@@ -112,6 +112,10 @@ function bindControls() {
       window.location.assign('../diagnostics/index.html');
       return;
     }
+    if (button.dataset.action === 'emulation.manageCores' || button.dataset.action === 'emulation.importFirmware') {
+      window.location.assign('../emulation/index.html');
+      return;
+    }
     const status = document.querySelector('[data-save-status]');
     if (status) status.textContent = `${button.textContent} queued`;
   }));

@@ -62,3 +62,5 @@ Compatibility diagnostics are available at `src/frontend/diagnostics/index.html`
 Transport adapters are covered by `src/frontend/transport/transport.test.mjs` with injected WebSocket and RTCPeerConnection fakes, so signaling and offer/answer behavior can be verified without a live host or relay.
 
 Local capture primitives are in `src/frontend/capture/capture.mjs`. Screenshots use a video frame and Canvas; recordings use MediaRecorder with WebM MIME fallback. No capture data is uploaded by the frontend.
+
+The emulation center is available at `src/frontend/emulation/index.html`. It reads the versioned core catalog, accepts only explicit user-selected game and firmware files, and produces a runtime launch plan without reading or distributing content outside the browser file selection boundary.

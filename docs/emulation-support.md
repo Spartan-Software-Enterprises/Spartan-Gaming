@@ -50,6 +50,8 @@ The libretro adapter must support:
 
 ## Emulator catalog
 
+The first user-facing emulation center is available at `src/frontend/emulation/index.html`. It loads this catalog, shows runtime/license metadata, accepts explicit local game and firmware selections, and creates launch plans without uploading or bundling content.
+
 | Project | Systems | Preferred mode | Role |
 | --- | --- | --- | --- |
 | RetroArch/libretro | Many classic and modern systems | Browser/native | Unified frontend and core ecosystem |
