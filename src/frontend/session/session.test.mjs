@@ -15,7 +15,8 @@ test('session manager follows offer, answer, and close lifecycle', () => {
   const manager = createSessionManager({idFactory: () => 'ses-test-01', clock: () => '2026-08-07T12:00:00.000Z'});
   const backend = {id: 'spartan-host', backendType: 'provider'};
   const offer = manager.start({backend});
-  assert.equal(manager.state, 'negotiating'); assert.equal(offer.type, 'session.offer'); assert.equal(offer.sessionId, 'ses-test-01');
+  assert.equal(manager.state, 'negotiating'); assert.equal(offer.type, 'session.offer'); assert.equal(offer.sessionId, 'ses-test-01'); assert.equal(offer.payload.quality.type, 'quality.request');
+  manager.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'telemetry.health', payload: {packetLossPct: 9}})); assert.equal(manager.quality.id, 'low');
   assert.equal(manager.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true}})), 'connected');
   assert.equal(manager.close(), 'closed'); assert.throws(() => manager.receive({sessionId: offer.sessionId, type: 'session.answer'}), /transition/);
 });

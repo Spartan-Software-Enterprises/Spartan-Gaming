@@ -1,3 +1,5 @@
+import {createQualityController} from './quality.mjs';
+
 const PROTOCOL = 'spartan-gaming/1';
 const DEFAULT_CAPABILITIES = Object.freeze({
   transports: ['webrtc', 'websocket'],
@@ -53,20 +55,22 @@ export function createSessionEnvelope({sessionId, type, payload, sequence = 0, m
 }
 
 export function createSessionManager({clock = () => new Date().toISOString(), idFactory = () => `ses-${Date.now()}`} = {}) {
-  let state = 'idle'; let session = null; let sequence = 0;
+  let state = 'idle'; let session = null; let sequence = 0; let quality = createQualityController();
   const transition = next => { if (!transitions[state].includes(next)) throw new Error(`Invalid session transition: ${state} -> ${next}`); state = next; return state; };
   return {
     get state() { return state; },
     get session() { return session ? clone(session) : null; },
+    get quality() { return quality.profile; },
     start({backend, capabilities = DEFAULT_CAPABILITIES} = {}) {
       if (!backend?.id) throw new TypeError('backend.id is required');
-      transition('preparing'); session = {id: idFactory(), backendId: backend.id, backendType: backend.backendType, capabilities: normalizeCapabilities(capabilities)}; sequence = 0;
+      transition('preparing'); quality = createQualityController(); session = {id: idFactory(), backendId: backend.id, backendType: backend.backendType, capabilities: normalizeCapabilities(capabilities), quality: quality.profile}; sequence = 0;
       transition('negotiating');
-      return createSessionEnvelope({sessionId: session.id, type: 'session.offer', sequence, sentAt: clock(), payload: {role: 'client', backendId: backend.id, transports: session.capabilities.transports, video: session.capabilities.video, audio: session.capabilities.audio, input: session.capabilities.input}});
+      return createSessionEnvelope({sessionId: session.id, type: 'session.offer', sequence, sentAt: clock(), payload: {role: 'client', backendId: backend.id, transports: session.capabilities.transports, video: session.capabilities.video, audio: session.capabilities.audio, input: session.capabilities.input, quality: quality.request()}});
     },
     receive(message) {
       if (!session || message?.sessionId !== session.id) throw new Error('Message belongs to another session');
       sequence = Math.max(sequence, Number.isInteger(message.sequence) ? message.sequence : sequence);
+      if (message.type === 'telemetry.health') { const decision = quality.ingest(message.payload); session.quality = decision.profile; return state; }
       const next = { 'session.answer': 'connected', 'session.reconnect': 'reconnecting', 'session.close': 'closing' }[message.type];
       if (next) { transition(next); if (next === 'closing') transition('closed'); }
       return state;

@@ -75,6 +75,8 @@ The session runtime in `src/frontend/session/session.mjs` provides the first tra
 
 Universal controller input is normalized in `src/frontend/input/input.mjs`. It applies configurable analog deadzones and maps browser Gamepad API buttons/axes to stable action events, leaving platform-specific HID, keyboard, touch, and native controller adapters free to feed the same action vocabulary.
 
+Adaptive streaming policy is implemented in `src/frontend/session/quality.mjs`. Health telemetry is bounded before use, classified into good/fair/poor network states, and converted into a shared profile request. Degradation steps down quickly; recovery requires consecutive healthy samples to avoid oscillation.
+
 ## Cross-platform strategy
 
 The browser product layer should share UX, session, protocol, and diagnostics code. Windowing, media capture, hardware acceleration, packaging, signing, permissions, and input backends should be isolated behind platform adapters.

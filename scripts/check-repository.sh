@@ -29,6 +29,8 @@ required_files=(
   src/frontend/dashboard/dashboard.mjs
   src/frontend/session/session.mjs
   src/frontend/session/session.test.mjs
+  src/frontend/session/quality.mjs
+  src/frontend/session/quality.test.mjs
   src/frontend/input/input.mjs
   src/frontend/input/input.test.mjs
   src/frontend/adapters/adapters.mjs
@@ -84,9 +86,10 @@ NODE
 node protocol/v1/validate-session.mjs protocol/v1/examples/session-offer.json
 node --check src/frontend/dashboard/dashboard.mjs
 node --check src/frontend/session/session.mjs
+node --check src/frontend/session/quality.mjs
 node --check src/frontend/input/input.mjs
 node --check src/frontend/adapters/adapters.mjs
-node --test src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/input/input.test.mjs src/frontend/adapters/adapters.test.mjs
+node --test src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/input/input.test.mjs src/frontend/adapters/adapters.test.mjs
 
 if command -v git >/dev/null 2>&1; then
   if git ls-files -z | grep -E -z '(^|/)(\.env|.*\.(pem|key))$' >/dev/null; then

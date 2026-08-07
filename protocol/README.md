@@ -31,6 +31,8 @@ The first version covers:
 - Health and latency telemetry.
 - Graceful close and reconnect metadata.
 
+The browser starts with a quality request in the session offer. Hosts and relays can send `telemetry.health` envelopes; the frontend quality controller responds with bounded `quality.request` values for resolution, framerate, codec-independent bitrate, and profile name.
+
 It intentionally does not define game-library discovery, account federation, billing, or a proprietary media codec.
 
 ## Local validation
@@ -40,4 +42,3 @@ The v1 envelope can be validated without installing project dependencies:
 ```bash
 node protocol/v1/validate-session.mjs protocol/v1/examples/session-offer.json
 ```
-
