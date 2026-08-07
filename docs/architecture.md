@@ -77,6 +77,8 @@ Universal controller input is normalized in `src/frontend/input/input.mjs`. It a
 
 Adaptive streaming policy is implemented in `src/frontend/session/quality.mjs`. Health telemetry is bounded before use, classified into good/fair/poor network states, and converted into a shared profile request. Degradation steps down quickly; recovery requires consecutive healthy samples to avoid oscillation.
 
+User-owned host connections use the secure boundary in `src/frontend/host/host.mjs`; see [host support](host-support.md) for endpoint, pairing, and transport rules.
+
 ## Cross-platform strategy
 
 The browser product layer should share UX, session, protocol, and diagnostics code. Windowing, media capture, hardware acceleration, packaging, signing, permissions, and input backends should be isolated behind platform adapters.

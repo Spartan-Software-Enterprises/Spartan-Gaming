@@ -19,6 +19,7 @@ required_files=(
   protocol/v1/validate-session.mjs
   docs/provider-support.md
   docs/emulation-support.md
+  docs/host-support.md
   providers/catalog.json
   emulators/catalog.json
   package.json
@@ -35,6 +36,8 @@ required_files=(
   src/frontend/input/input.test.mjs
   src/frontend/adapters/adapters.mjs
   src/frontend/adapters/adapters.test.mjs
+  src/frontend/host/host.mjs
+  src/frontend/host/host.test.mjs
   src/frontend/settings/index.html
   src/frontend/settings/settings.css
   src/frontend/settings/settings.mjs
@@ -89,7 +92,8 @@ node --check src/frontend/session/session.mjs
 node --check src/frontend/session/quality.mjs
 node --check src/frontend/input/input.mjs
 node --check src/frontend/adapters/adapters.mjs
-node --test src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/input/input.test.mjs src/frontend/adapters/adapters.test.mjs
+node --check src/frontend/host/host.mjs
+node --test src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/input/input.test.mjs src/frontend/adapters/adapters.test.mjs src/frontend/host/host.test.mjs
 
 if command -v git >/dev/null 2>&1; then
   if git ls-files -z | grep -E -z '(^|/)(\.env|.*\.(pem|key))$' >/dev/null; then
