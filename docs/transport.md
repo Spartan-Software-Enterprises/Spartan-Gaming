@@ -3,6 +3,7 @@
 `src/frontend/transport/transport.mjs` supplies the browser-facing transport primitives used by host and provider adapters:
 
 - `createWebSocketSignalTransport` validates `ws`/`wss` endpoints, exposes open/message/error/close events, and only sends protocol v1 envelopes.
+- `createWebTransportSignalTransport` provides an experimental HTTPS datagram signaling path with the same envelope validation and optional join handshake.
 - `createWebRtcTransport` wraps `RTCPeerConnection`, creates offers, accepts answers, forwards ICE candidates and media tracks, and closes cleanly.
 - `src/frontend/transport/ice.mjs` validates STUN/TURN URLs, requires secure remote TURN by default, accepts ephemeral session credentials, bounds server/pool counts, and produces redacted diagnostics.
 - `validateTransportMessage` fails closed for unknown protocol message types or malformed envelopes.

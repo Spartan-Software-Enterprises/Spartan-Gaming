@@ -26,6 +26,42 @@ export function createWebSocketSignalTransport({endpoint, join, WebSocketImpl = 
   return Object.freeze(transport);
 }
 
+export function createWebTransportSignalTransport({endpoint, join, WebTransportImpl = globalThis.WebTransport} = {}) {
+  const parsed = parseHostEndpoint(endpoint);
+  if (parsed.protocol !== 'https:') throw new TypeError('WebTransport signaling requires an https endpoint');
+  const bus = events(); let connection = null; let writer = null; let reader = null; let state = 'idle';
+  const encode = value => new TextEncoder().encode(value); const decode = value => new TextDecoder().decode(value);
+  const validJoin = value => { if (!value || typeof value.sessionId !== 'string' || typeof value.role !== 'string' || typeof value.ticket !== 'string') throw new TypeError('signaling join requires sessionId, role, and ticket'); return value; };
+  const readLoop = async () => {
+    try {
+      while (state === 'open') {
+        const result = await reader.read();
+        if (result.done) break;
+        try { bus.emit('message', validateTransportMessage(JSON.parse(decode(result.value)))); } catch (error) { bus.emit('error', error); }
+      }
+      if (state === 'open') { state = 'closed'; bus.emit('close'); }
+    } catch (error) { if (state !== 'closed') { state = 'error'; bus.emit('error', error); } }
+  };
+  const transport = {
+    get state() { return state; }, on: bus.on,
+    async connect() {
+      if (state === 'open') return;
+      if (typeof WebTransportImpl !== 'function') throw new Error('WebTransport is unavailable in this browser');
+      state = 'connecting'; connection = new WebTransportImpl(parsed.url);
+      try {
+        await connection.ready;
+        if (!connection.datagrams?.writable || !connection.datagrams?.readable) throw new Error('WebTransport datagrams are unavailable');
+        writer = connection.datagrams.writable.getWriter(); reader = connection.datagrams.readable.getReader();
+        if (join) await writer.write(encode(JSON.stringify({type: 'signaling.join', ...validJoin(join)})));
+        state = 'open'; bus.emit('open'); void readLoop();
+      } catch (error) { state = 'error'; bus.emit('error', error); connection.close?.(); throw error; }
+    },
+    send(message) { if (state !== 'open' || !writer) throw new Error('WebTransport signaling transport is not open'); return writer.write(encode(JSON.stringify(validateTransportMessage(message)))); },
+    close() { if (state === 'closed') return; state = 'closed'; reader?.cancel?.(); writer?.releaseLock?.(); connection?.close?.(); bus.emit('close'); },
+  };
+  return Object.freeze(transport);
+}
+
 export function createWebRtcTransport({RTCPeerConnectionImpl = globalThis.RTCPeerConnection, configuration = {}, ice, dataChannelLabel = 'spartan-control'} = {}) {
   if (typeof RTCPeerConnectionImpl !== 'function') throw new Error('RTCPeerConnection is unavailable in this browser');
   const bus = events(); const peer = new RTCPeerConnectionImpl(ice ? {...createIceConfiguration(ice), ...configuration} : configuration); let state = 'new';

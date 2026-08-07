@@ -59,7 +59,7 @@
 - [ ] Android and handheld-focused shell.
 - [ ] ChromeOS and television mode.
 - [ ] iOS/iPadOS compatibility strategy.
-- [ ] WebTransport experimental transport.
+- [x] WebTransport experimental datagram transport contract (server deployment and production fallback policy pending).
 - [ ] HDR, AV1, high-refresh, and multi-monitor support.
 - [ ] Provider SDK and community compatibility database.
 - [ ] Signed adapter and core registry.
