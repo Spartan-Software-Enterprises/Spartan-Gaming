@@ -97,7 +97,7 @@ The diagnostics center also queries `MediaCapabilities.decodingInfo()` per video
 
 The dashboard runs `src/frontend/compatibility/harness.mjs` after loading catalogs. Each entry is classified as browser-ready, setup-required, capability-missing, or native-adapter-required using the local diagnostics report; account, host, and pairing requirements remain explicit configuration rather than being treated as browser support.
 
-Provider preferences are managed at `src/frontend/providers/index.html`. `src/frontend/providers/profiles.mjs` stores only account labels, region hints, quality, launch mode, fullscreen preference, and private notes; it intentionally has no credential or cookie fields.
+Provider preferences are managed at `src/frontend/providers/index.html`. `src/frontend/providers/profiles.mjs` stores only account labels, region hints, quality, launch mode, fullscreen preference, and private notes; it intentionally has no credential or cookie fields. External provider/API handoffs open the official surface directly and do not create a false Spartan session; only user-owned host and future native/session adapters enter the Spartan session lifecycle.
 
 Transport adapters are covered by `src/frontend/transport/transport.test.mjs` with injected WebSocket and RTCPeerConnection fakes, so signaling and offer/answer behavior can be verified without a live host or relay.
 
