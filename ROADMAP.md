@@ -22,6 +22,7 @@
 - [x] Stream and system diagnostics page.
 - [ ] Windows, macOS, and Linux development builds.
 - [x] Unified frontend catalog and launcher model.
+- [x] Capability-aware launch plans with explicit readiness, troubleshooting, and next actions.
 - [x] Provider profiles for supported cloud, remote-play, and streaming services.
 - [x] Emulator/core profiles for libretro, Dolphin, PCSX2, RPCS3, PPSSPP, DuckStation, melonDS, Azahar, MAME, Flycast, xemu, and ScummVM.
 
@@ -34,7 +35,6 @@
 - [x] Input, decode, render, and network telemetry foundation from browser/WebRTC health signals.
 - [x] Screenshots and local recording.
 - [ ] LAN self-hosted reference stream.
-- [ ] Provider and emulator capability detection harness.
 - [x] Provider and emulator capability detection harness.
 - [x] Unified session lifecycle and error model.
 

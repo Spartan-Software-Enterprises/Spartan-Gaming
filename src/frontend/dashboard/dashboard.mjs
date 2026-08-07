@@ -14,7 +14,7 @@ import { resolveResumeEntry, resolveResumePresentation } from './resume.mjs';
 const FAVORITES_KEY = 'spartan-gaming.favorites.v1';
 const launchHistory = createLaunchHistoryStore();
 const requestedFilter = new URLSearchParams(globalThis.location?.search || '').get('filter');
-const state = { catalog: [], adapters: null, compatibility: null, filter: ['all', 'cloud', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(loadFavorites()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, profile])) };
+const state = { catalog: [], adapters: null, compatibility: null, report: null, filter: ['all', 'cloud', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(loadFavorites()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, profile])) };
 const cards = document.querySelector('[data-cards]');
 const toast = document.querySelector('[data-toast]');
 const sessionStatus = document.querySelector('[data-session-status]');
@@ -37,7 +37,7 @@ function openProviderSurface(entry, plan) {
   document.querySelector('[data-provider-detail]').textContent = `${integration.surfaces?.length ? integration.surfaces.join(' · ') : entry.kind} · ${integration.quality || 'balanced'} quality preference`;
   document.querySelector('[data-provider-frame]').src = plan.url;
   const external = document.querySelector('[data-provider-external]'); external.href = plan.url;
-  const notes = [...(integration.notes || []), ...(integration.requirements?.length ? [`Setup: ${integration.requirements.join(', ')}`] : []), 'Authentication and provider permissions remain on the official service.'];
+  const notes = [...(integration.notes || []), ...(plan.readiness?.issues || []).map(issue => issue.message), ...(integration.requirements?.length ? [`Setup: ${integration.requirements.join(', ')}`] : []), 'Authentication and provider permissions remain on the official service.'];
   document.querySelector('[data-provider-notes]').textContent = notes.join(' ');
   if (typeof providerDialog.showModal === 'function') providerDialog.showModal(); else providerDialog.setAttribute('open', '');
 }
@@ -47,7 +47,8 @@ function launchEntry(entry, plan) {
   state.lastLaunch = launchHistory.record({backendId: entry.id, backendType: entry.backendType, name: entry.name, mode: plan.mode, action: plan.action, at: new Date().toISOString()});
   renderResume();
   saveLaunchIntent(sessionStorage, createLaunchIntent({entry, plan, returnTo: './index.html'}));
-  if (plan.action === 'choose-runtime') { window.location.assign('../emulation/index.html'); return; }
+  if (plan.readiness?.nextAction === 'run-diagnostics') { window.location.assign('../diagnostics/index.html'); return; }
+  if (plan.readiness?.nextAction === 'choose-runtime' || plan.action === 'choose-runtime' || plan.action === 'configure-native-adapter') { window.location.assign('../emulation/index.html'); return; }
   if (plan.action === 'configure-host') { window.location.assign('../host/index.html'); return; }
   if (plan.action === 'embed-url') { openProviderSurface(entry, plan); showToast(`${entry.name}: official embed opened.`); return; }
   if (plan.action === 'open-url' || plan.action === 'configure-api') { window.open(plan.url, '_blank', 'noopener'); showToast(`${entry.name}: ${plan.action === 'open-url' ? 'official service opened' : 'official API surface opened'}.`); return; }
@@ -74,8 +75,8 @@ function render() {
     const favorite = state.favorites.has(entry.id);
     const tags = [...(state.recent.has(entry.id) ? ['Recent'] : []), ...(entry.systems || []).slice(0, 2), ...(entry.capabilities || []).slice(0, 1)];
     const summary = entry.description || (entry.requirements?.length ? entry.requirements.join(' · ') : entry.systems?.length ? entry.systems.join(' · ') : 'Ready to connect');
-    const compatibility = state.compatibility?.get(entry.id); const readiness = {ready: 'Browser ready', 'configuration-required': 'Setup required', 'browser-capability-missing': 'Capability missing', 'native-adapter-required': 'Native adapter'}[compatibility?.status] || 'Checking…';
-    return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(entry.backendType === 'emulator' ? 'Emulation' : entry.kind)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="card-actions"><button class="launch" data-launch="${escapeHtml(entry.id)}">${entry.backendType === 'provider' ? 'Open service' : 'Configure'}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}</span></div></article>`;
+    const plan = state.adapters?.get(entry.id)?.resolve(); const readiness = {ready: 'Ready', 'configuration-required': 'Setup required', 'browser-capability-missing': 'Capability missing', 'native-adapter-required': 'Native adapter'}[plan?.readiness?.status] || 'Checking…'; const actionLabel = plan?.readiness?.nextAction === 'run-diagnostics' ? 'Run diagnostics' : plan?.readiness?.nextAction === 'choose-runtime' ? 'Choose runtime' : entry.backendType === 'provider' ? 'Open service' : 'Configure';
+    return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(entry.backendType === 'emulator' ? 'Emulation' : entry.kind)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="card-actions"><button class="launch" data-launch="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}</span></div></article>`;
   }).join('') : '<div class="empty">No connections match this view. Try another filter or search term.</div>';
 }
 async function loadCatalog() {
@@ -84,9 +85,9 @@ async function loadCatalog() {
     validateCatalogManifest(providers, 'provider');
     validateCatalogManifest(emulators, 'emulator');
     state.catalog = createFrontendCatalog({ providers: providers.providers, emulators: emulators.projects }).entries;
-    state.adapters = createCatalogAdapterRegistry(state.catalog, {providerProfiles: state.providerProfiles});
+    state.adapters = createCatalogAdapterRegistry(state.catalog, {providerProfiles: state.providerProfiles, report: () => state.report || {}});
     render();
-    collectCapabilities().then(report => { state.compatibility = evaluateCatalog(state.catalog, report); render(); }).catch(() => {});
+    collectCapabilities().then(report => { state.report = report; state.compatibility = evaluateCatalog(state.catalog, report); render(); }).catch(() => {});
   } catch (error) { cards.innerHTML = '<div class="empty">The library could not load. Check the catalog files and try again.</div>'; console.error(error); }
 }
 document.querySelector('[data-search]').addEventListener('input', event => { state.search = event.target.value; render(); });

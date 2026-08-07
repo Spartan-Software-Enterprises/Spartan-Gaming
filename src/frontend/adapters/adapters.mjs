@@ -1,5 +1,7 @@
 import {createAdapterRegistry} from '../session/session.mjs';
-import {createProviderIntegration} from '../providers/integration.mjs';
+import {createProviderIntegration, providerTroubleshooting} from '../providers/integration.mjs';
+import {createEmulatorIntegration, emulatorTroubleshooting} from '../emulation/integration.mjs';
+import {evaluateCatalogCompatibility} from '../compatibility/harness.mjs';
 
 const PROVIDER_MODE_PLANS = Object.freeze({
   'browser-first': {kind: 'web', action: 'open-url', external: true},
@@ -21,17 +23,20 @@ function assertEntry(entry) { if (!entry?.id || !entry.backendType) throw new Ty
 
 export function resolveLaunchPlan(entry, {allowedModes, preferEmbedded = false, providerProfile = {}} = {}) {
   assertEntry(entry);
-  const integration = entry.backendType === 'provider' ? createProviderIntegration(entry, {profile: providerProfile}) : null;
+  const integration = entry.backendType === 'provider' ? createProviderIntegration(entry, {profile: providerProfile, report: providerProfile.report}) : createEmulatorIntegration(entry, {preference: providerProfile.emulationPreference, renderer: providerProfile.renderer, report: providerProfile.report});
+  const compatibility = evaluateCatalogCompatibility(entry, providerProfile.report || {});
+  const issues = entry.backendType === 'provider' ? providerTroubleshooting(integration) : emulatorTroubleshooting(integration);
   const modes = Array.isArray(allowedModes) ? allowedModes : integration?.mode ? [integration.mode, ...(entry.integrationModes || [])] : entry.integrationModes || [entry.launchMode];
   const plans = entry.backendType === 'provider' ? PROVIDER_MODE_PLANS : EMULATOR_MODE_PLANS;
   const orderedModes = preferEmbedded ? [...modes].sort(mode => mode === 'official-embed' ? -1 : 0) : modes;
   const selectedMode = orderedModes.find(mode => plans[mode]);
-  if (!selectedMode) return {backendId: entry.id, status: 'unsupported', action: 'show-support-error', reason: 'No supported integration mode is available in the current shell', availableModes: [...modes]};
+  if (!selectedMode) return {backendId: entry.id, status: 'unsupported', action: 'show-support-error', reason: 'No supported integration mode is available in the current shell', availableModes: [...modes], readiness: Object.freeze({status: compatibility.status, reason: compatibility.reason, nextAction: 'show-support-error', issues})};
   const plan = plans[selectedMode];
-  return Object.freeze({backendId: entry.id, status: 'ready', mode: selectedMode, ...plan, url: plan.action === 'open-url' || plan.action === 'embed-url' || plan.action === 'configure-api' ? entry.url : undefined, requirements: Object.freeze([...(entry.requirements || [])]), capabilities: Object.freeze([...(entry.capabilities || [])]), integration});
+  const nextAction = compatibility.status === 'native-adapter-required' ? 'choose-runtime' : compatibility.status === 'browser-capability-missing' ? 'run-diagnostics' : compatibility.status === 'configuration-required' ? plan.action === 'configure-host' ? 'configure-host' : 'open-service' : plan.action;
+  return Object.freeze({backendId: entry.id, status: 'ready', mode: selectedMode, ...plan, url: plan.action === 'open-url' || plan.action === 'embed-url' || plan.action === 'configure-api' ? entry.url : undefined, requirements: Object.freeze([...(entry.requirements || [])]), capabilities: Object.freeze([...(entry.capabilities || [])]), integration, readiness: Object.freeze({status: compatibility.status, reason: compatibility.reason, missingCapabilities: compatibility.missingCapabilities, configuration: compatibility.configuration, nextAction, issues})});
 }
 
 export function createCatalogAdapterRegistry(entries, options = {}) {
   if (!Array.isArray(entries)) throw new TypeError('entries must be an array');
-  return createAdapterRegistry(entries.map(entry => ({id: entry.id, backendId: entry.id, name: entry.name, backendType: entry.backendType, resolve: () => resolveLaunchPlan(entry, {...options, providerProfile: options.providerProfiles?.[entry.id]})})));
+  return createAdapterRegistry(entries.map(entry => ({id: entry.id, backendId: entry.id, name: entry.name, backendType: entry.backendType, resolve: () => { const report = typeof options.report === 'function' ? options.report() : options.report; return resolveLaunchPlan(entry, {...options, report, providerProfile: {...options.providerProfiles?.[entry.id], report}}); }})));
 }
