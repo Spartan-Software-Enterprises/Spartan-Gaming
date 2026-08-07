@@ -40,7 +40,7 @@
 ## Milestone 3: self-hosted stack
 
 - [ ] Windows and Linux host agent.
-- [ ] Secure device pairing.
+- [x] Secure device pairing UX and frontend contract (agent/signaling implementation pending).
 - [ ] Signaling service.
 - [ ] STUN/TURN integration.
 - [ ] Controller, keyboard, mouse, audio, and rumble forwarding.

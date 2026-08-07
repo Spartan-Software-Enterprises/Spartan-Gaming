@@ -1,0 +1,33 @@
+import '../pwa/register.mjs';
+import {createHostConnectionProfile, createHostProfileStore} from './host.mjs';
+
+const store = createHostProfileStore();
+const hostContainer = document.querySelector('[data-hosts]');
+const editor = document.querySelector('[data-editor]');
+const notice = document.querySelector('[data-notice]');
+let hosts = store.list();
+let selectedId = hosts[0]?.hostId || null;
+let timer;
+const escapeHtml = value => String(value).replace(/[&<>\'\"]/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));
+function showNotice(message) { notice.textContent = message; notice.classList.add('visible'); clearTimeout(timer); timer = setTimeout(() => notice.classList.remove('visible'), 2600); }
+function renderHosts() { document.querySelector('[data-count]').textContent = `${hosts.length} saved`; hostContainer.innerHTML = hosts.length ? hosts.map(host => `<button class="host-item ${host.hostId === selectedId ? 'active' : ''}" data-host="${escapeHtml(host.hostId)}"><strong>${escapeHtml(host.name)}</strong><small>${escapeHtml(host.endpoint)}</small></button>`).join('') : '<p class="loading">No hosts configured yet.</p>'; }
+function renderEditor() {
+  const host = hosts.find(item => item.hostId === selectedId);
+  if (!host) { editor.className = 'empty'; editor.textContent = 'Select a host profile or add a host to begin.'; return; }
+  editor.className = '';
+  editor.innerHTML = `<div class="editor-title"><p class="eyebrow">HOST PROFILE</p><h2>${escapeHtml(host.name)}</h2><p>${escapeHtml(host.endpoint)} · credentials session-scoped</p></div><div class="form"><label>Display name<input data-name value="${escapeHtml(host.name)}" maxlength="80"></label><label>Host ID<input data-host-id value="${escapeHtml(host.hostId)}" maxlength="120"></label><label class="wide">Endpoint URL<input data-endpoint value="${escapeHtml(host.endpoint)}" placeholder="wss://your-host.example/session"></label><label>Client name<input data-client-name value="${escapeHtml(host.clientName)}" maxlength="80"></label><label>Host transports<select data-transports><option value="webrtc">WebRTC preferred</option><option value="webtransport">WebTransport preferred</option><option value="websocket">WebSocket only</option></select></label><label class="wide">Private notes<textarea data-notes maxlength="500">${escapeHtml(host.notes)}</textarea></label></div><div class="save-row"><button class="secondary" data-remove>Remove</button><button class="primary" data-save>Save profile</button></div><section class="pairing panel"><div class="pairing-head"><div><p class="eyebrow">PAIR DEVICE</p><h2>Generate a pairing request</h2></div><button class="secondary" data-pair>Generate</button></div><p class="notice-copy">Enter the one-time code shown by your host agent. The request expires after five minutes and is never saved.</p><div data-pairing-result></div></section>`;
+  editor.querySelector('[data-transports]').value = host.hostTransports[0] || 'webrtc';
+}
+function selectHost(id) { selectedId = id; renderHosts(); renderEditor(); }
+function addHost() { const id = `host-${crypto.randomUUID().slice(0, 8)}`; store.save({hostId: id, name: 'New host', endpoint: 'http://localhost:8787', hostTransports: ['webrtc'], clientName: 'Spartan Gaming'}); hosts = store.list(); selectHost(id); editor.querySelector('[data-name]').focus(); }
+hostContainer.addEventListener('click', event => { const button = event.target.closest('[data-host]'); if (button) selectHost(button.dataset.host); });
+document.querySelector('[data-new]').addEventListener('click', addHost);
+editor.addEventListener('click', event => {
+  const host = hosts.find(item => item.hostId === selectedId); if (!host) return;
+  if (event.target.closest('[data-save]')) { try { const saved = store.save({hostId: editor.querySelector('[data-host-id]').value, name: editor.querySelector('[data-name]').value, endpoint: editor.querySelector('[data-endpoint]').value, clientName: editor.querySelector('[data-client-name]').value, hostTransports: [editor.querySelector('[data-transports]').value], notes: editor.querySelector('[data-notes]').value}); if (saved.hostId !== host.hostId) store.remove(host.hostId); hosts = store.list(); selectedId = saved.hostId; renderHosts(); renderEditor(); showNotice('Host profile saved'); } catch (error) { showNotice(error.message); } }
+  if (event.target.closest('[data-remove]')) { store.remove(host.hostId); hosts = store.list(); selectedId = hosts[0]?.hostId || null; renderHosts(); renderEditor(); showNotice('Host profile removed'); }
+  if (event.target.closest('[data-pair]')) { try { const code = prompt('Enter the one-time code shown by the host agent'); if (!code) return; const profile = createHostConnectionProfile({hostId: host.hostId, endpoint: host.endpoint, hostTransports: host.hostTransports, pairingCode: code, clientName: host.clientName}); const output = editor.querySelector('[data-pairing-result]'); output.innerHTML = `<strong class="pairing-code">${escapeHtml(profile.pairing.pairingCode)}</strong><small>Expires ${escapeHtml(new Date(profile.pairing.expiresAt).toLocaleTimeString())} · ${escapeHtml(profile.transport)}</small><pre>${escapeHtml(JSON.stringify(profile.pairing, null, 2))}</pre>`; } catch (error) { showNotice(error.message); } }
+});
+document.querySelector('[data-export]').addEventListener('click', () => { const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([store.export()], {type:'application/json'})); link.download = 'spartan-host-profiles.json'; link.click(); URL.revokeObjectURL(link.href); showNotice('Host profiles exported'); });
+document.querySelector('[data-import]').addEventListener('change', async event => { const file = event.target.files?.[0]; if (!file) return; try { hosts = store.import(await file.text()); selectedId = hosts[0]?.hostId || null; renderHosts(); renderEditor(); showNotice('Host profiles imported'); } catch (error) { showNotice(error.message); } event.target.value = ''; });
+renderHosts(); renderEditor();

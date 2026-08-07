@@ -45,6 +45,9 @@ required_files=(
   src/frontend/adapters/adapters.test.mjs
   src/frontend/host/host.mjs
   src/frontend/host/host.test.mjs
+  src/frontend/host/index.html
+  src/frontend/host/host.css
+  src/frontend/host/host-page.mjs
   src/frontend/player/index.html
   src/frontend/player/player.css
   src/frontend/player/player.mjs
@@ -153,6 +156,7 @@ node --check src/frontend/session/telemetry.mjs
 node --check src/frontend/input/input.mjs
 node --check src/frontend/adapters/adapters.mjs
 node --check src/frontend/host/host.mjs
+node --check src/frontend/host/host-page.mjs
 node --check src/frontend/player/player.mjs
 node --check src/frontend/player/immersive.mjs
 node --check src/frontend/workspaces/workspaces.mjs

@@ -1,6 +1,7 @@
 const SUPPORTED_TRANSPORTS = Object.freeze(['webrtc', 'webtransport', 'websocket']);
 const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '[::1]']);
 const PAIRING_CODE = /^[A-HJ-NP-Z2-9]{6,12}$/;
+export const HOST_PROFILES_KEY = 'spartan-gaming.host-profiles.v1';
 
 function requiredString(value, name) { if (typeof value !== 'string' || value.trim() === '') throw new TypeError(`${name} must be a non-empty string`); return value.trim(); }
 function isLocalHost(hostname) { return LOCAL_HOSTNAMES.has(hostname.toLowerCase()) || hostname.endsWith('.local'); }
@@ -39,4 +40,38 @@ export function createPairingRequest({hostId, clientName = 'Spartan Gaming', pai
 export function createHostConnectionProfile({hostId, endpoint, clientTransports, hostTransports, pairingCode, clientName, expiresAt} = {}) {
   requiredString(hostId, 'hostId'); const parsed = parseHostEndpoint(endpoint); const transport = selectHostTransport({clientTransports, hostTransports, endpoint: parsed});
   return Object.freeze({hostId, endpoint: parsed, transport, pairing: pairingCode ? createPairingRequest({hostId, clientName, pairingCode, expiresAt}) : undefined, credentials: 'session-scoped'});
+}
+
+export function normalizeHostProfile(profile) {
+  requiredString(profile?.hostId, 'profile.hostId');
+  requiredString(profile?.name, 'profile.name');
+  const endpoint = parseHostEndpoint(profile.endpoint);
+  const transports = Array.isArray(profile.hostTransports) ? profile.hostTransports.filter(item => SUPPORTED_TRANSPORTS.includes(item)) : [...SUPPORTED_TRANSPORTS];
+  return Object.freeze({
+    hostId: profile.hostId.trim(),
+    name: profile.name.trim(),
+    endpoint: endpoint.url,
+    hostTransports: transports.length ? transports : ['webrtc'],
+    clientName: String(profile.clientName || 'Spartan Gaming').trim() || 'Spartan Gaming',
+    notes: String(profile.notes || ''),
+  });
+}
+
+export function createHostProfileStore({storage = globalThis.localStorage, key = HOST_PROFILES_KEY} = {}) {
+  const backend = storage;
+  const read = () => {
+    try {
+      const parsed = JSON.parse(backend?.getItem(key) || '[]');
+      return Array.isArray(parsed) ? parsed.map(normalizeHostProfile) : [];
+    } catch { return []; }
+  };
+  const write = profiles => backend?.setItem(key, JSON.stringify(profiles));
+  return {
+    list() { return read().map(profile => ({...profile})); },
+    get(hostId) { const profile = read().find(item => item.hostId === hostId); return profile ? {...profile} : undefined; },
+    save(profile) { const normalized = normalizeHostProfile(profile); write([...read().filter(item => item.hostId !== normalized.hostId), normalized]); return {...normalized}; },
+    remove(hostId) { write(read().filter(profile => profile.hostId !== hostId)); },
+    export() { return JSON.stringify({version: 1, profiles: read()}, null, 2); },
+    import(serialized) { const parsed = typeof serialized === 'string' ? JSON.parse(serialized) : serialized; if (!Array.isArray(parsed?.profiles)) throw new TypeError('host profile export is invalid'); write(parsed.profiles.map(normalizeHostProfile)); return this.list(); },
+  };
 }
