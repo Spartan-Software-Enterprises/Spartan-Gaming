@@ -62,3 +62,9 @@ contract for that next adapter. It forwards bounded encoded chunks to an
 injected sink and reports publisher lifecycle/capability state, but deliberately
 does not reinterpret a sink as WebRTC until an RTP/WebRTC implementation is
 provided.
+
+`host/webrtc.mjs` detects optional WebRTC implementations without adding either
+one to Spartan's core dependency set. `node-datachannel` is the native adapter
+slot and `werift` is the TypeScript adapter slot. A production host selects one
+according to its platform packaging, then supplies its RTP packetization and
+peer-connection sink to the encoded publisher boundary.

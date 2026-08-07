@@ -45,6 +45,8 @@ required_files=(
   host/native-media.mjs
   host/native-media.integration.test.mjs
   host/publisher.integration.test.mjs
+  host/webrtc.mjs
+  host/webrtc.test.mjs
   signaling/agent.integration.test.mjs
   host/README.md
   host/pairing.mjs
@@ -285,6 +287,8 @@ node --check host/adapters.mjs
 node --check host/environment.mjs
 node --check host/media.mjs
 node --check host/publisher.mjs
+node --check host/webrtc.mjs
+node --check host/webrtc.test.mjs
 node --check host/input.mjs
 node --check host/audio.mjs
 node --check src/frontend/player/player.mjs

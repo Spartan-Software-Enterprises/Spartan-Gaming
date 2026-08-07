@@ -61,3 +61,26 @@ export function createEncodedMediaPublisher({pipeline, sink, codec = 'h264', max
   };
   return Object.freeze(publisher);
 }
+
+/**
+ * Bind encoded chunks to an RTP/WebRTC implementation supplied by the host.
+ * `packetizer.push` owns codec framing and returns one or more RTP packets;
+ * `transport.send` owns SRTP/WebRTC delivery. Keeping both injected lets the
+ * core stay dependency-free while making the media boundary executable.
+ */
+export function createRtpMediaPublisher({pipeline, packetizer, transport, codec = 'h264', maxChunkBytes = DEFAULT_MAX_CHUNK_BYTES} = {}) {
+  if (!packetizer || typeof packetizer.push !== 'function') throw new TypeError('packetizer must implement push(chunk, metadata)');
+  if (!transport || typeof transport.send !== 'function') throw new TypeError('transport must implement send(packet)');
+  let packetsSent = 0; let timestamp = 0;
+  const publisher = createEncodedMediaPublisher({pipeline, codec, maxChunkBytes, sink: {
+    open: metadata => { transport.open?.(metadata); },
+    write: chunk => {
+      const packets = packetizer.push(chunk, {codec, timestamp}); timestamp += 1;
+      if (!packets || typeof packets[Symbol.iterator] !== 'function') throw new TypeError('packetizer.push must return an iterable of RTP packets');
+      for (const packet of packets) { transport.send(packet); packetsSent += 1; }
+    },
+    close: () => { transport.close?.(); },
+    error: error => { transport.error?.(error); },
+  }});
+  return Object.freeze({publisher, get packetsSent() { return packetsSent; }});
+}

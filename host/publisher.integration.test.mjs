@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {createProcessLaunchPlan} from './adapters.mjs';
 import {createNativeMediaPipeline} from './native-media.mjs';
-import {createEncodedMediaPublisher} from './publisher.mjs';
+import {createEncodedMediaPublisher, createRtpMediaPublisher} from './publisher.mjs';
 
 function nodePlan(script, target = 'stdout') { return {process: createProcessLaunchPlan({executable: process.execPath, args: ['-e', script]}), output: {target}}; }
 
@@ -13,3 +13,11 @@ test('encoded media publisher hands capture-to-encode output to an adapter sink'
 });
 
 test('encoded media publisher rejects invalid sinks and codecs', () => { const pipeline = {start: async () => {}, stop: async () => {}}; assert.throws(() => createEncodedMediaPublisher({pipeline, sink: {}}), /write/); assert.throws(() => createEncodedMediaPublisher({pipeline, sink: {write() {}}, codec: 'mpeg2'}), /unsupported/); });
+
+test('RTP publisher packetizes encoded chunks and delegates transport delivery', async () => {
+  const pipeline = {videoOutput: new (await import('node:stream')).PassThrough(), start: async function() {}, stop: async function() { this.videoOutput.end(); }};
+  const packets = []; const timestamps = [];
+  const rtp = createRtpMediaPublisher({pipeline, packetizer: {push(chunk, metadata) { timestamps.push(metadata.timestamp); return [Buffer.concat([Buffer.from('rtp:'), chunk])]; }}, transport: {send: packet => packets.push(packet)}, codec: 'h264'});
+  await rtp.publisher.start(); pipeline.videoOutput.write(Buffer.from('frame')); await new Promise(resolve => setTimeout(resolve, 20)); await rtp.publisher.stop();
+  assert.deepEqual(timestamps, [0]); assert.deepEqual(packets.map(packet => packet.toString()), ['rtp:frame']); assert.equal(rtp.packetsSent, 1);
+});
