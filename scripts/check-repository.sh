@@ -77,6 +77,8 @@ required_files=(
   src/frontend/launch/history.test.mjs
   src/frontend/settings/profile.mjs
   src/frontend/settings/profile.test.mjs
+  src/frontend/settings/runtime-ui.mjs
+  src/frontend/settings/runtime-ui.test.mjs
   src/frontend/session/preferences.mjs
   src/frontend/session/preferences.test.mjs
   src/frontend/input/policy.mjs
@@ -259,6 +261,7 @@ node --check src/frontend/player/player-state.mjs
 node --check src/frontend/launch/intent.mjs
 node --check src/frontend/launch/history.mjs
 node --check src/frontend/settings/profile.mjs
+node --check src/frontend/settings/runtime-ui.mjs
 node --check src/frontend/session/preferences.mjs
 node --check src/frontend/input/policy.mjs
 node --check src/frontend/input/haptics.mjs
