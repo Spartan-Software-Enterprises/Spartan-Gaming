@@ -8,6 +8,7 @@ import {createSignalingBroker} from './broker.mjs';
 const DEFAULT_MAX_FRAME_BYTES = 64 * 1024;
 const DEFAULT_MAX_CONNECTIONS = 256;
 const DEFAULT_MAX_MESSAGES_PER_SECOND = 120;
+const SHUTDOWN_TIMEOUT_MS = 2000;
 
 function text(value) { return typeof value === 'string' ? value.trim() : ''; }
 function positiveInteger(value, fallback, maximum) { const number = Number(value); return Number.isInteger(number) && number > 0 ? Math.min(number, maximum) : fallback; }
@@ -119,7 +120,7 @@ export function createSignalingServer(options = {}) {
     });
     socket.on('close', cleanup); socket.on('error', cleanup);
   });
-  return Object.freeze({config, broker, server, stats: () => Object.freeze({connections: sockets.size, rejectedConnections, ...broker.stats()}), start() { return new Promise((resolve, rejectStart) => { server.once('error', rejectStart); server.listen(config.port, config.bind, () => { server.removeListener('error', rejectStart); resolve(server.address()); }); }); }, close() { for (const socket of sockets) socket.destroy(); server.closeIdleConnections?.(); server.closeAllConnections?.(); if (!server.listening) return Promise.resolve(); return new Promise(resolve => server.close(() => resolve())); }});
+  return Object.freeze({config, broker, server, stats: () => Object.freeze({connections: sockets.size, rejectedConnections, ...broker.stats()}), start() { return new Promise((resolve, rejectStart) => { server.once('error', rejectStart); server.listen(config.port, config.bind, () => { server.removeListener('error', rejectStart); resolve(server.address()); }); }); }, close() { for (const socket of sockets) socket.destroy(); server.closeIdleConnections?.(); server.closeAllConnections?.(); if (!server.listening) return Promise.resolve(); return new Promise(resolve => { let settled = false; const finish = () => { if (settled) return; settled = true; resolve(); }; server.close(finish); const timeout = setTimeout(finish, SHUTDOWN_TIMEOUT_MS); timeout.unref?.(); }); }});
 }
 
 if (pathEqualsMain()) {
