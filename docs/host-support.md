@@ -34,6 +34,12 @@ and Linux `uinput` adapters. Plans declare the required permission (`remote-inpu
 adapter is installed. The reference agent records the latest plan in health
 output rather than injecting OS input.
 
+`host/audio.mjs` adds the return-audio boundary for Windows WASAPI, macOS
+CoreAudio, and Linux PipeWire/PulseAudio. It validates microphone/session
+permissions, creates bounded FFmpeg PCM capture plans, and composes an Opus or
+AAC publisher plan. Audio remains `unconfigured` in the reference host until
+a native audio capture and WebRTC audio publisher are installed.
+
 ## Compatibility targets
 
 The adapter boundary can support Spartan Host first, then user-owned Steam Remote Play, Sunshine/Moonlight-compatible endpoints, Parsec, Xbox Remote Play, and PlayStation Remote Play where official protocols and platform rules permit. Compatibility is not permission to bypass authentication, DRM, anti-cheat, or undocumented service controls.

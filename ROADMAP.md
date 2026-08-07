@@ -50,6 +50,7 @@
 - [ ] STUN/TURN integration.
 - [x] Controller, keyboard, pointer, and rumble forwarding contract (native OS injection pending).
 - [ ] Native OS input injection, audio return, and end-to-end haptics.
+- [x] Cross-platform audio capture and publisher readiness contract (native audio publisher pending).
 - [x] Browser-to-host control-plane quality and input envelopes (OS adapters pending).
 - [ ] Docker deployment and administration API.
 
