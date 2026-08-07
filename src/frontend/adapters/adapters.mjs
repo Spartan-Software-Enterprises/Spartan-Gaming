@@ -1,4 +1,5 @@
 import {createAdapterRegistry} from '../session/session.mjs';
+import {createProviderIntegration} from '../providers/integration.mjs';
 
 const PROVIDER_MODE_PLANS = Object.freeze({
   'browser-first': {kind: 'web', action: 'open-url', external: true},
@@ -18,18 +19,19 @@ const EMULATOR_MODE_PLANS = Object.freeze({
 
 function assertEntry(entry) { if (!entry?.id || !entry.backendType) throw new TypeError('A normalized catalog entry is required'); }
 
-export function resolveLaunchPlan(entry, {allowedModes, preferEmbedded = false} = {}) {
+export function resolveLaunchPlan(entry, {allowedModes, preferEmbedded = false, providerProfile = {}} = {}) {
   assertEntry(entry);
-  const modes = Array.isArray(allowedModes) ? allowedModes : entry.integrationModes || [entry.launchMode];
+  const integration = entry.backendType === 'provider' ? createProviderIntegration(entry, {profile: providerProfile}) : null;
+  const modes = Array.isArray(allowedModes) ? allowedModes : integration?.mode ? [integration.mode, ...(entry.integrationModes || [])] : entry.integrationModes || [entry.launchMode];
   const plans = entry.backendType === 'provider' ? PROVIDER_MODE_PLANS : EMULATOR_MODE_PLANS;
   const orderedModes = preferEmbedded ? [...modes].sort(mode => mode === 'official-embed' ? -1 : 0) : modes;
   const selectedMode = orderedModes.find(mode => plans[mode]);
   if (!selectedMode) return {backendId: entry.id, status: 'unsupported', action: 'show-support-error', reason: 'No supported integration mode is available in the current shell', availableModes: [...modes]};
   const plan = plans[selectedMode];
-  return Object.freeze({backendId: entry.id, status: 'ready', mode: selectedMode, ...plan, url: plan.action === 'open-url' || plan.action === 'embed-url' ? entry.url : undefined, requirements: Object.freeze([...(entry.requirements || [])]), capabilities: Object.freeze([...(entry.capabilities || [])])});
+  return Object.freeze({backendId: entry.id, status: 'ready', mode: selectedMode, ...plan, url: plan.action === 'open-url' || plan.action === 'embed-url' ? entry.url : undefined, requirements: Object.freeze([...(entry.requirements || [])]), capabilities: Object.freeze([...(entry.capabilities || [])]), integration});
 }
 
 export function createCatalogAdapterRegistry(entries, options = {}) {
   if (!Array.isArray(entries)) throw new TypeError('entries must be an array');
-  return createAdapterRegistry(entries.map(entry => ({id: entry.id, backendId: entry.id, name: entry.name, backendType: entry.backendType, resolve: () => resolveLaunchPlan(entry, options)})));
+  return createAdapterRegistry(entries.map(entry => ({id: entry.id, backendId: entry.id, name: entry.name, backendType: entry.backendType, resolve: () => resolveLaunchPlan(entry, {...options, providerProfile: options.providerProfiles?.[entry.id]})})));
 }

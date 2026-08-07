@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createProviderIntegration, providerTroubleshooting} from './integration.mjs';
+
+const xbox = {id: 'xbox-cloud-gaming', name: 'Xbox Cloud Gaming', backendType: 'provider', integrationModes: ['browser-first', 'official-launch'], capabilities: ['gamepad', 'touch-controls'], requirements: ['xbox-account'], url: 'https://www.xbox.com/play'};
+const stream = {id: 'twitch', name: 'Twitch', backendType: 'provider', integrationModes: ['browser-first', 'official-api', 'official-embed'], capabilities: ['video', 'chat'], requirements: [], url: 'https://www.twitch.tv/'};
+
+test('provider integration selects platform preset and saved launch preference', () => { const integration = createProviderIntegration(xbox, {profile: {launchMode: 'official', quality: 'prefer-latency'}}); assert.equal(integration.mode, 'official-launch'); assert.equal(integration.controllerProfile, 'Xbox layout'); assert.equal(integration.quality, 'prefer-latency'); });
+test('provider integration exposes official surfaces without claiming API access', () => { const integration = createProviderIntegration(stream); assert.equal(integration.mode, 'browser-first'); assert.deepEqual(integration.surfaces, ['video', 'chat']); assert.equal(integration.health.authenticated, false); });
+test('provider troubleshooting remains structured and capability-aware', () => { const integration = createProviderIntegration(xbox, {report: {input: {gamepad: false}}}); const issues = providerTroubleshooting(integration); assert.equal(issues[0].key, 'gamepad'); assert.equal(issues[1].key, 'configuration'); });

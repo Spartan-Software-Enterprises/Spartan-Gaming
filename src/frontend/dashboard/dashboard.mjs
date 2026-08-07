@@ -5,9 +5,10 @@ import { createCatalogAdapterRegistry } from '../adapters/adapters.mjs';
 import { createControllerNavigator } from '../input/navigation.mjs';
 import { evaluateCatalog } from '../compatibility/harness.mjs';
 import { collectCapabilities } from '../diagnostics/capabilities.mjs';
+import { createProviderProfileStore } from '../providers/profiles.mjs';
 
 const FAVORITES_KEY = 'spartan-gaming.favorites.v1';
-const state = { catalog: [], adapters: null, compatibility: null, filter: 'all', search: '', favorites: new Set(loadFavorites()) };
+const state = { catalog: [], adapters: null, compatibility: null, filter: 'all', search: '', favorites: new Set(loadFavorites()), providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, profile])) };
 const cards = document.querySelector('[data-cards]');
 const toast = document.querySelector('[data-toast]');
 const sessionStatus = document.querySelector('[data-session-status]');
@@ -50,7 +51,7 @@ async function loadCatalog() {
     validateCatalogManifest(providers, 'provider');
     validateCatalogManifest(emulators, 'emulator');
     state.catalog = createFrontendCatalog({ providers: providers.providers, emulators: emulators.projects }).entries;
-    state.adapters = createCatalogAdapterRegistry(state.catalog);
+    state.adapters = createCatalogAdapterRegistry(state.catalog, {providerProfiles: state.providerProfiles});
     render();
     collectCapabilities().then(report => { state.compatibility = evaluateCatalog(state.catalog, report); render(); }).catch(() => {});
   } catch (error) { cards.innerHTML = '<div class="empty">The library could not load. Check the catalog files and try again.</div>'; console.error(error); }

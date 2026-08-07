@@ -54,6 +54,8 @@ We must never bypass DRM, bot detection, authentication controls, anti-cheat, re
 
 Every provider profile should expose supported platforms and regions, sign-in and subscription requirements, controller types, recommended quality, codec and hardware-acceleration expectations, fullscreen/input behavior, known limitations, official launch/support URLs, and a report-compatibility action.
 
+The shared resolver in `src/frontend/providers/integration.mjs` now turns catalog entries plus saved provider profiles into immutable integration descriptors. It selects the requested official/browser/host mode, recommends controller and quality profiles for major console/cloud-PC services, exposes watch/chat/creator surfaces, and returns reachability-only health metadata. It never claims authentication, API approval, embed permission, or a provider’s current regional availability.
+
 Provider accounts must remain isolated by profile. Provider tokens must never be stored in the game catalog or URL-history export.
 
 ## Implementation order
@@ -63,4 +65,3 @@ Provider accounts must remain isolated by profile. Provider tokens must never be
 3. Official API/OAuth integrations where approval, scopes, and terms permit them.
 4. Steam Remote Play, Spartan Host, and compatible open streaming endpoints.
 5. Additional regional and retro providers through the same manifest format.
-
