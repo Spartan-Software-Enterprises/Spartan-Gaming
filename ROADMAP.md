@@ -28,7 +28,7 @@
 - [x] WebRTC/session runtime bridge for signaling, SDP/ICE, media tracks, input, and reconnect envelopes.
 - [x] Adaptive bitrate and resolution policy.
 - [x] Bounded reconnection and session recovery policy with player control.
-- [ ] Hardware decode detection.
+- [x] Per-codec hardware decode detection through MediaCapabilities with safe fallback.
 - [x] Input, decode, render, and network telemetry foundation from browser/WebRTC health signals.
 - [x] Screenshots and local recording.
 - [ ] LAN self-hosted reference stream.
