@@ -18,6 +18,10 @@ test('session manager follows offer, answer, and close lifecycle', () => {
   assert.equal(manager.state, 'negotiating'); assert.equal(offer.type, 'session.offer'); assert.equal(offer.sessionId, 'ses-test-01'); assert.equal(offer.payload.quality.type, 'quality.request');
   manager.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'telemetry.health', payload: {packetLossPct: 9}})); assert.equal(manager.quality.id, 'low');
   assert.equal(manager.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true}})), 'connected');
+  const reconnect = manager.requestReconnect();
+  assert.equal(manager.state, 'reconnecting'); assert.equal(reconnect.type, 'session.reconnect'); assert.equal(reconnect.payload.attempt, 1); assert.equal(manager.recovery.attempt, 1);
+  manager.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true}, sequence: reconnect.sequence + 1}));
+  assert.equal(manager.state, 'connected'); assert.equal(manager.recovery.attempt, 0);
   assert.equal(manager.close(), 'closed'); assert.throws(() => manager.receive({sessionId: offer.sessionId, type: 'session.answer'}), /transition/);
 });
 

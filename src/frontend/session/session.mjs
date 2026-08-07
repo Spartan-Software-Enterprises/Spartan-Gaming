@@ -1,4 +1,5 @@
 import {createQualityController} from './quality.mjs';
+import {createReconnectPolicy} from './recovery.mjs';
 
 const PROTOCOL = 'spartan-gaming/1';
 const DEFAULT_CAPABILITIES = Object.freeze({
@@ -55,15 +56,16 @@ export function createSessionEnvelope({sessionId, type, payload, sequence = 0, m
 }
 
 export function createSessionManager({clock = () => new Date().toISOString(), idFactory = () => `ses-${Date.now()}`} = {}) {
-  let state = 'idle'; let session = null; let sequence = 0; let quality = createQualityController();
+  let state = 'idle'; let session = null; let sequence = 0; let quality = createQualityController(); let recovery = createReconnectPolicy();
   const transition = next => { if (!transitions[state].includes(next)) throw new Error(`Invalid session transition: ${state} -> ${next}`); state = next; return state; };
   return {
     get state() { return state; },
     get session() { return session ? clone(session) : null; },
     get quality() { return quality.profile; },
+    get recovery() { return {attempt: recovery.attempt, exhausted: recovery.exhausted, maxAttempts: recovery.maxAttempts}; },
     start({backend, capabilities = DEFAULT_CAPABILITIES} = {}) {
       if (!backend?.id) throw new TypeError('backend.id is required');
-      transition('preparing'); quality = createQualityController(); session = {id: idFactory(), backendId: backend.id, backendType: backend.backendType, capabilities: normalizeCapabilities(capabilities), quality: quality.profile}; sequence = 0;
+      transition('preparing'); quality = createQualityController(); recovery = createReconnectPolicy(); session = {id: idFactory(), backendId: backend.id, backendType: backend.backendType, capabilities: normalizeCapabilities(capabilities), quality: quality.profile}; sequence = 0;
       transition('negotiating');
       return createSessionEnvelope({sessionId: session.id, type: 'session.offer', sequence, sentAt: clock(), payload: {role: 'client', backendId: backend.id, transports: session.capabilities.transports, video: session.capabilities.video, audio: session.capabilities.audio, input: session.capabilities.input, quality: quality.request()}});
     },
@@ -72,11 +74,19 @@ export function createSessionManager({clock = () => new Date().toISOString(), id
       sequence = Math.max(sequence, Number.isInteger(message.sequence) ? message.sequence : sequence);
       if (message.type === 'telemetry.health') { const decision = quality.ingest(message.payload); session.quality = decision.profile; return state; }
       const next = { 'session.answer': 'connected', 'session.reconnect': 'reconnecting', 'session.close': 'closing' }[message.type];
-      if (next) { transition(next); if (next === 'closing') transition('closed'); }
+      if (next) { transition(next); if (next === 'connected') recovery.succeeded(); if (next === 'closing') transition('closed'); }
       return state;
     },
+    requestReconnect() {
+      if (!session || (state !== 'connected' && state !== 'reconnecting')) throw new Error('Only connected sessions can reconnect');
+      if (state === 'connected') transition('reconnecting');
+      const plan = recovery.next();
+      if (plan.exhausted) { transition('error'); throw new Error('Session reconnect attempts exhausted'); }
+      sequence += 1;
+      return createSessionEnvelope({sessionId: session.id, type: 'session.reconnect', sequence, payload: {attempt: plan.attempt, delayMs: plan.delayMs}});
+    },
     close() { if (state === 'connected' || state === 'reconnecting') { transition('closing'); transition('closed'); } return state; },
-    reset() { if (state !== 'closed' && state !== 'error') throw new Error('Only closed or error sessions can reset'); session = null; state = 'idle'; sequence = 0; },
+    reset() { if (state !== 'closed' && state !== 'error') throw new Error('Only closed or error sessions can reset'); session = null; state = 'idle'; sequence = 0; recovery.reset(); },
   };
 }
 

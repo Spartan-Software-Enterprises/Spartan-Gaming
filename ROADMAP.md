@@ -27,7 +27,7 @@
 
 - [ ] WebRTC session manager.
 - [x] Adaptive bitrate and resolution policy.
-- [ ] Reconnection and session recovery.
+- [x] Bounded reconnection and session recovery policy with player control.
 - [ ] Hardware decode detection.
 - [ ] Input, decode, render, and network telemetry.
 - [x] Screenshots and local recording.
