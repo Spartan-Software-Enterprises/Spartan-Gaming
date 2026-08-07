@@ -5,6 +5,7 @@ import {createSessionEnvelope} from '../src/frontend/session/session.mjs';
 import {validateTransportMessage} from '../src/frontend/transport/transport.mjs';
 import {createPairingAuthority, createPairingCode} from './pairing.mjs';
 import {normalizeHostCapabilities} from './capabilities.mjs';
+import {detectHostEnvironment} from './environment.mjs';
 
 const args = new Map();
 for (let index = 2; index < process.argv.length; index += 1) { const value = process.argv[index]; if (value.startsWith('--')) args.set(value.slice(2), process.argv[index + 1]?.startsWith('--') ? true : process.argv[++index]); }
@@ -16,6 +17,7 @@ const pairingCode = args.get('pairing-code') || createPairingCode();
 const pairing = createPairingAuthority({code: pairingCode});
 const capabilities = {transports: ['websocket'], video: {codecs: ['h264', 'vp9'], maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false}, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: true, keyboard: true, pointer: true, rumble: true}};
 const hostCapabilities = normalizeHostCapabilities({media: {state: 'not-configured', capture: false, encode: false, audio: false, transports: ['webrtc']}, process: {mode: 'none'}, input: capabilities.input});
+const environment = detectHostEnvironment();
 const sessions = new Set(); let inputEvents = 0; let lastQuality = null;
 
 function json(response, status, body) { response.writeHead(status, {'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store'}); response.end(JSON.stringify(body)); }
@@ -56,7 +58,7 @@ function handleMessage(socket, text, session) {
 }
 
 const server = createServer((request, response) => {
-  if (request.url === '/health') return json(response, 200, {service: 'spartan-host-reference', version: 1, hostId, hostName, pairingExpiresAt: pairing.expiresAt, pairingUsed: pairing.used, activeSessions: sessions.size, inputEvents, lastQuality, capabilities, hostCapabilities});
+  if (request.url === '/health') return json(response, 200, {service: 'spartan-host-reference', version: 1, hostId, hostName, pairingExpiresAt: pairing.expiresAt, pairingUsed: pairing.used, activeSessions: sessions.size, inputEvents, lastQuality, capabilities, hostCapabilities, environment});
   json(response, 404, {error: 'not found'});
 });
 server.on('upgrade', (request, socket) => {
