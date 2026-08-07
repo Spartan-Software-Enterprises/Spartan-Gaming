@@ -14,7 +14,7 @@
 - [x] Session player shell with stream target, overlays, quality state, controller hooks, and diagnostics.
 - [x] Gaming profiles and workspaces with persistent isolated launch preferences.
 - [x] Fullscreen gaming mode.
-- [ ] Controller-first navigation.
+- [x] Controller-first dashboard navigation with focus, confirm, and cancel actions.
 - [x] Controller remapping profiles and live gamepad/HID inspector.
 - [x] Capability-aware Keyboard Lock and Pointer Lock controls with graceful permission fallback.
 - [x] Stream and system diagnostics page.

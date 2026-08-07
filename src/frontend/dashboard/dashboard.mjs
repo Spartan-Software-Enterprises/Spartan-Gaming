@@ -1,6 +1,7 @@
 import { createFrontendCatalog, validateCatalogManifest } from '../catalog.mjs';
 import { createSessionManager } from '../session/session.mjs';
 import { createCatalogAdapterRegistry } from '../adapters/adapters.mjs';
+import { createControllerNavigator } from '../input/navigation.mjs';
 
 const FAVORITES_KEY = 'spartan-gaming.favorites.v1';
 const state = { catalog: [], adapters: null, filter: 'all', search: '', favorites: new Set(loadFavorites()) };
@@ -9,6 +10,7 @@ const toast = document.querySelector('[data-toast]');
 const sessionStatus = document.querySelector('[data-session-status]');
 const sessionManager = createSessionManager({idFactory: () => `ses-${crypto.randomUUID()}`});
 let toastTimer;
+const controllerNavigator = createControllerNavigator({root: document});
 
 function loadFavorites() { try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; } }
 function saveFavorites() { localStorage.setItem(FAVORITES_KEY, JSON.stringify([...state.favorites])); }
@@ -59,3 +61,4 @@ document.addEventListener('click', event => {
 document.querySelector('[data-action="resume"]').addEventListener('click', () => { const offer = beginSession({id: 'spartan-host', backendType: 'remote-play'}); if (offer) window.location.assign('../player/index.html?backend=spartan-host'); });
 document.querySelectorAll('[data-section]').forEach(button => button.addEventListener('click', () => showToast(`${button.textContent.trim()} view is coming online with the adapter registry.`)));
 loadCatalog();
+controllerNavigator.start();

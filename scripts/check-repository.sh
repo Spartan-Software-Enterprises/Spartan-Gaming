@@ -67,6 +67,8 @@ required_files=(
   src/frontend/input/inspector.html
   src/frontend/input/inspector.css
   src/frontend/input/inspector-page.mjs
+  src/frontend/input/navigation.mjs
+  src/frontend/input/navigation.test.mjs
   src/frontend/diagnostics/capabilities.mjs
   src/frontend/diagnostics/capabilities.test.mjs
   src/frontend/diagnostics/index.html
@@ -148,13 +150,14 @@ node --check src/frontend/input/profiles.mjs
 node --check src/frontend/input/profiles-page.mjs
 node --check src/frontend/input/inspector.mjs
 node --check src/frontend/input/inspector-page.mjs
+node --check src/frontend/input/navigation.mjs
 node --check src/frontend/diagnostics/capabilities.mjs
 node --check src/frontend/diagnostics/diagnostics.mjs
 node --check src/frontend/transport/transport.mjs
 node --check src/frontend/capture/capture.mjs
 node --check src/frontend/emulation/emulation.mjs
 node --check src/frontend/emulation/emulation-page.mjs
-node --test src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/session/recovery.test.mjs src/frontend/session/runtime.test.mjs src/frontend/session/telemetry.test.mjs src/frontend/input/input.test.mjs src/frontend/input/profiles.test.mjs src/frontend/input/inspector.test.mjs src/frontend/adapters/adapters.test.mjs src/frontend/host/host.test.mjs src/frontend/player/player-state.test.mjs src/frontend/player/immersive.test.mjs src/frontend/workspaces/workspaces.test.mjs src/frontend/diagnostics/capabilities.test.mjs src/frontend/transport/transport.test.mjs src/frontend/capture/capture.test.mjs src/frontend/emulation/emulation.test.mjs
+node --test src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/session/recovery.test.mjs src/frontend/session/runtime.test.mjs src/frontend/session/telemetry.test.mjs src/frontend/input/input.test.mjs src/frontend/input/profiles.test.mjs src/frontend/input/inspector.test.mjs src/frontend/input/navigation.test.mjs src/frontend/adapters/adapters.test.mjs src/frontend/host/host.test.mjs src/frontend/player/player-state.test.mjs src/frontend/player/immersive.test.mjs src/frontend/workspaces/workspaces.test.mjs src/frontend/diagnostics/capabilities.test.mjs src/frontend/transport/transport.test.mjs src/frontend/capture/capture.test.mjs src/frontend/emulation/emulation.test.mjs
 
 if command -v git >/dev/null 2>&1; then
   if git ls-files -z | grep -E -z '(^|/)(\.env|.*\.(pem|key))$' >/dev/null; then
