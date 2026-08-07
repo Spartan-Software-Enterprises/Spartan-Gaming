@@ -1,22 +1,15 @@
 import '../pwa/register.mjs';
-import {defaultSettings, settingsCategories} from './settings-data.mjs';
+import {settingsCategories} from './settings-data.mjs';
+import {createSettingsStore} from './profile.mjs';
 
-const storageKey = 'spartan-gaming.settings.v1';
-const state = loadState();
+const settingsStore = createSettingsStore();
+const state = {...settingsStore.read()};
 const requestedCategory = new URLSearchParams(globalThis.location?.search || '').get('category');
 let activeCategory = settingsCategories.some((category) => category.id === requestedCategory) ? requestedCategory : 'general';
 let query = '';
 
-function loadState() {
-  try {
-    return {...defaultSettings, ...JSON.parse(localStorage.getItem(storageKey) ?? '{}')};
-  } catch {
-    return {...defaultSettings};
-  }
-}
-
 function saveState() {
-  localStorage.setItem(storageKey, JSON.stringify(state));
+  Object.assign(state, settingsStore.save(state));
   const status = document.querySelector('[data-save-status]');
   if (status) {
     status.textContent = 'Saved locally';
@@ -101,7 +94,7 @@ function bindControls() {
   });
   document.querySelectorAll('[data-action]').forEach((button) => button.addEventListener('click', () => {
     if (button.dataset.action === 'general.reset') {
-      Object.assign(state, defaultSettings);
+      Object.assign(state, settingsStore.reset());
       saveState();
       render();
       return;
@@ -116,6 +109,14 @@ function bindControls() {
     }
     if (button.dataset.action === 'sync.manageProfiles') {
       window.location.assign('../workspaces/index.html');
+      return;
+    }
+    if (button.dataset.action === 'sync.exportSettings') {
+      downloadSettings();
+      return;
+    }
+    if (button.dataset.action === 'sync.importSettings') {
+      document.querySelector('[data-import-file]').click();
       return;
     }
     if (button.dataset.action === 'providers.manageProfiles') {
@@ -151,13 +152,27 @@ document.querySelector('[data-search]').addEventListener('input', (event) => {
   render();
 });
 
-document.querySelector('[data-export]').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify({version: 1, exportedAt: new Date().toISOString(), settings: state}, null, 2)], {type: 'application/json'});
+function downloadSettings() {
+  const blob = new Blob([settingsStore.export()], {type: 'application/json'});
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = 'spartan-gaming-settings.json';
   link.click();
   URL.revokeObjectURL(link.href);
+}
+
+document.querySelector('[data-export]').addEventListener('click', downloadSettings);
+document.querySelector('[data-import-file]').addEventListener('change', async (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  try {
+    Object.assign(state, settingsStore.import(await file.text()));
+    render();
+    document.querySelector('[data-save-status]').textContent = 'Imported and saved';
+  } catch (error) {
+    document.querySelector('[data-save-status]').textContent = error.message;
+  }
+  event.target.value = '';
 });
 
 render();
