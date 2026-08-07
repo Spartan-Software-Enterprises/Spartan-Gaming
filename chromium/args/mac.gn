@@ -1,0 +1,9 @@
+# Spartan Gaming development args for Chromium on macOS.
+# Select target_cpu explicitly for the checkout (arm64 or x64); do not assume
+# that one binary architecture covers every supported Mac.
+is_official_build = false
+is_component_build = true
+symbol_level = 1
+blink_symbol_level = 0
+enable_nacl = false
+use_rtti = false

@@ -25,6 +25,18 @@ The first Chromium integration should prove:
 - Hardware video decode reporting.
 - Stream diagnostics and overlay lifecycle.
 
+The tracked Chromium build contract lives in `chromium/build-manifest.json`.
+It deliberately keeps branch selection open until the rebase policy is
+approved. `chromium/args/` contains development templates for Linux, macOS,
+and Windows; these are inputs to an external checkout, not standalone GN
+projects. Validate a workstation with `npm run chromium:environment` or use
+`npm run chromium:validate -- --strict` for a Linux build gate.
+
+The upstream workflow is `fetch chromium`, `gclient sync`, `gn gen`, and
+`autoninja -C out/<directory> chrome`. Platform-specific prerequisites and
+signing steps remain owned by Chromium's current build documentation and must
+be rechecked when the branch is selected.
+
 ## Platform gates
 
 Every platform feature must document:

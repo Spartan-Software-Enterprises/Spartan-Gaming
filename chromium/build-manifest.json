@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "product": "Spartan Gaming",
+  "source": {
+    "repository": "https://chromium.googlesource.com/chromium/src.git",
+    "channel": "unselected",
+    "branch": null,
+    "rebasePolicy": "select-and-document-upstream-branch-before-first-patch-series"
+  },
+  "checkout": {
+    "managedOutsideRepository": true,
+    "environmentVariable": "SPARTAN_CHROMIUM_SRC",
+    "requiredTools": ["git", "python3", "gclient", "gn", "autoninja"]
+  },
+  "targets": [
+    { "id": "linux", "args": "chromium/args/linux.gn", "buildTarget": "chrome" },
+    { "id": "mac", "args": "chromium/args/mac.gn", "buildTarget": "chrome" },
+    { "id": "windows", "args": "chromium/args/windows.gn", "buildTarget": "chrome" }
+  ],
+  "productIntegration": {
+    "shellEntry": "src/frontend/dashboard/index.html",
+    "settingsEntry": "src/frontend/settings/index.html",
+    "playerEntry": "src/frontend/player/index.html",
+    "overlayEntry": "src/frontend/diagnostics/index.html",
+    "integrationStatus": "frontend-overlay-contract"
+  }
+}

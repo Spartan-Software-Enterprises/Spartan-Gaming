@@ -4,9 +4,10 @@
 
 - [x] Establish project name, scope, principles, and repository governance.
 - [x] Define cross-platform target matrix.
+- [x] Record Chromium source, external-checkout, and branch-selection contract.
 - [ ] Select Chromium branch and rebase policy.
 - [ ] Define browser/server/host repository boundaries.
-- [ ] Publish contributor setup for Linux, Windows, and macOS.
+- [x] Publish initial contributor setup contract for Linux, Windows, and macOS.
 
 ## Milestone 1: browser shell
 

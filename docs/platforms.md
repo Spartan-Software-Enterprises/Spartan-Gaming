@@ -33,3 +33,11 @@ Spartan Gaming is intended to be universal across practical Chromium-supported e
 
 Every feature should declare its support level: `shared`, `platform-adapted`, `experimental`, or `unavailable`.
 
+## Chromium build targets
+
+Linux, macOS, and Windows are the first desktop build targets. Their tracked
+development GN templates are in `chromium/args/`, and the source checkout is
+external to this repository. Run `node scripts/chromium/check-environment.mjs
+--platform <linux|mac|windows>` to validate the local toolchain without
+requiring Chromium in CI. Android, ChromeOS, iOS/iPadOS, and TV targets remain
+product targets with separate packaging and feasibility gates.
