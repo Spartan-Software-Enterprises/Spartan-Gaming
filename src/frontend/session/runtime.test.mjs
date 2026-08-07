@@ -44,3 +44,10 @@ test('session runtime emits a transport error for incompatible host capabilities
   const accepted = runtime.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true, capabilities: {transports: ['websocket'], video: {codecs: ['h264']}, audio: {codecs: ['aac']}}}}));
   assert.equal(accepted, false); assert.match(errors[0].message, /No compatible session transport/); assert.equal(runtime.state, 'negotiating');
 });
+
+test('session runtime emits a transport error for an explicit host refusal', async () => {
+  const signaling = fakeTransport(); const runtime = createSessionRuntime({signaling}); const errors = []; runtime.on('error', error => errors.push(error));
+  const offer = await runtime.start({backend: {id: 'spartan-host'}});
+  assert.equal(runtime.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: false, reason: 'host-busy'}})), false);
+  assert.match(errors[0].message, /rejected by host/); assert.equal(runtime.state, 'negotiating');
+});

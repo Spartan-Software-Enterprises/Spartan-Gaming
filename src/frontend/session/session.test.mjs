@@ -29,7 +29,7 @@ test('session manager follows offer, answer, and close lifecycle', () => {
   assert.equal(manager.state, 'reconnecting'); assert.equal(reconnect.type, 'session.reconnect'); assert.equal(reconnect.payload.attempt, 1); assert.equal(manager.recovery.attempt, 1);
   manager.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true}, sequence: reconnect.sequence + 1}));
   assert.equal(manager.state, 'connected'); assert.equal(manager.recovery.attempt, 0);
-  assert.equal(manager.close(), 'closed'); assert.throws(() => manager.receive({sessionId: offer.sessionId, type: 'session.answer'}), /transition/);
+  assert.equal(manager.close(), 'closed'); assert.throws(() => manager.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true}})), /transition/);
 });
 
 test('session manager records negotiated capabilities from a compatible answer', () => {
@@ -46,6 +46,13 @@ test('session manager refuses an incompatible answer before connecting', () => {
   const offer = manager.start({backend: {id: 'host'}, capabilities: {transports: ['webrtc'], video: {codecs: ['av1']}, audio: {codecs: ['opus']}}});
   const answer = createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true, capabilities: {transports: ['websocket'], video: {codecs: ['h264']}, audio: {codecs: ['aac']}}}});
   assert.throws(() => manager.receive(answer), /No compatible session transport/);
+  assert.equal(manager.state, 'negotiating');
+});
+
+test('session manager refuses an explicitly rejected host answer', () => {
+  const manager = createSessionManager({idFactory: () => 'ses-rejected'});
+  const offer = manager.start({backend: {id: 'host'}});
+  assert.throws(() => manager.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: false, reason: 'host-busy'}})), /rejected by host/);
   assert.equal(manager.state, 'negotiating');
 });
 

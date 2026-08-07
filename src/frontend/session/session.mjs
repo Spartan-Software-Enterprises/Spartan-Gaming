@@ -86,7 +86,10 @@ export function createSessionManager({clock = () => new Date().toISOString(), id
       if (!session || message?.sessionId !== session.id) throw new Error('Message belongs to another session');
       sequence = Math.max(sequence, Number.isInteger(message.sequence) ? message.sequence : sequence);
       if (message.type === 'telemetry.health') { const decision = quality.ingest(message.payload); session.quality = decision.profile; return state; }
-      if (message.type === 'session.answer' && message.payload?.capabilities) session.negotiated = negotiateCapabilities(session.capabilities, message.payload.capabilities);
+      if (message.type === 'session.answer') {
+        if (message.payload?.accepted !== true) throw new Error('Session answer rejected by host');
+        if (message.payload.capabilities) session.negotiated = negotiateCapabilities(session.capabilities, message.payload.capabilities);
+      }
       const next = { 'session.answer': 'connected', 'session.reconnect': 'reconnecting', 'session.close': 'closing' }[message.type];
       if (next) { transition(next); if (next === 'connected') recovery.succeeded(); if (next === 'closing') transition('closed'); }
       return state;
