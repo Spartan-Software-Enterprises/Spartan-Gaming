@@ -11,6 +11,12 @@
 
 `src/frontend/session/runtime.mjs` composes these primitives with the session manager. It connects signaling, adds the WebRTC offer/answer and ICE payloads, forwards media tracks, routes input/reconnect envelopes, and exposes session events for the player. It does not own provider credentials or host process lifecycle.
 
+The player loads the persisted transport policy through
+`src/frontend/player/transport-config.mjs`. HTTPS signaling can select the
+experimental WebTransport datagram adapter; WSS signaling uses WebSocket;
+WebRTC remains the media transport when the browser exposes it. Relay policy
+is passed into the WebRTC configuration for the current session only.
+
 When WebRTC exposes `getStats()`, the runtime starts `src/frontend/session/telemetry.mjs`. The collector reduces inbound video and candidate-pair statistics to RTT, packet loss, decode rate, jitter, dropped frames, and byte counters, then emits bounded `telemetry.health` messages. Raw stats reports and browser/device identity are never forwarded.
 
 Codec hardware efficiency is detected separately in the diagnostics center through MediaCapabilities; runtime telemetry remains measurement-only and does not infer decoder hardware from performance alone.

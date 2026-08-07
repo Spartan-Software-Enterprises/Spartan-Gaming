@@ -2,7 +2,8 @@ import '../pwa/register.mjs';
 import {createSessionEnvelope, createSessionManager} from '../session/session.mjs';
 import {createSessionRuntime} from '../session/runtime.mjs';
 import {createInputEventEnvelope, createInputMapper} from '../input/input.mjs';
-import {createWebRtcTransport, createWebSocketSignalTransport} from '../transport/transport.mjs';
+import {createWebRtcTransport, createWebSocketSignalTransport, createWebTransportSignalTransport} from '../transport/transport.mjs';
+import {readTransportPolicy, resolveSignalingTransport} from './transport-config.mjs';
 import {createPlayerState, formatLatency, reducePlayerState} from './player-state.mjs';
 import {captureVideoFrame, createRecordingController} from '../capture/capture.mjs';
 import {createImmersiveController} from './immersive.mjs';
@@ -10,6 +11,7 @@ import {createImmersiveController} from './immersive.mjs';
 const query = new URLSearchParams(location.search);
 const pendingHostPair = (() => { try { const value = JSON.parse(sessionStorage.getItem('spartan-gaming.pending-host-pair.v1') || 'null'); sessionStorage.removeItem('spartan-gaming.pending-host-pair.v1'); return value; } catch { return null; } })();
 const manager = createSessionManager({idFactory: () => `ses-${crypto.randomUUID()}`});
+const transportPolicy = readTransportPolicy();
 const mapper = createInputMapper();
 const immersive = createImmersiveController({target: document.querySelector('[data-stage]')});
 let runtime = null;
@@ -35,8 +37,9 @@ async function start() {
   try {
     const endpoint = query.get('signal') || pendingHostPair?.endpoint;
     if (endpoint) {
-      const signaling = createWebSocketSignalTransport({endpoint});
-      const media = typeof RTCPeerConnection === 'function' ? createWebRtcTransport() : undefined;
+      const selectedSignaling = resolveSignalingTransport({endpoint, policy: transportPolicy});
+      const signaling = selectedSignaling === 'webtransport' ? createWebTransportSignalTransport({endpoint}) : createWebSocketSignalTransport({endpoint});
+      const media = typeof RTCPeerConnection === 'function' ? createWebRtcTransport({ice: {policy: transportPolicy.icePolicy}}) : undefined;
       runtime = createSessionRuntime({manager, signaling, media});
       runtime.on('stream', stream => { elements.video.srcObject = stream; elements.video.play().catch(() => {}); });
       runtime.on('stream', () => { apply({type: 'media.state', state: 'active'}); elements.demo.classList.add('is-hidden'); });
@@ -44,7 +47,7 @@ async function start() {
       runtime.on('telemetry', sample => { apply({type: 'telemetry.health', rttMs: sample.rttMs, packetLossPct: sample.packetLossPct}); apply({type: 'quality.changed', profile: manager.quality.id}); });
       runtime.on('error', error => apply({type: 'error', message: error.message || 'Transport error'}));
       const offer = await runtime.start({backend: {id: backendId, backendType: 'remote-play', hostId: pendingHostPair?.hostId, pairingCode: pendingHostPair?.pairingCode}});
-      elements.transport.textContent = media ? 'WebRTC · adaptive' : 'WebSocket signaling';
+      elements.transport.textContent = `${selectedSignaling === 'webtransport' ? 'WebTransport' : 'WebSocket'} signaling${media ? ' · WebRTC media' : ''}`;
       window.dispatchEvent(new CustomEvent('spartan:session-offer', {detail: offer}));
     } else {
       const offer = manager.start({backend: {id: backendId, backendType: 'remote-play'}}); elements.transport.textContent = offer.payload.quality.profile === 'balanced' ? 'WebRTC · adaptive' : 'WebRTC';
