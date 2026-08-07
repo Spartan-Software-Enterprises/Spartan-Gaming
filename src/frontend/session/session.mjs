@@ -64,11 +64,11 @@ export function createSessionManager({clock = () => new Date().toISOString(), id
     get quality() { return quality.profile; },
     get qualityRequest() { return quality.request(); },
     get recovery() { return {attempt: recovery.attempt, exhausted: recovery.exhausted, maxAttempts: recovery.maxAttempts}; },
-    start({backend, capabilities = DEFAULT_CAPABILITIES} = {}) {
+    start({backend, capabilities = DEFAULT_CAPABILITIES, preferences = {}} = {}) {
       if (!backend?.id) throw new TypeError('backend.id is required');
-      transition('preparing'); quality = createQualityController(); recovery = createReconnectPolicy(); session = {id: idFactory(), backendId: backend.id, backendType: backend.backendType, capabilities: normalizeCapabilities(capabilities), quality: quality.profile}; sequence = 0;
+      transition('preparing'); quality = createQualityController({initialProfile: preferences.qualityPreset || 'balanced'}); recovery = createReconnectPolicy(); session = {id: idFactory(), backendId: backend.id, backendType: backend.backendType, capabilities: normalizeCapabilities(capabilities), preferences: clone(preferences), quality: quality.profile}; sequence = 0;
       transition('negotiating');
-      const payload = {role: 'client', backendId: backend.id, transports: session.capabilities.transports, video: session.capabilities.video, audio: session.capabilities.audio, input: session.capabilities.input, quality: quality.request()};
+      const payload = {role: 'client', backendId: backend.id, transports: session.capabilities.transports, video: session.capabilities.video, audio: session.capabilities.audio, input: session.capabilities.input, quality: {...quality.request(), ...(preferences.bitrateKbps ? {bitrateKbps: preferences.bitrateKbps} : {})}, streaming: clone(preferences)};
       if (backend.hostId) payload.hostId = backend.hostId;
       if (backend.pairingCode) payload.pairingCode = backend.pairingCode;
       return createSessionEnvelope({sessionId: session.id, type: 'session.offer', sequence, sentAt: clock(), payload});

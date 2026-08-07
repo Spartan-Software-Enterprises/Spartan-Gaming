@@ -40,8 +40,8 @@ export function createSessionRuntime({manager = createSessionManager(), signalin
     get session() { return manager.session; },
     get manager() { return manager; },
     on: bus.on,
-    async start({backend, capabilities} = {}) {
-      const offer = manager.start({backend, capabilities}); sessionId = offer.sessionId; sequence = offer.sequence;
+    async start({backend, capabilities, preferences} = {}) {
+      const offer = manager.start({backend, capabilities, preferences}); sessionId = offer.sessionId; sequence = offer.sequence;
       bind(); await signaling.connect();
       let outbound = offer;
       if (media) { dataChannel = media.createDataChannel?.(); if (dataChannel) dataChannel.onmessage = event => { try { receive(JSON.parse(typeof event.data === 'string' ? event.data : String(event.data))); } catch (error) { bus.emit('error', error); } }; const sdp = await media.createOffer(); outbound = createSessionEnvelope({sessionId, type: offer.type, sequence: offer.sequence, sentAt: clock(), payload: {...offer.payload, sdp}}); }

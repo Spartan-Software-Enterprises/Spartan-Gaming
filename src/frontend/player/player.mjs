@@ -1,5 +1,6 @@
 import '../pwa/register.mjs';
 import {createSessionEnvelope, createSessionManager} from '../session/session.mjs';
+import {readSessionPreferences} from '../session/preferences.mjs';
 import {createSessionRuntime} from '../session/runtime.mjs';
 import {createInputEventEnvelope, createInputMapper} from '../input/input.mjs';
 import {createWebRtcTransport, createWebSocketSignalTransport, createWebTransportSignalTransport} from '../transport/transport.mjs';
@@ -13,6 +14,7 @@ const query = new URLSearchParams(location.search);
 const pendingHostPair = (() => { try { const value = JSON.parse(sessionStorage.getItem('spartan-gaming.pending-host-pair.v1') || 'null'); sessionStorage.removeItem('spartan-gaming.pending-host-pair.v1'); return value; } catch { return null; } })();
 const manager = createSessionManager({idFactory: () => `ses-${crypto.randomUUID()}`});
 const transportPolicy = readTransportPolicy();
+const sessionPreferences = readSessionPreferences();
 const mapper = createInputMapper();
 const immersive = createImmersiveController({target: document.querySelector('[data-stage]')});
 let runtime = null;
@@ -57,11 +59,11 @@ async function start() {
       runtime.on('session.answer', message => { const mediaState = message.payload?.hostCapabilities?.media?.state || (message.payload?.sdp ? 'negotiating' : 'not-configured'); apply({type: 'media.state', state: mediaState}); elements.demo.classList.add('is-hidden'); });
       runtime.on('telemetry', sample => { apply({type: 'telemetry.health', rttMs: sample.rttMs, packetLossPct: sample.packetLossPct}); apply({type: 'quality.changed', profile: manager.quality.id}); });
       runtime.on('error', error => apply({type: 'error', message: error.message || 'Transport error'}));
-      const offer = await runtime.start({backend: {id: backendId, backendType: 'remote-play', hostId: pendingHostPair?.hostId, pairingCode: pendingHostPair?.pairingCode}});
+      const offer = await runtime.start({backend: {id: backendId, backendType: 'remote-play', hostId: pendingHostPair?.hostId, pairingCode: pendingHostPair?.pairingCode}, capabilities: sessionPreferences.capabilities, preferences: sessionPreferences.preferences});
       elements.transport.textContent = `${selectedSignaling === 'webtransport' ? 'WebTransport' : 'WebSocket'} signaling${media ? ' · WebRTC media' : ''}`;
       window.dispatchEvent(new CustomEvent('spartan:session-offer', {detail: offer}));
     } else {
-      const offer = manager.start({backend: {id: backendId, backendType: 'remote-play'}}); elements.transport.textContent = offer.payload.quality.profile === 'balanced' ? 'WebRTC · adaptive' : 'WebRTC';
+      const offer = manager.start({backend: {id: backendId, backendType: 'remote-play'}, capabilities: sessionPreferences.capabilities, preferences: sessionPreferences.preferences}); elements.transport.textContent = offer.payload.quality.profile === 'balanced' ? 'WebRTC · adaptive' : 'WebRTC';
     }
   } catch (error) { apply({type: 'error', message: error.message}); return; }
   if (query.get('demo') === '1') setTimeout(acceptHostAnswer, 500);
