@@ -85,6 +85,8 @@ required_files=(
   src/frontend/player/player-state.test.mjs
   src/frontend/player/transport-config.mjs
   src/frontend/player/transport-config.test.mjs
+  src/frontend/player/media.mjs
+  src/frontend/player/media.test.mjs
   src/frontend/player/immersive.mjs
   src/frontend/player/immersive.test.mjs
   src/frontend/workspaces/workspaces.mjs
@@ -212,6 +214,7 @@ node --check host/input.mjs
 node --check host/audio.mjs
 node --check src/frontend/player/player.mjs
 node --check src/frontend/player/transport-config.mjs
+node --check src/frontend/player/media.mjs
 node --check src/frontend/player/immersive.mjs
 node --check src/frontend/workspaces/workspaces.mjs
 node --check src/frontend/workspaces/workspaces-page.mjs
@@ -237,7 +240,7 @@ node --check src/frontend/capture/capture.mjs
 node --check src/frontend/emulation/emulation.mjs
 node --check src/frontend/emulation/emulation-page.mjs
 node --check src/frontend/emulation/integration.mjs
-node --test scripts/chromium/config.test.mjs signaling/broker.test.mjs host/audio.test.mjs host/input.test.mjs host/publisher.test.mjs host/pairing.test.mjs host/capabilities.test.mjs host/adapters.test.mjs host/environment.test.mjs host/media.test.mjs src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/session/recovery.test.mjs src/frontend/session/runtime.test.mjs src/frontend/session/telemetry.test.mjs src/frontend/input/input.test.mjs src/frontend/input/profiles.test.mjs src/frontend/input/inspector.test.mjs src/frontend/input/navigation.test.mjs src/frontend/compatibility/harness.test.mjs src/frontend/providers/integration.test.mjs src/frontend/providers/profiles.test.mjs src/frontend/adapters/adapters.test.mjs src/frontend/host/host.test.mjs src/frontend/player/player-state.test.mjs src/frontend/player/immersive.test.mjs src/frontend/player/transport-config.test.mjs src/frontend/workspaces/workspaces.test.mjs src/frontend/diagnostics/capabilities.test.mjs src/frontend/transport/ice.test.mjs src/frontend/transport/policy.test.mjs src/frontend/transport/transport.test.mjs src/frontend/capture/capture.test.mjs src/frontend/emulation/integration.test.mjs src/frontend/emulation/emulation.test.mjs src/frontend/pwa/cache.test.mjs
+node --test scripts/chromium/config.test.mjs signaling/broker.test.mjs host/audio.test.mjs host/input.test.mjs host/publisher.test.mjs host/pairing.test.mjs host/capabilities.test.mjs host/adapters.test.mjs host/environment.test.mjs host/media.test.mjs src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/session/recovery.test.mjs src/frontend/session/runtime.test.mjs src/frontend/session/telemetry.test.mjs src/frontend/input/input.test.mjs src/frontend/input/profiles.test.mjs src/frontend/input/inspector.test.mjs src/frontend/input/navigation.test.mjs src/frontend/compatibility/harness.test.mjs src/frontend/providers/integration.test.mjs src/frontend/providers/profiles.test.mjs src/frontend/adapters/adapters.test.mjs src/frontend/host/host.test.mjs src/frontend/player/player-state.test.mjs src/frontend/player/immersive.test.mjs src/frontend/player/media.test.mjs src/frontend/player/transport-config.test.mjs src/frontend/workspaces/workspaces.test.mjs src/frontend/diagnostics/capabilities.test.mjs src/frontend/transport/ice.test.mjs src/frontend/transport/policy.test.mjs src/frontend/transport/transport.test.mjs src/frontend/capture/capture.test.mjs src/frontend/emulation/integration.test.mjs src/frontend/emulation/emulation.test.mjs src/frontend/pwa/cache.test.mjs
 
 if command -v git >/dev/null 2>&1; then
   if git ls-files -z | grep -E -z '(^|/)(\.env|.*\.(pem|key))$' >/dev/null; then

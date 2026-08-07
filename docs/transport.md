@@ -17,6 +17,11 @@ experimental WebTransport datagram adapter; WSS signaling uses WebSocket;
 WebRTC remains the media transport when the browser exposes it. Relay policy
 is passed into the WebRTC configuration for the current session only.
 
+Incoming WebRTC streams are attached through `src/frontend/player/media.mjs`.
+The player reports whether video and audio tracks arrived, starts audio
+enabled by default, and provides a local mute toggle without changing the
+remote stream or exposing device data.
+
 When WebRTC exposes `getStats()`, the runtime starts `src/frontend/session/telemetry.mjs`. The collector reduces inbound video and candidate-pair statistics to RTT, packet loss, decode rate, jitter, dropped frames, and byte counters, then emits bounded `telemetry.health` messages. Raw stats reports and browser/device identity are never forwarded.
 
 Codec hardware efficiency is detected separately in the diagnostics center through MediaCapabilities; runtime telemetry remains measurement-only and does not infer decoder hardware from performance alone.

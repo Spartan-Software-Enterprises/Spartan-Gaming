@@ -7,6 +7,7 @@ import {readTransportPolicy, resolveSignalingTransport} from './transport-config
 import {createPlayerState, formatLatency, reducePlayerState} from './player-state.mjs';
 import {captureVideoFrame, createRecordingController} from '../capture/capture.mjs';
 import {createImmersiveController} from './immersive.mjs';
+import {attachMediaStreamTarget, describeMediaStream, setMediaAudioEnabled} from './media.mjs';
 
 const query = new URLSearchParams(location.search);
 const pendingHostPair = (() => { try { const value = JSON.parse(sessionStorage.getItem('spartan-gaming.pending-host-pair.v1') || 'null'); sessionStorage.removeItem('spartan-gaming.pending-host-pair.v1'); return value; } catch { return null; } })();
@@ -17,11 +18,12 @@ const immersive = createImmersiveController({target: document.querySelector('[da
 let runtime = null;
 const elements = {
   status: document.querySelector('[data-status]'), message: document.querySelector('[data-stage-message]'), quality: document.querySelector('[data-quality]'), qualityDetail: document.querySelector('[data-quality-detail]'),
-  latency: document.querySelector('[data-latency]'), latencyDetail: document.querySelector('[data-latency-detail]'), loss: document.querySelector('[data-loss]'), gamepad: document.querySelector('[data-gamepad]'), diagnostics: document.querySelector('[data-diagnostics]'), overlay: document.querySelectorAll('[data-overlay]'), stage: document.querySelector('[data-stage]'), video: document.querySelector('[data-video]'), demo: document.querySelector('[data-demo-answer]'), sessionName: document.querySelector('[data-session-name]'), transport: document.querySelector('[data-transport]'),
+  latency: document.querySelector('[data-latency]'), latencyDetail: document.querySelector('[data-latency-detail]'), loss: document.querySelector('[data-loss]'), gamepad: document.querySelector('[data-gamepad]'), audio: document.querySelector('[data-audio]'), diagnostics: document.querySelector('[data-diagnostics]'), overlay: document.querySelectorAll('[data-overlay]'), stage: document.querySelector('[data-stage]'), video: document.querySelector('[data-video]'), demo: document.querySelector('[data-demo-answer]'), sessionName: document.querySelector('[data-session-name]'), transport: document.querySelector('[data-transport]'),
 };
 let state = createPlayerState({status: 'negotiating'});
 let recording = null;
 let inputSequence = 0;
+let audioEnabled = true;
 const previousGamepad = new Map();
 
 function apply(event) {
@@ -41,7 +43,7 @@ async function start() {
       const signaling = selectedSignaling === 'webtransport' ? createWebTransportSignalTransport({endpoint}) : createWebSocketSignalTransport({endpoint});
       const media = typeof RTCPeerConnection === 'function' ? createWebRtcTransport({ice: {policy: transportPolicy.icePolicy}}) : undefined;
       runtime = createSessionRuntime({manager, signaling, media});
-      runtime.on('stream', stream => { elements.video.srcObject = stream; elements.video.play().catch(() => {}); });
+      runtime.on('stream', stream => { const mediaState = attachMediaStreamTarget({video: elements.video, stream, audioEnabled}); elements.audio.textContent = mediaState.hasAudio ? (audioEnabled ? 'Active' : 'Muted') : 'No track'; elements.video.play().catch(() => {}); });
       runtime.on('stream', () => { apply({type: 'media.state', state: 'active'}); elements.demo.classList.add('is-hidden'); });
       runtime.on('session.answer', message => { const mediaState = message.payload?.hostCapabilities?.media?.state || (message.payload?.sdp ? 'negotiating' : 'not-configured'); apply({type: 'media.state', state: mediaState}); elements.demo.classList.add('is-hidden'); });
       runtime.on('telemetry', sample => { apply({type: 'telemetry.health', rttMs: sample.rttMs, packetLossPct: sample.packetLossPct}); apply({type: 'quality.changed', profile: manager.quality.id}); });
@@ -65,6 +67,7 @@ function downloadBlob(blob, filename) { const link = document.createElement('a')
 async function takeScreenshot() { try { const blob = await captureVideoFrame(elements.video); downloadBlob(blob, `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.png`); elements.message.textContent = 'Screenshot saved locally.'; } catch (error) { elements.message.textContent = error.message; } }
 async function toggleRecording() { try { if (!recording) recording = createRecordingController({stream: elements.video.srcObject}); if (recording.state === 'recording') { const blob = await recording.stop(); downloadBlob(blob, `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.webm`); elements.message.textContent = 'Recording saved locally.'; elements.record.classList.remove('capture-active'); } else { recording.start(); elements.message.textContent = 'Recording locally. Press record again to stop.'; elements.record.classList.add('capture-active'); } } catch (error) { elements.message.textContent = error.message; } }
 
+document.querySelector('[data-action="audio"]').addEventListener('click', () => { audioEnabled = !audioEnabled; setMediaAudioEnabled(elements.video, audioEnabled); elements.audio.textContent = audioEnabled ? (describeMediaStream(elements.video.srcObject).hasAudio ? 'Active' : 'Waiting') : 'Muted'; const button = document.querySelector('[data-action="audio"]'); button.textContent = audioEnabled ? '🔊' : '🔇'; button.setAttribute('aria-label', audioEnabled ? 'Mute session audio' : 'Unmute session audio'); });
 document.querySelector('[data-action="fullscreen"]').addEventListener('click', () => immersive.toggle().catch(error => { elements.message.textContent = error.message; }));
 elements.screenshot = document.querySelector('[data-action="screenshot"]'); elements.record = document.querySelector('[data-action="record"]'); elements.screenshot.addEventListener('click', takeScreenshot); elements.record.addEventListener('click', toggleRecording); elements.reconnect = document.querySelector('[data-action="reconnect"]'); elements.reconnect.addEventListener('click', requestReconnect);
 document.querySelector('[data-action="overlay"]').addEventListener('click', () => apply({type: 'toggle.overlay'}));
@@ -75,5 +78,5 @@ window.addEventListener('spartan:telemetry', event => { const sample = event.det
 window.addEventListener('keydown', event => keyboardInput(event, true)); window.addEventListener('keyup', event => keyboardInput(event, false));
 window.addEventListener('gamepadconnected', () => apply({type: 'gamepad.connection', connected: true})); window.addEventListener('gamepaddisconnected', () => apply({type: 'gamepad.connection', connected: false}));
 setInterval(() => { const gamepads = navigator.getGamepads?.() || []; const connected = [...gamepads].some(Boolean); if (connected !== state.gamepadConnected) apply({type: 'gamepad.connection', connected}); const pad = [...gamepads].find(Boolean); if (!pad) return; const normalized = mapper.normalize(pad); const previous = previousGamepad.get(normalized.index); normalized.buttons.forEach((button, index) => { if (!previous || button.pressed !== previous.buttons[index]?.pressed || button.value !== previous.buttons[index]?.value) { const event = mapper.mapButton(index, button.pressed, button.value); if (event) emitInput({...event, source: 'gamepad', control: `button-${index}`}); } }); normalized.axes.forEach((value, index) => { if (!previous || Math.abs(value - (previous.axes[index] || 0)) > 0.08) { const event = mapper.mapAxis(index, value); if (event) emitInput({...event, source: 'gamepad', control: `axis-${index}`}); } }); previousGamepad.set(normalized.index, normalized); }, 100);
-const suppliedStream = window.__SPARTAN_MEDIA_STREAM__; if (suppliedStream && typeof MediaStream !== 'undefined' && suppliedStream instanceof MediaStream) { elements.video.srcObject = suppliedStream; elements.video.play().catch(() => {}); }
+const suppliedStream = window.__SPARTAN_MEDIA_STREAM__; if (suppliedStream && typeof MediaStream !== 'undefined' && suppliedStream instanceof MediaStream) { const mediaState = attachMediaStreamTarget({video: elements.video, stream: suppliedStream, audioEnabled}); elements.audio.textContent = mediaState.hasAudio ? 'Active' : 'No track'; elements.video.play().catch(() => {}); }
 start(); apply({type: 'session.state', status: 'negotiating'});
