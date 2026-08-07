@@ -10,7 +10,7 @@
 
 ## Milestone 1: browser shell
 
-- [ ] Gaming dashboard and library.
+- [x] Gaming dashboard and library shell with catalog search, filters, favorites, and launch handoffs.
 - [ ] Gaming profiles and workspaces.
 - [ ] Fullscreen gaming mode.
 - [ ] Controller-first navigation.
@@ -18,7 +18,7 @@
 - [ ] Keyboard Lock, Pointer Lock, and per-site permission UX.
 - [ ] Stream diagnostics page.
 - [ ] Windows, macOS, and Linux development builds.
-- [ ] Unified frontend catalog and launcher model.
+- [x] Unified frontend catalog and launcher model.
 - [ ] Provider profiles for GeForce NOW, Xbox Cloud Gaming, Amazon Luna, Boosteroid, Shadow, Twitch, YouTube Live, Discord, and Steam.
 - [ ] Emulator/core profiles for libretro, Dolphin, PCSX2, RPCS3, PPSSPP, DuckStation, melonDS, Azahar, MAME, Flycast, xemu, and ScummVM.
 

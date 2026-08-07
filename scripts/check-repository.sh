@@ -24,6 +24,9 @@ required_files=(
   package.json
   src/frontend/catalog.mjs
   src/frontend/catalog.test.mjs
+  src/frontend/dashboard/index.html
+  src/frontend/dashboard/dashboard.css
+  src/frontend/dashboard/dashboard.mjs
   src/frontend/settings/index.html
   src/frontend/settings/settings.css
   src/frontend/settings/settings.mjs
@@ -73,6 +76,7 @@ console.log(`valid emulator catalog: ${emulatorCatalogPath}`);
 NODE
 
 node protocol/v1/validate-session.mjs protocol/v1/examples/session-offer.json
+node --check src/frontend/dashboard/dashboard.mjs
 node --test src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs
 
 if command -v git >/dev/null 2>&1; then
