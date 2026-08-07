@@ -8,10 +8,12 @@ import { collectCapabilities } from '../diagnostics/capabilities.mjs';
 import { createProviderProfileStore } from '../providers/profiles.mjs';
 import { createLaunchIntent, saveLaunchIntent } from '../launch/intent.mjs';
 import { createLaunchHistoryStore } from '../launch/history.mjs';
+import { resolveDashboardSection } from './routes.mjs';
 
 const FAVORITES_KEY = 'spartan-gaming.favorites.v1';
 const launchHistory = createLaunchHistoryStore();
-const state = { catalog: [], adapters: null, compatibility: null, filter: 'all', search: '', favorites: new Set(loadFavorites()), recent: new Set(launchHistory.list().map(record => record.backendId)), providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, profile])) };
+const requestedFilter = new URLSearchParams(globalThis.location?.search || '').get('filter');
+const state = { catalog: [], adapters: null, compatibility: null, filter: ['all', 'cloud', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(loadFavorites()), recent: new Set(launchHistory.list().map(record => record.backendId)), providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, profile])) };
 const cards = document.querySelector('[data-cards]');
 const toast = document.querySelector('[data-toast]');
 const sessionStatus = document.querySelector('[data-session-status]');
@@ -73,6 +75,7 @@ async function loadCatalog() {
 }
 document.querySelector('[data-search]').addEventListener('input', event => { state.search = event.target.value; render(); });
 document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => { state.filter = button.dataset.filter; document.querySelectorAll('[data-filter]').forEach(item => item.classList.toggle('is-active', item === button)); render(); }));
+document.querySelectorAll('[data-filter]').forEach(button => button.classList.toggle('is-active', button.dataset.filter === state.filter));
 document.addEventListener('click', event => {
   const favoriteButton = event.target.closest('[data-favorite]');
   if (favoriteButton) { const id = favoriteButton.dataset.favorite; state.favorites.has(id) ? state.favorites.delete(id) : state.favorites.add(id); saveFavorites(); render(); showToast(state.favorites.has(id) ? 'Added to favorites' : 'Removed from favorites'); return; }
@@ -82,6 +85,10 @@ document.addEventListener('click', event => {
 document.querySelector('[data-provider-close]').addEventListener('click', closeProviderSurface);
 providerDialog.addEventListener('close', () => { document.querySelector('[data-provider-frame]').src = 'about:blank'; });
 document.querySelector('[data-action="resume"]').addEventListener('click', () => { const offer = beginSession({id: 'spartan-host', backendType: 'remote-play'}); if (offer) window.location.assign('../player/index.html?backend=spartan-host'); });
-document.querySelectorAll('[data-section]').forEach(button => button.addEventListener('click', () => showToast(`${button.textContent.trim()} view is coming online with the adapter registry.`)));
+document.querySelectorAll('[data-section]').forEach(button => button.addEventListener('click', () => {
+  const route = resolveDashboardSection(button.dataset.section); if (!route) return;
+  if (route.kind === 'navigate') { window.location.assign(route.href); return; }
+  state.filter = route.filter; document.querySelectorAll('[data-filter]').forEach(item => item.classList.toggle('is-active', item.dataset.filter === state.filter)); render();
+}));
 loadCatalog();
 controllerNavigator.start();
