@@ -20,6 +20,13 @@ The repository includes `host/agent.mjs` as a dependency-free Node.js reference 
 
 `host/media.mjs` provides the next boundary for those platform implementations. It generates shell-free FFmpeg capture plans for Linux X11/PipeWire, Windows desktop capture, and macOS AVFoundation, validates basic permission context, and generates codec/bitrate encoder plans for H.264, VP9, and AV1. These plans target a future WebRTC publisher and are deliberately not executed by the reference agent.
 
+`host/publisher.mjs` composes those plans into a transport-neutral publisher
+contract. It reports `unconfigured` or `plan-only` until a native capture
+adapter and WebRTC publisher are installed, and carries bounded codec,
+resolution, framerate, audio, and transport capabilities into host health and
+session answers. The reference agent therefore exposes truthful readiness
+without pretending that FFmpeg output is already playable media.
+
 ## Compatibility targets
 
 The adapter boundary can support Spartan Host first, then user-owned Steam Remote Play, Sunshine/Moonlight-compatible endpoints, Parsec, Xbox Remote Play, and PlayStation Remote Play where official protocols and platform rules permit. Compatibility is not permission to bypass authentication, DRM, anti-cheat, or undocumented service controls.
