@@ -3,7 +3,11 @@ export const DEFAULT_BINDINGS = Object.freeze({
   moveUp: 'axis-1-negative', moveDown: 'axis-1-positive', moveLeft: 'axis-0-negative', moveRight: 'axis-0-positive',
 });
 
+export const REMOTE_INPUT_KINDS = Object.freeze(['button', 'axis', 'key', 'pointer', 'touch', 'rumble']);
+export const REMOTE_INPUT_SOURCES = Object.freeze(['gamepad', 'keyboard', 'pointer', 'touch', 'host']);
+
 function clamp(value, minimum = -1, maximum = 1) { return Math.max(minimum, Math.min(maximum, value)); }
+function boundedInteger(value, minimum, maximum, fallback) { const number = Number(value); return Number.isInteger(number) ? Math.max(minimum, Math.min(maximum, number)) : fallback; }
 
 export function applyDeadzone(value, deadzone = 0.12) {
   const amount = Math.abs(value); if (amount <= deadzone) return 0;
@@ -36,6 +40,32 @@ export function createInputMapper({bindings = DEFAULT_BINDINGS, deadzone = 0.12}
 export function createInputEventEnvelope({sessionId, event, sequence = 0, clock = () => new Date().toISOString()} = {}) {
   if (!event || event.type !== 'input.event') throw new TypeError('event must be an input.event');
   if (typeof event.action !== 'string' || !event.action) throw new TypeError('input event action is required');
-  return createSessionEnvelope({sessionId, type: 'input.event', sequence, sentAt: clock(), payload: {action: event.action, pressed: Boolean(event.pressed), value: clamp(Number(event.value) || 0), source: event.source || 'gamepad', control: event.control || event.action}});
+  const normalized = normalizeRemoteInputEvent(event);
+  const payload = {...normalized};
+  if (!event.kind) delete payload.kind;
+  return createSessionEnvelope({sessionId, type: 'input.event', sequence, sentAt: clock(), payload});
+}
+
+export function normalizeRemoteInputEvent(event) {
+  if (!event || event.type !== 'input.event') throw new TypeError('event must be an input.event');
+  if (typeof event.action !== 'string' || !event.action || event.action.length > 64) throw new TypeError('input event action is required');
+  const source = REMOTE_INPUT_SOURCES.includes(event.source) ? event.source : 'gamepad';
+  const kind = REMOTE_INPUT_KINDS.includes(event.kind) ? event.kind : source === 'keyboard' ? 'key' : source === 'pointer' ? 'pointer' : source === 'touch' ? 'touch' : 'button';
+  const normalized = {
+    action: event.action,
+    pressed: Boolean(event.pressed),
+    value: clamp(Number(event.value) || 0),
+    source,
+    control: String(event.control || event.action).slice(0, 64),
+  };
+  if (event.kind || kind !== 'button') normalized.kind = kind;
+  if (['pointer', 'touch'].includes(kind)) {
+    normalized.x = clamp(Number(event.x) || 0, 0, 1);
+    normalized.y = clamp(Number(event.y) || 0, 0, 1);
+    normalized.deltaX = clamp(Number(event.deltaX) || 0, -4096, 4096);
+    normalized.deltaY = clamp(Number(event.deltaY) || 0, -4096, 4096);
+  }
+  if (kind === 'rumble') normalized.durationMs = boundedInteger(event.durationMs, 0, 5000, 0);
+  return Object.freeze(normalized);
 }
 import {createSessionEnvelope} from '../session/session.mjs';
