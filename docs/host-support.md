@@ -50,6 +50,13 @@ and stops all tracks on close. It is intended for authenticated host-role
 signaling sessions and does not replace the native host agent or claim OS-level
 game capture, process launch, or input injection.
 
+`src/frontend/host/browser-host-runtime.mjs` binds that publisher to an
+authenticated host-role signaling transport. It accepts a validated client
+offer after capture is active, negotiates bounded protocol capabilities,
+returns an SDP answer, forwards ICE candidates, and exposes input and quality
+callbacks to the host UI. It still requires an application to provision a
+short-lived host signaling ticket and obtain explicit display-capture consent.
+
 ## Compatibility targets
 
 The adapter boundary can support Spartan Host first, then user-owned Steam Remote Play, Sunshine/Moonlight-compatible endpoints, Parsec, Xbox Remote Play, and PlayStation Remote Play where official protocols and platform rules permit. Compatibility is not permission to bypass authentication, DRM, anti-cheat, or undocumented service controls.

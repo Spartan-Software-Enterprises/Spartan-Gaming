@@ -112,6 +112,8 @@ required_files=(
   src/frontend/host/host-page.mjs
   src/frontend/host/browser-publisher.mjs
   src/frontend/host/browser-publisher.test.mjs
+  src/frontend/host/browser-host-runtime.mjs
+  src/frontend/host/browser-host-runtime.test.mjs
   src/frontend/player/index.html
   src/frontend/player/player.css
   src/frontend/player/player.mjs
@@ -243,6 +245,7 @@ node --check src/frontend/adapters/adapters.mjs
 node --check src/frontend/host/host.mjs
 node --check src/frontend/host/host-page.mjs
 node --check src/frontend/host/browser-publisher.mjs
+node --check src/frontend/host/browser-host-runtime.mjs
 node --check host/agent.mjs
 node --check host/pairing.mjs
 node --check host/signaling.mjs
