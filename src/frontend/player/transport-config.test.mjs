@@ -12,7 +12,7 @@ test('player transport settings normalize saved labels without storing credentia
 
 test('player resolves WebTransport for HTTPS signaling and WebSocket for WSS', () => {
   assert.equal(resolveSignalingTransport({endpoint: 'https://relay.example.test/signal', webTransportAvailable: true}), 'webtransport');
-  assert.equal(resolveSignalingTransport({endpoint: 'wss://relay.example.test/signal', webTransportAvailable: true}), 'websocket');
+  assert.equal(resolveSignalingTransport({endpoint: 'wss://relay.example.test/signal', webTransportAvailable: true, webSocketAvailable: true}), 'websocket');
   assert.equal(resolveSignalingTransport({endpoint: 'https://relay.example.test/signal', policy: {preference: 'webtransport'}, webTransportAvailable: true}), 'webtransport');
 });
 
