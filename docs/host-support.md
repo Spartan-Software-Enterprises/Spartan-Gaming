@@ -64,6 +64,13 @@ shows a local preview and bounded activity log, and stops the publisher on
 navigation. It intentionally does not launch processes, record media, or
 inject native input.
 
+The session player has the matching authenticated client flow. Open
+`src/frontend/player/index.html`, enter the same signaling endpoint and
+session ID with a short-lived `client` ticket, and select **Connect securely**.
+The player joins the broker before sending its SDP offer; the ticket is never
+persisted. The legacy one-time pairing flow remains available for the local
+reference host, which does not use broker tickets.
+
 ## Compatibility targets
 
 The adapter boundary can support Spartan Host first, then user-owned Steam Remote Play, Sunshine/Moonlight-compatible endpoints, Parsec, Xbox Remote Play, and PlayStation Remote Play where official protocols and platform rules permit. Compatibility is not permission to bypass authentication, DRM, anti-cheat, or undocumented service controls.

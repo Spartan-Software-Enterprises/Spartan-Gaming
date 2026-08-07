@@ -32,6 +32,13 @@ test('session manager follows offer, answer, and close lifecycle', () => {
   assert.equal(manager.close(), 'closed'); assert.throws(() => manager.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true}})), /transition/);
 });
 
+test('session manager can abort an in-flight negotiation for retry', () => {
+  const manager = createSessionManager({idFactory: () => 'ses-retry'});
+  manager.start({backend: {id: 'host'}});
+  assert.equal(manager.close(), 'closed');
+  assert.equal(manager.start({backend: {id: 'host'}}).sessionId, 'ses-retry');
+});
+
 test('session manager records negotiated capabilities from a compatible answer', () => {
   const manager = createSessionManager({idFactory: () => 'ses-negotiated'});
   const offer = manager.start({backend: {id: 'host'}, capabilities: {transports: ['webrtc', 'websocket'], video: {codecs: ['h264'], maxWidth: 1920, maxHeight: 1080, maxFramerate: 60}, audio: {codecs: ['opus'], channels: 2}}});

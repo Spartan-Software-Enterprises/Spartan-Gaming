@@ -10,7 +10,7 @@ const DEFAULT_CAPABILITIES = Object.freeze({
 });
 
 const transitions = Object.freeze({
-  idle: ['preparing'], preparing: ['negotiating', 'error'], negotiating: ['connected', 'reconnecting', 'error'],
+  idle: ['preparing'], preparing: ['negotiating', 'error', 'closing'], negotiating: ['connected', 'reconnecting', 'error', 'closing'],
   connected: ['reconnecting', 'closing', 'error'], reconnecting: ['negotiating', 'connected', 'closing', 'error'],
   closing: ['closed'], closed: ['preparing'], error: ['preparing', 'closed'],
 });
@@ -102,7 +102,7 @@ export function createSessionManager({clock = () => new Date().toISOString(), id
       sequence += 1;
       return createSessionEnvelope({sessionId: session.id, type: 'session.reconnect', sequence, payload: {attempt: plan.attempt, delayMs: plan.delayMs}});
     },
-    close() { if (state === 'connected' || state === 'reconnecting') { transition('closing'); transition('closed'); } return state; },
+    close() { if (state === 'preparing' || state === 'negotiating' || state === 'connected' || state === 'reconnecting') { transition('closing'); transition('closed'); } return state; },
     reset() { if (state !== 'closed' && state !== 'error') throw new Error('Only closed or error sessions can reset'); session = null; state = 'idle'; sequence = 0; recovery.reset(); },
   };
 }

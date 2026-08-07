@@ -28,5 +28,10 @@ Codec hardware efficiency is detected separately in the diagnostics center throu
 
 The player remains transport-neutral: an adapter can attach a negotiated `MediaStream` to its video target and forward health/input events to the session manager. Signaling authentication, host authorization, and process ownership stay outside the browser transport wrapper. A host/signaling service may supply short-lived ICE credentials to `createWebRtcTransport({ice})`; credentials must remain session-scoped and must never be stored in host profiles, exports, diagnostics, or URLs.
 
+The session player provides the authenticated client entrypoint: its in-memory
+connection form accepts a signaling endpoint, matching session ID, and
+short-lived `client` ticket, then joins the broker before sending an SDP offer.
+Browser Host Studio uses the corresponding `host` ticket for the same session.
+
 When degraded telemetry changes the active quality profile, the runtime sends a validated `quality.request` envelope back through signaling. Host adapters may apply that request to their encoder; the reference host records it for diagnostics but cannot encode media. `input.event` envelopes are likewise delivered to the host control plane only after the session and pairing checks succeed.
 The player emits normalized controller and keyboard actions as protocol v1 `input.event` envelopes through the `spartan:input` browser event. Gamepad values include deadzone processing and signed analog ranges; adapters are responsible for forwarding these envelopes over the active data channel and applying the selected controller profile on the host side. The browser does not transmit raw device identity or full Gamepad objects.
