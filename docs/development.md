@@ -87,6 +87,8 @@ Frontend pages register `src/frontend/pwa/service-worker.mjs` when served over H
 
 Controller profiles are managed at `src/frontend/input/profiles.html`. The live controller tester is `src/frontend/input/inspector.html`; it reports normalized buttons, axes, haptics, battery metadata, and approved HID devices locally. Profiles are persisted locally, validate duplicate bindings before save, and share the same stable action vocabulary with the session player and future native input adapters.
 
+Session input permissions are enforced by `src/frontend/input/policy.mjs` as well as advertised during capability negotiation. The player does not poll or forward disabled gamepad input, and input diagnostics distinguish a disconnected controller from one disabled by the active settings profile.
+
 The dashboard starts `src/frontend/input/navigation.mjs` when available. The navigator moves focus spatially with a D-pad or analog stick, activates the focused control with the primary button, and uses the secondary button for browser back navigation. It does not intercept input when no gamepad is connected.
 
 Compatibility diagnostics are available at `src/frontend/diagnostics/index.html`. The probe runs locally, checks browser media/graphics/input/transport capabilities, and exports only a redacted report without credentials, cookies, endpoints, or platform identity details.
