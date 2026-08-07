@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {clearLaunchIntent, createLaunchIntent, readLaunchIntent, saveLaunchIntent} from './intent.mjs';
+
+const entry = {id: 'dolphin', backendType: 'emulator', launchMode: 'native', requirements: ['user-files'], capabilities: ['gamepad']};
+const plan = {backendId: 'dolphin', action: 'choose-runtime', mode: 'native', requirements: ['user-files'], capabilities: ['gamepad']};
+
+test('launch intents preserve backend-neutral routing metadata', () => {
+  const intent = createLaunchIntent({entry, plan, profileId: 'living-room'});
+  assert.deepEqual(intent, {version: 1, backendId: 'dolphin', backendType: 'emulator', mode: 'native', action: 'choose-runtime', url: null, profileId: 'living-room', returnTo: '../dashboard/index.html', requirements: ['user-files'], capabilities: ['gamepad'], createdAt: intent.createdAt});
+  assert.equal(Object.isFrozen(intent), true);
+});
+
+test('launch intents persist only validated session-scoped data', () => {
+  const values = new Map();
+  const storage = {setItem: (key, value) => values.set(key, value), getItem: key => values.get(key), removeItem: key => values.delete(key)};
+  const saved = saveLaunchIntent(storage, createLaunchIntent({entry, plan}));
+  assert.equal(readLaunchIntent(storage).backendId, saved.backendId);
+  assert.equal(readLaunchIntent(storage).returnTo, saved.returnTo);
+  clearLaunchIntent(storage);
+  assert.equal(readLaunchIntent(storage), null);
+});
+
+test('launch intents reject insecure URLs and malformed stored values', () => {
+  assert.throws(() => createLaunchIntent({entry: {...entry, backendType: 'provider'}, plan: {...plan, action: 'open-url', url: 'http://example.test'}}), /HTTPS/);
+  const storage = {getItem: () => '{bad json'};
+  assert.equal(readLaunchIntent(storage), null);
+});
