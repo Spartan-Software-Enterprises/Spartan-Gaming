@@ -79,6 +79,8 @@ Adaptive streaming policy is implemented in `src/frontend/session/quality.mjs`. 
 
 User-owned host connections use the secure boundary in `src/frontend/host/host.mjs`; see [host support](host-support.md) for endpoint, pairing, and transport rules.
 
+Browser signaling and media transport primitives live in `src/frontend/transport/transport.mjs`; see [transport](transport.md) for the WebSocket and WebRTC boundary.
+
 ## Cross-platform strategy
 
 The browser product layer should share UX, session, protocol, and diagnostics code. Windowing, media capture, hardware acceleration, packaging, signing, permissions, and input backends should be isolated behind platform adapters.

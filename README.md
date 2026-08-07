@@ -37,7 +37,7 @@ providers/             Machine-readable cloud gaming and streaming provider cata
 emulators/             Machine-readable emulator and core catalog
 scripts/               Reproducible development and release helpers
 src/                   Spartan browser product code (planned)
-src/frontend/          Unified catalog, dashboard, settings, and backend contracts
+src/frontend/          Catalog, dashboard, player, settings, diagnostics, input, and transport contracts
 server/                Optional self-hosted services (planned)
 host/                  Optional gaming host agent (planned)
 third_party/           Third-party notices and integration metadata
