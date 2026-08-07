@@ -1,3 +1,4 @@
+import '../pwa/register.mjs';
 import {collectCapabilities, redactDiagnostics} from './capabilities.mjs';
 
 let report = null; const capabilityContainer = document.querySelector('[data-capabilities]'); const recommendationContainer = document.querySelector('[data-recommendation-list]');

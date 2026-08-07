@@ -1,3 +1,4 @@
+import '../pwa/register.mjs';
 import {BUILTIN_CONTROLLER_PROFILES, createControllerProfile, createControllerProfileStore, updateControllerBinding} from './profiles.mjs';
 
 const store = createControllerProfileStore({storage: window.localStorage});

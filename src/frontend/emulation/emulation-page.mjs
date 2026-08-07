@@ -1,3 +1,4 @@
+import '../pwa/register.mjs';
 import {createEmulationLaunchPlan, createUserFileRecord, formatFileSize} from './emulation.mjs';
 
 const state = {cores: [], gameFiles: [], firmwareFiles: []};

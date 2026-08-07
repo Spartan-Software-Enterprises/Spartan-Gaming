@@ -1,3 +1,4 @@
+import '../pwa/register.mjs';
 import { createFrontendCatalog, validateCatalogManifest } from '../catalog.mjs';
 import { createSessionManager } from '../session/session.mjs';
 import { createCatalogAdapterRegistry } from '../adapters/adapters.mjs';

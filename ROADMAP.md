@@ -11,6 +11,7 @@
 ## Milestone 1: browser shell
 
 - [x] Gaming dashboard and library shell with catalog search, filters, favorites, and launch handoffs.
+- [x] Installable PWA shell with offline-safe frontend and public catalog caching.
 - [x] Session player shell with stream target, overlays, quality state, controller hooks, and diagnostics.
 - [x] Gaming profiles and workspaces with persistent isolated launch preferences.
 - [x] Fullscreen gaming mode.

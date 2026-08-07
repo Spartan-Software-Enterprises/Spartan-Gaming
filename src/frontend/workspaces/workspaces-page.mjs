@@ -1,3 +1,4 @@
+import '../pwa/register.mjs';
 import {createWorkspaceStore} from './workspaces.mjs';
 
 const store = createWorkspaceStore(); const grid = document.querySelector('[data-workspaces]'); const toast = document.querySelector('[data-toast]'); let timer;

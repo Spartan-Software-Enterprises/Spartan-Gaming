@@ -1,3 +1,4 @@
+import '../pwa/register.mjs';
 import {detectInputCapabilities, inspectGamepad, listApprovedHidDevices} from './inspector.mjs';
 
 const devicesElement = document.querySelector('[data-devices]');

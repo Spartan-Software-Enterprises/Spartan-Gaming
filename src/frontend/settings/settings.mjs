@@ -1,3 +1,4 @@
+import '../pwa/register.mjs';
 import {defaultSettings, settingsCategories} from './settings-data.mjs';
 
 const storageKey = 'spartan-gaming.settings.v1';

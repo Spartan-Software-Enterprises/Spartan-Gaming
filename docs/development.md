@@ -61,6 +61,8 @@ The player’s fullscreen control uses `src/frontend/player/immersive.mjs` to re
 
 Gaming workspaces are stored locally through `src/frontend/workspaces/workspaces.mjs`. The workspace manager isolates launch behavior, quality, controller profile, and overlay defaults; exports contain only workspace preferences and never provider credentials, cookies, ROMs, or save data. The management surface is `src/frontend/workspaces/index.html` and is linked from Settings → Profiles & sync.
 
+Frontend pages register `src/frontend/pwa/service-worker.mjs` when served over HTTP(S). The service worker pre-caches the shell and public provider/emulator catalogs, updates same-origin documents/scripts/styles, and explicitly excludes signaling, session, and API paths. It is an offline shell enhancement, not a cache for credentials or game streams.
+
 Controller profiles are managed at `src/frontend/input/profiles.html`. The live controller tester is `src/frontend/input/inspector.html`; it reports normalized buttons, axes, haptics, battery metadata, and approved HID devices locally. Profiles are persisted locally, validate duplicate bindings before save, and share the same stable action vocabulary with the session player and future native input adapters.
 
 The dashboard starts `src/frontend/input/navigation.mjs` when available. The navigator moves focus spatially with a D-pad or analog stick, activates the focused control with the primary button, and uses the secondary button for browser back navigation. It does not intercept input when no gamepad is connected.

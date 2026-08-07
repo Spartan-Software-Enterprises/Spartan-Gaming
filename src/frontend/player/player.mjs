@@ -1,3 +1,4 @@
+import '../pwa/register.mjs';
 import {createSessionEnvelope, createSessionManager} from '../session/session.mjs';
 import {createSessionRuntime} from '../session/runtime.mjs';
 import {createInputEventEnvelope, createInputMapper} from '../input/input.mjs';
