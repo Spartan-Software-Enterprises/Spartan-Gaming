@@ -14,3 +14,5 @@ The default development endpoints are:
 The agent accepts one correctly paired `session.offer`, returns a protocol-valid `session.answer`, and rejects replayed or expired pairing codes. It is intentionally dependency-free and runs anywhere Node.js 20 runs. This is a control-plane reference only: it does not launch games, capture or encode media, inject OS input, provide TLS, or operate STUN/TURN. Those capabilities belong in platform-specific host adapters and the production signaling/deployment layer.
 
 The health response also reports the selected platform adapter, detected `ffmpeg`/GStreamer tools, and conservative readiness flags. A detected encoder tool is evidence only that a future media adapter may be possible; it is not a claim that capture, WebRTC publication, or game launching is implemented.
+
+Capture and encode plans are available as pure, testable contracts in `host/media.mjs`. They use `shell: false`, require explicit platform permission context, and return a pipeline description for a future WebRTC publisher rather than starting a desktop capture unexpectedly.
