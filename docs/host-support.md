@@ -42,6 +42,14 @@ permissions, creates bounded FFmpeg PCM capture plans, and composes an Opus or
 AAC publisher plan. Audio remains `unconfigured` in the reference host until
 a native audio capture and WebRTC audio publisher are installed.
 
+`src/frontend/host/browser-publisher.mjs` provides a browser-host path for
+user-approved display capture. It bounds capture constraints, calls
+`getDisplayMedia` only when the host UI explicitly requests it, adds the
+returned tracks to a WebRTC peer, accepts a remote offer, emits ICE candidates,
+and stops all tracks on close. It is intended for authenticated host-role
+signaling sessions and does not replace the native host agent or claim OS-level
+game capture, process launch, or input injection.
+
 ## Compatibility targets
 
 The adapter boundary can support Spartan Host first, then user-owned Steam Remote Play, Sunshine/Moonlight-compatible endpoints, Parsec, Xbox Remote Play, and PlayStation Remote Play where official protocols and platform rules permit. Compatibility is not permission to bypass authentication, DRM, anti-cheat, or undocumented service controls.
