@@ -30,6 +30,13 @@ Run `npm test` for the dependency-free contract suite and `npm run check` for
 repository validation. Chromium itself is built with GN and `autoninja` from
 the external checkout.
 
+The shared contract suite runs in CI on Ubuntu/Linux, macOS, and Windows.
+Keep platform-specific behavior behind the documented adapter boundaries and
+run `npm run chromium:validate -- --platform <linux|mac|windows>` when
+checking a target template locally. The report-only validation does not
+require a Chromium checkout; `--strict` is reserved for a configured build
+machine.
+
 ## Commit guidance
 
 Use concise imperative subjects, for example:

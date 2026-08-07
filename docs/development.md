@@ -55,6 +55,13 @@ Run the repository checks before committing:
 ./scripts/check-repository.sh
 ```
 
+GitHub Actions also runs the dependency-free contract suite on Linux, macOS,
+and Windows. This catches platform-neutral frontend, protocol, catalog, and
+settings regressions without requiring a full Chromium checkout on every
+runner. The Chromium target templates are validated with
+`npm run chromium:validate -- --platform <linux|mac|windows>` in the same
+matrix; strict tool and checkout checks remain opt-in for local build hosts.
+
 The frontend catalog contract can be tested independently of Chromium:
 
 ```bash

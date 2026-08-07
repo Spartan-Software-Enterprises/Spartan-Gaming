@@ -11,7 +11,7 @@
     "signaling": "node signaling/agent.mjs",
     "check": "./scripts/check-repository.sh",
     "chromium:environment": "node scripts/chromium/check-environment.mjs",
-    "chromium:validate": "node scripts/chromium/check-environment.mjs --platform linux"
+    "chromium:validate": "node scripts/chromium/check-environment.mjs"
   },
   "engines": {
     "node": ">=20"

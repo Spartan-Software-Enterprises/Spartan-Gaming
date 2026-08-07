@@ -1,0 +1,32 @@
+name: Cross-platform contracts
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    name: ${{ matrix.platform }} contracts
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: mac
+          - os: windows-latest
+            platform: windows
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - name: Run dependency-free contract suite
+        run: npm test
+      - name: Validate Chromium target contract
+        run: npm run chromium:validate -- --platform ${{ matrix.platform }}

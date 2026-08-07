@@ -11,6 +11,8 @@ required_files=(
   SECURITY.md
   CODE_OF_CONDUCT.md
   LICENSE
+  .github/workflows/repository-checks.yml
+  .github/workflows/cross-platform-contracts.yml
   docs/architecture.md
   docs/platforms.md
   signaling/README.md
