@@ -56,6 +56,8 @@ required_files=(
   src/frontend/diagnostics/diagnostics.mjs
   src/frontend/transport/transport.mjs
   src/frontend/transport/transport.test.mjs
+  src/frontend/capture/capture.mjs
+  src/frontend/capture/capture.test.mjs
   src/frontend/settings/index.html
   src/frontend/settings/settings.css
   src/frontend/settings/settings.mjs
@@ -118,7 +120,8 @@ node --check src/frontend/input/profiles-page.mjs
 node --check src/frontend/diagnostics/capabilities.mjs
 node --check src/frontend/diagnostics/diagnostics.mjs
 node --check src/frontend/transport/transport.mjs
-node --test src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/input/input.test.mjs src/frontend/input/profiles.test.mjs src/frontend/adapters/adapters.test.mjs src/frontend/host/host.test.mjs src/frontend/player/player-state.test.mjs src/frontend/diagnostics/capabilities.test.mjs src/frontend/transport/transport.test.mjs
+node --check src/frontend/capture/capture.mjs
+node --test src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/input/input.test.mjs src/frontend/input/profiles.test.mjs src/frontend/adapters/adapters.test.mjs src/frontend/host/host.test.mjs src/frontend/player/player-state.test.mjs src/frontend/diagnostics/capabilities.test.mjs src/frontend/transport/transport.test.mjs src/frontend/capture/capture.test.mjs
 
 if command -v git >/dev/null 2>&1; then
   if git ls-files -z | grep -E -z '(^|/)(\.env|.*\.(pem|key))$' >/dev/null; then

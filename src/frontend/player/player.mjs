@@ -1,6 +1,7 @@
 import {createSessionEnvelope, createSessionManager} from '../session/session.mjs';
 import {createInputMapper} from '../input/input.mjs';
 import {createPlayerState, formatLatency, reducePlayerState} from './player-state.mjs';
+import {captureVideoFrame, createRecordingController} from '../capture/capture.mjs';
 
 const query = new URLSearchParams(location.search);
 const manager = createSessionManager({idFactory: () => `ses-${crypto.randomUUID()}`});
@@ -10,6 +11,7 @@ const elements = {
   latency: document.querySelector('[data-latency]'), latencyDetail: document.querySelector('[data-latency-detail]'), loss: document.querySelector('[data-loss]'), gamepad: document.querySelector('[data-gamepad]'), diagnostics: document.querySelector('[data-diagnostics]'), overlay: document.querySelectorAll('[data-overlay]'), stage: document.querySelector('[data-stage]'), video: document.querySelector('[data-video]'), demo: document.querySelector('[data-demo-answer]'), sessionName: document.querySelector('[data-session-name]'), transport: document.querySelector('[data-transport]'),
 };
 let state = createPlayerState({status: 'negotiating'});
+let recording = null;
 
 function apply(event) {
   state = reducePlayerState(state, event);
@@ -26,7 +28,12 @@ function start() {
 
 function acceptHostAnswer() { if (manager.state !== 'negotiating') return; manager.receive(createSessionEnvelope({sessionId: manager.session.id, type: 'session.answer', payload: {accepted: true}})); apply({type: 'session.state', status: 'connected'}); elements.demo.classList.add('is-hidden'); elements.message.textContent = 'Media transport is ready. Attach a host stream to begin playback.'; }
 
+function downloadBlob(blob, filename) { const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename; link.click(); URL.revokeObjectURL(link.href); }
+async function takeScreenshot() { try { const blob = await captureVideoFrame(elements.video); downloadBlob(blob, `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.png`); elements.message.textContent = 'Screenshot saved locally.'; } catch (error) { elements.message.textContent = error.message; } }
+async function toggleRecording() { try { if (!recording) recording = createRecordingController({stream: elements.video.srcObject}); if (recording.state === 'recording') { const blob = await recording.stop(); downloadBlob(blob, `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.webm`); elements.message.textContent = 'Recording saved locally.'; elements.record.classList.remove('capture-active'); } else { recording.start(); elements.message.textContent = 'Recording locally. Press record again to stop.'; elements.record.classList.add('capture-active'); } } catch (error) { elements.message.textContent = error.message; } }
+
 document.querySelector('[data-action="fullscreen"]').addEventListener('click', () => elements.stage.requestFullscreen?.());
+elements.screenshot = document.querySelector('[data-action="screenshot"]'); elements.record = document.querySelector('[data-action="record"]'); elements.screenshot.addEventListener('click', takeScreenshot); elements.record.addEventListener('click', toggleRecording);
 document.querySelector('[data-action="overlay"]').addEventListener('click', () => apply({type: 'toggle.overlay'}));
 document.querySelector('[data-action="diagnostics"]').addEventListener('click', () => apply({type: 'toggle.diagnostics'}));
 document.querySelector('[data-action="end"]').addEventListener('click', () => { if (manager.state === 'connected' || manager.state === 'reconnecting') manager.close(); apply({type: 'session.state', status: 'ended'}); });
@@ -34,5 +41,5 @@ elements.demo.addEventListener('click', acceptHostAnswer);
 window.addEventListener('spartan:telemetry', event => { const sample = event.detail || {}; try { manager.receive(createSessionEnvelope({sessionId: manager.session.id, type: 'telemetry.health', payload: sample})); apply({type: 'telemetry.health', rttMs: sample.rttMs, packetLossPct: sample.packetLossPct}); apply({type: 'quality.changed', profile: manager.quality.id}); } catch { apply({type: 'error', message: 'Invalid session telemetry received'}); } });
 window.addEventListener('gamepadconnected', () => apply({type: 'gamepad.connection', connected: true})); window.addEventListener('gamepaddisconnected', () => apply({type: 'gamepad.connection', connected: false}));
 setInterval(() => { const gamepads = navigator.getGamepads?.() || []; const connected = [...gamepads].some(Boolean); if (connected !== state.gamepadConnected) apply({type: 'gamepad.connection', connected}); if (connected) { const pad = [...gamepads].find(Boolean); mapper.normalize(pad); } }, 500);
-if (window.__SPARTAN_MEDIA_STREAM__ instanceof MediaStream) { elements.video.srcObject = window.__SPARTAN_MEDIA_STREAM__; elements.video.play().catch(() => {}); }
+const suppliedStream = window.__SPARTAN_MEDIA_STREAM__; if (suppliedStream && typeof MediaStream !== 'undefined' && suppliedStream instanceof MediaStream) { elements.video.srcObject = suppliedStream; elements.video.play().catch(() => {}); }
 start(); apply({type: 'session.state', status: 'negotiating'});

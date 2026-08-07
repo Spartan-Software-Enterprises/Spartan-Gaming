@@ -30,7 +30,7 @@
 - [ ] Reconnection and session recovery.
 - [ ] Hardware decode detection.
 - [ ] Input, decode, render, and network telemetry.
-- [ ] Screenshots and local recording.
+- [x] Screenshots and local recording.
 - [ ] LAN self-hosted reference stream.
 - [ ] Provider and emulator capability detection harness.
 - [x] Unified session lifecycle and error model.
