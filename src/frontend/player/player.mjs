@@ -4,6 +4,7 @@ import {readSessionPreferences} from '../session/preferences.mjs';
 import {createSessionRuntime} from '../session/runtime.mjs';
 import {createInputEventEnvelope, createInputMapper} from '../input/input.mjs';
 import {createInputPermissionPolicy} from '../input/policy.mjs';
+import {createHapticsController} from '../input/haptics.mjs';
 import {createWebRtcTransport, createWebSocketSignalTransport, createWebTransportSignalTransport} from '../transport/transport.mjs';
 import {readTransportPolicy, resolveSignalingTransport} from './transport-config.mjs';
 import {createPlayerState, formatLatency, reducePlayerState} from './player-state.mjs';
@@ -17,6 +18,7 @@ const manager = createSessionManager({idFactory: () => `ses-${crypto.randomUUID(
 const transportPolicy = readTransportPolicy();
 const sessionPreferences = readSessionPreferences();
 const inputPolicy = createInputPermissionPolicy(sessionPreferences.capabilities);
+const haptics = createHapticsController({enabled: inputPolicy.allows('rumble')});
 const mapper = createInputMapper();
 const immersive = createImmersiveController({target: document.querySelector('[data-stage]')});
 let runtime = null;
@@ -63,6 +65,7 @@ async function start() {
       runtime.on('session.answer', message => { const mediaState = message.payload?.hostCapabilities?.media?.state || (message.payload?.sdp ? 'negotiating' : 'not-configured'); apply({type: 'media.state', state: mediaState}); elements.demo.classList.add('is-hidden'); });
       runtime.on('telemetry', sample => { apply({type: 'telemetry.health', rttMs: sample.rttMs, packetLossPct: sample.packetLossPct}); apply({type: 'quality.changed', profile: manager.quality.id}); });
       runtime.on('error', error => apply({type: 'error', message: error.message || 'Transport error'}));
+      runtime.on('input.event', message => { const event = message.payload || {}; if (event.source === 'host' && event.kind === 'rumble' && inputPolicy.allows('rumble')) haptics.play({gamepadIndex: event.gamepadIndex, durationMs: event.durationMs, strongMagnitude: event.strongMagnitude ?? event.value, weakMagnitude: event.weakMagnitude ?? event.value}); });
       const offer = await runtime.start({backend: {id: backendId, backendType: 'remote-play', hostId: pendingHostPair?.hostId, pairingCode: pendingHostPair?.pairingCode}, capabilities: sessionPreferences.capabilities, preferences: sessionPreferences.preferences});
       elements.transport.textContent = `${selectedSignaling === 'webtransport' ? 'WebTransport' : 'WebSocket'} signaling${media ? ' · WebRTC media' : ''}`;
       window.dispatchEvent(new CustomEvent('spartan:session-offer', {detail: offer}));
