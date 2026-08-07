@@ -51,3 +51,13 @@ test('session runtime emits a transport error for an explicit host refusal', asy
   assert.equal(runtime.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: false, reason: 'host-busy'}})), false);
   assert.match(errors[0].message, /rejected by host/); assert.equal(runtime.state, 'negotiating');
 });
+
+test('session runtime reports asynchronous media answer failures without unhandled rejection', async () => {
+  const signaling = fakeTransport(); const listeners = new Map(); const errors = [];
+  const media = {on(type, handler) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(handler); return () => listeners.get(type)?.delete(handler); }, async createOffer() { return {type: 'offer', sdp: 'browser-offer'}; }, async acceptAnswer() { throw new Error('remote SDP could not be applied'); }, close() {}};
+  const runtime = createSessionRuntime({signaling, media}); runtime.on('error', error => errors.push(error));
+  const offer = await runtime.start({backend: {id: 'spartan-host'}});
+  runtime.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true, sdp: {type: 'answer', sdp: 'bad-answer'}}}));
+  await new Promise(resolve => setImmediate(resolve));
+  assert.match(errors[0].message, /remote SDP could not be applied/); assert.equal(runtime.state, 'connected');
+});
