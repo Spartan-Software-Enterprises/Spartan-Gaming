@@ -91,6 +91,8 @@ Session input permissions are enforced by `src/frontend/input/policy.mjs` as wel
 
 Host-issued rumble events use `src/frontend/input/haptics.mjs` to request bounded `dual-rumble` effects on the selected browser gamepad. Unsupported actuators, denied settings, and rejected browser promises fail closed without affecting the session.
 
+The player forwards normalized mouse and touch pointer events through `src/frontend/input/pointer.mjs`. Coordinates are relative to the stream viewport, movement deltas are bounded, pointer capture is used for drag/look continuity, and `touch-action` is disabled on the session stage so touch controls do not scroll the page.
+
 The dashboard starts `src/frontend/input/navigation.mjs` when available. The navigator moves focus spatially with a D-pad or analog stick, activates the focused control with the primary button, and uses the secondary button for browser back navigation. It does not intercept input when no gamepad is connected.
 
 Compatibility diagnostics are available at `src/frontend/diagnostics/index.html`. The probe runs locally, checks browser media/graphics/input/transport capabilities, and exports only a redacted report without credentials, cookies, endpoints, or platform identity details.
