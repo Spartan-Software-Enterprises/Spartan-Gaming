@@ -68,3 +68,8 @@ one to Spartan's core dependency set. `node-datachannel` is the native adapter
 slot and `werift` is the TypeScript adapter slot. A production host selects one
 according to its platform packaging, then supplies its RTP packetization and
 peer-connection sink to the encoded publisher boundary.
+
+`host/werift-adapter.mjs` is the first concrete optional media adapter. It
+creates a Werift video track, attaches it to a peer connection, and exposes the
+track as an RTP transport for `createRtpMediaPublisher`; installing `werift` is
+still an explicit host deployment choice.

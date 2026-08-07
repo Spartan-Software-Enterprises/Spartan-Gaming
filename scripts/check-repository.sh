@@ -47,6 +47,8 @@ required_files=(
   host/publisher.integration.test.mjs
   host/webrtc.mjs
   host/webrtc.test.mjs
+  host/werift-adapter.mjs
+  host/werift-adapter.test.mjs
   signaling/agent.integration.test.mjs
   host/README.md
   host/pairing.mjs
@@ -289,6 +291,8 @@ node --check host/media.mjs
 node --check host/publisher.mjs
 node --check host/webrtc.mjs
 node --check host/webrtc.test.mjs
+node --check host/werift-adapter.mjs
+node --check host/werift-adapter.test.mjs
 node --check host/input.mjs
 node --check host/audio.mjs
 node --check src/frontend/player/player.mjs
