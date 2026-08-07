@@ -32,3 +32,10 @@ export function createInputMapper({bindings = DEFAULT_BINDINGS, deadzone = 0.12}
     mapAxis(index, value) { const normalized = applyDeadzone(clamp(value), deadzone); const direction = normalized < 0 ? 'negative' : 'positive'; const action = this.actionFor(`axis-${index}-${direction}`); return action && normalized !== 0 ? {type: 'input.event', action, pressed: true, value: normalized} : null; },
   });
 }
+
+export function createInputEventEnvelope({sessionId, event, sequence = 0, clock = () => new Date().toISOString()} = {}) {
+  if (!event || event.type !== 'input.event') throw new TypeError('event must be an input.event');
+  if (typeof event.action !== 'string' || !event.action) throw new TypeError('input event action is required');
+  return createSessionEnvelope({sessionId, type: 'input.event', sequence, sentAt: clock(), payload: {action: event.action, pressed: Boolean(event.pressed), value: clamp(Number(event.value) || 0), source: event.source || 'gamepad', control: event.control || event.action}});
+}
+import {createSessionEnvelope} from '../session/session.mjs';

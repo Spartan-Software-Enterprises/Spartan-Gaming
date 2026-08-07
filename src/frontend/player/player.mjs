@@ -1,5 +1,5 @@
 import {createSessionEnvelope, createSessionManager} from '../session/session.mjs';
-import {createInputMapper} from '../input/input.mjs';
+import {createInputEventEnvelope, createInputMapper} from '../input/input.mjs';
 import {createPlayerState, formatLatency, reducePlayerState} from './player-state.mjs';
 import {captureVideoFrame, createRecordingController} from '../capture/capture.mjs';
 
@@ -12,6 +12,8 @@ const elements = {
 };
 let state = createPlayerState({status: 'negotiating'});
 let recording = null;
+let inputSequence = 0;
+const previousGamepad = new Map();
 
 function apply(event) {
   state = reducePlayerState(state, event);
@@ -28,6 +30,8 @@ function start() {
 
 function acceptHostAnswer() { if (manager.state !== 'negotiating' && manager.state !== 'reconnecting') return; manager.receive(createSessionEnvelope({sessionId: manager.session.id, type: 'session.answer', payload: {accepted: true}})); apply({type: 'session.state', status: 'connected'}); elements.demo.classList.add('is-hidden'); elements.message.textContent = 'Media transport is ready. Attach a host stream to begin playback.'; }
 function requestReconnect() { try { const envelope = manager.requestReconnect(); apply({type: 'session.state', status: 'reconnecting'}); window.dispatchEvent(new CustomEvent('spartan:session-reconnect', {detail: envelope})); elements.message.textContent = `Reconnecting (attempt ${envelope.payload.attempt})…`; if (query.get('demo') === '1') setTimeout(acceptHostAnswer, Math.min(envelope.payload.delayMs, 700)); } catch (error) { apply({type: 'error', message: error.message}); } }
+function emitInput(event) { try { const envelope = createInputEventEnvelope({sessionId: manager.session?.id, event, sequence: ++inputSequence}); window.dispatchEvent(new CustomEvent('spartan:input', {detail: envelope})); } catch { /* Input is best-effort while a session is ending. */ } }
+function keyboardInput(event, pressed) { if (event.repeat && pressed) return; emitInput({type: 'input.event', action: `key:${event.code}`, pressed, value: pressed ? 1 : 0, source: 'keyboard', control: event.code}); }
 
 function downloadBlob(blob, filename) { const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename; link.click(); URL.revokeObjectURL(link.href); }
 async function takeScreenshot() { try { const blob = await captureVideoFrame(elements.video); downloadBlob(blob, `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.png`); elements.message.textContent = 'Screenshot saved locally.'; } catch (error) { elements.message.textContent = error.message; } }
@@ -40,7 +44,8 @@ document.querySelector('[data-action="diagnostics"]').addEventListener('click', 
 document.querySelector('[data-action="end"]').addEventListener('click', () => { if (manager.state === 'connected' || manager.state === 'reconnecting') manager.close(); apply({type: 'session.state', status: 'ended'}); });
 elements.demo.addEventListener('click', acceptHostAnswer);
 window.addEventListener('spartan:telemetry', event => { const sample = event.detail || {}; try { manager.receive(createSessionEnvelope({sessionId: manager.session.id, type: 'telemetry.health', payload: sample})); apply({type: 'telemetry.health', rttMs: sample.rttMs, packetLossPct: sample.packetLossPct}); apply({type: 'quality.changed', profile: manager.quality.id}); } catch { apply({type: 'error', message: 'Invalid session telemetry received'}); } });
+window.addEventListener('keydown', event => keyboardInput(event, true)); window.addEventListener('keyup', event => keyboardInput(event, false));
 window.addEventListener('gamepadconnected', () => apply({type: 'gamepad.connection', connected: true})); window.addEventListener('gamepaddisconnected', () => apply({type: 'gamepad.connection', connected: false}));
-setInterval(() => { const gamepads = navigator.getGamepads?.() || []; const connected = [...gamepads].some(Boolean); if (connected !== state.gamepadConnected) apply({type: 'gamepad.connection', connected}); if (connected) { const pad = [...gamepads].find(Boolean); mapper.normalize(pad); } }, 500);
+setInterval(() => { const gamepads = navigator.getGamepads?.() || []; const connected = [...gamepads].some(Boolean); if (connected !== state.gamepadConnected) apply({type: 'gamepad.connection', connected}); const pad = [...gamepads].find(Boolean); if (!pad) return; const normalized = mapper.normalize(pad); const previous = previousGamepad.get(normalized.index); normalized.buttons.forEach((button, index) => { if (!previous || button.pressed !== previous.buttons[index]?.pressed || button.value !== previous.buttons[index]?.value) { const event = mapper.mapButton(index, button.pressed, button.value); if (event) emitInput({...event, source: 'gamepad', control: `button-${index}`}); } }); normalized.axes.forEach((value, index) => { if (!previous || Math.abs(value - (previous.axes[index] || 0)) > 0.08) { const event = mapper.mapAxis(index, value); if (event) emitInput({...event, source: 'gamepad', control: `axis-${index}`}); } }); previousGamepad.set(normalized.index, normalized); }, 100);
 const suppliedStream = window.__SPARTAN_MEDIA_STREAM__; if (suppliedStream && typeof MediaStream !== 'undefined' && suppliedStream instanceof MediaStream) { elements.video.srcObject = suppliedStream; elements.video.play().catch(() => {}); }
 start(); apply({type: 'session.state', status: 'negotiating'});
