@@ -61,6 +61,7 @@
 - [x] Shell-free native input executor boundary with permissions and rate limiting (OS adapter implementations pending).
 - [ ] Native OS input injection, audio return, and end-to-end haptics.
 - [x] Cross-platform audio capture and publisher readiness contract (native audio publisher pending).
+- [x] Shell-free audio publisher and RTP handoff boundary with permission gating (native capture/codec adapters pending).
 - [x] Browser-to-host control-plane quality and input envelopes (OS adapters pending).
 - [x] Docker deployment and opt-in bearer-authenticated administration API.
 

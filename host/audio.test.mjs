@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createAudioCapturePlan, createAudioPublisherPlan, listAudioBackends, normalizeAudioCapabilities, validateAudioPermission} from './audio.mjs';
+import {createAudioCapturePlan, createAudioPublisher, createAudioPublisherPlan, createRtpAudioPublisher, listAudioBackends, normalizeAudioCapabilities, validateAudioPermission} from './audio.mjs';
 
 test('audio backend matrix covers Windows, macOS, and Linux', () => {
   assert.deepEqual(listAudioBackends('win32').map(item => item.backend), ['wasapi']);
@@ -24,4 +24,22 @@ test('audio publisher plans bound codec bitrate and capabilities', () => {
   const capabilities = normalizeAudioCapabilities({state: 'ready', codecs: ['invalid', 'opus'], channels: 99});
   assert.deepEqual(capabilities.codecs, ['opus']);
   assert.equal(capabilities.channels, 8);
+});
+
+test('audio publisher forwards bounded encoded chunks and tears down cleanly', async () => {
+  const output = {listeners: new Set(), on(type, handler) { if (type === 'data') this.listeners.add(handler); }, off(type, handler) { if (type === 'data') this.listeners.delete(handler); }, emit(value) { for (const handler of this.listeners) handler(value); }};
+  let started = 0; let stopped = 0; const chunks = []; const pipeline = {audioOutput: output, async start() { started += 1; }, async stop() { stopped += 1; }};
+  const publisher = createAudioPublisher({pipeline, permissionGranted: true, sink: {write: chunk => chunks.push(chunk)}}); await publisher.start(); output.emit(Buffer.from('audio')); await publisher.stop();
+  assert.equal(started, 1); assert.equal(stopped, 1); assert.deepEqual(chunks, [Buffer.from('audio')]); assert.equal(publisher.bytesWritten, 5); assert.equal(publisher.state, 'stopped');
+});
+
+test('RTP audio publisher delegates packetization and transport delivery', async () => {
+  const output = {listeners: new Set(), on(type, handler) { if (type === 'data') this.listeners.add(handler); }, off(type, handler) { if (type === 'data') this.listeners.delete(handler); }, emit(value) { for (const handler of this.listeners) handler(value); }};
+  const pipeline = {audioOutput: output, async start() {}, async stop() {}}; const transport = {packets: [], send(packet) { this.packets.push(packet); }}; const packetizer = {push(chunk, metadata) { return [{chunk, timestamp: metadata.timestamp}]; }};
+  const result = createRtpAudioPublisher({pipeline, packetizer, transport, permissionGranted: true}); await result.publisher.start(); output.emit(Buffer.from('voice')); await result.publisher.stop();
+  assert.equal(result.packetsSent, 1); assert.deepEqual(transport.packets[0].chunk, Buffer.from('voice')); assert.equal(transport.packets[0].timestamp, 0);
+});
+
+test('audio publisher requires explicit capture permission', () => {
+  assert.throws(() => createAudioPublisher({pipeline: {start() {}, stop() {}}, sink: {write() {}}}), /permission/);
 });

@@ -48,6 +48,13 @@ permissions, creates bounded FFmpeg PCM capture plans, and composes an Opus or
 AAC publisher plan. Audio remains `unconfigured` in the reference host until
 a native audio capture and WebRTC audio publisher are installed.
 
+The same module now provides `createAudioPublisher` and
+`createRtpAudioPublisher`. These accept an injected encoded audio pipeline,
+require an explicit permission grant, bound chunk sizes, stop the pipeline on
+sink failure, and delegate RTP framing/delivery to an injected adapter. They do
+not request permissions, launch capture processes, or claim that raw PCM is
+already an Opus/AAC stream.
+
 `src/frontend/host/browser-publisher.mjs` provides a browser-host path for
 user-approved display capture. It bounds capture constraints, calls
 `getDisplayMedia` only when the host UI explicitly requests it, adds the

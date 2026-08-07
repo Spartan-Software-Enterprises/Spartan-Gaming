@@ -43,3 +43,48 @@ export function createAudioPublisherPlan({capturePlan, codec = 'opus', bitrateKb
 export function normalizeAudioCapabilities(audio = {}) {
   return Object.freeze({version: 1, state: ['unconfigured', 'plan-only', 'ready', 'active', 'failed'].includes(audio.state) ? audio.state : 'unconfigured', codecs: Object.freeze(Array.isArray(audio.codecs) && audio.codecs.length ? [...new Set(audio.codecs.filter(codec => CODECS.has(codec)))] : ['opus']), channels: bounded(audio.channels, 2, 1, 8), sampleRate: bounded(audio.sampleRate, 48000, 8000, 192000), requires: Object.freeze(Array.isArray(audio.requires) && audio.requires.length ? [...new Set(audio.requires.map(String))] : ['native-audio-capture', 'webrtc-audio-publisher'])});
 }
+
+const DEFAULT_MAX_AUDIO_CHUNK_BYTES = 1024 * 1024;
+
+/**
+ * Forward encoded audio from an injected capture/encode pipeline to an
+ * adapter-owned sink. Permission must be granted by the caller; this module
+ * never requests microphone access or launches a process.
+ */
+export function createAudioPublisher({pipeline, sink, codec = 'opus', permissionGranted = false, maxChunkBytes = DEFAULT_MAX_AUDIO_CHUNK_BYTES} = {}) {
+  if (!pipeline || typeof pipeline.start !== 'function' || typeof pipeline.stop !== 'function') throw new TypeError('an audio pipeline is required');
+  if (!sink || typeof sink.write !== 'function') throw new TypeError('audio publisher sink must implement write(chunk)');
+  if (!CODECS.has(codec)) throw new TypeError(`unsupported audio codec: ${codec}`);
+  if (permissionGranted !== true) throw new Error('audio capture permission is not granted');
+  const limit = Math.max(1024, Math.min(DEFAULT_MAX_AUDIO_CHUNK_BYTES, Number(maxChunkBytes) || DEFAULT_MAX_AUDIO_CHUNK_BYTES));
+  let state = 'unconfigured'; let bytes = 0; let handler = null;
+  const fail = error => { state = 'failed'; sink.error?.(error); void pipeline.stop().catch(() => {}); };
+  const publisher = {
+    get state() { return state; },
+    get bytesWritten() { return bytes; },
+    get capabilities() { return normalizeAudioCapabilities({state: state === 'active' ? 'active' : state === 'failed' ? 'failed' : 'ready', codecs: [codec]}); },
+    async start() {
+      if (state !== 'unconfigured' && state !== 'ready') throw new Error(`audio publisher cannot start from ${state}`);
+      state = 'ready'; await pipeline.start(); const output = pipeline.audioOutput; if (!output?.on) { state = 'failed'; await pipeline.stop(); throw new Error('audio pipeline did not expose an encoded audio stream'); }
+      sink.open?.({codec});
+      handler = chunk => { try { const value = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk); if (value.length > limit) throw new Error('encoded audio chunk exceeds publisher limit'); sink.write(Buffer.from(value)); bytes += value.length; } catch (error) { fail(error); } };
+      output.on('data', handler); state = 'active'; return this;
+    },
+    async stop() { if (state === 'unconfigured' || state === 'stopped') return this; if (handler && pipeline.audioOutput?.off) pipeline.audioOutput.off('data', handler); handler = null; await pipeline.stop(); sink.close?.(); state = 'stopped'; return this; },
+  };
+  return Object.freeze(publisher);
+}
+
+/** Bind encoded audio chunks to an injected RTP/WebRTC audio implementation. */
+export function createRtpAudioPublisher({pipeline, packetizer, transport, codec = 'opus', permissionGranted = false, maxChunkBytes} = {}) {
+  if (!packetizer || typeof packetizer.push !== 'function') throw new TypeError('audio packetizer must implement push(chunk, metadata)');
+  if (!transport || typeof transport.send !== 'function') throw new TypeError('audio transport must implement send(packet)');
+  let packetsSent = 0; let timestamp = 0;
+  const publisher = createAudioPublisher({pipeline, codec, permissionGranted, maxChunkBytes, sink: {
+    open: metadata => transport.open?.(metadata),
+    write: chunk => { const packets = packetizer.push(chunk, {codec, timestamp}); timestamp += 1; if (!packets || typeof packets[Symbol.iterator] !== 'function') throw new TypeError('audio packetizer.push must return an iterable of RTP packets'); for (const packet of packets) { transport.send(packet); packetsSent += 1; } },
+    close: () => transport.close?.(),
+    error: error => transport.error?.(error),
+  }});
+  return Object.freeze({publisher, get packetsSent() { return packetsSent; }});
+}
