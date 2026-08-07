@@ -4,8 +4,10 @@ import {normalizeAudioCapabilities} from './audio.mjs';
 
 const MEDIA_STATES = new Set(['not-configured', 'ready', 'negotiating', 'active']);
 const PROCESS_MODES = new Set(['none', 'user-selected', 'managed']);
+const WEBRTC_ADAPTER_STATES = new Set(['available', 'unavailable']);
 
 function list(value, fallback) { return Array.isArray(value) && value.length ? [...new Set(value.map(String))] : [...fallback]; }
+function normalizeWebRtcAdapters(value) { return Object.freeze((Array.isArray(value) ? value : []).filter(adapter => adapter && typeof adapter.id === 'string' && WEBRTC_ADAPTER_STATES.has(adapter.state)).map(adapter => Object.freeze({id: adapter.id, state: adapter.state}))); }
 
 export function normalizeHostCapabilities(capabilities = {}) {
   const media = capabilities.media || {};
@@ -17,6 +19,7 @@ export function normalizeHostCapabilities(capabilities = {}) {
     media: Object.freeze({state, capture: Boolean(media.capture), encode: Boolean(media.encode), audio: Boolean(media.audio), transports: list(media.transports, ['webrtc'])}),
     process: Object.freeze({mode: processMode, launch: Boolean(process.launch), emulator: Boolean(process.emulator)}),
     publisher: normalizePublisherCapabilities(capabilities.publisher),
+    webrtc: Object.freeze({adapters: normalizeWebRtcAdapters(capabilities.webrtc?.adapters), ready: normalizeWebRtcAdapters(capabilities.webrtc?.adapters).some(adapter => adapter.state === 'available')}),
     audioPublisher: normalizeAudioCapabilities(capabilities.audioPublisher),
     inputAdapter: normalizeInputAdapterCapabilities(capabilities.inputAdapter),
     input: Object.freeze({gamepad: capabilities.input?.gamepad !== false, keyboard: capabilities.input?.keyboard !== false, pointer: capabilities.input?.pointer !== false, rumble: Boolean(capabilities.input?.rumble), hid: Boolean(capabilities.input?.hid)}),

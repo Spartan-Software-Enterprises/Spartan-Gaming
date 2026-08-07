@@ -47,6 +47,7 @@
 - [x] Native capture-to-encode stream pipeline with publisher handoff boundary.
 - [x] Encoded media publisher sink contract with bounded chunks and lifecycle state.
 - [x] Optional WebRTC adapter discovery for native and TypeScript RTP implementations.
+- [x] Host capability serialization for safe WebRTC adapter readiness diagnostics.
 - [x] Platform-aware capture and encoder plan contracts (native execution and WebRTC publisher pending).
 - [x] Transport-neutral media publisher readiness contract (native publisher implementation pending).
 - [x] Authenticated in-memory signaling routing contract (WebSocket service adapter and deployment pending).

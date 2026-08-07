@@ -25,7 +25,7 @@ const pairingCode = args.get('pairing-code') || createPairingCode();
 const pairing = createPairingAuthority({code: pairingCode});
 const capabilities = {transports: ['websocket'], video: {codecs: ['h264', 'vp9'], maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false}, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: true, keyboard: true, pointer: true, rumble: true}};
 const environment = detectHostEnvironment();
-const hostCapabilities = normalizeHostCapabilities({media: {state: 'not-configured', capture: false, encode: false, audio: false, transports: ['webrtc']}, process: {mode: 'none'}, publisher: environment.publisher, audioPublisher: environment.audioPublisher, inputAdapter: environment.inputAdapter, input: capabilities.input});
+const hostCapabilities = normalizeHostCapabilities({media: {state: 'not-configured', capture: false, encode: false, audio: false, transports: ['webrtc']}, process: {mode: 'none'}, publisher: environment.publisher, audioPublisher: environment.audioPublisher, inputAdapter: environment.inputAdapter, webrtc: environment.webrtc, input: capabilities.input});
 const sessions = new Set(); let inputEvents = 0; let lastQuality = null; let lastInputPlan = null;
 
 function json(response, status, body) { response.writeHead(status, {'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store'}); response.end(JSON.stringify(body)); }
