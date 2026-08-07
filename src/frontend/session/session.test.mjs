@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createAdapterRegistry, createSessionEnvelope, createSessionManager, negotiateCapabilities} from './session.mjs';
+import {createAdapterRegistry, createSessionEnvelope, createSessionManager, negotiateCapabilities, normalizeCapabilities} from './session.mjs';
 
 test('capability negotiation selects compatible transport and codecs', () => {
   const result = negotiateCapabilities({transports: ['websocket', 'webrtc'], video: {codecs: ['h264'], maxWidth: 1920, maxHeight: 1080, maxFramerate: 60}, audio: {codecs: ['opus'], channels: 2}}, {transports: ['webrtc'], video: {codecs: ['av1', 'h264'], maxWidth: 1280, maxHeight: 720, maxFramerate: 30}, audio: {codecs: ['opus'], channels: 1}});
@@ -9,6 +9,13 @@ test('capability negotiation selects compatible transport and codecs', () => {
 
 test('capability negotiation rejects incompatible sessions', () => {
   assert.throws(() => negotiateCapabilities({transports: ['webrtc'], video: {codecs: ['av1']}, audio: {codecs: ['opus']}}, {transports: ['websocket'], video: {codecs: ['h264']}, audio: {codecs: ['aac']}}), /transport/);
+});
+
+test('capability normalization rejects malformed remote limits', () => {
+  assert.throws(() => normalizeCapabilities({video: {maxWidth: Number.NaN}}), /video.maxWidth/);
+  assert.throws(() => normalizeCapabilities({video: {maxFramerate: 241}}), /video.maxFramerate/);
+  assert.throws(() => normalizeCapabilities({audio: {channels: 0}}), /audio.channels/);
+  assert.throws(() => normalizeCapabilities({video: {codecs: ['h264', '']} }), /video.codecs/);
 });
 
 test('session manager follows offer, answer, and close lifecycle', () => {

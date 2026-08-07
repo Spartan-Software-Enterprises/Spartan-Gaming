@@ -18,6 +18,8 @@ const transitions = Object.freeze({
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 function intersect(preferred, offered) { return preferred.filter(item => offered.includes(item)); }
 function requiredString(value, name) { if (typeof value !== 'string' || !value) throw new TypeError(`${name} must be a non-empty string`); }
+function boundedInteger(value, fallback, maximum, name) { const result = value === undefined ? fallback : value; if (!Number.isInteger(result) || result < 1 || result > maximum) throw new TypeError(`${name} must be an integer between 1 and ${maximum}`); return result; }
+function stringList(value, fallback, name) { const result = value === undefined ? fallback : value; if (!Array.isArray(result) || !result.length || result.some(item => typeof item !== 'string' || !item)) throw new TypeError(`${name} must contain non-empty strings`); return [...new Set(result)]; }
 
 export function normalizeCapabilities(capabilities = {}) {
   const merged = {
@@ -26,9 +28,15 @@ export function normalizeCapabilities(capabilities = {}) {
     audio: {...DEFAULT_CAPABILITIES.audio, ...(capabilities.audio || {})},
     input: {...DEFAULT_CAPABILITIES.input, ...(capabilities.input || {})},
   };
-  if (!Array.isArray(merged.transports) || !merged.transports.length) throw new TypeError('transports must contain at least one value');
-  if (!Array.isArray(merged.video.codecs) || !merged.video.codecs.length) throw new TypeError('video.codecs must contain at least one value');
-  if (!Array.isArray(merged.audio.codecs) || !merged.audio.codecs.length) throw new TypeError('audio.codecs must contain at least one value');
+  merged.transports = stringList(merged.transports, DEFAULT_CAPABILITIES.transports, 'transports');
+  merged.video.codecs = stringList(merged.video.codecs, DEFAULT_CAPABILITIES.video.codecs, 'video.codecs');
+  merged.video.maxWidth = boundedInteger(merged.video.maxWidth, DEFAULT_CAPABILITIES.video.maxWidth, 16384, 'video.maxWidth');
+  merged.video.maxHeight = boundedInteger(merged.video.maxHeight, DEFAULT_CAPABILITIES.video.maxHeight, 8640, 'video.maxHeight');
+  merged.video.maxFramerate = boundedInteger(merged.video.maxFramerate, DEFAULT_CAPABILITIES.video.maxFramerate, 240, 'video.maxFramerate');
+  merged.audio.codecs = stringList(merged.audio.codecs, DEFAULT_CAPABILITIES.audio.codecs, 'audio.codecs');
+  merged.audio.channels = boundedInteger(merged.audio.channels, DEFAULT_CAPABILITIES.audio.channels, 8, 'audio.channels');
+  merged.video.hdr = Boolean(merged.video.hdr);
+  for (const key of Object.keys(DEFAULT_CAPABILITIES.input)) merged.input[key] = Boolean(merged.input[key]);
   return merged;
 }
 
