@@ -33,3 +33,11 @@ The first version covers:
 
 It intentionally does not define game-library discovery, account federation, billing, or a proprietary media codec.
 
+## Local validation
+
+The v1 envelope can be validated without installing project dependencies:
+
+```bash
+node protocol/v1/validate-session.mjs protocol/v1/examples/session-offer.json
+```
+

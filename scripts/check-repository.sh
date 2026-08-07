@@ -16,6 +16,7 @@ required_files=(
   protocol/README.md
   protocol/v1/session.schema.json
   protocol/v1/examples/session-offer.json
+  protocol/v1/validate-session.mjs
 )
 
 for file in "${required_files[@]}"; do
@@ -44,6 +45,8 @@ assert.equal(typeof example.payload, 'object');
 console.log(`valid JSON and protocol contract: ${schemaPath}`);
 console.log(`valid JSON and protocol contract: ${examplePath}`);
 NODE
+
+node protocol/v1/validate-session.mjs protocol/v1/examples/session-offer.json
 
 if command -v git >/dev/null 2>&1; then
   if git ls-files -z | grep -E -z '(^|/)(\.env|.*\.(pem|key))$' >/dev/null; then
