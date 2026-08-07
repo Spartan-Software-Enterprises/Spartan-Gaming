@@ -28,6 +28,11 @@ const RUNTIME_STYLES = `
 html[data-spartan-reduce-motion] *,html[data-spartan-reduce-motion] *::before,html[data-spartan-reduce-motion] *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
 html[data-spartan-large-text]{font-size:110%}
 html body{font-size:calc(1em * var(--spartan-ui-scale,1))}
+html[data-spartan-theme="light"]{color-scheme:light}
+html[data-spartan-theme="light"] body{background:#f3f6f8!important;color:#14202a!important}
+html[data-spartan-theme="light"] .panel,html[data-spartan-theme="light"] .card,html[data-spartan-theme="light"] .hero,html[data-spartan-theme="light"] .rail,html[data-spartan-theme="light"] .sidebar,html[data-spartan-theme="light"] .stage,html[data-spartan-theme="light"] .provider-dialog{background:#fff!important;color:#14202a!important;border-color:#c7d3dc!important}
+html[data-spartan-theme="oled"] body{background:#000!important}
+html[data-spartan-theme="oled"] .panel,html[data-spartan-theme="oled"] .card,html[data-spartan-theme="oled"] .hero,html[data-spartan-theme="oled"] .rail,html[data-spartan-theme="oled"] .sidebar,html[data-spartan-theme="oled"] .stage{background:#050505!important}
 html[data-spartan-high-contrast] body{filter:contrast(1.16)}
 html[data-spartan-focus-ring] :focus-visible{outline:3px solid var(--spartan-accent,#50e1d1)!important;outline-offset:3px!important}
 html[data-spartan-overlay="hidden"] .overlay-top,html[data-spartan-overlay="hidden"] .overlay-bottom{display:none!important}

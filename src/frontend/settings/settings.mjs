@@ -2,6 +2,7 @@ import '../pwa/register.mjs';
 import {settingsCategories} from './settings-data.mjs';
 import {createSettingsStore} from './profile.mjs';
 import {resolveSettingsAction} from './actions.mjs';
+import {applyRuntimeUiSettings} from './runtime-ui.mjs';
 
 const settingsStore = createSettingsStore();
 const state = {...settingsStore.read()};
@@ -11,6 +12,7 @@ let query = '';
 
 function saveState() {
   Object.assign(state, settingsStore.save(state));
+  applyRuntimeUiSettings(document, state);
   const status = document.querySelector('[data-save-status]');
   if (status) {
     status.textContent = 'Saved locally';
@@ -144,6 +146,7 @@ document.querySelector('[data-import-file]').addEventListener('change', async (e
   if (!file) return;
   try {
     Object.assign(state, settingsStore.import(await file.text()));
+    applyRuntimeUiSettings(document, state);
     render();
     document.querySelector('[data-save-status]').textContent = 'Imported and saved';
   } catch (error) {
