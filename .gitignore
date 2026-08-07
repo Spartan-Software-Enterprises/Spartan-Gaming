@@ -1,0 +1,26 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Build output
+out/
+build/
+dist/
+target/
+node_modules/
+*.log
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Chromium/depot_tools local state
+.gclient_entries
+src/third_party/depot_tools/
+

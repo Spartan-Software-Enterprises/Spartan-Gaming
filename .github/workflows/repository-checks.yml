@@ -1,0 +1,28 @@
+name: Repository checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  markdown:
+    name: Markdown and repository checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check required files
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in README.md ROADMAP.md CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md LICENSE; do
+            test -s "$file"
+          done
+      - name: Check for accidental credential files
+        shell: bash
+        run: |
+          set -euo pipefail
+          ! find . -path './.git' -prune -o \( -name '*.pem' -o -name '*.key' -o -name '.env' \) -print | grep -q .
+
