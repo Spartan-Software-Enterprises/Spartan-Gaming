@@ -20,7 +20,18 @@ fetch chromium
 gclient sync
 ```
 
-Set `SPARTAN_CHROMIUM_SRC` to the external checkout's `src` directory and run:
+The repository also provides a plan-first bootstrap. Choose an external parent
+directory; it refuses paths inside the Spartan Gaming repository:
+
+```bash
+npm run chromium:bootstrap -- --platform linux --checkout "$HOME/src/spartan-chromium"
+npm run chromium:bootstrap -- --platform linux --checkout "$HOME/src/spartan-chromium" --execute
+```
+
+`--execute` is required before `fetch`, `gclient`, or `git` changes the
+external checkout. The bootstrap synchronizes the manifest-selected branch,
+runs hooks, and detaches the source at the fetched ref. Set
+`SPARTAN_CHROMIUM_SRC` to the resulting `src` directory and run:
 
 ```bash
 node scripts/chromium/check-environment.mjs --platform linux
