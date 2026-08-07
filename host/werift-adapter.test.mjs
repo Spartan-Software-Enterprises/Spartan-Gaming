@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createWeriftVideoTransport, loadWerift} from './werift-adapter.mjs';
+import {createWeriftSession, createWeriftVideoTransport, loadWerift} from './werift-adapter.mjs';
 
 function fakeWerift() {
   class Track { constructor(options) { this.options = options; this.packets = []; } writeRtp(packet) { this.packets.push(packet); } stop() { this.stopped = true; } }
@@ -10,3 +10,9 @@ function fakeWerift() {
 
 test('Werift adapter creates a video track and forwards RTP packets', () => { const module = fakeWerift(); const adapter = createWeriftVideoTransport({module, peerConfig: {iceServers: []}, ssrc: 42}); const packet = {header: {timestamp: 10}, payload: Buffer.from('frame')}; adapter.transport.send(packet); assert.equal(adapter.track.options.kind, 'video'); assert.equal(adapter.track.options.ssrc, 42); assert.deepEqual(adapter.track.packets, [packet]); assert.equal(adapter.sender.track, adapter.track); adapter.close(); assert.equal(adapter.track.stopped, true); assert.equal(adapter.peer.closed, true); assert.throws(() => adapter.transport.send(packet), /closed/); });
 test('Werift loader is optional and preserves the injected package boundary', async () => { const module = await loadWerift({loader: async name => { assert.equal(name, 'werift'); return {ready: true}; }}); assert.equal(module.ready, true); });
+
+test('Werift session answers SDP offers and forwards ICE lifecycle events', async () => {
+  const module = fakeWerift(); const adapter = createWeriftVideoTransport({module}); let remote; let local; const candidates = []; const states = [];
+  adapter.peer.setRemoteDescription = async value => { remote = value; }; adapter.peer.createAnswer = async () => ({type: 'answer', sdp: 'answer-sdp'}); adapter.peer.setLocalDescription = async value => { local = value; return value; }; adapter.peer.addIceCandidate = async value => { adapter.peer.candidate = value; };
+  const session = createWeriftSession({adapter, onIceCandidate: candidate => candidates.push(candidate), onStateChange: state => states.push(state)}); const answer = await session.acceptOffer({type: 'offer', sdp: 'offer-sdp'}); await session.addIceCandidate({candidate: 'candidate'}); assert.deepEqual(remote, {type: 'offer', sdp: 'offer-sdp'}); assert.deepEqual(local, {type: 'answer', sdp: 'answer-sdp'}); assert.deepEqual(answer, {type: 'answer', sdp: 'answer-sdp'}); assert.deepEqual(adapter.peer.candidate, {candidate: 'candidate'}); assert.deepEqual(candidates, []); assert.deepEqual(states, []); await session.close();
+});

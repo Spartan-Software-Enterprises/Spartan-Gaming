@@ -73,3 +73,7 @@ peer-connection sink to the encoded publisher boundary.
 creates a Werift video track, attaches it to a peer connection, and exposes the
 track as an RTP transport for `createRtpMediaPublisher`; installing `werift` is
 still an explicit host deployment choice.
+
+The same module exposes a session wrapper for SDP offer/answer and ICE
+candidate handling. It is ready to be connected to the host signaling client;
+the complete LAN stream remains gated on a real browser-to-host media test.
