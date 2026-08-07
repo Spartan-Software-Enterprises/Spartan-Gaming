@@ -15,7 +15,9 @@ for (let index = 2; index < process.argv.length; index += 1) { const value = pro
 const hostId = String(args.get('id') || `host-${randomUUID().slice(0, 8)}`);
 const hostName = String(args.get('name') || 'Spartan Host');
 const bind = String(args.get('bind') || '127.0.0.1');
-const port = Number(args.get('port') || 8787);
+const portArgument = args.get('port');
+const port = portArgument === undefined ? 8787 : Number(portArgument);
+if (!Number.isInteger(port) || port < 0 || port > 65535) throw new TypeError('port must be an integer between 0 and 65535');
 const signalEndpoint = args.get('signal-endpoint') ? String(args.get('signal-endpoint')) : null;
 const signalSessionId = args.get('signal-session') ? String(args.get('signal-session')) : null;
 const signalTicket = args.get('signal-ticket') ? String(args.get('signal-ticket')) : null;
@@ -82,7 +84,8 @@ server.on('upgrade', (request, socket) => {
   socket.on('error', () => {});
 });
 server.listen(port, bind, () => {
-  console.log(JSON.stringify({service: 'spartan-host-reference', endpoint: `ws://${bind}:${port}/session`, health: `http://${bind}:${port}/health`, hostId, hostName, pairingCode: args.get('quiet') ? undefined : pairingCode, pairingExpiresAt: pairing.expiresAt, signalingEndpoint: signalEndpoint || undefined, warning: 'Reference control plane only; media capture/encoding and process launch are not configured.'}));
+  const actualPort = server.address().port;
+  console.log(JSON.stringify({service: 'spartan-host-reference', endpoint: `ws://${bind}:${actualPort}/session`, health: `http://${bind}:${actualPort}/health`, hostId, hostName, pairingCode: args.get('quiet') ? undefined : pairingCode, pairingExpiresAt: pairing.expiresAt, signalingEndpoint: signalEndpoint || undefined, warning: 'Reference control plane only; media capture/encoding and process launch are not configured.'}));
   if (!signalEndpoint && !signalSessionId && !signalTicket) return;
   if (!signalEndpoint || !signalSessionId || !signalTicket) { console.error('Outbound signaling requires --signal-endpoint, --signal-session, and --signal-ticket.'); process.exitCode = 1; return; }
   let signalingClient;

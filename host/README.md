@@ -26,6 +26,12 @@ isolated behind a firewall.
 
 The agent accepts one correctly paired `session.offer`, returns a protocol-valid `session.answer`, and rejects replayed or expired pairing codes. It is intentionally dependency-free and runs anywhere Node.js 20 runs. This is a control-plane reference only: it does not launch games, capture or encode media, inject OS input, provide TLS, or operate STUN/TURN. Those capabilities belong in platform-specific host adapters and the production signaling/deployment layer.
 
+The agent accepts `--port 0` for an ephemeral local port, which is useful for
+integration tests and launcher-managed instances. The executable integration
+contract in `host/agent.integration.test.mjs` starts that reference agent,
+performs a real paired WebSocket offer/answer exchange, sends quality and
+input envelopes, and verifies the redacted health counters.
+
 Before accepting an offer, the agent intersects the client’s transports,
 video, audio, and input capabilities with its own and returns only the
 selected contract. Offers with no compatible transport or codec receive an

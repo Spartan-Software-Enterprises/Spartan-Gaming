@@ -1,0 +1,48 @@
+import assert from 'node:assert/strict';
+import {spawn} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import net from 'node:net';
+import test from 'node:test';
+import {createSessionEnvelope, createSessionManager} from '../src/frontend/session/session.mjs';
+
+const agentPath = fileURLToPath(new URL('./agent.mjs', import.meta.url));
+
+function frame(value) {
+  const body = Buffer.from(value); const mask = Buffer.from([0x52, 0x70, 0x61, 0x72]);
+  if (body.length >= 65536) throw new Error('integration frame is unexpectedly large');
+  const payload = Buffer.from(body); for (let index = 0; index < payload.length; index += 1) payload[index] ^= mask[index % 4];
+  const header = body.length < 126 ? Buffer.from([0x81, 0x80 | body.length]) : Buffer.from([0x81, 0xfe, body.length >> 8, body.length & 0xff]);
+  return Buffer.concat([header, mask, payload]);
+}
+
+function socketClient(port) {
+  const socket = net.connect({host: '127.0.0.1', port}); let buffer = Buffer.alloc(0); let handshake = false; const frames = []; const waiters = [];
+  const pump = () => {
+    if (!handshake) { const boundary = buffer.indexOf('\r\n\r\n'); if (boundary < 0) return; buffer = buffer.subarray(boundary + 4); handshake = true; }
+    while (buffer.length >= 2) {
+      let length = buffer[1] & 0x7f; let header = 2; if (length === 126) { if (buffer.length < 4) return; length = buffer.readUInt16BE(2); header = 4; } if (length === 127 || buffer.length < header + length) return;
+      const payload = buffer.subarray(header, header + length).toString('utf8'); buffer = buffer.subarray(header + length); frames.push(payload); waiters.shift()?.(payload);
+    }
+  };
+  socket.on('data', chunk => { buffer = Buffer.concat([buffer, chunk]); pump(); });
+  const ready = new Promise((resolve, reject) => { socket.once('connect', () => { socket.write(`GET /session HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: c3BhcnRhbi10ZXN0LWtleQ==\r\n\r\n`); const check = () => handshake ? resolve() : setTimeout(check, 5); check(); }); socket.once('error', reject); });
+  return {socket, ready, send(value) { socket.write(frame(JSON.stringify(value))); }, next() { return frames.length ? Promise.resolve(frames.shift()) : new Promise(resolve => waiters.push(resolve)); }, close() { socket.destroy(); }};
+}
+
+async function startAgent() {
+  const child = spawn(process.execPath, [agentPath, '--bind', '127.0.0.1', '--port', '0', '--id', 'host-integration', '--pairing-code', 'ABCD23', '--quiet'], {stdio: ['ignore', 'pipe', 'pipe']});
+  const info = await new Promise((resolve, reject) => { let pending = ''; const timer = setTimeout(() => reject(new Error('reference host did not start')), 5000); child.stdout.on('data', chunk => { pending += chunk.toString(); const line = pending.split('\n')[0]; try { const parsed = JSON.parse(line); clearTimeout(timer); resolve(parsed); } catch {} }); child.once('error', reject); });
+  return {child, info};
+}
+
+test('reference host completes a paired direct session and records control traffic', async () => {
+  const {child, info} = await startAgent(); const client = socketClient(new URL(info.endpoint).port); const manager = createSessionManager({idFactory: () => 'ses-host-integration'});
+  try {
+    await client.ready;
+    const offer = manager.start({backend: {id: 'spartan-host', backendType: 'remote-play', hostId: 'host-integration', pairingCode: 'ABCD23'}, capabilities: {transports: ['websocket'], video: {codecs: ['h264'], maxWidth: 1920, maxHeight: 1080, maxFramerate: 60, hdr: false}, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: true, keyboard: true, pointer: true, rumble: true}}});
+    client.send(offer); const answer = JSON.parse(await client.next()); assert.equal(answer.type, 'session.answer'); assert.equal(answer.payload.accepted, true); assert.equal(answer.payload.hostId, 'host-integration'); manager.receive(answer); assert.equal(manager.state, 'connected');
+    client.send(createSessionEnvelope({sessionId: offer.sessionId, type: 'quality.request', sequence: 1, payload: {profile: 'low', maxWidth: 1280, maxHeight: 720, maxFramerate: 30, bitrateKbps: 2500}}));
+    client.send(createSessionEnvelope({sessionId: offer.sessionId, type: 'input.event', sequence: 2, payload: {kind: 'keyboard', code: 'KeyA', pressed: true, value: 1, source: 'keyboard'}}));
+    await new Promise(resolve => setTimeout(resolve, 60)); const health = await fetch(info.health).then(response => response.json()); assert.equal(health.activeSessions, 1); assert.equal(health.inputEvents, 1); assert.equal(health.lastQuality.profile, 'low'); assert.equal(health.pairingUsed, true);
+  } finally { client.close(); child.kill(); await new Promise(resolve => child.once('exit', resolve)); }
+});
