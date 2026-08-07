@@ -16,6 +16,8 @@ test('provider and emulator manifests compose into one frontend catalog', async 
 
   assert.equal(catalog.entries.length, providerEntries.length + emulatorEntries.length);
   assert.equal(catalog.get('xbox-cloud-gaming').backendType, 'provider');
+  assert.ok(providerEntries.length >= 20);
+  for (const id of ['playstation-plus-cloud', 'blacknut', 'antstream', 'parsec', 'xbox-remote-play', 'sunshine-moonlight', 'spartan-host']) assert.equal(catalog.get(id).backendType, 'provider');
   assert.equal(catalog.get('pcsx2').backendType, 'emulator');
   assert.ok(catalog.find({backendType: 'provider', capability: 'gamepad'}).length > 0);
   assert.ok(catalog.find({backendType: 'emulator', supportLevel: 'B'}).length > 0);
