@@ -1,6 +1,7 @@
 import '../pwa/register.mjs';
 import {settingsCategories} from './settings-data.mjs';
 import {createSettingsStore} from './profile.mjs';
+import {resolveSettingsAction} from './actions.mjs';
 
 const settingsStore = createSettingsStore();
 const state = {...settingsStore.read()};
@@ -93,50 +94,17 @@ function bindControls() {
     if (control.classList.contains('toggle')) control.addEventListener('click', update);
   });
   document.querySelectorAll('[data-action]').forEach((button) => button.addEventListener('click', () => {
-    if (button.dataset.action === 'general.reset') {
-      Object.assign(state, settingsStore.reset());
-      saveState();
-      render();
-      return;
-    }
-    if (button.dataset.action === 'controllers.manageProfiles') {
-      window.location.assign('../input/profiles.html');
-      return;
-    }
-    if (button.dataset.action === 'controllers.test') {
-      window.location.assign('../input/inspector.html');
-      return;
-    }
-    if (button.dataset.action === 'sync.manageProfiles') {
-      window.location.assign('../workspaces/index.html');
-      return;
-    }
-    if (button.dataset.action === 'sync.exportSettings') {
-      downloadSettings();
-      return;
-    }
-    if (button.dataset.action === 'sync.importSettings') {
-      document.querySelector('[data-import-file]').click();
-      return;
-    }
-    if (button.dataset.action === 'providers.manageProfiles') {
-      window.location.assign('../providers/index.html');
-      return;
-    }
-    if (button.dataset.action === 'providers.manageHosts') {
-      window.location.assign('../host/index.html');
-      return;
-    }
-    if (button.dataset.action === 'performance.diagnostics' || button.dataset.action === 'advanced.exportDiagnostics') {
-      window.location.assign('../diagnostics/index.html');
-      return;
-    }
-    if (button.dataset.action === 'emulation.manageCores' || button.dataset.action === 'emulation.importFirmware') {
-      window.location.assign('../emulation/index.html');
-      return;
-    }
+    const action = resolveSettingsAction(button.dataset.action);
+    if (!action) return;
+    if (action.kind === 'reset') { Object.assign(state, settingsStore.reset()); saveState(); render(); return; }
+    if (action.kind === 'navigate') { window.location.assign(action.href); return; }
+    if (action.kind === 'external') { window.open(action.href, '_blank', 'noopener,noreferrer'); return; }
+    if (action.kind === 'category') { activeCategory = action.category; query = ''; document.querySelector('[data-search]').value = ''; render(); return; }
+    if (action.kind === 'export-settings') { downloadSettings(); return; }
+    if (action.kind === 'import-settings') { document.querySelector('[data-import-file]').click(); return; }
+    if (action.kind === 'export-privacy') { downloadPrivacyData(); return; }
     const status = document.querySelector('[data-save-status]');
-    if (status) status.textContent = `${button.textContent} queued`;
+    if (status && action.kind === 'status') { status.textContent = action.message; return; }
   }));
 }
 
@@ -153,10 +121,19 @@ document.querySelector('[data-search]').addEventListener('input', (event) => {
 });
 
 function downloadSettings() {
-  const blob = new Blob([settingsStore.export()], {type: 'application/json'});
+  downloadJson('spartan-gaming-settings.json', settingsStore.export());
+}
+
+function downloadPrivacyData() {
+  const privacy = Object.fromEntries(Object.entries(state).filter(([key]) => key.startsWith('privacy.')));
+  downloadJson('spartan-gaming-privacy.json', JSON.stringify({version: 1, exportedAt: new Date().toISOString(), settings: privacy, note: 'Browser permission grants and provider credentials remain origin-scoped and are not included.'}, null, 2));
+}
+
+function downloadJson(filename, content) {
+  const blob = new Blob([content], {type: 'application/json'});
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = 'spartan-gaming-settings.json';
+  link.download = filename;
   link.click();
   URL.revokeObjectURL(link.href);
 }
