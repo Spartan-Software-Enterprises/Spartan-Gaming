@@ -28,7 +28,7 @@ export function resolveLaunchPlan(entry, {allowedModes, preferEmbedded = false, 
   const selectedMode = orderedModes.find(mode => plans[mode]);
   if (!selectedMode) return {backendId: entry.id, status: 'unsupported', action: 'show-support-error', reason: 'No supported integration mode is available in the current shell', availableModes: [...modes]};
   const plan = plans[selectedMode];
-  return Object.freeze({backendId: entry.id, status: 'ready', mode: selectedMode, ...plan, url: plan.action === 'open-url' || plan.action === 'embed-url' ? entry.url : undefined, requirements: Object.freeze([...(entry.requirements || [])]), capabilities: Object.freeze([...(entry.capabilities || [])]), integration});
+  return Object.freeze({backendId: entry.id, status: 'ready', mode: selectedMode, ...plan, url: plan.action === 'open-url' || plan.action === 'embed-url' || plan.action === 'configure-api' ? entry.url : undefined, requirements: Object.freeze([...(entry.requirements || [])]), capabilities: Object.freeze([...(entry.capabilities || [])]), integration});
 }
 
 export function createCatalogAdapterRegistry(entries, options = {}) {
