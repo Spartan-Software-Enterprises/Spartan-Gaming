@@ -6,6 +6,7 @@ import {validateTransportMessage} from '../src/frontend/transport/transport.mjs'
 import {createPairingAuthority, createPairingCode} from './pairing.mjs';
 import {normalizeHostCapabilities} from './capabilities.mjs';
 import {detectHostEnvironment} from './environment.mjs';
+import {createInputInjectionPlan} from './input.mjs';
 
 const args = new Map();
 for (let index = 2; index < process.argv.length; index += 1) { const value = process.argv[index]; if (value.startsWith('--')) args.set(value.slice(2), process.argv[index + 1]?.startsWith('--') ? true : process.argv[++index]); }
@@ -17,8 +18,8 @@ const pairingCode = args.get('pairing-code') || createPairingCode();
 const pairing = createPairingAuthority({code: pairingCode});
 const capabilities = {transports: ['websocket'], video: {codecs: ['h264', 'vp9'], maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false}, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: true, keyboard: true, pointer: true, rumble: true}};
 const environment = detectHostEnvironment();
-const hostCapabilities = normalizeHostCapabilities({media: {state: 'not-configured', capture: false, encode: false, audio: false, transports: ['webrtc']}, process: {mode: 'none'}, publisher: environment.publisher, input: capabilities.input});
-const sessions = new Set(); let inputEvents = 0; let lastQuality = null;
+const hostCapabilities = normalizeHostCapabilities({media: {state: 'not-configured', capture: false, encode: false, audio: false, transports: ['webrtc']}, process: {mode: 'none'}, publisher: environment.publisher, inputAdapter: environment.inputAdapter, input: capabilities.input});
+const sessions = new Set(); let inputEvents = 0; let lastQuality = null; let lastInputPlan = null;
 
 function json(response, status, body) { response.writeHead(status, {'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store'}); response.end(JSON.stringify(body)); }
 function frame(text) { const body = Buffer.from(text); const size = body.length; if (size < 126) return Buffer.concat([Buffer.from([0x81, size]), body]); if (size < 65536) { const header = Buffer.alloc(4); header[0] = 0x81; header[1] = 126; header.writeUInt16BE(size, 2); return Buffer.concat([header, body]); } throw new Error('WebSocket message is too large'); }
@@ -52,13 +53,13 @@ function handleMessage(socket, text, session) {
   }
   if (message.sessionId !== session.sessionId) { socket.end(closeFrame()); return; }
   if (message.type === 'quality.request') { lastQuality = {profile: String(message.payload.profile || 'balanced'), maxWidth: Number(message.payload.maxWidth) || 0, maxHeight: Number(message.payload.maxHeight) || 0, maxFramerate: Number(message.payload.maxFramerate) || 0, bitrateKbps: Number(message.payload.bitrateKbps) || 0}; return; }
-  if (message.type === 'input.event') { inputEvents += 1; session.lastInputAt = message.sentAt; return; }
+  if (message.type === 'input.event') { inputEvents += 1; session.lastInputAt = message.sentAt; try { lastInputPlan = createInputInjectionPlan({platform: environment.platform, event: {type: 'input.event', ...message.payload}}); } catch (error) { lastInputPlan = {state: 'failed', reason: error.message}; } return; }
   if (message.type === 'session.reconnect') { const answer = createSessionEnvelope({sessionId: message.sessionId, type: 'session.answer', sequence: (message.sequence || 0) + 1, payload: {accepted: true, hostId, capabilities, hostCapabilities}}); socket.write(frame(JSON.stringify(answer))); return; }
   if (message.type === 'session.close') { sessions.delete(session); socket.end(closeFrame()); }
 }
 
 const server = createServer((request, response) => {
-  if (request.url === '/health') return json(response, 200, {service: 'spartan-host-reference', version: 1, hostId, hostName, pairingExpiresAt: pairing.expiresAt, pairingUsed: pairing.used, activeSessions: sessions.size, inputEvents, lastQuality, capabilities, hostCapabilities, environment});
+  if (request.url === '/health') return json(response, 200, {service: 'spartan-host-reference', version: 1, hostId, hostName, pairingExpiresAt: pairing.expiresAt, pairingUsed: pairing.used, activeSessions: sessions.size, inputEvents, lastInputPlan, lastQuality, capabilities, hostCapabilities, environment});
   json(response, 404, {error: 'not found'});
 });
 server.on('upgrade', (request, socket) => {

@@ -27,6 +27,13 @@ resolution, framerate, audio, and transport capabilities into host health and
 session answers. The reference agent therefore exposes truthful readiness
 without pretending that FFmpeg output is already playable media.
 
+`host/input.mjs` is the matching input boundary. It maps normalized browser
+events to shell-free plans for Windows `SendInput`, macOS Core Graphics/HID,
+and Linux `uinput` adapters. Plans declare the required permission (`remote-input`,
+`virtual-gamepad`, or `haptic-output`) and remain `plan-only` until a native
+adapter is installed. The reference agent records the latest plan in health
+output rather than injecting OS input.
+
 ## Compatibility targets
 
 The adapter boundary can support Spartan Host first, then user-owned Steam Remote Play, Sunshine/Moonlight-compatible endpoints, Parsec, Xbox Remote Play, and PlayStation Remote Play where official protocols and platform rules permit. Compatibility is not permission to bypass authentication, DRM, anti-cheat, or undocumented service controls.

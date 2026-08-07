@@ -48,7 +48,8 @@
 - [x] Authenticated in-memory signaling routing contract (WebSocket service adapter and deployment pending).
 - [ ] Signaling service.
 - [ ] STUN/TURN integration.
-- [ ] Controller, keyboard, mouse, audio, and rumble forwarding.
+- [x] Controller, keyboard, pointer, and rumble forwarding contract (native OS injection pending).
+- [ ] Native OS input injection, audio return, and end-to-end haptics.
 - [x] Browser-to-host control-plane quality and input envelopes (OS adapters pending).
 - [ ] Docker deployment and administration API.
 
