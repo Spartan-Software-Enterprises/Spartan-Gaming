@@ -34,6 +34,7 @@
 - [x] Screenshots and local recording.
 - [ ] LAN self-hosted reference stream.
 - [ ] Provider and emulator capability detection harness.
+- [x] Provider and emulator capability detection harness.
 - [x] Unified session lifecycle and error model.
 
 ## Milestone 3: self-hosted stack

@@ -3,9 +3,11 @@ import { createFrontendCatalog, validateCatalogManifest } from '../catalog.mjs';
 import { createSessionManager } from '../session/session.mjs';
 import { createCatalogAdapterRegistry } from '../adapters/adapters.mjs';
 import { createControllerNavigator } from '../input/navigation.mjs';
+import { evaluateCatalog } from '../compatibility/harness.mjs';
+import { collectCapabilities } from '../diagnostics/capabilities.mjs';
 
 const FAVORITES_KEY = 'spartan-gaming.favorites.v1';
-const state = { catalog: [], adapters: null, filter: 'all', search: '', favorites: new Set(loadFavorites()) };
+const state = { catalog: [], adapters: null, compatibility: null, filter: 'all', search: '', favorites: new Set(loadFavorites()) };
 const cards = document.querySelector('[data-cards]');
 const toast = document.querySelector('[data-toast]');
 const sessionStatus = document.querySelector('[data-session-status]');
@@ -38,7 +40,8 @@ function render() {
     const favorite = state.favorites.has(entry.id);
     const tags = [...(entry.systems || []).slice(0, 2), ...(entry.capabilities || []).slice(0, 1)];
     const summary = entry.description || (entry.requirements?.length ? entry.requirements.join(' · ') : entry.systems?.length ? entry.systems.join(' · ') : 'Ready to connect');
-    return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(entry.backendType === 'emulator' ? 'Emulation' : entry.kind)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="card-actions"><button class="launch" data-launch="${escapeHtml(entry.id)}">${entry.backendType === 'provider' ? 'Open service' : 'Configure'}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')}</span></div></article>`;
+    const compatibility = state.compatibility?.get(entry.id); const readiness = {ready: 'Browser ready', 'configuration-required': 'Setup required', 'browser-capability-missing': 'Capability missing', 'native-adapter-required': 'Native adapter'}[compatibility?.status] || 'Checking…';
+    return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(entry.backendType === 'emulator' ? 'Emulation' : entry.kind)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="card-actions"><button class="launch" data-launch="${escapeHtml(entry.id)}">${entry.backendType === 'provider' ? 'Open service' : 'Configure'}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}</span></div></article>`;
   }).join('') : '<div class="empty">No connections match this view. Try another filter or search term.</div>';
 }
 async function loadCatalog() {
@@ -49,6 +52,7 @@ async function loadCatalog() {
     state.catalog = createFrontendCatalog({ providers: providers.providers, emulators: emulators.projects }).entries;
     state.adapters = createCatalogAdapterRegistry(state.catalog);
     render();
+    collectCapabilities().then(report => { state.compatibility = evaluateCatalog(state.catalog, report); render(); }).catch(() => {});
   } catch (error) { cards.innerHTML = '<div class="empty">The library could not load. Check the catalog files and try again.</div>'; console.error(error); }
 }
 document.querySelector('[data-search]').addEventListener('input', event => { state.search = event.target.value; render(); });
