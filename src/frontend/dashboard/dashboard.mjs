@@ -1,8 +1,9 @@
 import { createFrontendCatalog, validateCatalogManifest } from '../catalog.mjs';
 import { createSessionManager } from '../session/session.mjs';
+import { createCatalogAdapterRegistry } from '../adapters/adapters.mjs';
 
 const FAVORITES_KEY = 'spartan-gaming.favorites.v1';
-const state = { catalog: [], filter: 'all', search: '', favorites: new Set(loadFavorites()) };
+const state = { catalog: [], adapters: null, filter: 'all', search: '', favorites: new Set(loadFavorites()) };
 const cards = document.querySelector('[data-cards]');
 const toast = document.querySelector('[data-toast]');
 const sessionStatus = document.querySelector('[data-session-status]');
@@ -42,6 +43,7 @@ async function loadCatalog() {
     validateCatalogManifest(providers, 'provider');
     validateCatalogManifest(emulators, 'emulator');
     state.catalog = createFrontendCatalog({ providers: providers.providers, emulators: emulators.projects }).entries;
+    state.adapters = createCatalogAdapterRegistry(state.catalog);
     render();
   } catch (error) { cards.innerHTML = '<div class="empty">The library could not load. Check the catalog files and try again.</div>'; console.error(error); }
 }
@@ -51,7 +53,7 @@ document.addEventListener('click', event => {
   const favoriteButton = event.target.closest('[data-favorite]');
   if (favoriteButton) { const id = favoriteButton.dataset.favorite; state.favorites.has(id) ? state.favorites.delete(id) : state.favorites.add(id); saveFavorites(); render(); showToast(state.favorites.has(id) ? 'Added to favorites' : 'Removed from favorites'); return; }
   const launchButton = event.target.closest('[data-launch]');
-  if (launchButton) { const entry = state.catalog.find(item => item.id === launchButton.dataset.launch); if (!entry) return; const offer = beginSession(entry); if (!offer) return; if (entry.backendType === 'provider') window.open(entry.url, '_blank', 'noopener'); showToast(`${entry.name}: ${offer.payload.transports?.length ? 'session offer prepared' : 'adapter setup required'}.`); }
+  if (launchButton) { const entry = state.catalog.find(item => item.id === launchButton.dataset.launch); if (!entry) return; const plan = state.adapters?.get(entry.id)?.resolve(); if (!plan || plan.status === 'unsupported') { showToast(`${entry.name}: no supported integration mode is available.`); return; } const offer = beginSession({...entry, adapterMode: plan.mode}); if (!offer) return; if (plan.action === 'open-url') window.open(plan.url, '_blank', 'noopener'); showToast(`${entry.name}: ${plan.action === 'open-url' ? 'service opened and session offer prepared' : plan.action.replaceAll('-', ' ')}.`); }
 });
 document.querySelector('[data-action="resume"]').addEventListener('click', () => { const offer = beginSession({id: 'spartan-host', backendType: 'remote-play'}); if (offer) showToast('Session offer prepared for the Spartan Host adapter.'); });
 document.querySelectorAll('[data-section]').forEach(button => button.addEventListener('click', () => showToast(`${button.textContent.trim()} view is coming online with the adapter registry.`)));
