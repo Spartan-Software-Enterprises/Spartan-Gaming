@@ -26,6 +26,12 @@ isolated behind a firewall.
 
 The agent accepts one correctly paired `session.offer`, returns a protocol-valid `session.answer`, and rejects replayed or expired pairing codes. It is intentionally dependency-free and runs anywhere Node.js 20 runs. This is a control-plane reference only: it does not launch games, capture or encode media, inject OS input, provide TLS, or operate STUN/TURN. Those capabilities belong in platform-specific host adapters and the production signaling/deployment layer.
 
+## Optional Werift runtime
+
+`host/werift-runtime.mjs` provides the host-side session bridge for an optional `werift` installation. A caller supplies a `sessionFactory` that creates the concrete session from `host/werift-adapter.mjs`; the runtime then handles Spartan Gaming SDP offers, ICE candidates, input events, quality requests, reconnect answers, and outbound ICE candidates over any signaling transport implementing `connect()`, `send()`, and `on()`.
+
+The Werift package remains optional. The dependency-free reference host and browser-host runtime continue to work without it, and the Werift contract suite is run separately with `npm run test:werift`.
+
 The agent accepts `--port 0` for an ephemeral local port, which is useful for
 integration tests and launcher-managed instances. The executable integration
 contract in `host/agent.integration.test.mjs` starts that reference agent,
@@ -75,5 +81,7 @@ track as an RTP transport for `createRtpMediaPublisher`; installing `werift` is
 still an explicit host deployment choice.
 
 The same module exposes a session wrapper for SDP offer/answer and ICE
-candidate handling. It is ready to be connected to the host signaling client;
-the complete LAN stream remains gated on a real browser-to-host media test.
+candidate handling. `host/werift-runtime.mjs` now connects that wrapper to the
+authenticated Spartan transport envelopes, including input and quality
+callbacks. The complete LAN stream remains gated on a real browser-to-host
+media test and a production capture/encode wiring pass.
