@@ -27,7 +27,7 @@ if (!target) throw new Error(`unsupported platform: ${platform}`);
 
 console.log(`Spartan Gaming Chromium environment: ${platform} on ${os.platform()} ${os.arch()}`);
 console.log(`Manifest: ${path.relative(process.cwd(), chromiumManifestPath)}`);
-console.log(`Source policy: ${manifest.source.channel}; branch selection is pending.`);
+console.log(`Source policy: ${manifest.source.channel}; branch: ${manifest.source.branch}`);
 
 const tools = ['git', 'python3', 'gclient', 'gn', 'autoninja'];
 const missing = [];

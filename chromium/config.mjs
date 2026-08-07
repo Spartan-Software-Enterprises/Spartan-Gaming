@@ -43,7 +43,7 @@ export function validateChromiumManifest(manifest) {
   if (manifest.source.repository !== 'https://chromium.googlesource.com/chromium/src.git') {
     throw new Error('manifest must use the upstream Chromium source repository');
   }
-  if (manifest.source.branch !== null) throw new Error('Chromium branch selection must remain explicit');
+  if (manifest.source.branch !== 'refs/heads/main' && !/^refs\/branch-heads\/[0-9]+$/.test(manifest.source.branch || '')) throw new Error('manifest must select Chromium main or a numeric stable branch-head');
   if (!Array.isArray(manifest.targets) || manifest.targets.length < 3) {
     throw new Error('manifest must describe Linux, macOS, and Windows targets');
   }

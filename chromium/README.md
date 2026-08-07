@@ -6,9 +6,9 @@ history, and generated build output do not enter the product repository.
 
 The tracked [build manifest](build-manifest.json) records the source policy,
 desktop targets, integration entry points, and development GN templates. The
-Chromium branch is intentionally unselected until the project agrees on a
-branch-head/rebase policy; no patch series should claim to be a complete
-Chromium fork before that decision is recorded.
+development baseline is Chromium `refs/heads/main`; releases must pin an
+upstream stable branch-head commit. The full baseline and rebase rules are in
+[ADR 0002](../docs/decisions/0002-chromium-and-repository-boundaries.md).
 
 ## Prepare a checkout
 

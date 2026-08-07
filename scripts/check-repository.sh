@@ -14,6 +14,7 @@ required_files=(
   .github/workflows/repository-checks.yml
   .github/workflows/cross-platform-contracts.yml
   docs/architecture.md
+  docs/decisions/0002-chromium-and-repository-boundaries.md
   docs/platforms.md
   signaling/README.md
   signaling/broker.mjs

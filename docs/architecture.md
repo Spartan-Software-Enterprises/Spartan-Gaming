@@ -44,6 +44,14 @@ Optional services
 └── Administration API
 ```
 
+## Repository boundaries
+
+The frontend and protocol layers are portable and unprivileged. `host/` owns
+privileged capture, process, input, audio, and publisher adapters; `signaling/`
+owns only authenticated control-plane routing; and `chromium/` owns build and
+overlay metadata around an external Chromium checkout. These boundaries are
+formalized in [ADR 0002](decisions/0002-chromium-and-repository-boundaries.md).
+
 The reference signaling boundary in `signaling/broker.mjs` issues short-lived
 HMAC-scoped client/host tickets and routes validated v1 envelopes between one
 client and one host. It is intentionally in-memory and media-free; production

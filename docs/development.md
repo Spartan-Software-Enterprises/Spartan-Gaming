@@ -26,8 +26,9 @@ The first Chromium integration should prove:
 - Stream diagnostics and overlay lifecycle.
 
 The tracked Chromium build contract lives in `chromium/build-manifest.json`.
-It deliberately keeps branch selection open until the rebase policy is
-approved. `chromium/args/` contains development templates for Linux, macOS,
+Development follows upstream `refs/heads/main`; release work pins a stable
+branch-head commit according to [ADR 0002](decisions/0002-chromium-and-repository-boundaries.md).
+`chromium/args/` contains development templates for Linux, macOS,
 and Windows; these are inputs to an external checkout, not standalone GN
 projects. Validate a workstation with `npm run chromium:environment` or use
 `npm run chromium:validate -- --strict` for a Linux build gate.
