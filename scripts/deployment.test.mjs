@@ -17,6 +17,8 @@ test('signaling image is minimal, non-root, and health checked', () => {
 
 test('Compose keeps the reference signaling service local and requires a secret', () => {
   assert.match(compose, /SPARTAN_SIGNALING_SECRET: \$\{SPARTAN_SIGNALING_SECRET:\?Set /);
+  assert.match(compose, /SPARTAN_SIGNALING_ALLOWED_ORIGINS/);
+  assert.match(compose, /SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND/);
   assert.match(compose, /127\.0\.0\.1:8790:8790/);
   assert.match(compose, /read_only: true/);
   assert.match(compose, /cap_drop:\s*\n\s*- ALL/);

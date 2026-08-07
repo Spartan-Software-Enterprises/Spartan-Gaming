@@ -21,6 +21,20 @@ health endpoint is:
 http://127.0.0.1:8790/health
 ```
 
+The service rejects oversized or unmasked WebSocket frames, requires the
+authenticated join frame before protocol messages, and enforces bounded
+connections and message rates. For browser deployments, set an exact-origin
+allowlist, for example:
+
+```bash
+export SPARTAN_SIGNALING_ALLOWED_ORIGINS="https://play.example.com"
+export SPARTAN_SIGNALING_MAX_CONNECTIONS=512
+export SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND=240
+```
+
+The health response reports configured limits and rejected connection counts,
+but never returns tickets, subjects, or session payloads.
+
 The container runs as the unprivileged `node` user, with a read-only root
 filesystem, dropped Linux capabilities, a small no-exec temporary filesystem,
 and `no-new-privileges`. The secret is supplied at runtime and is never baked

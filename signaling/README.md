@@ -27,3 +27,11 @@ SPARTAN_SIGNALING_SECRET=local-development-only node signaling/agent.mjs
 It listens on `ws://127.0.0.1:8790/signal` and `http://127.0.0.1:8790/health`.
 Clients use `createWebSocketSignalTransport({ join: { sessionId, role, ticket } })`
 to send the authenticated join frame before protocol envelopes.
+
+The service applies bounded connection and message-rate limits. Set
+`SPARTAN_SIGNALING_ALLOWED_ORIGINS` to a comma-separated exact-origin allowlist
+when browsers should be restricted to known frontend origins; configure
+`SPARTAN_SIGNALING_MAX_CONNECTIONS` and
+`SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND` for deployment capacity. The
+health response exposes limits and rejected-connection counts without
+exposing tickets or session contents.
