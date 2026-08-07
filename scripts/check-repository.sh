@@ -21,6 +21,14 @@ required_files=(
   docs/emulation-support.md
   providers/catalog.json
   emulators/catalog.json
+  package.json
+  src/frontend/catalog.mjs
+  src/frontend/catalog.test.mjs
+  src/frontend/settings/index.html
+  src/frontend/settings/settings.css
+  src/frontend/settings/settings.mjs
+  src/frontend/settings/settings-data.mjs
+  src/frontend/settings/settings.test.mjs
 )
 
 for file in "${required_files[@]}"; do
@@ -65,6 +73,7 @@ console.log(`valid emulator catalog: ${emulatorCatalogPath}`);
 NODE
 
 node protocol/v1/validate-session.mjs protocol/v1/examples/session-offer.json
+node --test src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs
 
 if command -v git >/dev/null 2>&1; then
   if git ls-files -z | grep -E -z '(^|/)(\.env|.*\.(pem|key))$' >/dev/null; then

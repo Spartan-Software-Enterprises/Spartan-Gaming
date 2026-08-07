@@ -43,3 +43,12 @@ Run the repository checks before committing:
 ./scripts/check-repository.sh
 ```
 
+The frontend catalog contract can be tested independently of Chromium:
+
+```bash
+npm test
+```
+
+The catalog loader is intentionally dependency-free. Browser UI code, native adapters, and future service processes can consume the same normalized backend entries without importing provider-specific UI behavior.
+
+The first frontend surface is available at `src/frontend/settings/index.html`. It is a dependency-free settings prototype backed by `settings-data.mjs`, with local persistence and export behavior. Chromium integration will connect these keys to browser preferences, profiles, provider sessions, and native adapters as those services land.

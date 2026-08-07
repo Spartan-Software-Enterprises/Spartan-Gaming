@@ -1,0 +1,211 @@
+const toggle = (key, label, description, defaultValue = false) => ({key, label, description, type: 'toggle', default: defaultValue});
+const select = (key, label, description, options, defaultValue) => ({key, label, description, type: 'select', options, default: defaultValue ?? options[0]});
+const range = (key, label, description, min, max, step, defaultValue, unit = '') => ({key, label, description, type: 'range', min, max, step, default: defaultValue, unit});
+const text = (key, label, description, defaultValue = '') => ({key, label, description, type: 'text', default: defaultValue});
+const action = (key, label, description, actionLabel) => ({key, label, description, type: 'action', actionLabel});
+
+export const settingsCategories = [
+  {
+    id: 'general', label: 'General', icon: '◈', description: 'Startup, defaults, and core browser behavior.', settings: [
+      toggle('general.restoreSession', 'Restore previous session', 'Reopen tabs, windows, workspaces, and active game sessions on startup.', true),
+      select('general.startupPage', 'Startup page', 'Choose what Spartan Gaming opens when the browser launches.', ['Gaming home', 'Continue playing', 'New tab', 'Last session'], 'Gaming home'),
+      select('general.defaultSearch', 'Search provider', 'Search used by the address bar and the gaming dashboard.', ['DuckDuckGo', 'Google', 'Bing', 'Brave Search', 'Custom'], 'DuckDuckGo'),
+      toggle('general.askBeforeQuit', 'Confirm before quitting', 'Prevent accidental shutdown while an active session is running.', true),
+      toggle('general.backgroundApps', 'Continue background apps', 'Allow provider notifications and sync tasks after the window closes.'),
+      select('general.language', 'Language', 'Interface language. Provider content remains controlled by the provider.', ['English', 'Spanish', 'French', 'German', 'Japanese', 'Korean'], 'English'),
+      action('general.reset', 'Reset all settings', 'Restore Spartan Gaming defaults. Browser profiles and saved games are not removed.', 'Reset settings'),
+    ],
+  },
+  {
+    id: 'appearance', label: 'Appearance', icon: '◐', description: 'Theme, layout, density, and fullscreen presentation.', settings: [
+      select('appearance.theme', 'Theme', 'Choose the visual treatment for browser chrome and the gaming frontend.', ['Spartan Dark', 'Spartan Light', 'System', 'OLED Black'], 'Spartan Dark'),
+      select('appearance.accent', 'Accent color', 'Used for focus, active controls, selection, and session status.', ['Cyan', 'Violet', 'Lime', 'Amber', 'Red', 'Custom'], 'Cyan'),
+      select('appearance.density', 'Interface density', 'Controls spacing in navigation, library rows, and settings.', ['Comfortable', 'Compact', 'Controller-first'], 'Comfortable'),
+      select('appearance.tabLayout', 'Tab layout', 'Choose how browser tabs are presented during normal browsing.', ['Top tabs', 'Vertical tabs', 'Compact tabs', 'Hidden in gaming mode'], 'Top tabs'),
+      toggle('appearance.translucentChrome', 'Translucent browser chrome', 'Use a subtle translucent surface where the platform compositor supports it.', true),
+      toggle('appearance.reduceMotion', 'Reduce motion', 'Respect reduced-motion preferences and remove non-essential transitions.'),
+      toggle('appearance.showStatusBar', 'Show session status bar', 'Keep latency, controller, and connection state visible below the game.'),
+      range('appearance.uiScale', 'UI scale', 'Scale browser controls and the gaming overlay independently of page zoom.', 80, 140, 5, 100, '%'),
+    ],
+  },
+  {
+    id: 'gaming', label: 'Gaming', icon: '✦', description: 'Library, launch behavior, overlays, and game sessions.', settings: [
+      toggle('gaming.autoFullscreen', 'Enter fullscreen on launch', 'Request fullscreen when a provider or emulator session begins.', true),
+      toggle('gaming.hideBrowserChrome', 'Hide browser chrome in sessions', 'Remove tabs and navigation controls while a game session is active.', true),
+      toggle('gaming.pauseOnBlur', 'Pause when window loses focus', 'Ask the backend to pause when another application becomes active.'),
+      select('gaming.launchBehavior', 'Launch behavior', 'Choose where new games open.', ['Current workspace', 'New tab', 'New gaming window', 'Fullscreen window'], 'Current workspace'),
+      select('gaming.sessionPriority', 'Session priority', 'Control how Spartan Gaming treats game processes and background tabs.', ['Balanced', 'Game priority', 'Maximum game priority'], 'Game priority'),
+      toggle('gaming.autoSuspendTabs', 'Suspend unrelated tabs', 'Reduce memory and CPU use while a session is active.', true),
+      toggle('gaming.showOverlay', 'Enable gaming overlay', 'Allow the session overlay for quality, input, capture, chat, and controls.', true),
+      select('gaming.overlayPosition', 'Overlay position', 'Default location for the session overlay.', ['Top left', 'Top right', 'Bottom left', 'Bottom right'], 'Top right'),
+      range('gaming.overlayOpacity', 'Overlay opacity', 'Opacity of the session overlay surface.', 20, 100, 5, 92, '%'),
+      toggle('gaming.instantReplay', 'Enable instant replay buffer', 'Keep a rolling local buffer for clipping the last moments of a session.'),
+      select('gaming.replayLength', 'Replay length', 'How much video the instant replay buffer retains.', ['15 seconds', '30 seconds', '60 seconds', '120 seconds'], '30 seconds'),
+    ],
+  },
+  {
+    id: 'streaming', label: 'Streaming', icon: '◉', description: 'Cloud playback, remote play, and stream quality.', settings: [
+      select('streaming.qualityPreset', 'Quality preset', 'Choose the default tradeoff between image quality, bandwidth, and latency.', ['Prefer latency', 'Balanced', 'Prefer quality', 'Custom'], 'Balanced'),
+      select('streaming.resolution', 'Maximum resolution', 'The highest output resolution requested from a provider or host.', ['720p', '1080p', '1440p', '4K', 'Source'], '1080p'),
+      select('streaming.framerate', 'Maximum framerate', 'Cap the stream framerate to match the display and network.', ['30 FPS', '60 FPS', '90 FPS', '120 FPS', '144 FPS'], '60 FPS'),
+      range('streaming.bitrate', 'Bitrate limit', 'Maximum target video bitrate. Providers may apply their own limits.', 2, 100, 1, 25, ' Mbps'),
+      select('streaming.codec', 'Preferred codec', 'Codec preference sent during negotiation. Automatic falls back safely.', ['Automatic', 'AV1', 'VP9', 'H.264'], 'Automatic'),
+      toggle('streaming.hardwareDecode', 'Prefer hardware video decoding', 'Use the platform decoder when it is available and stable.', true),
+      toggle('streaming.adaptiveBitrate', 'Adaptive bitrate', 'Adjust bitrate based on congestion, packet loss, and decode health.', true),
+      toggle('streaming.adaptiveResolution', 'Adaptive resolution', 'Lower resolution before the session starts dropping frames.', true),
+      toggle('streaming.lowLatencyMode', 'Low-latency mode', 'Reduce buffering and jitter tolerance at the cost of more visible recovery.', true),
+      range('streaming.jitterBuffer', 'Jitter buffer', 'Additional receive buffer for unstable connections.', 0, 500, 10, 60, ' ms'),
+      select('streaming.networkMode', 'Network mode', 'Choose congestion behavior for wired, Wi-Fi, or metered networks.', ['Automatic', 'Wired', 'Wi-Fi', 'Mobile/metered'], 'Automatic'),
+      toggle('streaming.showTelemetry', 'Show stream telemetry', 'Expose ping, jitter, packet loss, decode time, and frame pacing.'),
+    ],
+  },
+  {
+    id: 'controllers', label: 'Controllers', icon: '⌁', description: 'Gamepads, HID devices, mappings, and rumble.', settings: [
+      select('controllers.defaultProfile', 'Default controller profile', 'Profile used for new games and providers.', ['Auto-detect', 'Xbox layout', 'PlayStation layout', 'Nintendo layout', 'Keyboard and mouse'], 'Auto-detect'),
+      toggle('controllers.allowGamepad', 'Allow gamepads', 'Allow web sessions and adapters to access connected gamepads.', true),
+      toggle('controllers.allowHid', 'Allow HID devices', 'Allow explicitly approved racing wheels, fight sticks, flight sticks, and specialty controllers.'),
+      toggle('controllers.rumble', 'Enable rumble', 'Forward vibration and haptic feedback when supported.', true),
+      toggle('controllers.adaptiveTriggers', 'Enable adaptive triggers', 'Forward adaptive trigger effects where the platform and backend support them.'),
+      toggle('controllers.gyro', 'Enable motion controls', 'Allow gyroscope and accelerometer input for compatible games.'),
+      range('controllers.deadzone', 'Default stick dead zone', 'Ignore small analog stick movement to reduce drift.', 0, 30, 1, 8, '%'),
+      select('controllers.inputLatency', 'Input polling', 'Controller polling target; platform and device limits still apply.', ['Automatic', 'Standard', 'High frequency'], 'Automatic'),
+      action('controllers.manageProfiles', 'Manage controller profiles', 'Create, edit, import, and export per-device and per-game mappings.', 'Open profile manager'),
+      action('controllers.test', 'Test connected devices', 'Inspect buttons, axes, haptics, battery, and motion sensors.', 'Open controller tester'),
+    ],
+  },
+  {
+    id: 'emulation', label: 'Emulation', icon: '⌘', description: 'Cores, adapters, saves, shaders, and legal file access.', settings: [
+      select('emulation.frontend', 'Emulation frontend', 'Choose the runtime used for compatible cores and standalone adapters.', ['Automatic', 'Spartan runtime', 'Libretro host', 'Native adapter'], 'Automatic'),
+      toggle('emulation.scanLibraries', 'Scan selected game folders', 'Index user-selected folders for supported games and metadata.', true),
+      toggle('emulation.autoSaveStates', 'Auto-save on exit', 'Create a safety save state when a session closes normally.', true),
+      toggle('emulation.cloudSaves', 'Sync save data', 'Sync save RAM and save states through the selected sync provider.'),
+      select('emulation.saveLocation', 'Save location', 'Where local save data is stored.', ['Profile storage', 'Game folder', 'Custom folder'], 'Profile storage'),
+      select('emulation.renderer', 'Graphics renderer', 'Default renderer for native adapters and compatible cores.', ['Automatic', 'Vulkan', 'DirectX 12', 'Metal', 'OpenGL', 'Software'], 'Automatic'),
+      toggle('emulation.integerScaling', 'Integer scaling', 'Preserve sharp pixel edges for low-resolution systems.', true),
+      toggle('emulation.vsync', 'Vertical synchronization', 'Synchronize emulated frames to the display refresh cycle.', true),
+      select('emulation.shaderPreset', 'Shader preset', 'Default post-processing for emulated video.', ['Off', 'Sharp bilinear', 'CRT subtle', 'CRT scanlines', 'LCD'], 'Sharp bilinear'),
+      toggle('emulation.rewind', 'Enable rewind', 'Keep a rolling state buffer for supported cores.'),
+      toggle('emulation.netplay', 'Allow netplay', 'Enable multiplayer networking for cores and adapters that support it.'),
+      action('emulation.importFirmware', 'Import BIOS or firmware', 'Select and hash-check firmware you legally dumped from your own hardware.', 'Import firmware'),
+      action('emulation.manageCores', 'Manage emulator cores', 'View installed cores, versions, licenses, and update channels.', 'Open core manager'),
+    ],
+  },
+  {
+    id: 'providers', label: 'Providers', icon: '◇', description: 'Cloud services, accounts, regions, and compatibility profiles.', settings: [
+      toggle('providers.showCatalog', 'Show provider catalog', 'Include supported cloud, remote-play, and streaming providers in the library.', true),
+      toggle('providers.autoDetect', 'Detect provider sessions', 'Recognize active supported provider sessions and attach the Spartan overlay.', true),
+      toggle('providers.preferOfficialApps', 'Prefer official native apps', 'Launch a provider’s official app when browser support is unavailable or explicitly preferred.'),
+      select('providers.region', 'Service region', 'Region hint used for links, latency tests, and provider recommendations.', ['Automatic', 'North America', 'Europe', 'Asia Pacific', 'Latin America', 'Custom'], 'Automatic'),
+      toggle('providers.healthChecks', 'Run provider health checks', 'Test provider reachability and compatibility without signing in.'),
+      toggle('providers.librarySync', 'Sync provider libraries', 'Use approved account integrations to show owned or available games.'),
+      toggle('providers.isolateAccounts', 'Isolate provider accounts by profile', 'Prevent account metadata and sessions from crossing browser profiles.', true),
+      action('providers.manageProfiles', 'Manage provider profiles', 'Configure launch URLs, account profiles, region hints, and quality overrides.', 'Open provider manager'),
+      action('providers.clearSessions', 'Clear provider sessions', 'Sign out and remove provider session cookies from the current profile.', 'Clear sessions'),
+    ],
+  },
+  {
+    id: 'performance', label: 'Performance', icon: '↯', description: 'CPU, GPU, memory, power, and diagnostics.', settings: [
+      toggle('performance.hardwareAcceleration', 'Use hardware acceleration', 'Use the GPU for rendering, compositing, WebGPU, and video.', true),
+      select('performance.gpuPreference', 'GPU preference', 'Choose which GPU to use on multi-GPU systems.', ['Automatic', 'Power saving GPU', 'High performance GPU'], 'Automatic'),
+      select('performance.powerMode', 'Power mode', 'Balance performance, fan noise, and battery life.', ['Balanced', 'Performance', 'Battery saver'], 'Balanced'),
+      toggle('performance.backgroundThrottling', 'Throttle background tabs', 'Reduce background work while preserving active game sessions.', true),
+      toggle('performance.prewarmProviders', 'Prewarm provider connections', 'Prepare approved provider origins for faster session startup.'),
+      toggle('performance.webgpu', 'Enable WebGPU', 'Allow browser games and supported runtimes to use WebGPU.', true),
+      toggle('performance.webAssemblyThreads', 'Enable WebAssembly threads', 'Use shared workers for compatible browser emulators and games.', true),
+      select('performance.processModel', 'Process model', 'Choose the browser process isolation profile.', ['Default', 'Maximum isolation', 'Low memory'], 'Default'),
+      toggle('performance.crashReports', 'Send crash reports', 'Share minimal crash diagnostics to improve stability.'),
+      action('performance.taskManager', 'Open gaming task manager', 'Inspect CPU, GPU, memory, network, decoder, and per-tab usage.', 'Open task manager'),
+      action('performance.diagnostics', 'Run compatibility diagnostics', 'Test GPU, codecs, WebGPU, controllers, audio, and network latency.', 'Run diagnostics'),
+    ],
+  },
+  {
+    id: 'privacy', label: 'Privacy & security', icon: '▣', description: 'Permissions, identity isolation, telemetry, and data controls.', settings: [
+      select('privacy.trackingProtection', 'Tracking protection', 'Block known trackers and reduce cross-site profiling.', ['Standard', 'Strict', 'Disabled'], 'Strict'),
+      toggle('privacy.blockThirdPartyCookies', 'Block third-party cookies', 'Prevent cross-site cookies unless an explicit exception is configured.', true),
+      toggle('privacy.preventWebRtcIpLeak', 'Limit WebRTC IP exposure', 'Prefer privacy-preserving WebRTC candidates when compatible with the session.'),
+      toggle('privacy.doNotTrack', 'Send Do Not Track', 'Ask sites not to track browsing activity.'),
+      toggle('privacy.telemetry', 'Share anonymous product telemetry', 'Share opt-in aggregate performance and compatibility metrics.'),
+      toggle('privacy.sessionTelemetry', 'Store local session telemetry', 'Keep detailed latency and decoder data locally for troubleshooting.', true),
+      select('privacy.permissionPrompts', 'Permission prompts', 'Control how device permissions are requested.', ['Ask every time', 'Ask per site', 'Block by default'], 'Ask per site'),
+      toggle('privacy.clearOnExit', 'Clear session data on exit', 'Remove temporary session cookies, cache, and provider state when the profile closes.'),
+      action('privacy.permissions', 'Review site permissions', 'Manage camera, microphone, gamepad, HID, screen capture, and notifications.', 'Review permissions'),
+      action('privacy.exportData', 'Export privacy data', 'Export permissions, exceptions, and telemetry settings without credentials.', 'Export data'),
+    ],
+  },
+  {
+    id: 'audio-video', label: 'Audio & video', icon: '◒', description: 'Displays, HDR, audio routing, capture, and recording.', settings: [
+      select('media.display', 'Preferred display', 'Display used for fullscreen sessions and capture.', ['Automatic', 'Display 1', 'Display 2', 'Ask each time'], 'Automatic'),
+      select('media.refreshRate', 'Refresh-rate preference', 'Target display refresh rate for session negotiation.', ['Automatic', '60 Hz', '90 Hz', '120 Hz', '144 Hz', '240 Hz'], 'Automatic'),
+      toggle('media.hdr', 'Allow HDR', 'Request HDR output when the display, GPU, provider, and codec support it.'),
+      select('media.audioOutput', 'Audio output', 'Default output for game and browser audio.', ['System default', 'Headphones', 'Speakers', 'HDMI/Display'], 'System default'),
+      select('media.audioInput', 'Microphone input', 'Default microphone for voice chat and broadcasts.', ['System default', 'No microphone', 'Ask each time'], 'System default'),
+      range('media.gameVolume', 'Game volume', 'Volume for the active game or stream.', 0, 100, 1, 100, '%'),
+      range('media.chatVolume', 'Chat volume', 'Relative volume for voice and chat channels.', 0, 100, 1, 100, '%'),
+      toggle('media.spatialAudio', 'Spatial audio', 'Enable platform spatial-audio processing where available.'),
+      toggle('media.micNoiseSuppression', 'Microphone noise suppression', 'Reduce background noise during voice chat and broadcasts.', true),
+      select('media.recordingCodec', 'Recording codec', 'Codec used for local clips and recordings.', ['Automatic', 'AV1', 'VP9', 'H.264'], 'Automatic'),
+      select('media.recordingLocation', 'Recording location', 'Folder used for screenshots, clips, and recordings.', ['Videos/Spartan Gaming', 'Desktop', 'Ask each time', 'Custom folder'], 'Videos/Spartan Gaming'),
+    ],
+  },
+  {
+    id: 'sync', label: 'Profiles & sync', icon: '⇄', description: 'Profiles, encrypted settings, and cross-device continuity.', settings: [
+      select('sync.activeProfile', 'Active profile', 'Identity, cookies, permissions, saves, and library state are isolated by profile.', ['Default', 'Gaming', 'Family', 'Guest'], 'Gaming'),
+      toggle('sync.settings', 'Sync settings', 'Sync preferences across signed-in Spartan Gaming devices.'),
+      toggle('sync.library', 'Sync library and profiles', 'Sync provider links, emulator profiles, controller mappings, and metadata.'),
+      toggle('sync.saveData', 'Sync save data', 'Sync save RAM and save states using encrypted storage.'),
+      select('sync.provider', 'Sync provider', 'Storage used for encrypted cross-device data.', ['Spartan Sync', 'Self-hosted sync', 'None'], 'None'),
+      toggle('sync.encryptLocally', 'Encrypt synced data locally', 'Require a local recovery key before sync data can be restored.', true),
+      action('sync.manageProfiles', 'Manage profiles', 'Create, rename, export, or remove browser and gaming profiles.', 'Open profile manager'),
+      action('sync.exportSettings', 'Export settings', 'Create a portable settings file without credentials or session cookies.', 'Export settings'),
+      action('sync.importSettings', 'Import settings', 'Restore settings and mappings from a portable file.', 'Import settings'),
+    ],
+  },
+  {
+    id: 'accessibility', label: 'Accessibility', icon: '⊙', description: 'Readable, remappable, and assistive gaming controls.', settings: [
+      toggle('accessibility.highContrast', 'High contrast mode', 'Increase control, text, and focus contrast.', false),
+      toggle('accessibility.largeText', 'Large text', 'Increase interface text and control labels.', false),
+      select('accessibility.colorVision', 'Color vision mode', 'Adjust status colors for common color-vision differences.', ['None', 'Protanopia', 'Deuteranopia', 'Tritanopia'], 'None'),
+      toggle('accessibility.focusRing', 'Always show focus ring', 'Keep keyboard and controller focus visible.', true),
+      toggle('accessibility.reduceMotion', 'Reduce motion', 'Disable non-essential animation and transition effects.', false),
+      toggle('accessibility.screenReaderHints', 'Screen-reader hints', 'Add context to complex game-session and controller controls.'),
+      toggle('accessibility.stickyKeys', 'Sticky modifier keys', 'Allow modifier keys to be pressed sequentially.'),
+      toggle('accessibility.monoAudio', 'Mono audio', 'Mix stereo output into a single channel.'),
+      select('accessibility.touchLayout', 'Touch-control layout', 'Default virtual controller layout on touch devices.', ['Automatic', 'Minimal', 'Full gamepad', 'Custom'], 'Automatic'),
+      action('accessibility.remapShortcuts', 'Remap browser shortcuts', 'Configure keyboard, controller, switch, and voice shortcuts.', 'Open shortcut editor'),
+    ],
+  },
+  {
+    id: 'advanced', label: 'Advanced & developer', icon: '⌬', description: 'Experimental features, logs, protocols, and diagnostics.', settings: [
+      toggle('advanced.developerMode', 'Developer mode', 'Expose experimental flags, adapter inspection, and debugging tools.'),
+      toggle('advanced.experimentalWebTransport', 'Experimental WebTransport', 'Allow compatible self-hosted sessions to test WebTransport transport.'),
+      toggle('advanced.experimentalUpscaling', 'Experimental client upscaling', 'Try client-side enhancement for supported stream formats.'),
+      toggle('advanced.allowUnsignedAdapters', 'Allow unsigned local adapters', 'Load local development adapters without release signatures.'),
+      toggle('advanced.verboseLogs', 'Verbose logs', 'Write detailed browser, provider, emulator, and session logs locally.'),
+      select('advanced.logRetention', 'Log retention', 'How long local diagnostic logs are retained.', ['1 day', '7 days', '30 days', 'Until manually removed'], '7 days'),
+      toggle('advanced.networkSimulation', 'Network simulation tools', 'Expose artificial latency, jitter, packet loss, and bandwidth controls.'),
+      toggle('advanced.forceSoftwareDecode', 'Force software video decode', 'Useful for diagnosing GPU driver and hardware decoder issues.'),
+      text('advanced.customSignalingUrl', 'Custom signaling URL', 'Endpoint for a self-hosted Spartan Host signaling service.', ''),
+      action('advanced.exportDiagnostics', 'Export diagnostics bundle', 'Create a redacted bundle of compatibility, logs, and active settings.', 'Export bundle'),
+      action('advanced.flags', 'Open experimental flags', 'Review feature flags that may reduce stability or compatibility.', 'Open flags'),
+    ],
+  },
+  {
+    id: 'updates', label: 'Updates', icon: '↻', description: 'Browser, adapter, core, and catalog update behavior.', settings: [
+      select('updates.channel', 'Release channel', 'Choose how early you receive browser and frontend builds.', ['Stable', 'Beta', 'Dev', 'Nightly'], 'Stable'),
+      toggle('updates.autoUpdate', 'Automatically update Spartan Gaming', 'Download and apply signed browser updates when available.', true),
+      toggle('updates.adapterUpdates', 'Update adapters automatically', 'Keep provider and emulator adapters current within the selected channel.', true),
+      toggle('updates.coreUpdates', 'Update emulator cores automatically', 'Update cores while preserving pinned versions and save compatibility.'),
+      toggle('updates.catalogUpdates', 'Update provider and game metadata', 'Refresh compatibility, artwork, and capability metadata.', true),
+      toggle('updates.notifyRestart', 'Notify before restart', 'Ask before applying an update that closes browser windows.', true),
+      action('updates.checkNow', 'Check for updates', 'Check the browser, adapters, emulator cores, and catalogs now.', 'Check now'),
+      action('updates.releaseNotes', 'View release notes', 'Review changes, known issues, and security fixes.', 'View release notes'),
+    ],
+  },
+];
+
+export const defaultSettings = Object.fromEntries(
+  settingsCategories.flatMap((category) => category.settings)
+    .filter((setting) => setting.type !== 'action')
+    .map((setting) => [setting.key, setting.default]),
+);
+

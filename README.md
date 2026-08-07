@@ -37,6 +37,7 @@ providers/             Machine-readable cloud gaming and streaming provider cata
 emulators/             Machine-readable emulator and core catalog
 scripts/               Reproducible development and release helpers
 src/                   Spartan browser product code (planned)
+src/frontend/          Unified frontend catalog and backend contracts
 server/                Optional self-hosted services (planned)
 host/                  Optional gaming host agent (planned)
 third_party/           Third-party notices and integration metadata
@@ -58,6 +59,8 @@ The first milestone will document the supported Chromium checkout and build conf
 ## Status
 
 Spartan Gaming is in the foundation and architecture phase. Follow [ROADMAP.md](ROADMAP.md) for the current sequence of work.
+
+The first interactive frontend surface is the [settings control center](src/frontend/settings/index.html), covering browser, gaming, streaming, controllers, emulation, providers, performance, privacy, accessibility, profiles, and updates.
 
 ## License
 
