@@ -41,6 +41,6 @@ test('session runtime sends a new quality request after degraded telemetry', asy
 test('session runtime emits a transport error for incompatible host capabilities', async () => {
   const signaling = fakeTransport(); const runtime = createSessionRuntime({signaling}); const errors = []; runtime.on('error', error => errors.push(error));
   const offer = await runtime.start({backend: {id: 'spartan-host'}, capabilities: {transports: ['webrtc'], video: {codecs: ['av1']}, audio: {codecs: ['opus']}}});
-  signaling.emit('message', createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true, capabilities: {transports: ['websocket'], video: {codecs: ['h264']}, audio: {codecs: ['aac']}}}}));
-  assert.match(errors[0].message, /No compatible session transport/); assert.equal(runtime.state, 'negotiating');
+  const accepted = runtime.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true, capabilities: {transports: ['websocket'], video: {codecs: ['h264']}, audio: {codecs: ['aac']}}}}));
+  assert.equal(accepted, false); assert.match(errors[0].message, /No compatible session transport/); assert.equal(runtime.state, 'negotiating');
 });
