@@ -73,6 +73,8 @@ The frontend must make clear whether a session is browser-hosted, native, remote
 
 The session runtime in `src/frontend/session/session.mjs` provides the first transport-neutral implementation of this model. It negotiates transports, codecs, display limits, audio, and input features; creates protocol v1 offers; and enforces explicit lifecycle transitions (`preparing`, `negotiating`, `connected`, `reconnecting`, `closing`, and `closed`). Provider and emulator integrations can register immutable adapter descriptors without coupling the frontend to a specific relay, native process, or cloud service.
 
+Universal controller input is normalized in `src/frontend/input/input.mjs`. It applies configurable analog deadzones and maps browser Gamepad API buttons/axes to stable action events, leaving platform-specific HID, keyboard, touch, and native controller adapters free to feed the same action vocabulary.
+
 ## Cross-platform strategy
 
 The browser product layer should share UX, session, protocol, and diagnostics code. Windowing, media capture, hardware acceleration, packaging, signing, permissions, and input backends should be isolated behind platform adapters.
