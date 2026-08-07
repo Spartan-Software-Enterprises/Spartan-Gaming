@@ -19,7 +19,10 @@ export function createSessionRuntime({manager = createSessionManager(), signalin
     if (validated.sessionId !== sessionId) return;
     if (validated.type === 'session.answer' && media && validated.payload.sdp) media.acceptAnswer(validated.payload.sdp);
     if (validated.type === 'session.ice-candidate' && media && validated.payload.candidate) media.addIceCandidate(validated.payload.candidate);
-    manager.receive(validated); bus.emit('message', validated); bus.emit(validated.type, validated);
+    const beforeQuality = manager.quality.id;
+    manager.receive(validated);
+    if (validated.type === 'telemetry.health' && manager.quality.id !== beforeQuality) send(createSessionEnvelope({sessionId, type: 'quality.request', sequence: ++sequence, sentAt: clock(), payload: manager.qualityRequest}));
+    bus.emit('message', validated); bus.emit(validated.type, validated);
   };
   const bind = () => {
     unbind.forEach(off => off()); unbind = [];

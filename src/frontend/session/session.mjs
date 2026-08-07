@@ -62,6 +62,7 @@ export function createSessionManager({clock = () => new Date().toISOString(), id
     get state() { return state; },
     get session() { return session ? clone(session) : null; },
     get quality() { return quality.profile; },
+    get qualityRequest() { return quality.request(); },
     get recovery() { return {attempt: recovery.attempt, exhausted: recovery.exhausted, maxAttempts: recovery.maxAttempts}; },
     start({backend, capabilities = DEFAULT_CAPABILITIES} = {}) {
       if (!backend?.id) throw new TypeError('backend.id is required');

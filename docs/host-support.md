@@ -16,7 +16,7 @@ The browser is responsible for user consent, endpoint validation, capability neg
 
 The host manager at `src/frontend/host/index.html` stores only non-secret host profiles in local browser storage. It can generate a `host.pair` request for a one-time code supplied by a running host agent, show the selected transport, and export/import endpoint preferences. It does not complete pairing by itself: the future host agent and signaling service must validate the request, exchange session-scoped credentials, and enforce expiry and replay protection.
 
-The repository includes `host/agent.mjs` as a dependency-free Node.js reference control plane. Run `npm run host -- --pairing-code ABCD23` to expose a local `ws://127.0.0.1:8787/session` endpoint and `/health`. It validates the pairing code once, answers protocol-v1 offers, and handles reconnect messages. It intentionally reports `media.state: not-configured`: capture, encode, game launch, OS input injection, TLS deployment, and TURN are production work still required for a usable remote stream.
+The repository includes `host/agent.mjs` as a dependency-free Node.js reference control plane. Run `npm run host -- --pairing-code ABCD23` to expose a local `ws://127.0.0.1:8787/session` endpoint and `/health`. It validates the pairing code once, answers protocol-v1 offers, records quality requests and input-event counts, and handles reconnect messages. It intentionally reports `media.state: not-configured`: capture, encode, game launch, OS input injection, TLS deployment, and TURN are production work still required for a usable remote stream.
 
 ## Compatibility targets
 

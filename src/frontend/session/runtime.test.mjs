@@ -29,3 +29,11 @@ test('session runtime accepts WebRTC answers and emits media streams', async () 
   signaling.emit('message', createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true, sdp: {type: 'answer', sdp: 'host-answer'}}}));
   media.emit('track', {streams: ['stream-01']}); assert.equal(media.answer.sdp, 'host-answer'); assert.deepEqual(streams, ['stream-01']);
 });
+
+test('session runtime sends a new quality request after degraded telemetry', async () => {
+  const signaling = fakeTransport(); const runtime = createSessionRuntime({signaling});
+  const offer = await runtime.start({backend: {id: 'spartan-host'}});
+  signaling.emit('message', createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true}}));
+  signaling.emit('message', createSessionEnvelope({sessionId: offer.sessionId, type: 'telemetry.health', payload: {packetLossPct: 9}}));
+  assert.equal(signaling.sent.at(-1).type, 'quality.request'); assert.equal(signaling.sent.at(-1).payload.profile, 'low');
+});

@@ -45,6 +45,7 @@
 - [ ] Signaling service.
 - [ ] STUN/TURN integration.
 - [ ] Controller, keyboard, mouse, audio, and rumble forwarding.
+- [x] Browser-to-host control-plane quality and input envelopes (OS adapters pending).
 - [ ] Docker deployment and administration API.
 
 ## Later exploration

@@ -27,6 +27,7 @@ function apply(event) {
   const labels = {idle: 'Ready', preparing: 'Preparing session', negotiating: 'Negotiating session', connected: 'Connected', reconnecting: 'Reconnecting', ended: 'Session ended', error: 'Connection error'};
   elements.status.textContent = labels[state.status]; elements.quality.textContent = state.quality[0].toUpperCase() + state.quality.slice(1); elements.qualityDetail.textContent = `${elements.quality.textContent} · ${state.quality === 'low' ? '720p30' : '1080p60'}`; elements.latency.textContent = formatLatency(state.latencyMs); elements.latencyDetail.textContent = formatLatency(state.latencyMs); elements.loss.textContent = `${state.packetLossPct}%`; elements.diagnostics.classList.toggle('is-visible', state.diagnosticsVisible); elements.overlay.forEach(overlay => overlay.classList.toggle('is-hidden', !state.overlayVisible));
   if (state.status === 'error') elements.message.textContent = state.error; if (state.status === 'ended') elements.message.textContent = 'This session has ended. Return to the library to choose another backend.';
+  if (state.status === 'connected' && state.mediaState === 'not-configured') elements.message.textContent = 'Host paired successfully. Media capture and encoding are not configured on this host.';
 }
 
 async function start() {
@@ -38,6 +39,8 @@ async function start() {
       const media = typeof RTCPeerConnection === 'function' ? createWebRtcTransport() : undefined;
       runtime = createSessionRuntime({manager, signaling, media});
       runtime.on('stream', stream => { elements.video.srcObject = stream; elements.video.play().catch(() => {}); });
+      runtime.on('stream', () => { apply({type: 'media.state', state: 'active'}); elements.demo.classList.add('is-hidden'); });
+      runtime.on('session.answer', message => { const mediaState = message.payload?.hostCapabilities?.media?.state || (message.payload?.sdp ? 'negotiating' : 'not-configured'); apply({type: 'media.state', state: mediaState}); elements.demo.classList.add('is-hidden'); });
       runtime.on('telemetry', sample => { apply({type: 'telemetry.health', rttMs: sample.rttMs, packetLossPct: sample.packetLossPct}); apply({type: 'quality.changed', profile: manager.quality.id}); });
       runtime.on('error', error => apply({type: 'error', message: error.message || 'Transport error'}));
       const offer = await runtime.start({backend: {id: backendId, backendType: 'remote-play', hostId: pendingHostPair?.hostId, pairingCode: pendingHostPair?.pairingCode}});
@@ -50,7 +53,7 @@ async function start() {
   if (query.get('demo') === '1') setTimeout(acceptHostAnswer, 500);
 }
 
-function acceptHostAnswer() { if (manager.state !== 'negotiating' && manager.state !== 'reconnecting') return; const answer = createSessionEnvelope({sessionId: manager.session.id, type: 'session.answer', payload: {accepted: true}}); if (runtime) runtime.receive(answer); else manager.receive(answer); apply({type: 'session.state', status: 'connected'}); elements.demo.classList.add('is-hidden'); elements.message.textContent = 'Media transport is ready. Attach a host stream to begin playback.'; }
+function acceptHostAnswer() { if (manager.state !== 'negotiating' && manager.state !== 'reconnecting') return; const answer = createSessionEnvelope({sessionId: manager.session.id, type: 'session.answer', payload: {accepted: true, hostCapabilities: {media: {state: 'not-configured'}}}}); if (runtime) runtime.receive(answer); else manager.receive(answer); apply({type: 'session.state', status: 'connected'}); apply({type: 'media.state', state: 'not-configured'}); elements.demo.classList.add('is-hidden'); }
 function requestReconnect() { try { const envelope = runtime ? runtime.requestReconnect() : manager.requestReconnect(); apply({type: 'session.state', status: 'reconnecting'}); window.dispatchEvent(new CustomEvent('spartan:session-reconnect', {detail: envelope})); elements.message.textContent = `Reconnecting (attempt ${envelope.payload.attempt})…`; if (query.get('demo') === '1') setTimeout(acceptHostAnswer, Math.min(envelope.payload.delayMs, 700)); } catch (error) { apply({type: 'error', message: error.message}); } }
 function emitInput(event) { try { const envelope = createInputEventEnvelope({sessionId: manager.session?.id, event, sequence: ++inputSequence}); if (runtime) runtime.send(envelope); window.dispatchEvent(new CustomEvent('spartan:input', {detail: envelope})); } catch { /* Input is best-effort while a session is ending. */ } }
 function keyboardInput(event, pressed) { if (event.repeat && pressed) return; emitInput({type: 'input.event', action: `key:${event.code}`, pressed, value: pressed ? 1 : 0, source: 'keyboard', control: event.code}); }
