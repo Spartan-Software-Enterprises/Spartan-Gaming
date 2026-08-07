@@ -27,6 +27,8 @@ required_files=(
   chromium/args/windows.gn
   scripts/chromium/check-environment.mjs
   scripts/chromium/config.test.mjs
+  scripts/chromium/build.mjs
+  scripts/chromium/build.test.mjs
   protocol/README.md
   protocol/v1/session.schema.json
   protocol/v1/examples/session-offer.json
@@ -239,6 +241,7 @@ NODE
 node protocol/v1/validate-session.mjs protocol/v1/examples/session-offer.json
 node --check chromium/config.mjs
 node --check scripts/chromium/check-environment.mjs
+node --check scripts/chromium/build.mjs
 node --check signaling/broker.mjs
 node --check signaling/agent.mjs
 node --check src/frontend/dashboard/dashboard.mjs

@@ -32,18 +32,22 @@ missing local tools without making CI depend on a full Chromium toolchain.
 
 ## Generate and build
 
-From the external Chromium `src` directory, copy the platform template into
-the GN args for the selected output directory, then generate and build:
+The repository now provides a plan-first bootstrap that selects the manifest
+target, validates its GN template, and emits fixed `gn`/`autoninja` argument
+arrays. Set `SPARTAN_CHROMIUM_SRC` or pass `--source`:
 
 ```bash
-gn gen out/SpartanGaming --args="$(cat /path/to/Spartan-Gaming/chromium/args/linux.gn)"
-autoninja -C out/SpartanGaming chrome
+npm run chromium:build -- --platform linux --source "$SPARTAN_CHROMIUM_SRC"
+npm run chromium:build -- --platform linux --source "$SPARTAN_CHROMIUM_SRC" --execute
 ```
 
-On Windows, use the Visual Studio developer shell and PowerShell's equivalent
-file-reading syntax. On macOS, choose `target_cpu = "arm64"` or
-`target_cpu = "x64"` explicitly for the intended artifact. Universal packaging
-is a release-pipeline concern and must produce separately validated binaries.
+The first command is a safe plan-only preview; `--execute` is required before
+the external checkout is modified. The same command accepts `mac` and
+`windows`, and `--json` produces machine-readable build metadata. On Windows,
+run it from the Visual Studio developer shell. On macOS, choose
+`target_cpu = "arm64"` or `target_cpu = "x64"` explicitly for the intended
+artifact. Universal packaging is a release-pipeline concern and must produce
+separately validated binaries.
 
 Initial integration gates are browser shell branding, dashboard navigation,
 controller permissions, fullscreen/Pointer Lock/Keyboard Lock, hardware

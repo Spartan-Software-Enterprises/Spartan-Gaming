@@ -32,10 +32,12 @@ and Windows; these are inputs to an external checkout, not standalone GN
 projects. Validate a workstation with `npm run chromium:environment` or use
 `npm run chromium:validate -- --strict` for a Linux build gate.
 
-The upstream workflow is `fetch chromium`, `gclient sync`, `gn gen`, and
-`autoninja -C out/<directory> chrome`. Platform-specific prerequisites and
-signing steps remain owned by Chromium's current build documentation and must
-be rechecked when the branch is selected.
+The upstream workflow is `fetch chromium`, `gclient sync`, followed by the
+repository's plan-first `npm run chromium:build -- --platform <target>`
+bootstrap. Add `--execute` only on a configured external checkout; the script
+then runs `gn gen` and `autoninja -C ... chrome` with fixed argument arrays.
+Platform-specific prerequisites and signing steps remain owned by Chromium's
+current build documentation and must be rechecked when the branch is selected.
 
 ## Platform gates
 
