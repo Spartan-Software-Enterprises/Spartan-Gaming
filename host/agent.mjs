@@ -1,0 +1,65 @@
+#!/usr/bin/env node
+import {createHash, randomUUID} from 'node:crypto';
+import {createServer} from 'node:http';
+import {createSessionEnvelope} from '../src/frontend/session/session.mjs';
+import {validateTransportMessage} from '../src/frontend/transport/transport.mjs';
+import {createPairingAuthority, createPairingCode} from './pairing.mjs';
+
+const args = new Map();
+for (let index = 2; index < process.argv.length; index += 1) { const value = process.argv[index]; if (value.startsWith('--')) args.set(value.slice(2), process.argv[index + 1]?.startsWith('--') ? true : process.argv[++index]); }
+const hostId = String(args.get('id') || `host-${randomUUID().slice(0, 8)}`);
+const hostName = String(args.get('name') || 'Spartan Host');
+const bind = String(args.get('bind') || '127.0.0.1');
+const port = Number(args.get('port') || 8787);
+const pairingCode = args.get('pairing-code') || createPairingCode();
+const pairing = createPairingAuthority({code: pairingCode});
+const capabilities = {transports: ['websocket'], video: {codecs: ['h264', 'vp9'], maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false}, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: true, keyboard: true, pointer: true, rumble: true}};
+
+function json(response, status, body) { response.writeHead(status, {'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store'}); response.end(JSON.stringify(body)); }
+function frame(text) { const body = Buffer.from(text); const size = body.length; if (size < 126) return Buffer.concat([Buffer.from([0x81, size]), body]); if (size < 65536) { const header = Buffer.alloc(4); header[0] = 0x81; header[1] = 126; header.writeUInt16BE(size, 2); return Buffer.concat([header, body]); } throw new Error('WebSocket message is too large'); }
+function closeFrame() { return Buffer.from([0x88, 0x00]); }
+function acceptKey(key) { return createHash('sha1').update(`${key}258EAFA5-E914-47DA-95CA-C5AB0DC85B11`).digest('base64'); }
+function parseFrames(buffer, onMessage, socket) {
+  let cursor = 0;
+  while (buffer.length - cursor >= 2) {
+    const first = buffer[cursor]; const second = buffer[cursor + 1]; const opcode = first & 0x0f; const masked = Boolean(second & 0x80); let length = second & 0x7f; let header = 2;
+    if (length === 126) { if (buffer.length - cursor < 4) break; length = buffer.readUInt16BE(cursor + 2); header = 4; }
+    if (length === 127 || !masked || length > 65536) { socket.end(closeFrame()); return Buffer.alloc(0); }
+    if (buffer.length - cursor < header + 4 + length) break;
+    const mask = buffer.subarray(cursor + header, cursor + header + 4); const payload = Buffer.from(buffer.subarray(cursor + header + 4, cursor + header + 4 + length)); for (let index = 0; index < payload.length; index += 1) payload[index] ^= mask[index % 4];
+    cursor += header + 4 + length;
+    if (opcode === 0x8) { socket.end(closeFrame()); return buffer.subarray(cursor); }
+    if (opcode === 0x9) { socket.write(Buffer.from([0x8a, 0])); continue; }
+    if (opcode !== 0x1) { socket.end(closeFrame()); return Buffer.alloc(0); }
+    onMessage(payload.toString('utf8'));
+  }
+  return buffer.subarray(cursor);
+}
+function handleMessage(socket, text, session) {
+  let message;
+  try { message = validateTransportMessage(JSON.parse(text)); } catch { socket.end(closeFrame()); return; }
+  if (message.type === 'session.offer' && !session.accepted) {
+    if (message.payload.hostId !== hostId || !pairing.verify(message.payload.pairingCode)) { socket.end(closeFrame()); return; }
+    session.accepted = true; session.sessionId = message.sessionId;
+    const answer = createSessionEnvelope({sessionId: message.sessionId, type: 'session.answer', sequence: (message.sequence || 0) + 1, payload: {accepted: true, hostId, hostName, capabilities, media: {state: 'not-configured'}}});
+    socket.write(frame(JSON.stringify(answer)));
+    return;
+  }
+  if (message.sessionId !== session.sessionId) { socket.end(closeFrame()); return; }
+  if (message.type === 'session.reconnect') { const answer = createSessionEnvelope({sessionId: message.sessionId, type: 'session.answer', sequence: (message.sequence || 0) + 1, payload: {accepted: true, hostId, capabilities, media: {state: 'not-configured'}}}); socket.write(frame(JSON.stringify(answer))); return; }
+  if (message.type === 'session.close') socket.end(closeFrame());
+}
+
+const server = createServer((request, response) => {
+  if (request.url === '/health') return json(response, 200, {service: 'spartan-host-reference', version: 1, hostId, hostName, pairingExpiresAt: pairing.expiresAt, pairingUsed: pairing.used, capabilities});
+  json(response, 404, {error: 'not found'});
+});
+server.on('upgrade', (request, socket) => {
+  const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
+  if (url.pathname !== '/session' || request.headers.upgrade?.toLowerCase() !== 'websocket' || !request.headers['sec-websocket-key']) { socket.end('HTTP/1.1 404 Not Found\r\n\r\n'); return; }
+  socket.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${acceptKey(request.headers['sec-websocket-key'])}\r\n\r\n`);
+  const session = {accepted: false, sessionId: null}; let buffer = Buffer.alloc(0);
+  socket.on('data', chunk => { buffer = parseFrames(Buffer.concat([buffer, chunk]), text => handleMessage(socket, text, session), socket); });
+  socket.on('error', () => {});
+});
+server.listen(port, bind, () => { console.log(JSON.stringify({service: 'spartan-host-reference', endpoint: `ws://${bind}:${port}/session`, health: `http://${bind}:${port}/health`, hostId, hostName, pairingCode: args.get('quiet') ? undefined : pairingCode, pairingExpiresAt: pairing.expiresAt, warning: 'Reference control plane only; media capture/encoding and process launch are not configured.'})); });

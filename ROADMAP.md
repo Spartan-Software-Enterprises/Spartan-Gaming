@@ -41,6 +41,7 @@
 
 - [ ] Windows and Linux host agent.
 - [x] Secure device pairing UX and frontend contract (agent/signaling implementation pending).
+- [x] Dependency-free reference host control plane (media and OS adapters pending).
 - [ ] Signaling service.
 - [ ] STUN/TURN integration.
 - [ ] Controller, keyboard, mouse, audio, and rumble forwarding.

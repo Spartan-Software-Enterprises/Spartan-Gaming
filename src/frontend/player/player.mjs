@@ -8,6 +8,7 @@ import {captureVideoFrame, createRecordingController} from '../capture/capture.m
 import {createImmersiveController} from './immersive.mjs';
 
 const query = new URLSearchParams(location.search);
+const pendingHostPair = (() => { try { const value = JSON.parse(sessionStorage.getItem('spartan-gaming.pending-host-pair.v1') || 'null'); sessionStorage.removeItem('spartan-gaming.pending-host-pair.v1'); return value; } catch { return null; } })();
 const manager = createSessionManager({idFactory: () => `ses-${crypto.randomUUID()}`});
 const mapper = createInputMapper();
 const immersive = createImmersiveController({target: document.querySelector('[data-stage]')});
@@ -31,7 +32,7 @@ function apply(event) {
 async function start() {
   const backendId = query.get('backend') || 'spartan-host'; const backendName = query.get('name') || 'Spartan Host'; elements.sessionName.textContent = backendName;
   try {
-    const endpoint = query.get('signal');
+    const endpoint = query.get('signal') || pendingHostPair?.endpoint;
     if (endpoint) {
       const signaling = createWebSocketSignalTransport({endpoint});
       const media = typeof RTCPeerConnection === 'function' ? createWebRtcTransport() : undefined;
@@ -39,7 +40,7 @@ async function start() {
       runtime.on('stream', stream => { elements.video.srcObject = stream; elements.video.play().catch(() => {}); });
       runtime.on('telemetry', sample => { apply({type: 'telemetry.health', rttMs: sample.rttMs, packetLossPct: sample.packetLossPct}); apply({type: 'quality.changed', profile: manager.quality.id}); });
       runtime.on('error', error => apply({type: 'error', message: error.message || 'Transport error'}));
-      const offer = await runtime.start({backend: {id: backendId, backendType: 'remote-play'}});
+      const offer = await runtime.start({backend: {id: backendId, backendType: 'remote-play', hostId: pendingHostPair?.hostId, pairingCode: pendingHostPair?.pairingCode}});
       elements.transport.textContent = media ? 'WebRTC · adaptive' : 'WebSocket signaling';
       window.dispatchEvent(new CustomEvent('spartan:session-offer', {detail: offer}));
     } else {

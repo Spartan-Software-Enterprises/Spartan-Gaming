@@ -67,7 +67,10 @@ export function createSessionManager({clock = () => new Date().toISOString(), id
       if (!backend?.id) throw new TypeError('backend.id is required');
       transition('preparing'); quality = createQualityController(); recovery = createReconnectPolicy(); session = {id: idFactory(), backendId: backend.id, backendType: backend.backendType, capabilities: normalizeCapabilities(capabilities), quality: quality.profile}; sequence = 0;
       transition('negotiating');
-      return createSessionEnvelope({sessionId: session.id, type: 'session.offer', sequence, sentAt: clock(), payload: {role: 'client', backendId: backend.id, transports: session.capabilities.transports, video: session.capabilities.video, audio: session.capabilities.audio, input: session.capabilities.input, quality: quality.request()}});
+      const payload = {role: 'client', backendId: backend.id, transports: session.capabilities.transports, video: session.capabilities.video, audio: session.capabilities.audio, input: session.capabilities.input, quality: quality.request()};
+      if (backend.hostId) payload.hostId = backend.hostId;
+      if (backend.pairingCode) payload.pairingCode = backend.pairingCode;
+      return createSessionEnvelope({sessionId: session.id, type: 'session.offer', sequence, sentAt: clock(), payload});
     },
     receive(message) {
       if (!session || message?.sessionId !== session.id) throw new Error('Message belongs to another session');

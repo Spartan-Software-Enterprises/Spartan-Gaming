@@ -39,7 +39,7 @@ scripts/               Reproducible development and release helpers
 src/                   Spartan browser product code (planned)
 src/frontend/          Catalog, dashboard, player, settings, diagnostics, input, and transport contracts
 server/                Optional self-hosted services (planned)
-host/                  Optional gaming host agent (planned)
+host/                  Portable reference host control plane and pairing authority
 third_party/           Third-party notices and integration metadata
 ```
 
@@ -60,7 +60,7 @@ The first milestone will document the supported Chromium checkout and build conf
 
 Spartan Gaming is in the foundation and architecture phase. Follow [ROADMAP.md](ROADMAP.md) for the current sequence of work.
 
-Interactive frontend surfaces include the [gaming dashboard](src/frontend/dashboard/index.html), which merges provider and emulator catalogs into one searchable library; the [session player](src/frontend/player/index.html), with stream, overlay, quality, reconnect, capture, controller, and diagnostics surfaces; the [controller profile manager](src/frontend/input/profiles.html), with persistent remapping and deadzone controls; the [emulation center](src/frontend/emulation/index.html), with core metadata and legal user-file launch plans; the [compatibility diagnostics center](src/frontend/diagnostics/index.html), with local capability probing and redacted reports; and the [settings control center](src/frontend/settings/index.html), covering browser, gaming, streaming, controllers, emulation, providers, performance, privacy, accessibility, profiles, and updates.
+Interactive frontend surfaces include the [gaming dashboard](src/frontend/dashboard/index.html), which merges provider and emulator catalogs into one searchable library; the [session player](src/frontend/player/index.html), with stream, overlay, quality, reconnect, capture, controller, and diagnostics surfaces; the [controller profile manager](src/frontend/input/profiles.html), with persistent remapping and deadzone controls; the [host profile manager](src/frontend/host/index.html), with secure endpoint validation and one-time pairing handoff; the [emulation center](src/frontend/emulation/index.html), with core metadata and legal user-file launch plans; the [compatibility diagnostics center](src/frontend/diagnostics/index.html), with local capability probing and redacted reports; and the [settings control center](src/frontend/settings/index.html), covering browser, gaming, streaming, controllers, emulation, providers, performance, privacy, accessibility, profiles, and updates.
 
 ## License
 

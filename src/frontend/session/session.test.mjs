@@ -25,6 +25,13 @@ test('session manager follows offer, answer, and close lifecycle', () => {
   assert.equal(manager.close(), 'closed'); assert.throws(() => manager.receive({sessionId: offer.sessionId, type: 'session.answer'}), /transition/);
 });
 
+test('host identity and pairing metadata travel only in the session offer', () => {
+  const manager = createSessionManager({idFactory: () => 'ses-host'});
+  const offer = manager.start({backend: {id: 'spartan-host', backendType: 'remote-play', hostId: 'host-1', pairingCode: 'ABCD23'}});
+  assert.equal(offer.payload.hostId, 'host-1');
+  assert.equal(offer.payload.pairingCode, 'ABCD23');
+});
+
 test('adapter registry rejects duplicate ids and returns immutable adapters', () => {
   const registry = createAdapterRegistry([{id: 'web-provider', kind: 'provider', modes: ['web']}]);
   assert.equal(registry.get('web-provider').kind, 'provider'); assert.throws(() => registry.register({id: 'web-provider'}), /duplicate/); assert.equal(Object.isFrozen(registry.get('web-provider')), true);
