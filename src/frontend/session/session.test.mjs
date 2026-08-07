@@ -25,6 +25,23 @@ test('session manager follows offer, answer, and close lifecycle', () => {
   assert.equal(manager.close(), 'closed'); assert.throws(() => manager.receive({sessionId: offer.sessionId, type: 'session.answer'}), /transition/);
 });
 
+test('session manager records negotiated capabilities from a compatible answer', () => {
+  const manager = createSessionManager({idFactory: () => 'ses-negotiated'});
+  const offer = manager.start({backend: {id: 'host'}, capabilities: {transports: ['webrtc', 'websocket'], video: {codecs: ['h264'], maxWidth: 1920, maxHeight: 1080, maxFramerate: 60}, audio: {codecs: ['opus'], channels: 2}}});
+  manager.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true, capabilities: {transports: ['websocket'], video: {codecs: ['h264'], maxWidth: 1280, maxHeight: 720, maxFramerate: 30}, audio: {codecs: ['opus'], channels: 1}}}}));
+  assert.equal(manager.negotiated.transports[0], 'websocket');
+  assert.equal(manager.negotiated.video.maxWidth, 1280);
+  assert.equal(manager.negotiated.audio.channels, 1);
+});
+
+test('session manager refuses an incompatible answer before connecting', () => {
+  const manager = createSessionManager({idFactory: () => 'ses-incompatible'});
+  const offer = manager.start({backend: {id: 'host'}, capabilities: {transports: ['webrtc'], video: {codecs: ['av1']}, audio: {codecs: ['opus']}}});
+  const answer = createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true, capabilities: {transports: ['websocket'], video: {codecs: ['h264']}, audio: {codecs: ['aac']}}}});
+  assert.throws(() => manager.receive(answer), /No compatible session transport/);
+  assert.equal(manager.state, 'negotiating');
+});
+
 test('host identity and pairing metadata travel only in the session offer', () => {
   const manager = createSessionManager({idFactory: () => 'ses-host'});
   const offer = manager.start({backend: {id: 'spartan-host', backendType: 'remote-play', hostId: 'host-1', pairingCode: 'ABCD23'}});

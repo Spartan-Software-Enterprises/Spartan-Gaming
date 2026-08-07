@@ -63,10 +63,11 @@ export function createSessionManager({clock = () => new Date().toISOString(), id
     get session() { return session ? clone(session) : null; },
     get quality() { return quality.profile; },
     get qualityRequest() { return quality.request(); },
+    get negotiated() { return session?.negotiated ? clone(session.negotiated) : null; },
     get recovery() { return {attempt: recovery.attempt, exhausted: recovery.exhausted, maxAttempts: recovery.maxAttempts}; },
     start({backend, capabilities = DEFAULT_CAPABILITIES, preferences = {}} = {}) {
       if (!backend?.id) throw new TypeError('backend.id is required');
-      transition('preparing'); quality = createQualityController({initialProfile: preferences.qualityPreset || 'balanced'}); recovery = createReconnectPolicy(); session = {id: idFactory(), backendId: backend.id, backendType: backend.backendType, capabilities: normalizeCapabilities(capabilities), preferences: clone(preferences), quality: quality.profile}; sequence = 0;
+      transition('preparing'); quality = createQualityController({initialProfile: preferences.qualityPreset || 'balanced'}); recovery = createReconnectPolicy(); session = {id: idFactory(), backendId: backend.id, backendType: backend.backendType, capabilities: normalizeCapabilities(capabilities), preferences: clone(preferences), negotiated: null, quality: quality.profile}; sequence = 0;
       transition('negotiating');
       const payload = {role: 'client', backendId: backend.id, transports: session.capabilities.transports, video: session.capabilities.video, audio: session.capabilities.audio, input: session.capabilities.input, quality: {...quality.request(), ...(preferences.bitrateKbps ? {bitrateKbps: preferences.bitrateKbps} : {})}, streaming: clone(preferences)};
       if (backend.hostId) payload.hostId = backend.hostId;
@@ -77,6 +78,7 @@ export function createSessionManager({clock = () => new Date().toISOString(), id
       if (!session || message?.sessionId !== session.id) throw new Error('Message belongs to another session');
       sequence = Math.max(sequence, Number.isInteger(message.sequence) ? message.sequence : sequence);
       if (message.type === 'telemetry.health') { const decision = quality.ingest(message.payload); session.quality = decision.profile; return state; }
+      if (message.type === 'session.answer' && message.payload?.capabilities) session.negotiated = negotiateCapabilities(session.capabilities, message.payload.capabilities);
       const next = { 'session.answer': 'connected', 'session.reconnect': 'reconnecting', 'session.close': 'closing' }[message.type];
       if (next) { transition(next); if (next === 'connected') recovery.succeeded(); if (next === 'closing') transition('closed'); }
       return state;
