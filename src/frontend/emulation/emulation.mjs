@@ -6,6 +6,14 @@ function clone(value) { return JSON.parse(JSON.stringify(value)); }
 
 export const DEFAULT_EMULATION_POLICY = Object.freeze({shipRoms: false, shipBios: false, allowUserSelectedFiles: true, requireLicenseMetadata: true});
 
+const FRONTEND_PREFERENCES = Object.freeze({'Automatic': 'automatic', 'Spartan runtime': 'spartan-runtime', 'Libretro host': 'libretro-host', 'Native adapter': 'native-adapter'});
+
+export function resolveEmulationPreferences(settings = {}) {
+  const frontend = FRONTEND_PREFERENCES[settings['emulation.frontend']] || 'automatic';
+  const renderer = typeof settings['emulation.renderer'] === 'string' && settings['emulation.renderer'].trim() ? settings['emulation.renderer'] : 'Automatic';
+  return Object.freeze({preference: frontend, renderer});
+}
+
 export function createUserFileRecord(file, {kind = 'game', userSelected = true} = {}) {
   const name = requiredString(file?.name, 'file.name'); if (!['game', 'firmware', 'save', 'media'].includes(kind)) throw new TypeError('unsupported emulation file kind'); const size = Math.max(0, Number(file.size) || 0); const lastModified = Math.max(0, Number(file.lastModified) || 0); const extension = (name.match(EXTENSION)?.[1] || '').toLowerCase();
   return Object.freeze({id: `${kind}:${name}:${size}:${lastModified}`, name, kind, extension, size, lastModified, userSelected: Boolean(userSelected)});

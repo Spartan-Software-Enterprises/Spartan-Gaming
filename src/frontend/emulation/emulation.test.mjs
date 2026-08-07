@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createEmulationLaunchPlan, createEmulationLibraryIndex, createUserFileRecord, formatFileSize} from './emulation.mjs';
+import {createEmulationLaunchPlan, createEmulationLibraryIndex, createUserFileRecord, formatFileSize, resolveEmulationPreferences} from './emulation.mjs';
 
 const core = {id: 'dolphin', mode: 'native', systems: ['gamecube', 'wii'], license: 'GPL-2.0-or-later'};
 test('user file records preserve selection metadata without file contents', () => { const record = createUserFileRecord({name: 'game.iso', size: 1024, lastModified: 10}); assert.equal(record.extension, 'iso'); assert.equal(record.userSelected, true); assert.equal(record.content, undefined); });
@@ -9,3 +9,4 @@ test('launch plans require legal user-selected game and firmware files', () => {
 test('launch plans fail closed for missing license or unselected content', () => { assert.throws(() => createEmulationLaunchPlan({core: {...core, license: ''}, gameFile: {name: 'game.iso'}}), /license/); assert.throws(() => createEmulationLaunchPlan({core, gameFile: {name: 'game.iso', userSelected: false}}), /selected/); });
 test('launch plans require firmware when the selected runtime declares it', () => { const pcsx2 = {id: 'pcsx2', mode: 'native', systems: ['playstation-2'], license: 'GPL-3.0-or-later'}; assert.throws(() => createEmulationLaunchPlan({core: pcsx2, gameFile: {name: 'game.iso'}}), /firmware/); });
 test('file sizes are human-readable', () => { assert.equal(formatFileSize(1024 ** 2), '1.0 MB'); });
+test('emulation preferences translate settings into integration choices', () => { assert.deepEqual(resolveEmulationPreferences({'emulation.frontend': 'Spartan runtime', 'emulation.renderer': 'Metal'}), {preference: 'spartan-runtime', renderer: 'Metal'}); assert.deepEqual(resolveEmulationPreferences({'emulation.frontend': 'unknown', 'emulation.renderer': ''}), {preference: 'automatic', renderer: 'Automatic'}); });
