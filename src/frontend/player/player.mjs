@@ -31,6 +31,7 @@ let state = createPlayerState({status: 'negotiating'});
 let recording = null;
 let inputSequence = 0;
 let audioEnabled = true;
+let autoFullscreenAttempted = false;
 let mediaObservation = null;
 const previousGamepad = new Map();
 
@@ -41,6 +42,7 @@ function apply(event) {
   state = reducePlayerState(state, event);
   const labels = {idle: 'Ready', preparing: 'Preparing session', negotiating: 'Negotiating session', connected: 'Connected', reconnecting: 'Reconnecting', ended: 'Session ended', error: 'Connection error'};
   elements.status.textContent = labels[state.status]; elements.quality.textContent = state.quality[0].toUpperCase() + state.quality.slice(1); elements.qualityDetail.textContent = `${elements.quality.textContent} · ${state.quality === 'low' ? '720p30' : '1080p60'}`; elements.latency.textContent = formatLatency(state.latencyMs); elements.latencyDetail.textContent = formatLatency(state.latencyMs); elements.loss.textContent = `${state.packetLossPct}%`; elements.negotiated.textContent = formatNegotiatedCapabilities(state.negotiated); elements.diagnostics.classList.toggle('is-visible', state.diagnosticsVisible); elements.overlay.forEach(overlay => overlay.classList.toggle('is-hidden', !state.overlayVisible));
+  if (state.status === 'connected' && sessionPreferences.preferences.autoFullscreen && !autoFullscreenAttempted) { autoFullscreenAttempted = true; immersive.enter().catch(() => {}); }
   if (state.status === 'error') elements.message.textContent = state.error; if (state.status === 'ended') elements.message.textContent = 'This session has ended. Return to the library to choose another backend.';
   if (state.status === 'connected' && state.mediaState === 'not-configured') elements.message.textContent = 'Host paired successfully. Media capture and encoding are not configured on this host.';
 }

@@ -11,6 +11,8 @@ test('session preferences map streaming settings into bounded capabilities', () 
   assert.equal(result.capabilities.input.gamepad, false);
   assert.equal(result.preferences.qualityPreset, 'low');
   assert.equal(result.preferences.bitrateKbps, 40000);
+  assert.equal(result.preferences.autoFullscreen, true);
+  assert.equal(result.preferences.showOverlay, true);
 });
 
 test('session preferences fall back safely for invalid settings', () => {
@@ -19,4 +21,5 @@ test('session preferences fall back safely for invalid settings', () => {
   assert.equal(result.capabilities.video.maxFramerate, 60);
   assert.deepEqual(result.capabilities.video.codecs, ['av1', 'vp9', 'h264']);
   assert.equal(result.preferences.bitrateKbps, 25000);
+  assert.equal(result.preferences.autoFullscreen, true);
 });
