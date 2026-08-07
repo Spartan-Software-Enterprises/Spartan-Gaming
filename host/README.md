@@ -80,6 +80,11 @@ creates a Werift video track, attaches it to a peer connection, and exposes the
 track as an RTP transport for `createRtpMediaPublisher`; installing `werift` is
 still an explicit host deployment choice.
 
+The same module exports `createWeriftRtpPublisher`, which composes that track
+transport with the native encoded-media publisher. The caller supplies the
+platform pipeline and codec packetizer, so the adapter owns WebRTC/RTP delivery
+without guessing how a platform captures, frames, or packetizes video.
+
 The same module exposes a session wrapper for SDP offer/answer and ICE
 candidate handling. `host/werift-runtime.mjs` now connects that wrapper to the
 authenticated Spartan transport envelopes, including input and quality

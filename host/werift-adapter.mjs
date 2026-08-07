@@ -1,5 +1,7 @@
 const DEFAULT_CODEC = 'h264';
 
+import {createRtpMediaPublisher} from './publisher.mjs';
+
 export async function loadWerift({loader = packageName => import(packageName)} = {}) {
   if (typeof loader !== 'function') throw new TypeError('loader must be a function');
   const module = await loader('werift');
@@ -16,6 +18,17 @@ export function createWeriftVideoTransport({module, peerConfig = {}, codec = DEF
   const sender = typeof peer.addTrack === 'function' ? peer.addTrack(track) : null; let closed = false;
   const transport = Object.freeze({send(packet) { if (closed) throw new Error('Werift transport is closed'); track.writeRtp(packet); }, close() { if (closed) return; closed = true; track.stop?.(); peer.close?.(); }});
   return Object.freeze({peer, track, sender, transport, close: () => transport.close()});
+}
+
+export function createWeriftRtpPublisher({module, pipeline, packetizer, peerConfig = {}, codec = DEFAULT_CODEC, ssrc = 1, streamId = 'spartan-stream', label = 'Spartan Gaming', maxChunkBytes} = {}) {
+  const adapter = createWeriftVideoTransport({module, peerConfig, codec, ssrc, streamId, label});
+  try {
+    const publisher = createRtpMediaPublisher({pipeline, packetizer, transport: adapter.transport, codec, maxChunkBytes});
+    return Object.freeze({adapter, publisher: publisher.publisher, get packetsSent() { return publisher.packetsSent; }});
+  } catch (error) {
+    adapter.close();
+    throw error;
+  }
 }
 
 function subscribe(event, handler) { if (typeof event?.subscribe === 'function') return event.subscribe(handler); if (typeof event?.addEventListener === 'function') { event.addEventListener(handler); return () => event.removeEventListener?.(handler); } return () => {}; }
