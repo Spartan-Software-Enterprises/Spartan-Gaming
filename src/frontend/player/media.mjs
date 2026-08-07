@@ -17,3 +17,21 @@ export function setMediaAudioEnabled(video, enabled) {
   video.muted = !Boolean(enabled);
   return !video.muted;
 }
+
+export function observeMediaStream(stream, onChange) {
+  if (!stream || typeof stream.getTracks !== 'function') throw new TypeError('MediaStream-like value is required');
+  if (typeof onChange !== 'function') throw new TypeError('onChange callback is required');
+  if (typeof stream.addEventListener !== 'function' || typeof stream.removeEventListener !== 'function') {
+    throw new TypeError('MediaStream-like value must support track events');
+  }
+  const emit = () => onChange(describeMediaStream(stream));
+  stream.addEventListener('addtrack', emit);
+  stream.addEventListener('removetrack', emit);
+  emit();
+  return Object.freeze({
+    disconnect() {
+      stream.removeEventListener('addtrack', emit);
+      stream.removeEventListener('removetrack', emit);
+    },
+  });
+}

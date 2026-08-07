@@ -7,7 +7,7 @@ import {readTransportPolicy, resolveSignalingTransport} from './transport-config
 import {createPlayerState, formatLatency, reducePlayerState} from './player-state.mjs';
 import {captureVideoFrame, createRecordingController} from '../capture/capture.mjs';
 import {createImmersiveController} from './immersive.mjs';
-import {attachMediaStreamTarget, describeMediaStream, setMediaAudioEnabled} from './media.mjs';
+import {attachMediaStreamTarget, describeMediaStream, observeMediaStream, setMediaAudioEnabled} from './media.mjs';
 
 const query = new URLSearchParams(location.search);
 const pendingHostPair = (() => { try { const value = JSON.parse(sessionStorage.getItem('spartan-gaming.pending-host-pair.v1') || 'null'); sessionStorage.removeItem('spartan-gaming.pending-host-pair.v1'); return value; } catch { return null; } })();
@@ -24,6 +24,7 @@ let state = createPlayerState({status: 'negotiating'});
 let recording = null;
 let inputSequence = 0;
 let audioEnabled = true;
+let mediaObservation = null;
 const previousGamepad = new Map();
 
 function apply(event) {
@@ -43,7 +44,15 @@ async function start() {
       const signaling = selectedSignaling === 'webtransport' ? createWebTransportSignalTransport({endpoint}) : createWebSocketSignalTransport({endpoint});
       const media = typeof RTCPeerConnection === 'function' ? createWebRtcTransport({ice: {policy: transportPolicy.icePolicy}}) : undefined;
       runtime = createSessionRuntime({manager, signaling, media});
-      runtime.on('stream', stream => { const mediaState = attachMediaStreamTarget({video: elements.video, stream, audioEnabled}); elements.audio.textContent = mediaState.hasAudio ? (audioEnabled ? 'Active' : 'Muted') : 'No track'; elements.video.play().catch(() => {}); });
+      runtime.on('stream', stream => {
+        const mediaState = attachMediaStreamTarget({video: elements.video, stream, audioEnabled});
+        mediaObservation?.disconnect();
+        mediaObservation = observeMediaStream(stream, nextState => {
+          elements.audio.textContent = nextState.hasAudio ? (audioEnabled ? 'Active' : 'Muted') : 'No track';
+        });
+        elements.audio.textContent = mediaState.hasAudio ? (audioEnabled ? 'Active' : 'Muted') : 'No track';
+        elements.video.play().catch(() => {});
+      });
       runtime.on('stream', () => { apply({type: 'media.state', state: 'active'}); elements.demo.classList.add('is-hidden'); });
       runtime.on('session.answer', message => { const mediaState = message.payload?.hostCapabilities?.media?.state || (message.payload?.sdp ? 'negotiating' : 'not-configured'); apply({type: 'media.state', state: mediaState}); elements.demo.classList.add('is-hidden'); });
       runtime.on('telemetry', sample => { apply({type: 'telemetry.health', rttMs: sample.rttMs, packetLossPct: sample.packetLossPct}); apply({type: 'quality.changed', profile: manager.quality.id}); });
