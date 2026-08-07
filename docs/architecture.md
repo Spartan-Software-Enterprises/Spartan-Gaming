@@ -2,19 +2,39 @@
 
 ## Product boundary
 
-Spartan Gaming consists of a Chromium-based browser client and optional open-source streaming services. The browser must remain useful with existing web-based gaming providers; the optional services enable self-hosted streaming from a user-owned PC, VM, or cloud GPU.
+Spartan Gaming is a universal frontend and orchestration layer. It presents one library, launcher, controller model, overlay, profile system, and diagnostics surface over multiple execution backends:
+
+- Cloud gaming providers opened through optimized official web experiences.
+- Remote-play and streaming clients connected to user-owned systems.
+- Browser-native games and WebAssembly emulators.
+- Native emulator adapters and libretro cores installed or supplied through supported package channels.
+- Local games and desktop applications where platform permissions allow them.
+
+Spartan Gaming does not own the catalogs, bypass provider controls, replace emulator projects, or distribute copyrighted games and firmware.
 
 ## Components
 
 ```text
-Spartan Gaming browser
+Spartan Gaming frontend
 ├── Chromium browser and renderer processes
-├── Gaming shell and dashboard
+├── Unified library and launcher
+├── Provider adapter registry
+├── Emulator/core adapter registry
 ├── Session and profile manager
 ├── Controller/input service
-├── Streaming quality controller
+├── Streaming and playback coordinator
 ├── Overlay and diagnostics
-└── Capture and recording
+├── Capture and recording
+└── Permissions and secure credential broker
+
+Execution backends
+├── Provider web sessions
+├── Official provider APIs and embeds
+├── Browser-native WASM/WebGPU runtimes
+├── Native emulator adapters
+├── Libretro cores
+├── User-owned remote hosts
+└── Spartan Host/WebRTC services
 
 Optional services
 ├── Host agent
@@ -32,7 +52,24 @@ Optional services
 - Use WebCodecs where custom frame-level processing or diagnostics are required.
 - Use Gamepad first, with WebHID/WebUSB integrations only behind explicit permissions.
 - Keep privileged browser changes small, reviewable, and isolated behind browser services.
-- Maintain a compatibility layer for existing cloud gaming services rather than hard-coding service internals.
+- Maintain provider and emulator adapters rather than hard-coding service internals or forking every backend.
+- Define one session contract for launch, pause, stop, input, media, save data, telemetry, and failure reporting.
+- Keep backend-specific capabilities visible to the frontend so the UI can degrade gracefully.
+
+## Frontend session model
+
+Every launchable item resolves to a backend descriptor:
+
+```text
+catalog item
+  → backend adapter
+  → capability negotiation
+  → profile and permission resolution
+  → session lifecycle
+  → unified overlay/input/telemetry
+```
+
+The frontend must make clear whether a session is browser-hosted, native, remote, self-hosted, or emulated. A provider or emulator failure should return a structured error and troubleshooting link rather than silently changing the backend.
 
 ## Cross-platform strategy
 
@@ -50,4 +87,3 @@ input capture → upload → server input → game render → encode
 ```
 
 User-facing ping must not be presented as equivalent to end-to-end input-to-photon latency.
-

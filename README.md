@@ -1,6 +1,6 @@
 # Spartan Gaming
 
-Spartan Gaming is an open-source, cross-platform Chromium-based browser focused on cloud gaming, game streaming, browser games, controllers, and low-latency media.
+Spartan Gaming is an open-source, cross-platform Chromium-based gaming frontend for cloud gaming, game streaming, browser games, emulation, controllers, and low-latency media.
 
 > Early project notice: the repository currently contains project planning and engineering foundations. The Chromium fork and streaming implementation will be introduced incrementally.
 
@@ -21,16 +21,20 @@ Build a fast, privacy-respecting gaming browser that works across desktop, mobil
 ## Initial priorities
 
 1. Cross-platform Chromium build and release pipeline.
-2. Gaming dashboard, profiles, fullscreen mode, and controller-first navigation.
-3. Low-latency WebRTC streaming client with diagnostics.
-4. Optional self-hosted host agent and signaling service.
+2. A unified library and launcher for providers, emulators, browser games, and local games.
+3. One controller, fullscreen, overlay, recording, and diagnostics experience.
+4. Low-latency WebRTC streaming client with optional self-hosted host support.
 5. Reproducible builds, privacy controls, and a sustainable Chromium rebase process.
+
+Spartan Gaming is the frontend and orchestration layer. Providers and emulator projects remain the execution backends; integrations use official interfaces, documented protocols, or user-owned local installations.
 
 ## Repository layout
 
 ```text
 docs/                 Architecture, decisions, roadmap, and research
 protocol/              Versioned streaming protocol notes and schemas
+providers/             Machine-readable cloud gaming and streaming provider catalog
+emulators/             Machine-readable emulator and core catalog
 scripts/               Reproducible development and release helpers
 src/                   Spartan browser product code (planned)
 server/                Optional self-hosted services (planned)
@@ -58,4 +62,3 @@ Spartan Gaming is in the foundation and architecture phase. Follow [ROADMAP.md](
 ## License
 
 Spartan Gaming project code is licensed under the Apache License 2.0. Chromium and other dependencies retain their own licenses; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-

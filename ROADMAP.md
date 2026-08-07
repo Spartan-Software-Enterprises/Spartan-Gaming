@@ -18,6 +18,9 @@
 - [ ] Keyboard Lock, Pointer Lock, and per-site permission UX.
 - [ ] Stream diagnostics page.
 - [ ] Windows, macOS, and Linux development builds.
+- [ ] Unified frontend catalog and launcher model.
+- [ ] Provider profiles for GeForce NOW, Xbox Cloud Gaming, Amazon Luna, Boosteroid, Shadow, Twitch, YouTube Live, Discord, and Steam.
+- [ ] Emulator/core profiles for libretro, Dolphin, PCSX2, RPCS3, PPSSPP, DuckStation, melonDS, Azahar, MAME, Flycast, xemu, and ScummVM.
 
 ## Milestone 2: streaming client
 
@@ -28,6 +31,8 @@
 - [ ] Input, decode, render, and network telemetry.
 - [ ] Screenshots and local recording.
 - [ ] LAN self-hosted reference stream.
+- [ ] Provider and emulator capability detection harness.
+- [ ] Unified session lifecycle and error model.
 
 ## Milestone 3: self-hosted stack
 
@@ -46,4 +51,4 @@
 - [ ] WebTransport experimental transport.
 - [ ] HDR, AV1, high-refresh, and multi-monitor support.
 - [ ] Provider SDK and community compatibility database.
-
+- [ ] Signed adapter and core registry.

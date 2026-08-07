@@ -1,0 +1,17 @@
+{
+  "catalogVersion": 1,
+  "updatedAt": "2026-08-07",
+  "providers": [
+    {"id":"nvidia-geforce-now","name":"NVIDIA GeForce NOW","kind":"cloud-gaming","supportLevel":"B","integrationModes":["browser-first","official-launch"],"url":"https://www.nvidia.com/geforce-now/","requirements":["provider-account","supported-game-library"],"capabilities":["gamepad","keyboard","mouse","fullscreen","adaptive-quality","hardware-decode"]},
+    {"id":"xbox-cloud-gaming","name":"Xbox Cloud Gaming","kind":"cloud-gaming","supportLevel":"B","integrationModes":["browser-first","official-launch"],"url":"https://www.xbox.com/play","requirements":["xbox-account","supported-subscription-or-entitlement"],"capabilities":["gamepad","keyboard","touch-controls","fullscreen","adaptive-quality"]},
+    {"id":"amazon-luna","name":"Amazon Luna","kind":"cloud-gaming","supportLevel":"B","integrationModes":["browser-first","official-launch"],"url":"https://luna.amazon.com/","requirements":["amazon-account","supported-channel-or-entitlement"],"capabilities":["gamepad","keyboard","mouse","fullscreen","adaptive-quality"]},
+    {"id":"boosteroid","name":"Boosteroid","kind":"cloud-gaming","supportLevel":"B","integrationModes":["browser-first","official-launch"],"url":"https://boosteroid.com/","requirements":["provider-account","supported-game-library"],"capabilities":["gamepad","keyboard","mouse","fullscreen","adaptive-quality"]},
+    {"id":"shadow-pc","name":"Shadow PC","kind":"cloud-pc","supportLevel":"B","integrationModes":["browser-first","official-launch"],"url":"https://shadow.tech/","requirements":["provider-account","subscription"],"capabilities":["gamepad","keyboard","mouse","multi-monitor","clipboard","fullscreen"]},
+    {"id":"steam-remote-play","name":"Steam Remote Play","kind":"remote-play","supportLevel":"D","integrationModes":["official-launch","user-owned-host"],"url":"https://store.steampowered.com/remoteplay/","requirements":["steam-account","user-owned-steam-host"],"capabilities":["gamepad","keyboard","mouse","rumble","fullscreen"]},
+    {"id":"twitch","name":"Twitch","kind":"live-streaming","supportLevel":"C","integrationModes":["browser-first","official-api","official-embed"],"url":"https://www.twitch.tv/","requirements":[],"capabilities":["video","chat","clips","watch-parties","creator-dashboard"]},
+    {"id":"youtube-live","name":"YouTube Live","kind":"live-streaming","supportLevel":"C","integrationModes":["browser-first","official-api","official-embed"],"url":"https://www.youtube.com/live","requirements":["google-account-for-creator-actions"],"capabilities":["video","chat","clips","broadcast-management","creator-dashboard"]},
+    {"id":"discord","name":"Discord","kind":"social-streaming","supportLevel":"B","integrationModes":["browser-first","official-launch","official-embed"],"url":"https://discord.com/","requirements":["discord-account-for-social-actions"],"capabilities":["voice","chat","screen-share","party-links"]},
+    {"id":"owncast","name":"Owncast","kind":"self-hosted-live-streaming","supportLevel":"D","integrationModes":["browser-first","official-api","self-hosted"],"url":"https://owncast.online/","requirements":["owncast-instance-for-hosting"],"capabilities":["video","chat","self-hosting","custom-instance"]}
+  ]
+}
+

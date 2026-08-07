@@ -17,6 +17,10 @@ required_files=(
   protocol/v1/session.schema.json
   protocol/v1/examples/session-offer.json
   protocol/v1/validate-session.mjs
+  docs/provider-support.md
+  docs/emulation-support.md
+  providers/catalog.json
+  emulators/catalog.json
 )
 
 for file in "${required_files[@]}"; do
@@ -30,8 +34,12 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const schemaPath = 'protocol/v1/session.schema.json';
 const examplePath = 'protocol/v1/examples/session-offer.json';
+const providerCatalogPath = 'providers/catalog.json';
+const emulatorCatalogPath = 'emulators/catalog.json';
 const schema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
 const example = JSON.parse(fs.readFileSync(examplePath, 'utf8'));
+const providerCatalog = JSON.parse(fs.readFileSync(providerCatalogPath, 'utf8'));
+const emulatorCatalog = JSON.parse(fs.readFileSync(emulatorCatalogPath, 'utf8'));
 
 assert.equal(schema.properties.protocol.const, 'spartan-gaming/1');
 for (const required of schema.required) assert.ok(required in example, `${required} is required`);
@@ -41,9 +49,19 @@ assert.match(example.sessionId, new RegExp(schema.properties.sessionId.pattern))
 assert.ok(schema.properties.type.enum.includes(example.type));
 assert.match(example.sentAt, /^\d{4}-\d{2}-\d{2}T.*Z$/);
 assert.equal(typeof example.payload, 'object');
+for (const [name, catalog, minimum] of [
+  ['provider', providerCatalog, 5],
+  ['emulator', emulatorCatalog, 5],
+]) {
+  assert.equal(catalog.catalogVersion, 1, `${name} catalog version`);
+  assert.ok(Array.isArray(catalog.providers ?? catalog.projects));
+  assert.ok((catalog.providers ?? catalog.projects).length >= minimum);
+}
 
 console.log(`valid JSON and protocol contract: ${schemaPath}`);
 console.log(`valid JSON and protocol contract: ${examplePath}`);
+console.log(`valid provider catalog: ${providerCatalogPath}`);
+console.log(`valid emulator catalog: ${emulatorCatalogPath}`);
 NODE
 
 node protocol/v1/validate-session.mjs protocol/v1/examples/session-offer.json
