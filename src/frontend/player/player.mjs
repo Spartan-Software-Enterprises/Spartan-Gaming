@@ -13,9 +13,10 @@ import {captureVideoFrame, createRecordingController} from '../capture/capture.m
 import {createImmersiveController} from './immersive.mjs';
 import {attachMediaStreamTarget, describeMediaStream, observeMediaStream, setMediaAudioEnabled} from './media.mjs';
 import {hasAuthenticatedPlayerConnection, normalizePlayerConnection} from './connection.mjs';
+import {clearPendingHostPair, readPendingHostPair} from '../host/host.mjs';
 
 const query = new URLSearchParams(location.search);
-const pendingHostPair = (() => { try { const value = JSON.parse(sessionStorage.getItem('spartan-gaming.pending-host-pair.v1') || 'null'); sessionStorage.removeItem('spartan-gaming.pending-host-pair.v1'); return value; } catch { return null; } })();
+const pendingHostPair = readPendingHostPair(sessionStorage); clearPendingHostPair(sessionStorage);
 let connectionSessionId = query.get('session') || pendingHostPair?.sessionId || '';
 const manager = createSessionManager({idFactory: () => connectionSessionId || `ses-${crypto.randomUUID()}`});
 const transportPolicy = readTransportPolicy();
@@ -53,7 +54,7 @@ function apply(event) {
 }
 
 async function connect(connectionValues = {}) {
-  const backendId = query.get('backend') || 'spartan-host'; const backendName = query.get('name') || 'Spartan Host'; elements.sessionName.textContent = backendName;
+  const backendId = query.get('backend') || 'spartan-host'; const backendName = query.get('name') || pendingHostPair?.name || 'Spartan Host'; elements.sessionName.textContent = backendName;
   const connection = normalizePlayerConnection(connectionValues);
   const authenticated = hasAuthenticatedPlayerConnection(connection);
   if (!connection.endpoint) throw new Error('Signaling endpoint is required');

@@ -74,3 +74,9 @@ reference host, which does not use broker tickets.
 ## Compatibility targets
 
 The adapter boundary can support Spartan Host first, then user-owned Steam Remote Play, Sunshine/Moonlight-compatible endpoints, Parsec, Xbox Remote Play, and PlayStation Remote Play where official protocols and platform rules permit. Compatibility is not permission to bypass authentication, DRM, anti-cheat, or undocumented service controls.
+The Host Profiles page now completes the direct-host onboarding handoff: it
+validates the endpoint, normalizes the one-time pairing code, stores only an
+expiry-aware session-scoped handoff record, and opens the player with the host
+ID and pairing code. The player consumes and clears that record before
+starting the session offer; no password, signaling ticket, or persistent host
+credential is stored in the handoff.

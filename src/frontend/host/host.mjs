@@ -2,6 +2,7 @@ const SUPPORTED_TRANSPORTS = Object.freeze(['webrtc', 'webtransport', 'websocket
 const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '[::1]']);
 const PAIRING_CODE = /^[A-HJ-NP-Z2-9]{6,12}$/;
 export const HOST_PROFILES_KEY = 'spartan-gaming.host-profiles.v1';
+export const PENDING_HOST_PAIR_KEY = 'spartan-gaming.pending-host-pair.v1';
 
 function requiredString(value, name) { if (typeof value !== 'string' || value.trim() === '') throw new TypeError(`${name} must be a non-empty string`); return value.trim(); }
 function isLocalHost(hostname) { return LOCAL_HOSTNAMES.has(hostname.toLowerCase()) || hostname.endsWith('.local'); }
@@ -41,6 +42,29 @@ export function createHostConnectionProfile({hostId, endpoint, clientTransports,
   requiredString(hostId, 'hostId'); const parsed = parseHostEndpoint(endpoint); const transport = selectHostTransport({clientTransports, hostTransports, endpoint: parsed});
   return Object.freeze({hostId, endpoint: parsed, transport, pairing: pairingCode ? createPairingRequest({hostId, clientName, pairingCode, expiresAt}) : undefined, credentials: 'session-scoped'});
 }
+
+export function createPendingHostPair({hostId, name, endpoint, pairingCode, clientName = 'Spartan Gaming', expiresAt, sessionId} = {}) {
+  requiredString(hostId, 'hostId'); requiredString(name, 'name');
+  const parsed = parseHostEndpoint(endpoint);
+  if (!['ws:', 'wss:'].includes(parsed.protocol)) throw new TypeError('pending host endpoint must use ws or wss');
+  const pairing = createPairingRequest({hostId, clientName, pairingCode, expiresAt});
+  return Object.freeze({version: 1, endpoint: parsed.url, hostId: hostId.trim(), name: name.trim(), pairingCode: pairing.pairingCode, expiresAt: pairing.expiresAt, ...(sessionId ? {sessionId: requiredString(sessionId, 'sessionId')} : {})});
+}
+
+export function savePendingHostPair(storage = globalThis.sessionStorage, values) {
+  if (!storage || typeof storage.setItem !== 'function') throw new TypeError('session storage is required');
+  const pending = createPendingHostPair(values); storage.setItem(PENDING_HOST_PAIR_KEY, JSON.stringify(pending)); return pending;
+}
+
+export function readPendingHostPair(storage = globalThis.sessionStorage) {
+  try {
+    const parsed = JSON.parse(storage?.getItem(PENDING_HOST_PAIR_KEY) || 'null');
+    if (!parsed || parsed.version !== 1 || Date.parse(parsed.expiresAt) <= Date.now()) return null;
+    return createPendingHostPair(parsed);
+  } catch { return null; }
+}
+
+export function clearPendingHostPair(storage = globalThis.sessionStorage) { storage?.removeItem?.(PENDING_HOST_PAIR_KEY); }
 
 export function normalizeHostProfile(profile) {
   requiredString(profile?.hostId, 'profile.hostId');
