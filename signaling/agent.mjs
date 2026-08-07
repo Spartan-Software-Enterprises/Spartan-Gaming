@@ -119,7 +119,7 @@ export function createSignalingServer(options = {}) {
     });
     socket.on('close', cleanup); socket.on('error', cleanup);
   });
-  return Object.freeze({config, broker, server, stats: () => Object.freeze({connections: sockets.size, rejectedConnections, ...broker.stats()}), start() { return new Promise((resolve, rejectStart) => { server.once('error', rejectStart); server.listen(config.port, config.bind, () => { server.removeListener('error', rejectStart); resolve(server.address()); }); }); }, close() { for (const socket of sockets) socket.destroy(); if (!server.listening) return Promise.resolve(); return new Promise(resolve => server.close(() => resolve())); }});
+  return Object.freeze({config, broker, server, stats: () => Object.freeze({connections: sockets.size, rejectedConnections, ...broker.stats()}), start() { return new Promise((resolve, rejectStart) => { server.once('error', rejectStart); server.listen(config.port, config.bind, () => { server.removeListener('error', rejectStart); resolve(server.address()); }); }); }, close() { for (const socket of sockets) socket.destroy(); server.closeIdleConnections?.(); server.closeAllConnections?.(); if (!server.listening) return Promise.resolve(); return new Promise(resolve => server.close(() => resolve())); }});
 }
 
 if (pathEqualsMain()) {
