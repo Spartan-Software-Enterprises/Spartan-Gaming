@@ -46,7 +46,7 @@
 - [x] Platform-aware capture and encoder plan contracts (native execution and WebRTC publisher pending).
 - [x] Transport-neutral media publisher readiness contract (native publisher implementation pending).
 - [x] Authenticated in-memory signaling routing contract (WebSocket service adapter and deployment pending).
-- [ ] Signaling service.
+- [x] Dependency-free reference signaling service.
 - [x] Validated session-scoped STUN/TURN configuration contract (relay deployment and credential service pending).
 - [x] User-facing transport and relay policy controls (runtime provider/host wiring pending).
 - [x] Controller, keyboard, pointer, and rumble forwarding contract (native OS injection pending).
