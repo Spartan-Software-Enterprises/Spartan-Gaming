@@ -13,5 +13,5 @@ export function createLaunchHistoryStore({storage = globalThis.localStorage, key
   if (!Number.isInteger(maxEntries) || maxEntries < 1 || maxEntries > 50) throw new RangeError('maxEntries must be between 1 and 50');
   const read = () => { try { const parsed = JSON.parse(storage?.getItem(key) || '[]'); return Array.isArray(parsed) ? parsed.map(normalize) : []; } catch { return []; } };
   const write = records => storage?.setItem(key, JSON.stringify(records.map(record => ({...record}))));
-  return Object.freeze({list() { return read().map(record => ({...record})); }, record(input) { const record = normalize(input); const records = [record, ...read().filter(item => item.backendId !== record.backendId)].slice(0, maxEntries); write(records); return {...record}; }, clear() { storage?.removeItem?.(key); }});
+  return Object.freeze({list() { return read().map(record => ({...record})); }, latest() { const record = read()[0]; return record ? {...record} : null; }, record(input) { const record = normalize(input); const records = [record, ...read().filter(item => item.backendId !== record.backendId)].slice(0, maxEntries); write(records); return {...record}; }, clear() { storage?.removeItem?.(key); }});
 }

@@ -68,6 +68,8 @@ required_files=(
   src/frontend/catalog.test.mjs
   src/frontend/dashboard/routes.mjs
   src/frontend/dashboard/routes.test.mjs
+  src/frontend/dashboard/resume.mjs
+  src/frontend/dashboard/resume.test.mjs
   src/frontend/dashboard/index.html
   src/frontend/dashboard/dashboard.css
   src/frontend/dashboard/dashboard.mjs
@@ -228,6 +230,7 @@ node --check scripts/chromium/check-environment.mjs
 node --check signaling/broker.mjs
 node --check signaling/agent.mjs
 node --check src/frontend/dashboard/dashboard.mjs
+node --check src/frontend/dashboard/resume.mjs
 node --check src/frontend/session/session.mjs
 node --check src/frontend/session/quality.mjs
 node --check src/frontend/session/recovery.mjs

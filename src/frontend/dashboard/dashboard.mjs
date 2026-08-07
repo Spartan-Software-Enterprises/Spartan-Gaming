@@ -9,11 +9,12 @@ import { createProviderProfileStore } from '../providers/profiles.mjs';
 import { createLaunchIntent, saveLaunchIntent } from '../launch/intent.mjs';
 import { createLaunchHistoryStore } from '../launch/history.mjs';
 import { resolveDashboardSection } from './routes.mjs';
+import { resolveResumeEntry, resolveResumePresentation } from './resume.mjs';
 
 const FAVORITES_KEY = 'spartan-gaming.favorites.v1';
 const launchHistory = createLaunchHistoryStore();
 const requestedFilter = new URLSearchParams(globalThis.location?.search || '').get('filter');
-const state = { catalog: [], adapters: null, compatibility: null, filter: ['all', 'cloud', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(loadFavorites()), recent: new Set(launchHistory.list().map(record => record.backendId)), providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, profile])) };
+const state = { catalog: [], adapters: null, compatibility: null, filter: ['all', 'cloud', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(loadFavorites()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, profile])) };
 const cards = document.querySelector('[data-cards]');
 const toast = document.querySelector('[data-toast]');
 const sessionStatus = document.querySelector('[data-session-status]');
@@ -26,6 +27,10 @@ function loadFavorites() { try { return JSON.parse(localStorage.getItem(FAVORITE
 function saveFavorites() { localStorage.setItem(FAVORITES_KEY, JSON.stringify([...state.favorites])); }
 function showToast(message) { toast.textContent = message; toast.classList.add('is-visible'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 2600); }
 function setSessionStatus(message) { sessionStatus.textContent = message; }
+function renderResume() {
+  const presentation = resolveResumePresentation(state.lastLaunch); const title = document.querySelector('[data-resume-title]'); const copy = document.querySelector('[data-resume-copy]'); const button = document.querySelector('[data-action="resume"]');
+  title.textContent = presentation.title; copy.textContent = presentation.copy; button.textContent = presentation.actionLabel;
+}
 function openProviderSurface(entry, plan) {
   const integration = plan.integration || {};
   document.querySelector('[data-provider-title]').textContent = entry.name;
@@ -37,6 +42,17 @@ function openProviderSurface(entry, plan) {
   if (typeof providerDialog.showModal === 'function') providerDialog.showModal(); else providerDialog.setAttribute('open', '');
 }
 function closeProviderSurface() { document.querySelector('[data-provider-frame]').src = 'about:blank'; if (typeof providerDialog.close === 'function' && providerDialog.open) providerDialog.close(); else providerDialog.removeAttribute('open'); }
+function launchEntry(entry, plan) {
+  state.recent.add(entry.id);
+  state.lastLaunch = launchHistory.record({backendId: entry.id, backendType: entry.backendType, name: entry.name, mode: plan.mode, action: plan.action, at: new Date().toISOString()});
+  renderResume();
+  saveLaunchIntent(sessionStorage, createLaunchIntent({entry, plan, returnTo: './index.html'}));
+  if (plan.action === 'choose-runtime') { window.location.assign('../emulation/index.html'); return; }
+  if (plan.action === 'configure-host') { window.location.assign('../host/index.html'); return; }
+  if (plan.action === 'embed-url') { openProviderSurface(entry, plan); showToast(`${entry.name}: official embed opened.`); return; }
+  if (plan.action === 'open-url' || plan.action === 'configure-api') { window.open(plan.url, '_blank', 'noopener'); showToast(`${entry.name}: ${plan.action === 'open-url' ? 'official service opened' : 'official API surface opened'}.`); return; }
+  const offer = beginSession({...entry, adapterMode: plan.mode}); if (offer) showToast(`${entry.name}: ${plan.action.replaceAll('-', ' ')}.`);
+}
 function beginSession(backend) {
   if (sessionManager.state !== 'idle' && sessionManager.state !== 'closed' && sessionManager.state !== 'error') { showToast('A session is already negotiating. Close it before launching another.'); return null; }
   if (sessionManager.state === 'closed' || sessionManager.state === 'error') sessionManager.reset();
@@ -80,15 +96,21 @@ document.addEventListener('click', event => {
   const favoriteButton = event.target.closest('[data-favorite]');
   if (favoriteButton) { const id = favoriteButton.dataset.favorite; state.favorites.has(id) ? state.favorites.delete(id) : state.favorites.add(id); saveFavorites(); render(); showToast(state.favorites.has(id) ? 'Added to favorites' : 'Removed from favorites'); return; }
   const launchButton = event.target.closest('[data-launch]');
-  if (launchButton) { const entry = state.catalog.find(item => item.id === launchButton.dataset.launch); if (!entry) return; const plan = state.adapters?.get(entry.id)?.resolve(); if (!plan || plan.status === 'unsupported') { showToast(`${entry.name}: no supported integration mode is available.`); return; } state.recent.add(entry.id); launchHistory.record({backendId: entry.id, backendType: entry.backendType, name: entry.name, mode: plan.mode, action: plan.action, at: new Date().toISOString()}); saveLaunchIntent(sessionStorage, createLaunchIntent({entry, plan, returnTo: './index.html'})); if (plan.action === 'choose-runtime') { window.location.assign('../emulation/index.html'); return; } if (plan.action === 'configure-host') { window.location.assign('../host/index.html'); return; } if (plan.action === 'embed-url') { openProviderSurface(entry, plan); showToast(`${entry.name}: official embed opened.`); return; } if (plan.action === 'open-url' || plan.action === 'configure-api') { window.open(plan.url, '_blank', 'noopener'); showToast(`${entry.name}: ${plan.action === 'open-url' ? 'official service opened' : 'official API surface opened'}.`); return; } const offer = beginSession({...entry, adapterMode: plan.mode}); if (!offer) return; showToast(`${entry.name}: ${plan.action.replaceAll('-', ' ')}.`); }
+  if (launchButton) { const entry = state.catalog.find(item => item.id === launchButton.dataset.launch); if (!entry) return; const plan = state.adapters?.get(entry.id)?.resolve(); if (!plan || plan.status === 'unsupported') { showToast(`${entry.name}: no supported integration mode is available.`); return; } launchEntry(entry, plan); }
 });
 document.querySelector('[data-provider-close]').addEventListener('click', closeProviderSurface);
 providerDialog.addEventListener('close', () => { document.querySelector('[data-provider-frame]').src = 'about:blank'; });
-document.querySelector('[data-action="resume"]').addEventListener('click', () => { const offer = beginSession({id: 'spartan-host', backendType: 'remote-play'}); if (offer) window.location.assign('../player/index.html?backend=spartan-host'); });
+document.querySelector('[data-action="resume"]').addEventListener('click', () => {
+  if (!state.lastLaunch) { const offer = beginSession({id: 'spartan-host', backendType: 'remote-play'}); if (offer) window.location.assign('../player/index.html?backend=spartan-host'); return; }
+  const entry = resolveResumeEntry(state.lastLaunch, state.catalog); const plan = entry && state.adapters?.get(entry.id)?.resolve();
+  if (!entry || !plan || plan.status === 'unsupported') { showToast('The last connection is no longer available in the current catalog.'); return; }
+  launchEntry(entry, plan);
+});
 document.querySelectorAll('[data-section]').forEach(button => button.addEventListener('click', () => {
   const route = resolveDashboardSection(button.dataset.section); if (!route) return;
   if (route.kind === 'navigate') { window.location.assign(route.href); return; }
   state.filter = route.filter; document.querySelectorAll('[data-filter]').forEach(item => item.classList.toggle('is-active', item.dataset.filter === state.filter)); render();
 }));
+renderResume();
 loadCatalog();
 controllerNavigator.start();
