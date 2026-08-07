@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: 20
       - name: Run dependency-free contract suite
-        run: npm test
+        run: npm test --ignore-scripts
       - name: Run optional Werift adapter contract in isolation
         run: npm run test:werift
       - name: Validate Chromium target contract
