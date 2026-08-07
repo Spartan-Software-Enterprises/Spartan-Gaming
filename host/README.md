@@ -56,3 +56,9 @@ process’s stdin and exposes the encoded stdout stream. Its integration test us
 real child processes to prove the byte path and teardown behavior. This is the
 native capture-to-encode boundary; RTP/WebRTC publication, hardware encoder
 selection, and audio multiplexing remain adapter responsibilities.
+
+`createEncodedMediaPublisher` in `host/publisher.mjs` is the explicit handoff
+contract for that next adapter. It forwards bounded encoded chunks to an
+injected sink and reports publisher lifecycle/capability state, but deliberately
+does not reinterpret a sink as WebRTC until an RTP/WebRTC implementation is
+provided.

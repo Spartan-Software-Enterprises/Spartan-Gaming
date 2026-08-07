@@ -1,6 +1,7 @@
 const PUBLISHER_STATES = new Set(['unconfigured', 'planned', 'ready', 'active', 'failed']);
 const TRANSPORTS = new Set(['webrtc', 'webtransport']);
 const CODECS = new Set(['h264', 'vp9', 'av1']);
+const DEFAULT_MAX_CHUNK_BYTES = 4 * 1024 * 1024;
 
 function bounded(value, fallback, minimum, maximum) { const result = Number.isFinite(Number(value)) ? Number(value) : fallback; return Math.max(minimum, Math.min(maximum, result)); }
 function list(value, fallback) { return Array.isArray(value) && value.length ? [...new Set(value.map(String))] : [...fallback]; }
@@ -36,3 +37,27 @@ export function createMediaPublisherPlan({capturePlan, encoderPlan, transport = 
 }
 
 export function publisherIsReady(publisher) { return normalizePublisherCapabilities(publisher).state === 'ready' || normalizePublisherCapabilities(publisher).state === 'active'; }
+
+/**
+ * Forward encoded video chunks to an adapter-owned sink. The sink may be an
+ * RTP/WebRTC implementation, a recorder, or a test harness; this boundary does
+ * not infer that arbitrary bytes are a WebRTC track.
+ */
+export function createEncodedMediaPublisher({pipeline, sink, codec = 'h264', maxChunkBytes = DEFAULT_MAX_CHUNK_BYTES} = {}) {
+  if (!pipeline || typeof pipeline.start !== 'function' || typeof pipeline.stop !== 'function') throw new TypeError('a native media pipeline is required');
+  if (!sink || typeof sink.write !== 'function') throw new TypeError('publisher sink must implement write(chunk)');
+  if (!CODECS.has(codec)) throw new TypeError(`unsupported publisher codec: ${codec}`);
+  const limit = Math.max(1024, Math.min(DEFAULT_MAX_CHUNK_BYTES, Number(maxChunkBytes) || DEFAULT_MAX_CHUNK_BYTES)); let state = 'unconfigured'; let bytes = 0; let handler = null;
+  const fail = error => { state = 'failed'; sink.error?.(error); void pipeline.stop().catch(() => {}); };
+  const publisher = {
+    get state() { return state; }, get bytesWritten() { return bytes; }, get capabilities() { return normalizePublisherCapabilities({state: state === 'active' ? 'active' : state === 'failed' ? 'failed' : 'ready', video: {codecs: [codec]}}); },
+    async start() {
+      if (state !== 'unconfigured' && state !== 'ready') throw new Error(`publisher cannot start from ${state}`);
+      state = 'ready'; await pipeline.start(); const output = pipeline.videoOutput; if (!output?.on) { state = 'failed'; await pipeline.stop(); throw new Error('media pipeline did not expose an encoded video stream'); }
+      sink.open?.({codec}); handler = chunk => { try { const value = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk); if (value.length > limit) throw new Error('encoded media chunk exceeds publisher limit'); sink.write(Buffer.from(value)); bytes += value.length; } catch (error) { fail(error); } };
+      output.on('data', handler); state = 'active'; return this;
+    },
+    async stop() { if (state === 'unconfigured' || state === 'stopped') return this; if (handler && pipeline.videoOutput?.off) pipeline.videoOutput.off('data', handler); handler = null; await pipeline.stop(); sink.close?.(); state = 'stopped'; return this; },
+  };
+  return Object.freeze(publisher);
+}
