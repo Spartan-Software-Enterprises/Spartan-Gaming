@@ -32,6 +32,7 @@ Spartan Gaming is the frontend and orchestration layer. Providers and emulator p
 
 ```text
 docs/                 Architecture, decisions, roadmap, and research
+docker/               Hardened reference-service container definitions
 protocol/              Versioned streaming protocol notes and schemas
 providers/             Machine-readable cloud gaming and streaming provider catalog
 emulators/             Machine-readable emulator and core catalog

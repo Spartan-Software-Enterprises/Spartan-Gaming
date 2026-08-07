@@ -51,6 +51,10 @@ required_files=(
   host/audio.mjs
   host/audio.test.mjs
   docs/transport.md
+  docs/deployment.md
+  docker/signaling.Dockerfile
+  docker-compose.yml
+  scripts/deployment.test.mjs
   providers/catalog.json
   emulators/catalog.json
   package.json

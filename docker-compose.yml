@@ -1,0 +1,18 @@
+services:
+  signaling:
+    build:
+      context: .
+      dockerfile: docker/signaling.Dockerfile
+    environment:
+      SPARTAN_SIGNALING_SECRET: ${SPARTAN_SIGNALING_SECRET:?Set SPARTAN_SIGNALING_SECRET to a long random value}
+    ports:
+      - "127.0.0.1:8790:8790"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    init: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
