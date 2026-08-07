@@ -71,6 +71,8 @@ catalog item
 
 The frontend must make clear whether a session is browser-hosted, native, remote, self-hosted, or emulated. A provider or emulator failure should return a structured error and troubleshooting link rather than silently changing the backend.
 
+The session runtime in `src/frontend/session/session.mjs` provides the first transport-neutral implementation of this model. It negotiates transports, codecs, display limits, audio, and input features; creates protocol v1 offers; and enforces explicit lifecycle transitions (`preparing`, `negotiating`, `connected`, `reconnecting`, `closing`, and `closed`). Provider and emulator integrations can register immutable adapter descriptors without coupling the frontend to a specific relay, native process, or cloud service.
+
 ## Cross-platform strategy
 
 The browser product layer should share UX, session, protocol, and diagnostics code. Windowing, media capture, hardware acceleration, packaging, signing, permissions, and input backends should be isolated behind platform adapters.

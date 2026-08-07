@@ -1,14 +1,23 @@
 import { createFrontendCatalog, validateCatalogManifest } from '../catalog.mjs';
+import { createSessionManager } from '../session/session.mjs';
 
 const FAVORITES_KEY = 'spartan-gaming.favorites.v1';
 const state = { catalog: [], filter: 'all', search: '', favorites: new Set(loadFavorites()) };
 const cards = document.querySelector('[data-cards]');
 const toast = document.querySelector('[data-toast]');
+const sessionStatus = document.querySelector('[data-session-status]');
+const sessionManager = createSessionManager({idFactory: () => `ses-${crypto.randomUUID()}`});
 let toastTimer;
 
 function loadFavorites() { try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; } }
 function saveFavorites() { localStorage.setItem(FAVORITES_KEY, JSON.stringify([...state.favorites])); }
 function showToast(message) { toast.textContent = message; toast.classList.add('is-visible'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 2600); }
+function setSessionStatus(message) { sessionStatus.textContent = message; }
+function beginSession(backend) {
+  if (sessionManager.state !== 'idle' && sessionManager.state !== 'closed' && sessionManager.state !== 'error') { showToast('A session is already negotiating. Close it before launching another.'); return null; }
+  if (sessionManager.state === 'closed' || sessionManager.state === 'error') sessionManager.reset();
+  const offer = sessionManager.start({backend}); setSessionStatus('Session negotiating'); return offer;
+}
 function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character])); }
 function visibleEntries() {
   const query = state.search.toLowerCase().trim();
@@ -42,8 +51,8 @@ document.addEventListener('click', event => {
   const favoriteButton = event.target.closest('[data-favorite]');
   if (favoriteButton) { const id = favoriteButton.dataset.favorite; state.favorites.has(id) ? state.favorites.delete(id) : state.favorites.add(id); saveFavorites(); render(); showToast(state.favorites.has(id) ? 'Added to favorites' : 'Removed from favorites'); return; }
   const launchButton = event.target.closest('[data-launch]');
-  if (launchButton) { const entry = state.catalog.find(item => item.id === launchButton.dataset.launch); if (entry?.backendType === 'provider') window.open(entry.url, '_blank', 'noopener'); else showToast(`${entry?.name || 'Emulator'} is ready for adapter setup.`); }
+  if (launchButton) { const entry = state.catalog.find(item => item.id === launchButton.dataset.launch); if (!entry) return; const offer = beginSession(entry); if (!offer) return; if (entry.backendType === 'provider') window.open(entry.url, '_blank', 'noopener'); showToast(`${entry.name}: ${offer.payload.transports?.length ? 'session offer prepared' : 'adapter setup required'}.`); }
 });
-document.querySelector('[data-action="resume"]').addEventListener('click', () => showToast('Session handoff is ready for the Spartan Host adapter.'));
+document.querySelector('[data-action="resume"]').addEventListener('click', () => { const offer = beginSession({id: 'spartan-host', backendType: 'remote-play'}); if (offer) showToast('Session offer prepared for the Spartan Host adapter.'); });
 document.querySelectorAll('[data-section]').forEach(button => button.addEventListener('click', () => showToast(`${button.textContent.trim()} view is coming online with the adapter registry.`)));
 loadCatalog();

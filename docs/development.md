@@ -51,4 +51,6 @@ npm test
 
 The catalog loader is intentionally dependency-free. Browser UI code, native adapters, and future service processes can consume the same normalized backend entries without importing provider-specific UI behavior.
 
+Session capability negotiation and lifecycle behavior are covered by `src/frontend/session/session.test.mjs`. Adapter implementations should use the registry and protocol envelope helpers rather than inventing provider-specific state transitions in UI code.
+
 The first frontend surfaces are available at `src/frontend/dashboard/index.html` and `src/frontend/settings/index.html`. The dashboard is a dependency-free, responsive library shell that loads the provider and emulator manifests, supports search, filters, favorites, and launch/setup actions, and provides the handoff point for adapter sessions. The settings prototype is backed by `settings-data.mjs`, with local persistence and export behavior. Chromium integration will connect these surfaces to browser preferences, profiles, provider sessions, and native adapters as those services land.
