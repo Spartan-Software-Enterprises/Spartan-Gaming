@@ -108,6 +108,10 @@ function bindControls() {
       window.location.assign('../input/profiles.html');
       return;
     }
+    if (button.dataset.action === 'performance.diagnostics' || button.dataset.action === 'advanced.exportDiagnostics') {
+      window.location.assign('../diagnostics/index.html');
+      return;
+    }
     const status = document.querySelector('[data-save-status]');
     if (status) status.textContent = `${button.textContent} queued`;
   }));

@@ -60,7 +60,7 @@ The first milestone will document the supported Chromium checkout and build conf
 
 Spartan Gaming is in the foundation and architecture phase. Follow [ROADMAP.md](ROADMAP.md) for the current sequence of work.
 
-Interactive frontend surfaces include the [gaming dashboard](src/frontend/dashboard/index.html), which merges provider and emulator catalogs into one searchable library; the [session player](src/frontend/player/index.html), with stream, overlay, quality, reconnect, controller, and diagnostics surfaces; the [controller profile manager](src/frontend/input/profiles.html), with persistent remapping and deadzone controls; and the [settings control center](src/frontend/settings/index.html), covering browser, gaming, streaming, controllers, emulation, providers, performance, privacy, accessibility, profiles, and updates.
+Interactive frontend surfaces include the [gaming dashboard](src/frontend/dashboard/index.html), which merges provider and emulator catalogs into one searchable library; the [session player](src/frontend/player/index.html), with stream, overlay, quality, reconnect, controller, and diagnostics surfaces; the [controller profile manager](src/frontend/input/profiles.html), with persistent remapping and deadzone controls; the [compatibility diagnostics center](src/frontend/diagnostics/index.html), with local capability probing and redacted reports; and the [settings control center](src/frontend/settings/index.html), covering browser, gaming, streaming, controllers, emulation, providers, performance, privacy, accessibility, profiles, and updates.
 
 ## License
 

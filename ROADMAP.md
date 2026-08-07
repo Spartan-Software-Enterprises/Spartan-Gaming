@@ -17,7 +17,7 @@
 - [ ] Controller-first navigation.
 - [ ] Gamepad inspector and remapping profiles.
 - [ ] Keyboard Lock, Pointer Lock, and per-site permission UX.
-- [ ] Stream diagnostics page.
+- [x] Stream and system diagnostics page.
 - [ ] Windows, macOS, and Linux development builds.
 - [x] Unified frontend catalog and launcher model.
 - [ ] Provider profiles for GeForce NOW, Xbox Cloud Gaming, Amazon Luna, Boosteroid, Shadow, Twitch, YouTube Live, Discord, and Steam.
