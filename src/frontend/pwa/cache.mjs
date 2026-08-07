@@ -6,6 +6,7 @@ export const PRECACHE_URLS = Object.freeze([
   '/src/frontend/host/index.html', '/src/frontend/host/host.css', '/src/frontend/host/host.mjs', '/src/frontend/host/host-page.mjs',
   '/src/frontend/host/browser-studio.html', '/src/frontend/host/browser-studio.css', '/src/frontend/host/browser-studio.mjs',
   '/src/frontend/diagnostics/index.html', '/src/frontend/diagnostics/diagnostics.css', '/src/frontend/diagnostics/diagnostics.mjs',
+  '/src/frontend/emulation/index.html', '/src/frontend/emulation/emulation.css', '/src/frontend/emulation/emulation-page.mjs', '/src/frontend/emulation/emulation.mjs', '/src/frontend/emulation/integration.mjs',
   '/providers/catalog.json', '/emulators/catalog.json',
 ]);
 

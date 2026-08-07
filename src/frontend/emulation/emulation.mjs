@@ -5,6 +5,7 @@ function requiredString(value, name) { if (typeof value !== 'string' || !value.t
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 
 export const DEFAULT_EMULATION_POLICY = Object.freeze({shipRoms: false, shipBios: false, allowUserSelectedFiles: true, requireLicenseMetadata: true});
+export const EMULATION_LIBRARY_KEY = 'spartan-gaming.emulation-library.v1';
 
 const FRONTEND_PREFERENCES = Object.freeze({'Automatic': 'automatic', 'Spartan runtime': 'spartan-runtime', 'Libretro host': 'libretro-host', 'Native adapter': 'native-adapter'});
 
@@ -21,6 +22,22 @@ export function createUserFileRecord(file, {kind = 'game', userSelected = true} 
 
 export function createEmulationLibraryIndex(files = []) {
   if (!Array.isArray(files)) throw new TypeError('files must be an array'); const unique = new Map(); for (const file of files) { const record = file.id ? Object.freeze({...file}) : createUserFileRecord(file); unique.set(record.id, record); } return Object.freeze([...unique.values()]);
+}
+
+export function createEmulationLibraryStore({storage = globalThis.localStorage, maxEntries = 200} = {}) {
+  const entryLimit = Math.max(1, Math.min(1000, Number(maxEntries) || 200));
+  let files = [];
+  try {
+    const saved = JSON.parse(storage?.getItem(EMULATION_LIBRARY_KEY) || '[]');
+    if (Array.isArray(saved)) files = createEmulationLibraryIndex(saved.filter(file => file?.kind === 'game' || file?.kind === 'firmware')).map(file => Object.freeze({...file, userSelected: false}));
+  } catch { files = []; }
+  const persist = () => { try { storage?.setItem(EMULATION_LIBRARY_KEY, JSON.stringify(files.slice(0, entryLimit).map(file => ({...file, userSelected: false})))); } catch { /* Storage can be unavailable in private or restricted contexts. */ } };
+  return Object.freeze({
+    list() { return files.map(file => Object.freeze({...file})); },
+    add(records = []) { if (!Array.isArray(records)) throw new TypeError('library records must be an array'); const remembered = records.map(record => createUserFileRecord(record, {kind: record.kind, userSelected: false})); files = createEmulationLibraryIndex([...remembered, ...files]).slice(0, entryLimit).map(file => Object.freeze({...file, userSelected: false})); persist(); return this.list(); },
+    remove(id) { files = files.filter(file => file.id !== id); persist(); return this.list(); },
+    clear() { files = []; persist(); return this.list(); },
+  });
 }
 
 export function createEmulationLaunchPlan({core, gameFile, firmwareFiles = [], policy = DEFAULT_EMULATION_POLICY, preference = 'automatic', renderer = 'Automatic', report} = {}) {

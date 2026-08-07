@@ -97,3 +97,8 @@ The first user-facing emulation center is available at `src/frontend/emulation/i
 - Verify core and adapter signatures before loading.
 - Keep save data separate from game images and provider credentials.
 - Provide a clear removal/export path for user data.
+The Emulation Center remembers only safe file metadata (name, type, size, and
+modified time) in local browser storage so a user's collection survives a page
+reload. It never stores file contents, ROMs, BIOS data, or launch authority.
+Remembered entries are explicitly marked for re-selection; a launch still
+requires the user to choose the file again in the current session.

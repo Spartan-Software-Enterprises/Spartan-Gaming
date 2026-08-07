@@ -146,6 +146,7 @@ required_files=(
   src/frontend/pwa/cache.test.mjs
   src/frontend/pwa/service-worker.mjs
   src/frontend/pwa/register.mjs
+  src/frontend/service-worker.mjs
   src/frontend/pwa/manifest.webmanifest
   src/frontend/input/profiles.mjs
   src/frontend/input/profiles.test.mjs
