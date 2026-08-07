@@ -88,7 +88,7 @@ The reference signaling service has a real network contract test in `signaling/a
 
 The Host Profiles health action uses `src/frontend/host/readiness.mjs` to classify the host’s media capture, encoding, publisher, audio, input, and transport checks. A host can be paired for control-plane testing while the preflight still correctly reports `configuration-required` until media publishing is ready.
 
-Native process ownership is isolated in `host/process.mjs`. `createManagedProcess` starts only validated `shell: false` plans, bounds retained output, and provides graceful termination; `createProcessPipeline` starts plans in order and rolls back already-started members on failure. The executable coverage in `host/process.integration.test.mjs` uses real Node child processes on every CI platform. Capture/encode-to-WebRTC wiring remains a separate adapter milestone.
+Native process ownership is isolated in `host/process.mjs`. `createManagedProcess` starts only validated `shell: false` plans, bounds retained output, and provides graceful termination; `createProcessPipeline` starts plans in order and rolls back already-started members on failure. `host/native-media.mjs` connects a capture process stream to an encoder process stream and exposes encoded output to a future publisher. The executable coverage in `host/process.integration.test.mjs` and `host/native-media.integration.test.mjs` uses real Node child processes on every CI platform. Capture/encode-to-WebRTC track publication remains a separate adapter milestone.
 
 The signaling contract is covered by `signaling/broker.mjs`. It can be embedded
 behind a WebSocket or WebTransport server with a deployment-owned secret;

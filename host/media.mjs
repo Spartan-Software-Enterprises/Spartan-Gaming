@@ -37,6 +37,6 @@ export function createCapturePlan({platform, sourceType, source, width = 1920, h
 export function createEncoderPlan({codec = 'h264', width = 1920, height = 1080, framerate = 60, bitrateKbps = 10000, preferHardware = true} = {}) {
   if (!CODECS[codec]) throw new TypeError(`unsupported encoder codec: ${codec}`);
   const fps = positiveInteger(framerate, 'framerate', 60, 240); const boundedBitrate = positiveInteger(bitrateKbps, 'bitrateKbps', 10000, 1000000);
-  const encoder = CODECS[codec]; const args = ['-c:v', encoder, '-b:v', `${boundedBitrate}k`, '-maxrate', `${boundedBitrate}k`, '-bufsize', `${boundedBitrate * 2}k`, '-r', String(fps), '-g', String(fps * 2), '-f', 'matroska', 'pipe:1'];
+  const encoder = CODECS[codec]; const args = ['-f', 'matroska', '-i', 'pipe:0', '-c:v', encoder, '-b:v', `${boundedBitrate}k`, '-maxrate', `${boundedBitrate}k`, '-bufsize', `${boundedBitrate * 2}k`, '-r', String(fps), '-g', String(fps * 2), '-f', 'matroska', 'pipe:1'];
   return Object.freeze({kind: 'encoder', codec, width: positiveInteger(width, 'width', 1920, 7680), height: positiveInteger(height, 'height', 1080, 4320), framerate: fps, bitrateKbps: boundedBitrate, preference: preferHardware ? 'hardware-when-platform-adapter-provides-it' : 'software', process: createProcessLaunchPlan({executable: 'ffmpeg', args}), requires: Object.freeze(preferHardware ? ['platform-encoder-selection', 'webrtc-publisher'] : ['webrtc-publisher'])});
 }

@@ -20,22 +20,23 @@ function snapshot(state, child, output, exit) { return Object.freeze({state, pid
  * Manage one shell-free native process. Nothing is spawned until start() is called.
  * Output is retained as a bounded tail so a noisy encoder cannot exhaust host memory.
  */
-export function createManagedProcess({plan, spawnImpl = spawn, maxOutputBytes = DEFAULT_MAX_OUTPUT_BYTES, stopTimeoutMs = DEFAULT_STOP_TIMEOUT_MS} = {}) {
+export function createManagedProcess({plan, spawnImpl = spawn, maxOutputBytes = DEFAULT_MAX_OUTPUT_BYTES, stopTimeoutMs = DEFAULT_STOP_TIMEOUT_MS, stdio = ['ignore', 'pipe', 'pipe']} = {}) {
   if (!plan || plan.shell !== false || !Array.isArray(plan.args)) throw new TypeError('a shell-free process plan is required');
   if (typeof spawnImpl !== 'function') throw new TypeError('spawnImpl must be a function');
+  if (!Array.isArray(stdio) || stdio.length !== 3) throw new TypeError('stdio must contain stdin, stdout, and stderr entries');
   const outputLimit = bounded(maxOutputBytes, DEFAULT_MAX_OUTPUT_BYTES, 1024, 4 * 1024 * 1024); const timeout = bounded(stopTimeoutMs, DEFAULT_STOP_TIMEOUT_MS, 100, 30_000); const bus = events();
   let state = 'idle'; let child = null; let output = {stdout: '', stderr: ''}; let exit = null; let startPromise;
   const emitState = next => { state = next; bus.emit('state', snapshot(state, child, output, exit)); };
   const bindStream = (stream, name) => stream?.on?.('data', chunk => { output = {...output, [name]: append(output[name], chunk, outputLimit)}; bus.emit('output', Object.freeze({stream: name, text: Buffer.isBuffer(chunk) ? chunk.toString('utf8') : String(chunk)})); });
   const finish = (code, signal) => { exit = {code: code === undefined ? null : code, signal: signal || null}; if (state !== 'stopping') emitState(code === 0 ? 'stopped' : 'failed'); else emitState('stopped'); bus.emit('exit', snapshot(state, child, output, exit)); };
   const managed = {
-    get state() { return state; }, get pid() { return child?.pid ?? null; }, get output() { return Object.freeze({...output}); }, get exit() { return exit ? Object.freeze({...exit}) : null; }, on: bus.on,
+    get state() { return state; }, get pid() { return child?.pid ?? null; }, get streams() { return Object.freeze({stdin: child?.stdin || null, stdout: child?.stdout || null, stderr: child?.stderr || null}); }, get output() { return Object.freeze({...output}); }, get exit() { return exit ? Object.freeze({...exit}) : null; }, on: bus.on,
     start() {
       if (state !== 'idle') return Promise.reject(new Error(`process cannot start from ${state}`));
       emitState('starting');
       startPromise = new Promise((resolve, reject) => {
         try {
-          child = spawnImpl(plan.executable, [...plan.args], {cwd: plan.cwd, env: {...process.env, ...plan.env}, shell: false, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe']});
+          child = spawnImpl(plan.executable, [...plan.args], {cwd: plan.cwd, env: {...process.env, ...plan.env}, shell: false, windowsHide: true, stdio});
           bindStream(child.stdout, 'stdout'); bindStream(child.stderr, 'stderr');
           let spawned = false;
           child.once?.('spawn', () => { spawned = true; emitState('running'); resolve(snapshot(state, child, output, exit)); });

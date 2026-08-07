@@ -42,6 +42,8 @@ required_files=(
   host/agent.integration.test.mjs
   host/process.mjs
   host/process.integration.test.mjs
+  host/native-media.mjs
+  host/native-media.integration.test.mjs
   signaling/agent.integration.test.mjs
   host/README.md
   host/pairing.mjs
@@ -270,6 +272,8 @@ node --check host/agent.mjs
 node --check host/agent.integration.test.mjs
 node --check host/process.mjs
 node --check host/process.integration.test.mjs
+node --check host/native-media.mjs
+node --check host/native-media.integration.test.mjs
 node --check signaling/agent.integration.test.mjs
 node --check host/pairing.mjs
 node --check host/signaling.mjs

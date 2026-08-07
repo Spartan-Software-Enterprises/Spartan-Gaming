@@ -50,3 +50,9 @@ argument arrays shell-free, retains only bounded stdout/stderr tails, emits
 explicit starting/running/stopping/failed states, and rolls already-started
 processes back if a pipeline member cannot start. It does not itself claim that
 an FFmpeg output is a WebRTC track; a platform publisher still owns that bridge.
+
+`host/native-media.mjs` now connects a capture plan’s stdout to an encoder
+process’s stdin and exposes the encoded stdout stream. Its integration test uses
+real child processes to prove the byte path and teardown behavior. This is the
+native capture-to-encode boundary; RTP/WebRTC publication, hardware encoder
+selection, and audio multiplexing remain adapter responsibilities.
