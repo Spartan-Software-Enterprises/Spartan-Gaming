@@ -1,4 +1,5 @@
 import {parseHostEndpoint} from '../host/host.mjs';
+import {createIceConfiguration} from './ice.mjs';
 
 const VALID_MESSAGE_TYPES = new Set(['session.offer', 'session.answer', 'session.ice-candidate', 'session.reconnect', 'input.event', 'quality.request', 'telemetry.health', 'session.close']);
 
@@ -25,9 +26,9 @@ export function createWebSocketSignalTransport({endpoint, join, WebSocketImpl = 
   return Object.freeze(transport);
 }
 
-export function createWebRtcTransport({RTCPeerConnectionImpl = globalThis.RTCPeerConnection, configuration = {}, dataChannelLabel = 'spartan-control'} = {}) {
+export function createWebRtcTransport({RTCPeerConnectionImpl = globalThis.RTCPeerConnection, configuration = {}, ice, dataChannelLabel = 'spartan-control'} = {}) {
   if (typeof RTCPeerConnectionImpl !== 'function') throw new Error('RTCPeerConnection is unavailable in this browser');
-  const bus = events(); const peer = new RTCPeerConnectionImpl(configuration); let state = 'new';
+  const bus = events(); const peer = new RTCPeerConnectionImpl(ice ? {...createIceConfiguration(ice), ...configuration} : configuration); let state = 'new';
   peer.onicecandidate = event => { if (event.candidate) bus.emit('icecandidate', event.candidate); };
   peer.ontrack = event => bus.emit('track', event);
   const transport = {

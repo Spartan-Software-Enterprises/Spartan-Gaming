@@ -47,7 +47,7 @@
 - [x] Transport-neutral media publisher readiness contract (native publisher implementation pending).
 - [x] Authenticated in-memory signaling routing contract (WebSocket service adapter and deployment pending).
 - [ ] Signaling service.
-- [ ] STUN/TURN integration.
+- [x] Validated session-scoped STUN/TURN configuration contract (relay deployment and credential service pending).
 - [x] Controller, keyboard, pointer, and rumble forwarding contract (native OS injection pending).
 - [ ] Native OS input injection, audio return, and end-to-end haptics.
 - [x] Cross-platform audio capture and publisher readiness contract (native audio publisher pending).
