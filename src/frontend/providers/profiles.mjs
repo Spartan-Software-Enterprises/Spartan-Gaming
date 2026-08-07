@@ -1,0 +1,10 @@
+export const PROVIDER_PROFILES_KEY = 'spartan-gaming.provider-profiles.v1';
+
+function clone(value) { return JSON.parse(JSON.stringify(value)); }
+function required(value, name) { if (typeof value !== 'string' || !value.trim()) throw new TypeError(`${name} must be a non-empty string`); }
+export function normalizeProviderProfile(profile) { required(profile?.providerId, 'profile.providerId'); return Object.freeze({providerId: profile.providerId.trim(), accountLabel: String(profile.accountLabel || ''), region: String(profile.region || 'automatic'), quality: ['prefer-latency', 'balanced', 'prefer-quality'].includes(profile.quality) ? profile.quality : 'balanced', launchMode: ['browser', 'official', 'native'].includes(profile.launchMode) ? profile.launchMode : 'browser', autoFullscreen: profile.autoFullscreen !== false, notes: String(profile.notes || '')}); }
+
+export function createProviderProfileStore({storage = globalThis.localStorage, key = PROVIDER_PROFILES_KEY} = {}) {
+  const backend = storage; const read = () => { try { const parsed = JSON.parse(backend?.getItem(key) || '[]'); return Array.isArray(parsed) ? parsed.map(normalizeProviderProfile) : []; } catch { return []; } }; const write = profiles => backend?.setItem(key, JSON.stringify(profiles.map(clone)));
+  return {list() { return read().map(clone); }, get(providerId) { return read().find(profile => profile.providerId === providerId); }, save(profile) { const normalized = normalizeProviderProfile(profile); const profiles = read().filter(item => item.providerId !== normalized.providerId); profiles.push(normalized); write(profiles); return clone(normalized); }, remove(providerId) { write(read().filter(profile => profile.providerId !== providerId)); }, export() { return JSON.stringify({version: 1, profiles: read().map(clone)}, null, 2); }, import(serialized) { const parsed = typeof serialized === 'string' ? JSON.parse(serialized) : serialized; if (!Array.isArray(parsed?.profiles)) throw new TypeError('provider profile export is invalid'); const profiles = parsed.profiles.map(normalizeProviderProfile); write(profiles); return this.list(); }};
+}

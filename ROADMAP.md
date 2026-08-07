@@ -21,7 +21,7 @@
 - [x] Stream and system diagnostics page.
 - [ ] Windows, macOS, and Linux development builds.
 - [x] Unified frontend catalog and launcher model.
-- [ ] Provider profiles for GeForce NOW, Xbox Cloud Gaming, Amazon Luna, Boosteroid, Shadow, Twitch, YouTube Live, Discord, and Steam.
+- [x] Provider profiles for supported cloud, remote-play, and streaming services.
 - [x] Emulator/core profiles for libretro, Dolphin, PCSX2, RPCS3, PPSSPP, DuckStation, melonDS, Azahar, MAME, Flycast, xemu, and ScummVM.
 
 ## Milestone 2: streaming client

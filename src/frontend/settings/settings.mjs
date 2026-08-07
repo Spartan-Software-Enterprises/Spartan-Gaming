@@ -117,6 +117,10 @@ function bindControls() {
       window.location.assign('../workspaces/index.html');
       return;
     }
+    if (button.dataset.action === 'providers.manageProfiles') {
+      window.location.assign('../providers/index.html');
+      return;
+    }
     if (button.dataset.action === 'performance.diagnostics' || button.dataset.action === 'advanced.exportDiagnostics') {
       window.location.assign('../diagnostics/index.html');
       return;
