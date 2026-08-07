@@ -3,7 +3,8 @@ import {defaultSettings, settingsCategories} from './settings-data.mjs';
 
 const storageKey = 'spartan-gaming.settings.v1';
 const state = loadState();
-let activeCategory = 'general';
+const requestedCategory = new URLSearchParams(globalThis.location?.search || '').get('category');
+let activeCategory = settingsCategories.some((category) => category.id === requestedCategory) ? requestedCategory : 'general';
 let query = '';
 
 function loadState() {

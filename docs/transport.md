@@ -6,6 +6,7 @@
 - `createWebTransportSignalTransport` provides an experimental HTTPS datagram signaling path with the same envelope validation and optional join handshake.
 - `createWebRtcTransport` wraps `RTCPeerConnection`, creates offers, accepts answers, forwards ICE candidates and media tracks, and closes cleanly.
 - `src/frontend/transport/ice.mjs` validates STUN/TURN URLs, requires secure remote TURN by default, accepts ephemeral session credentials, bounds server/pool counts, and produces redacted diagnostics.
+- `src/frontend/transport/policy.mjs` normalizes saved transport preferences and creates session-only ICE options; it never stores relay URLs or credentials in profiles.
 - `validateTransportMessage` fails closed for unknown protocol message types or malformed envelopes.
 
 `src/frontend/session/runtime.mjs` composes these primitives with the session manager. It connects signaling, adds the WebRTC offer/answer and ICE payloads, forwards media tracks, routes input/reconnect envelopes, and exposes session events for the player. It does not own provider credentials or host process lifecycle.
