@@ -17,7 +17,7 @@ function normalizeValue(setting, value) {
 }
 
 export function normalizeSettings(values = {}) {
-  return Object.freeze(Object.fromEntries(definitions.keys().map(key => [key, normalizeValue(definitions.get(key), values[key] ?? defaultSettings[key])] )));
+  return Object.freeze(Object.fromEntries([...definitions.keys()].map(key => [key, normalizeValue(definitions.get(key), values[key] ?? defaultSettings[key])] )));
 }
 
 export function createSettingsStore({storage = globalThis.localStorage, key = SETTINGS_KEY} = {}) {
