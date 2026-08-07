@@ -5,7 +5,7 @@
   "description": "Cross-platform frontend and orchestration layer for cloud gaming, streaming, and emulation.",
   "type": "module",
   "scripts": {
-    "test": "node --test src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/input/input.test.mjs src/frontend/adapters/adapters.test.mjs src/frontend/host/host.test.mjs src/frontend/player/player-state.test.mjs",
+    "test": "node --test src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/input/input.test.mjs src/frontend/input/profiles.test.mjs src/frontend/adapters/adapters.test.mjs src/frontend/host/host.test.mjs src/frontend/player/player-state.test.mjs",
     "check": "./scripts/check-repository.sh"
   },
   "engines": {

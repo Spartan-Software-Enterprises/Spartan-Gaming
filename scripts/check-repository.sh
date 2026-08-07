@@ -43,6 +43,11 @@ required_files=(
   src/frontend/player/player.mjs
   src/frontend/player/player-state.mjs
   src/frontend/player/player-state.test.mjs
+  src/frontend/input/profiles.mjs
+  src/frontend/input/profiles.test.mjs
+  src/frontend/input/profiles.html
+  src/frontend/input/profiles.css
+  src/frontend/input/profiles-page.mjs
   src/frontend/settings/index.html
   src/frontend/settings/settings.css
   src/frontend/settings/settings.mjs
@@ -100,7 +105,9 @@ node --check src/frontend/adapters/adapters.mjs
 node --check src/frontend/host/host.mjs
 node --check src/frontend/player/player.mjs
 node --check src/frontend/player/player-state.mjs
-node --test src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/input/input.test.mjs src/frontend/adapters/adapters.test.mjs src/frontend/host/host.test.mjs src/frontend/player/player-state.test.mjs
+node --check src/frontend/input/profiles.mjs
+node --check src/frontend/input/profiles-page.mjs
+node --test src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/input/input.test.mjs src/frontend/input/profiles.test.mjs src/frontend/adapters/adapters.test.mjs src/frontend/host/host.test.mjs src/frontend/player/player-state.test.mjs
 
 if command -v git >/dev/null 2>&1; then
   if git ls-files -z | grep -E -z '(^|/)(\.env|.*\.(pem|key))$' >/dev/null; then

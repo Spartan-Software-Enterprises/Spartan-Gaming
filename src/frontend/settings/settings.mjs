@@ -104,6 +104,10 @@ function bindControls() {
       render();
       return;
     }
+    if (button.dataset.action === 'controllers.manageProfiles') {
+      window.location.assign('../input/profiles.html');
+      return;
+    }
     const status = document.querySelector('[data-save-status]');
     if (status) status.textContent = `${button.textContent} queued`;
   }));
@@ -131,4 +135,3 @@ document.querySelector('[data-export]').addEventListener('click', () => {
 });
 
 render();
-
