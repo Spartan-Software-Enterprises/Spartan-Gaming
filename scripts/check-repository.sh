@@ -13,6 +13,10 @@ required_files=(
   LICENSE
   docs/architecture.md
   docs/platforms.md
+  signaling/README.md
+  signaling/broker.mjs
+  signaling/broker.test.mjs
+  signaling/agent.mjs
   chromium/README.md
   chromium/build-manifest.json
   chromium/config.mjs
@@ -173,6 +177,8 @@ NODE
 node protocol/v1/validate-session.mjs protocol/v1/examples/session-offer.json
 node --check chromium/config.mjs
 node --check scripts/chromium/check-environment.mjs
+node --check signaling/broker.mjs
+node --check signaling/agent.mjs
 node --check src/frontend/dashboard/dashboard.mjs
 node --check src/frontend/session/session.mjs
 node --check src/frontend/session/quality.mjs
@@ -213,7 +219,7 @@ node --check src/frontend/capture/capture.mjs
 node --check src/frontend/emulation/emulation.mjs
 node --check src/frontend/emulation/emulation-page.mjs
 node --check src/frontend/emulation/integration.mjs
-node --test scripts/chromium/config.test.mjs host/pairing.test.mjs host/capabilities.test.mjs host/adapters.test.mjs host/environment.test.mjs host/media.test.mjs src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/session/recovery.test.mjs src/frontend/session/runtime.test.mjs src/frontend/session/telemetry.test.mjs src/frontend/input/input.test.mjs src/frontend/input/profiles.test.mjs src/frontend/input/inspector.test.mjs src/frontend/input/navigation.test.mjs src/frontend/compatibility/harness.test.mjs src/frontend/providers/integration.test.mjs src/frontend/providers/profiles.test.mjs src/frontend/adapters/adapters.test.mjs src/frontend/host/host.test.mjs src/frontend/player/player-state.test.mjs src/frontend/player/immersive.test.mjs src/frontend/workspaces/workspaces.test.mjs src/frontend/diagnostics/capabilities.test.mjs src/frontend/transport/transport.test.mjs src/frontend/capture/capture.test.mjs src/frontend/emulation/integration.test.mjs src/frontend/emulation/emulation.test.mjs src/frontend/pwa/cache.test.mjs
+node --test scripts/chromium/config.test.mjs signaling/broker.test.mjs host/pairing.test.mjs host/capabilities.test.mjs host/adapters.test.mjs host/environment.test.mjs host/media.test.mjs src/frontend/catalog.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/session/recovery.test.mjs src/frontend/session/runtime.test.mjs src/frontend/session/telemetry.test.mjs src/frontend/input/input.test.mjs src/frontend/input/profiles.test.mjs src/frontend/input/inspector.test.mjs src/frontend/input/navigation.test.mjs src/frontend/compatibility/harness.test.mjs src/frontend/providers/integration.test.mjs src/frontend/providers/profiles.test.mjs src/frontend/adapters/adapters.test.mjs src/frontend/host/host.test.mjs src/frontend/player/player-state.test.mjs src/frontend/player/immersive.test.mjs src/frontend/workspaces/workspaces.test.mjs src/frontend/diagnostics/capabilities.test.mjs src/frontend/transport/transport.test.mjs src/frontend/capture/capture.test.mjs src/frontend/emulation/integration.test.mjs src/frontend/emulation/emulation.test.mjs src/frontend/pwa/cache.test.mjs
 
 if command -v git >/dev/null 2>&1; then
   if git ls-files -z | grep -E -z '(^|/)(\.env|.*\.(pem|key))$' >/dev/null; then

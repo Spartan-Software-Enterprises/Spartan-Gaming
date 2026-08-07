@@ -44,6 +44,7 @@
 - [x] Secure device pairing UX and frontend contract (agent/signaling implementation pending).
 - [x] Dependency-free reference host control plane (media and OS adapters pending).
 - [x] Platform-aware capture and encoder plan contracts (native execution and WebRTC publisher pending).
+- [x] Authenticated in-memory signaling routing contract (WebSocket service adapter and deployment pending).
 - [ ] Signaling service.
 - [ ] STUN/TURN integration.
 - [ ] Controller, keyboard, mouse, audio, and rumble forwarding.

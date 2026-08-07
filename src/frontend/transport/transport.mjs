@@ -10,14 +10,14 @@ export function validateTransportMessage(message) {
   return message;
 }
 
-export function createWebSocketSignalTransport({endpoint, WebSocketImpl = globalThis.WebSocket} = {}) {
+export function createWebSocketSignalTransport({endpoint, join, WebSocketImpl = globalThis.WebSocket} = {}) {
   const parsed = parseHostEndpoint(endpoint); if (!['ws:', 'wss:'].includes(parsed.protocol)) throw new TypeError('WebSocket signaling requires a ws or wss endpoint');
   const bus = events(); let socket = null; let state = 'idle'; let connectReject;
   const transport = {
     get state() { return state; }, on: bus.on,
     connect() {
       if (state === 'open') return Promise.resolve(); if (typeof WebSocketImpl !== 'function') return Promise.reject(new Error('WebSocket is unavailable in this browser'));
-      state = 'connecting'; return new Promise((resolve, reject) => { connectReject = reject; socket = new WebSocketImpl(parsed.url); socket.onopen = () => { state = 'open'; connectReject = undefined; bus.emit('open'); resolve(); }; socket.onmessage = event => { try { bus.emit('message', validateTransportMessage(JSON.parse(typeof event.data === 'string' ? event.data : String(event.data)))); } catch (error) { bus.emit('error', error); } }; socket.onerror = error => { state = 'error'; bus.emit('error', error); if (connectReject) { connectReject(error instanceof Error ? error : new Error('WebSocket connection failed')); connectReject = undefined; } }; socket.onclose = event => { state = 'closed'; bus.emit('close', event); }; });
+    state = 'connecting'; return new Promise((resolve, reject) => { connectReject = reject; socket = new WebSocketImpl(parsed.url); socket.onopen = () => { if (join) { if (typeof join.sessionId !== 'string' || typeof join.role !== 'string' || typeof join.ticket !== 'string') { state = 'error'; const error = new TypeError('signaling join requires sessionId, role, and ticket'); bus.emit('error', error); reject(error); return; } socket.send(JSON.stringify({type: 'signaling.join', sessionId: join.sessionId, role: join.role, ticket: join.ticket})); } state = 'open'; connectReject = undefined; bus.emit('open'); resolve(); }; socket.onmessage = event => { try { bus.emit('message', validateTransportMessage(JSON.parse(typeof event.data === 'string' ? event.data : String(event.data)))); } catch (error) { bus.emit('error', error); } }; socket.onerror = error => { state = 'error'; bus.emit('error', error); if (connectReject) { connectReject(error instanceof Error ? error : new Error('WebSocket connection failed')); connectReject = undefined; } }; socket.onclose = event => { state = 'closed'; bus.emit('close', event); }; });
     },
     send(message) { if (state !== 'open' || !socket) throw new Error('WebSocket signaling transport is not open'); socket.send(JSON.stringify(validateTransportMessage(message))); },
     close(code = 1000, reason = 'client closed') { socket?.close(code, reason); state = 'closed'; },

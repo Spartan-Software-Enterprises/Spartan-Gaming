@@ -44,6 +44,12 @@ Optional services
 └── Administration API
 ```
 
+The reference signaling boundary in `signaling/broker.mjs` issues short-lived
+HMAC-scoped client/host tickets and routes validated v1 envelopes between one
+client and one host. It is intentionally in-memory and media-free; production
+deployment still requires TLS, rate limiting, origin controls, secret
+management, and a clustered session registry.
+
 ## Technical direction
 
 - Preserve Chromium's sandbox, site isolation, and multi-process model.

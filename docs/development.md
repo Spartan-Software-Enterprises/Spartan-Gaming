@@ -71,6 +71,12 @@ For a live signaling session, open the player with a `signal=wss://...` query pa
 
 For a local control-plane smoke test, run `npm run host -- --pairing-code ABCD23`. Register `ws://127.0.0.1:8787/session` in the host manager, enter `ABCD23`, and choose **Connect in player**. The reference agent proves endpoint, pairing, and session-envelope behavior; it intentionally does not provide media until a platform capture/encode adapter is installed.
 
+The signaling contract is covered by `signaling/broker.mjs`. It can be embedded
+behind a WebSocket or WebTransport server with a deployment-owned secret;
+`npm test` exercises scoped ticket issuance, role authorization, message size
+limits, duplicate-role rejection, routing, and cleanup. It is not a public
+relay or a substitute for STUN/TURN.
+
 The player’s fullscreen control uses `src/frontend/player/immersive.mjs` to request fullscreen, Pointer Lock, and Keyboard Lock from the same user gesture when supported. Optional permission failures are tolerated so browsers with stricter site policies still retain fullscreen playback.
 
 Gaming workspaces are stored locally through `src/frontend/workspaces/workspaces.mjs`. The workspace manager isolates launch behavior, quality, controller profile, and overlay defaults; exports contain only workspace preferences and never provider credentials, cookies, ROMs, or save data. The management surface is `src/frontend/workspaces/index.html` and is linked from Settings → Profiles & sync.
