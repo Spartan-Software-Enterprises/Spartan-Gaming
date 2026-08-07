@@ -15,7 +15,7 @@
 - [x] Gaming profiles and workspaces with persistent isolated launch preferences.
 - [x] Fullscreen gaming mode.
 - [ ] Controller-first navigation.
-- [x] Controller remapping profiles; gamepad inspector remains planned.
+- [x] Controller remapping profiles and live gamepad/HID inspector.
 - [x] Capability-aware Keyboard Lock and Pointer Lock controls with graceful permission fallback.
 - [x] Stream and system diagnostics page.
 - [ ] Windows, macOS, and Linux development builds.

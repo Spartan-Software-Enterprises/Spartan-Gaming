@@ -108,6 +108,10 @@ function bindControls() {
       window.location.assign('../input/profiles.html');
       return;
     }
+    if (button.dataset.action === 'controllers.test') {
+      window.location.assign('../input/inspector.html');
+      return;
+    }
     if (button.dataset.action === 'sync.manageProfiles') {
       window.location.assign('../workspaces/index.html');
       return;
