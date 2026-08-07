@@ -11,6 +11,7 @@
 ## Milestone 1: browser shell
 
 - [x] Gaming dashboard and library shell with catalog search, filters, favorites, and launch handoffs.
+- [x] Session player shell with stream target, overlays, quality state, controller hooks, and diagnostics.
 - [ ] Gaming profiles and workspaces.
 - [ ] Fullscreen gaming mode.
 - [ ] Controller-first navigation.
@@ -25,14 +26,14 @@
 ## Milestone 2: streaming client
 
 - [ ] WebRTC session manager.
-- [ ] Adaptive bitrate and resolution.
+- [x] Adaptive bitrate and resolution policy.
 - [ ] Reconnection and session recovery.
 - [ ] Hardware decode detection.
 - [ ] Input, decode, render, and network telemetry.
 - [ ] Screenshots and local recording.
 - [ ] LAN self-hosted reference stream.
 - [ ] Provider and emulator capability detection harness.
-- [ ] Unified session lifecycle and error model.
+- [x] Unified session lifecycle and error model.
 
 ## Milestone 3: self-hosted stack
 

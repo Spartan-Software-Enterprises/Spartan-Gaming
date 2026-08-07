@@ -55,6 +55,6 @@ document.addEventListener('click', event => {
   const launchButton = event.target.closest('[data-launch]');
   if (launchButton) { const entry = state.catalog.find(item => item.id === launchButton.dataset.launch); if (!entry) return; const plan = state.adapters?.get(entry.id)?.resolve(); if (!plan || plan.status === 'unsupported') { showToast(`${entry.name}: no supported integration mode is available.`); return; } const offer = beginSession({...entry, adapterMode: plan.mode}); if (!offer) return; if (plan.action === 'open-url') window.open(plan.url, '_blank', 'noopener'); showToast(`${entry.name}: ${plan.action === 'open-url' ? 'service opened and session offer prepared' : plan.action.replaceAll('-', ' ')}.`); }
 });
-document.querySelector('[data-action="resume"]').addEventListener('click', () => { const offer = beginSession({id: 'spartan-host', backendType: 'remote-play'}); if (offer) showToast('Session offer prepared for the Spartan Host adapter.'); });
+document.querySelector('[data-action="resume"]').addEventListener('click', () => { const offer = beginSession({id: 'spartan-host', backendType: 'remote-play'}); if (offer) window.location.assign('../player/index.html?backend=spartan-host'); });
 document.querySelectorAll('[data-section]').forEach(button => button.addEventListener('click', () => showToast(`${button.textContent.trim()} view is coming online with the adapter registry.`)));
 loadCatalog();
