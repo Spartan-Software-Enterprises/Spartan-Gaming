@@ -28,5 +28,7 @@ jobs:
           node-version: 20
       - name: Run dependency-free contract suite
         run: npm test
+      - name: Run optional Werift adapter contract in isolation
+        run: npm run test:werift
       - name: Validate Chromium target contract
         run: npm run chromium:validate -- --platform ${{ matrix.platform }}
