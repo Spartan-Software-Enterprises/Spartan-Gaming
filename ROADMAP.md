@@ -25,7 +25,7 @@
 
 ## Milestone 2: streaming client
 
-- [ ] WebRTC session manager.
+- [x] WebRTC/session runtime bridge for signaling, SDP/ICE, media tracks, input, and reconnect envelopes.
 - [x] Adaptive bitrate and resolution policy.
 - [x] Bounded reconnection and session recovery policy with player control.
 - [ ] Hardware decode detection.
