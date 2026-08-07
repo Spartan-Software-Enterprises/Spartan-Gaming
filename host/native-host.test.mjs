@@ -32,3 +32,11 @@ test('native Werift host composes pipeline startup, SDP negotiation, and publish
   assert.equal(host.state, 'connected'); assert.equal(started, 1); assert.equal(signaling.sent.at(-1).payload.sdp.sdp, 'native-answer');
   host.close(); await new Promise(resolve => setTimeout(resolve, 0)); assert.equal(stopped, 1); assert.equal(host.state, 'closed');
 });
+
+test('native Werift host can construct its pipeline from shell-free capture and encoder plans', () => {
+  const signal = {on() { return () => {}; }, async connect() {}, send() {}, close() {}};
+  const capturePlan = {process: {shell: false, args: []}, output: {target: 'stdout'}};
+  const encoderPlan = {process: {shell: false, args: []}};
+  const host = createNativeWeriftHost({signaling: signal, module: fakeWerift(), capturePlan, encoderPlan, packetizer: {push: () => []}, sessionId: 'ses-plan-01'});
+  assert.equal(host.pipeline.state, 'idle'); assert.equal(host.state, 'idle');
+});
