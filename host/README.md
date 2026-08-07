@@ -26,6 +26,11 @@ isolated behind a firewall.
 
 The agent accepts one correctly paired `session.offer`, returns a protocol-valid `session.answer`, and rejects replayed or expired pairing codes. It is intentionally dependency-free and runs anywhere Node.js 20 runs. This is a control-plane reference only: it does not launch games, capture or encode media, inject OS input, provide TLS, or operate STUN/TURN. Those capabilities belong in platform-specific host adapters and the production signaling/deployment layer.
 
+Before accepting an offer, the agent intersects the client’s transports,
+video, audio, and input capabilities with its own and returns only the
+selected contract. Offers with no compatible transport or codec receive an
+explicit rejected answer and are not added to the active-session set.
+
 The health response also reports the selected platform adapter, detected `ffmpeg`/GStreamer tools, and conservative readiness flags. A detected encoder tool is evidence only that a future media adapter may be possible; it is not a claim that capture, WebRTC publication, or game launching is implemented.
 
 Capture and encode plans are available as pure, testable contracts in `host/media.mjs`. They use `shell: false`, require explicit platform permission context, and return a pipeline description for a future WebRTC publisher rather than starting a desktop capture unexpectedly.

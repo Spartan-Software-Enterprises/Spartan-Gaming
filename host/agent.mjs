@@ -8,6 +8,7 @@ import {normalizeHostCapabilities} from './capabilities.mjs';
 import {detectHostEnvironment} from './environment.mjs';
 import {createInputInjectionPlan} from './input.mjs';
 import {createHostSignalingClient} from './signaling.mjs';
+import {negotiateHostOffer} from './session.mjs';
 
 const args = new Map();
 for (let index = 2; index < process.argv.length; index += 1) { const value = process.argv[index]; if (value.startsWith('--')) args.set(value.slice(2), process.argv[index + 1]?.startsWith('--') ? true : process.argv[++index]); }
@@ -50,15 +51,18 @@ function handleMessage(connection, text, session) {
   try { message = validateTransportMessage(JSON.parse(text)); } catch { connection.close(); return; }
   if (message.type === 'session.offer' && !session.accepted) {
     if (message.payload.hostId !== hostId || !pairing.verify(message.payload.pairingCode)) { connection.close(); return; }
+    const negotiation = negotiateHostOffer({offer: message.payload, hostCapabilities: capabilities});
+    if (!negotiation.accepted) { connection.send(createSessionEnvelope({sessionId: message.sessionId, type: 'session.answer', sequence: (message.sequence || 0) + 1, payload: {accepted: false, hostId, hostName, reason: negotiation.reason}})); connection.close(); return; }
     session.accepted = true; session.sessionId = message.sessionId;
-    sessions.add(session); const answer = createSessionEnvelope({sessionId: message.sessionId, type: 'session.answer', sequence: (message.sequence || 0) + 1, payload: {accepted: true, hostId, hostName, capabilities, hostCapabilities}});
+    session.negotiated = negotiation.capabilities;
+    sessions.add(session); const answer = createSessionEnvelope({sessionId: message.sessionId, type: 'session.answer', sequence: (message.sequence || 0) + 1, payload: {accepted: true, hostId, hostName, capabilities: session.negotiated, hostCapabilities}});
     connection.send(answer);
     return;
   }
   if (message.sessionId !== session.sessionId) { connection.close(); return; }
   if (message.type === 'quality.request') { lastQuality = {profile: String(message.payload.profile || 'balanced'), maxWidth: Number(message.payload.maxWidth) || 0, maxHeight: Number(message.payload.maxHeight) || 0, maxFramerate: Number(message.payload.maxFramerate) || 0, bitrateKbps: Number(message.payload.bitrateKbps) || 0}; return; }
   if (message.type === 'input.event') { inputEvents += 1; session.lastInputAt = message.sentAt; try { lastInputPlan = createInputInjectionPlan({platform: environment.platform, event: {type: 'input.event', ...message.payload}}); } catch (error) { lastInputPlan = {state: 'failed', reason: error.message}; } return; }
-  if (message.type === 'session.reconnect') { const answer = createSessionEnvelope({sessionId: message.sessionId, type: 'session.answer', sequence: (message.sequence || 0) + 1, payload: {accepted: true, hostId, capabilities, hostCapabilities}}); connection.send(answer); return; }
+  if (message.type === 'session.reconnect') { const answer = createSessionEnvelope({sessionId: message.sessionId, type: 'session.answer', sequence: (message.sequence || 0) + 1, payload: {accepted: true, hostId, capabilities: session.negotiated || capabilities, hostCapabilities}}); connection.send(answer); return; }
   if (message.type === 'session.close') { sessions.delete(session); connection.close(); }
 }
 
@@ -71,7 +75,7 @@ server.on('upgrade', (request, socket) => {
   if (url.pathname !== '/session' || request.headers.upgrade?.toLowerCase() !== 'websocket' || !request.headers['sec-websocket-key']) { socket.end('HTTP/1.1 404 Not Found\r\n\r\n'); return; }
   socket.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${acceptKey(request.headers['sec-websocket-key'])}\r\n\r\n`);
   const connection = {send: value => socket.write(frame(JSON.stringify(value))), close: () => socket.end(closeFrame())};
-  const session = {accepted: false, sessionId: null}; let buffer = Buffer.alloc(0);
+  const session = {accepted: false, sessionId: null, negotiated: null}; let buffer = Buffer.alloc(0);
   socket.on('data', chunk => { buffer = parseFrames(Buffer.concat([buffer, chunk]), text => handleMessage(connection, text, session), socket); });
   socket.on('close', () => sessions.delete(session));
   socket.on('error', () => {});
@@ -81,7 +85,7 @@ server.listen(port, bind, () => {
   if (!signalEndpoint && !signalSessionId && !signalTicket) return;
   if (!signalEndpoint || !signalSessionId || !signalTicket) { console.error('Outbound signaling requires --signal-endpoint, --signal-session, and --signal-ticket.'); process.exitCode = 1; return; }
   let signalingClient;
-  const signalSession = {accepted: false, sessionId: signalSessionId};
+  const signalSession = {accepted: false, sessionId: signalSessionId, negotiated: null};
   signalingClient = createHostSignalingClient({endpoint: signalEndpoint, sessionId: signalSessionId, ticket: signalTicket, onMessage: message => handleMessage(signalingClient, JSON.stringify(message), signalSession), onError: error => console.error(`host signaling error: ${error.message}`), onClose: () => console.error('host signaling connection closed')});
   signalingClient.connect().catch(error => { console.error(`host signaling connection failed: ${error.message}`); process.exitCode = 1; });
 });
