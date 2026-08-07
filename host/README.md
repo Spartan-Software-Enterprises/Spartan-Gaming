@@ -43,3 +43,10 @@ failed capability attempt does not strand a valid retry.
 The health response also reports the selected platform adapter, detected `ffmpeg`/GStreamer tools, and conservative readiness flags. A detected encoder tool is evidence only that a future media adapter may be possible; it is not a claim that capture, WebRTC publication, or game launching is implemented.
 
 Capture and encode plans are available as pure, testable contracts in `host/media.mjs`. They use `shell: false`, require explicit platform permission context, and return a pipeline description for a future WebRTC publisher rather than starting a desktop capture unexpectedly.
+
+Native adapter authors can use `host/process.mjs` to execute those plans through
+`createManagedProcess` or `createProcessPipeline`. The lifecycle boundary keeps
+argument arrays shell-free, retains only bounded stdout/stderr tails, emits
+explicit starting/running/stopping/failed states, and rolls already-started
+processes back if a pipeline member cannot start. It does not itself claim that
+an FFmpeg output is a WebRTC track; a platform publisher still owns that bridge.

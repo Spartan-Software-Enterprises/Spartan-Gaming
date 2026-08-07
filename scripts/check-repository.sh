@@ -40,6 +40,8 @@ required_files=(
   docs/host-support.md
   host/agent.mjs
   host/agent.integration.test.mjs
+  host/process.mjs
+  host/process.integration.test.mjs
   signaling/agent.integration.test.mjs
   host/README.md
   host/pairing.mjs
@@ -266,6 +268,8 @@ node --check src/frontend/host/browser-host-runtime.mjs
 node --check src/frontend/host/browser-studio.mjs
 node --check host/agent.mjs
 node --check host/agent.integration.test.mjs
+node --check host/process.mjs
+node --check host/process.integration.test.mjs
 node --check signaling/agent.integration.test.mjs
 node --check host/pairing.mjs
 node --check host/signaling.mjs
