@@ -13,10 +13,10 @@
 - [x] Gaming dashboard and library shell with catalog search, filters, favorites, and launch handoffs.
 - [x] Session player shell with stream target, overlays, quality state, controller hooks, and diagnostics.
 - [ ] Gaming profiles and workspaces.
-- [ ] Fullscreen gaming mode.
+- [x] Fullscreen gaming mode.
 - [ ] Controller-first navigation.
 - [x] Controller remapping profiles; gamepad inspector remains planned.
-- [ ] Keyboard Lock, Pointer Lock, and per-site permission UX.
+- [x] Capability-aware Keyboard Lock and Pointer Lock controls with graceful permission fallback.
 - [x] Stream and system diagnostics page.
 - [ ] Windows, macOS, and Linux development builds.
 - [x] Unified frontend catalog and launcher model.

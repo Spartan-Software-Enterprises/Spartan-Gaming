@@ -57,6 +57,8 @@ The first frontend surfaces are available at `src/frontend/dashboard/index.html`
 
 For a live signaling session, open the player with a `signal=wss://...` query parameter. The player creates the WebSocket signaling transport, adds WebRTC when the browser exposes `RTCPeerConnection`, and uses the session runtime bridge for offer/answer, ICE, media tracks, telemetry, reconnect, and input. Without `signal`, the player stays in its local demo mode.
 
+The player’s fullscreen control uses `src/frontend/player/immersive.mjs` to request fullscreen, Pointer Lock, and Keyboard Lock from the same user gesture when supported. Optional permission failures are tolerated so browsers with stricter site policies still retain fullscreen playback.
+
 Controller profiles are managed at `src/frontend/input/profiles.html`. Profiles are persisted locally, validate duplicate bindings before save, and share the same stable action vocabulary with the session player and future native input adapters.
 
 Compatibility diagnostics are available at `src/frontend/diagnostics/index.html`. The probe runs locally, checks browser media/graphics/input/transport capabilities, and exports only a redacted report without credentials, cookies, endpoints, or platform identity details.

@@ -4,10 +4,12 @@ import {createInputEventEnvelope, createInputMapper} from '../input/input.mjs';
 import {createWebRtcTransport, createWebSocketSignalTransport} from '../transport/transport.mjs';
 import {createPlayerState, formatLatency, reducePlayerState} from './player-state.mjs';
 import {captureVideoFrame, createRecordingController} from '../capture/capture.mjs';
+import {createImmersiveController} from './immersive.mjs';
 
 const query = new URLSearchParams(location.search);
 const manager = createSessionManager({idFactory: () => `ses-${crypto.randomUUID()}`});
 const mapper = createInputMapper();
+const immersive = createImmersiveController({target: document.querySelector('[data-stage]')});
 let runtime = null;
 const elements = {
   status: document.querySelector('[data-status]'), message: document.querySelector('[data-stage-message]'), quality: document.querySelector('[data-quality]'), qualityDetail: document.querySelector('[data-quality-detail]'),
@@ -55,7 +57,7 @@ function downloadBlob(blob, filename) { const link = document.createElement('a')
 async function takeScreenshot() { try { const blob = await captureVideoFrame(elements.video); downloadBlob(blob, `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.png`); elements.message.textContent = 'Screenshot saved locally.'; } catch (error) { elements.message.textContent = error.message; } }
 async function toggleRecording() { try { if (!recording) recording = createRecordingController({stream: elements.video.srcObject}); if (recording.state === 'recording') { const blob = await recording.stop(); downloadBlob(blob, `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.webm`); elements.message.textContent = 'Recording saved locally.'; elements.record.classList.remove('capture-active'); } else { recording.start(); elements.message.textContent = 'Recording locally. Press record again to stop.'; elements.record.classList.add('capture-active'); } } catch (error) { elements.message.textContent = error.message; } }
 
-document.querySelector('[data-action="fullscreen"]').addEventListener('click', () => elements.stage.requestFullscreen?.());
+document.querySelector('[data-action="fullscreen"]').addEventListener('click', () => immersive.toggle().catch(error => { elements.message.textContent = error.message; }));
 elements.screenshot = document.querySelector('[data-action="screenshot"]'); elements.record = document.querySelector('[data-action="record"]'); elements.screenshot.addEventListener('click', takeScreenshot); elements.record.addEventListener('click', toggleRecording); elements.reconnect = document.querySelector('[data-action="reconnect"]'); elements.reconnect.addEventListener('click', requestReconnect);
 document.querySelector('[data-action="overlay"]').addEventListener('click', () => apply({type: 'toggle.overlay'}));
 document.querySelector('[data-action="diagnostics"]').addEventListener('click', () => apply({type: 'toggle.diagnostics'}));
