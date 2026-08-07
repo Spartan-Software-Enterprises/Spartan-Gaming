@@ -73,6 +73,8 @@ For a live signaling session, open the player with a `signal=wss://...` query pa
 
 For a local control-plane smoke test, run `npm run host -- --pairing-code ABCD23`. Register `ws://127.0.0.1:8787/session` in the host manager, enter `ABCD23`, and choose **Connect in player**. The reference agent proves endpoint, pairing, and session-envelope behavior; it intentionally does not provide media until a platform capture/encode adapter is installed.
 
+The Host Profiles health action uses `src/frontend/host/readiness.mjs` to classify the host’s media capture, encoding, publisher, audio, input, and transport checks. A host can be paired for control-plane testing while the preflight still correctly reports `configuration-required` until media publishing is ready.
+
 The signaling contract is covered by `signaling/broker.mjs`. It can be embedded
 behind a WebSocket or WebTransport server with a deployment-owned secret;
 `npm test` exercises scoped ticket issuance, role authorization, message size
