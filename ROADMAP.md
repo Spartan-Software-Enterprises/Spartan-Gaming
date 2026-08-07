@@ -40,7 +40,7 @@
 
 ## Milestone 3: self-hosted stack
 
-- [ ] Windows and Linux host agent.
+- [ ] Windows and Linux host agent (native composition boundary implemented; platform packaging and adapters pending).
 - [x] Secure device pairing UX and frontend contract (agent/signaling implementation pending).
 - [x] Dependency-free reference host control plane (media and OS adapters pending).
 - [x] Shell-free managed process lifecycle with bounded output and pipeline rollback.
@@ -49,6 +49,7 @@
 - [x] Optional WebRTC adapter discovery for native and TypeScript RTP implementations.
 - [x] Concrete optional Werift video-track/RTP transport adapter.
 - [x] Optional Werift host session runtime and encoded RTP publisher composition.
+- [x] Native pipeline/Werift host composition factory with lifecycle teardown.
 - [x] Host capability serialization for safe WebRTC adapter readiness diagnostics.
 - [x] Platform-aware capture and encoder plan contracts (native execution and WebRTC publisher pending).
 - [x] Transport-neutral media publisher readiness contract (native publisher implementation pending).

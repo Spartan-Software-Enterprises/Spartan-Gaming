@@ -90,3 +90,9 @@ candidate handling. `host/werift-runtime.mjs` now connects that wrapper to the
 authenticated Spartan transport envelopes, including input and quality
 callbacks. The complete LAN stream remains gated on a real browser-to-host
 media test and a production capture/encode wiring pass.
+
+`host/native-host.mjs` composes the native media pipeline, Werift RTP publisher,
+and signaling runtime behind one injectable factory. It starts capture/encode
+only after a validated session offer arrives and tears the publisher down with
+the session. Production platform adapters still supply the actual capture
+plans, packetizer, optional Werift package, and relay configuration.
