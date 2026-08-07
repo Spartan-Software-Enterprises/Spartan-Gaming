@@ -12,7 +12,7 @@
 
 - [x] Gaming dashboard and library shell with catalog search, filters, favorites, and launch handoffs.
 - [x] Session player shell with stream target, overlays, quality state, controller hooks, and diagnostics.
-- [ ] Gaming profiles and workspaces.
+- [x] Gaming profiles and workspaces with persistent isolated launch preferences.
 - [x] Fullscreen gaming mode.
 - [ ] Controller-first navigation.
 - [x] Controller remapping profiles; gamepad inspector remains planned.

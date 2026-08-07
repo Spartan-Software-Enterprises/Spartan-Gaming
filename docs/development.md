@@ -59,6 +59,8 @@ For a live signaling session, open the player with a `signal=wss://...` query pa
 
 The player’s fullscreen control uses `src/frontend/player/immersive.mjs` to request fullscreen, Pointer Lock, and Keyboard Lock from the same user gesture when supported. Optional permission failures are tolerated so browsers with stricter site policies still retain fullscreen playback.
 
+Gaming workspaces are stored locally through `src/frontend/workspaces/workspaces.mjs`. The workspace manager isolates launch behavior, quality, controller profile, and overlay defaults; exports contain only workspace preferences and never provider credentials, cookies, ROMs, or save data. The management surface is `src/frontend/workspaces/index.html` and is linked from Settings → Profiles & sync.
+
 Controller profiles are managed at `src/frontend/input/profiles.html`. Profiles are persisted locally, validate duplicate bindings before save, and share the same stable action vocabulary with the session player and future native input adapters.
 
 Compatibility diagnostics are available at `src/frontend/diagnostics/index.html`. The probe runs locally, checks browser media/graphics/input/transport capabilities, and exports only a redacted report without credentials, cookies, endpoints, or platform identity details.
