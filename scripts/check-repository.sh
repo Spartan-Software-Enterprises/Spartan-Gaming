@@ -55,6 +55,8 @@ required_files=(
   docker/signaling.Dockerfile
   docker-compose.yml
   scripts/deployment.test.mjs
+  scripts/issue-signaling-ticket.mjs
+  scripts/signaling-ticket.test.mjs
   providers/catalog.json
   emulators/catalog.json
   package.json

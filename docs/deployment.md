@@ -49,3 +49,21 @@ SPARTAN_SIGNALING_SECRET="local-development-only" npm run signaling
 Use `--bind`, `--port`, and `--secret` for local service customization. The
 browser transport joins with a short-lived, role-scoped ticket; it must not
 store the signing secret.
+
+## Provisioning join tickets
+
+Mint tickets out of band on the operator or host machine. Issue one ticket
+for each role in the same session, and deliver the ticket only to that role:
+
+```bash
+export SPARTAN_SIGNALING_SECRET="$(openssl rand -base64 32)"
+node scripts/issue-signaling-ticket.mjs --session ses-example-01 --role client --subject browser-01
+node scripts/issue-signaling-ticket.mjs --session ses-example-01 --role host --subject host-01
+```
+
+The command prints a JSON record containing the short-lived ticket. Tickets
+are scoped to one session and role, and should be passed in memory to
+`createWebSocketSignalTransport({join})`; do not put them in a URL, profile
+export, source file, or browser local storage. A production provisioning
+service should authenticate the operator and deliver the same claims through
+an audited secret-exchange channel.
