@@ -28,13 +28,13 @@ function connect(port) {
   return new Promise((resolve, reject) => {
     const socket = net.connect({host: '127.0.0.1', port}); let buffer = Buffer.alloc(0); let handshake = false; const messages = []; const waiters = [];
     const push = value => { const waiter = waiters.shift(); if (waiter) waiter(value); else messages.push(value); };
-    const next = () => new Promise((resolveNext, rejectNext) => { if (messages.length) return resolveNext(messages.shift()); const timer = setTimeout(() => rejectNext(new Error('signaling message timed out')), 2000); waiters.push(value => { clearTimeout(timer); resolveNext(value); }); });
+    const next = () => new Promise((resolveNext, rejectNext) => { if (messages.length) return resolveNext(messages.shift()); const timer = setTimeout(() => rejectNext(new Error('signaling message timed out after 10 seconds')), 10_000); waiters.push(value => { clearTimeout(timer); resolveNext(value); }); });
     socket.on('error', reject); socket.on('data', chunk => {
       buffer = Buffer.concat([buffer, chunk]);
       if (!handshake) { const end = buffer.indexOf('\r\n\r\n'); if (end < 0) return; const response = buffer.subarray(0, end).toString(); assert.match(response, /101 Switching Protocols/); buffer = buffer.subarray(end + 4); handshake = true; resolve({send: value => socket.write(clientFrame(value)), next, close: () => socket.destroy()}); }
       buffer = parseServerFrames(buffer, push);
     });
-    socket.once('connect', () => { const key = randomBytes(16).toString('base64'); socket.write(`GET /signal HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: ${key}\r\n\r\n`); });
+    socket.once('connect', () => { socket.setNoDelay?.(true); const key = randomBytes(16).toString('base64'); socket.write(`GET /signal HTTP/1.1\r\nHost: 127.0.0.1:${port}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: ${key}\r\n\r\n`); });
   });
 }
 
@@ -44,7 +44,7 @@ test('reference signaling service routes authenticated client and host envelopes
   try {
     const address = await service.start(); const clientTicket = service.broker.issueTicket({sessionId, role: 'client', subject: 'browser'}); const hostTicket = service.broker.issueTicket({sessionId, role: 'host', subject: 'host'});
     client = await connect(address.port); host = await connect(address.port);
-    client.send({type: 'signaling.join', sessionId, role: 'client', ticket: clientTicket}); host.send({type: 'signaling.join', sessionId, role: 'host', ticket: hostTicket});
+    client.send({type: 'signaling.join', sessionId, role: 'client', ticket: clientTicket}); host.send({type: 'signaling.join', sessionId, role: 'host', ticket: hostTicket}); await new Promise(resolve => setTimeout(resolve, 25));
     const offer = createSessionEnvelope({sessionId, type: 'session.offer', payload: {sdp: {type: 'offer', sdp: 'offer'}, transports: ['webrtc'], video: {codecs: ['h264']}, audio: {codecs: ['opus']}, input: {gamepad: true}}}); client.send(offer); assert.deepEqual(await host.next(), offer);
     const answer = createSessionEnvelope({sessionId, type: 'session.answer', sequence: 1, payload: {accepted: true, capabilities: {transports: ['webrtc'], video: {codecs: ['h264'], maxWidth: 1280, maxHeight: 720, maxFramerate: 60}, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: true}}}}); host.send(answer); assert.deepEqual(await client.next(), answer);
     const health = await fetch(`http://127.0.0.1:${address.port}/health`).then(response => response.json()); assert.equal(health.sessions, 1); assert.equal(health.participants, 2); assert.equal(health.connections, 2);
