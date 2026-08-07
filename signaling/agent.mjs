@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {createHash} from 'node:crypto';
+import {createHash, timingSafeEqual} from 'node:crypto';
 import {createServer} from 'node:http';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -17,6 +17,7 @@ export function normalizeServiceOptions(options = {}) {
   const allowedOrigins = Array.isArray(options.allowedOrigins) ? [...new Set(options.allowedOrigins.map(text).filter(Boolean))] : [];
   return Object.freeze({
     secret: text(options.secret), bind: text(options.bind) || '127.0.0.1', port: portNumber(options.port),
+    adminSecret: text(options.adminSecret),
     allowedOrigins: Object.freeze(allowedOrigins), maxConnections: positiveInteger(options.maxConnections, DEFAULT_MAX_CONNECTIONS, 10000),
     maxMessagesPerSecond: positiveInteger(options.maxMessagesPerSecond, DEFAULT_MAX_MESSAGES_PER_SECOND, 10000), maxFrameBytes: positiveInteger(options.maxFrameBytes, DEFAULT_MAX_FRAME_BYTES, DEFAULT_MAX_FRAME_BYTES),
   });
@@ -44,6 +45,22 @@ function closeFrame() { return Buffer.from([0x88, 0x00]); }
 function acceptKey(key) { return createHash('sha1').update(`${key}258EAFA5-E914-47DA-95CA-C5AB0DC85B11`).digest('base64'); }
 function reject(socket, status = '400 Bad Request') { socket.end(`HTTP/1.1 ${status}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`); }
 function json(response, status, body) { response.writeHead(status, {'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store'}); response.end(JSON.stringify(body)); }
+function adminAuthorized(request, secret) {
+  if (!secret) return false;
+  const value = request.headers.authorization || '';
+  const token = value.startsWith('Bearer ') ? value.slice(7) : '';
+  const expected = Buffer.from(secret); const actual = Buffer.from(token);
+  return actual.length === expected.length && timingSafeEqual(actual, expected);
+}
+function readBody(request, maximum = 4096) {
+  return new Promise((resolve, reject) => {
+    const chunks = []; let size = 0; let settled = false;
+    const fail = error => { if (settled) return; settled = true; reject(error); };
+    request.on('data', chunk => { size += chunk.length; if (size > maximum) { fail(new Error('request body is too large')); request.destroy(); return; } chunks.push(chunk); });
+    request.on('end', () => { if (!settled) { settled = true; resolve(Buffer.concat(chunks).toString('utf8')); } });
+    request.on('error', fail);
+  });
+}
 
 export function parseFrames(buffer, onMessage, socket, maxFrameBytes = DEFAULT_MAX_FRAME_BYTES) {
   let cursor = 0;
@@ -65,7 +82,21 @@ export function parseFrames(buffer, onMessage, socket, maxFrameBytes = DEFAULT_M
 export function createSignalingServer(options = {}) {
   const config = normalizeServiceOptions(options); if (!config.secret) throw new TypeError('secret is required');
   const broker = createSignalingBroker({secret: config.secret, ...(options.brokerOptions || {})}); const sockets = new Set(); let rejectedConnections = 0;
-  const server = createServer((request, response) => { if (request.url === '/health') return json(response, 200, {service: 'spartan-signaling-reference', version: 1, ...broker.stats(), limits: {maxConnections: config.maxConnections, maxMessagesPerSecond: config.maxMessagesPerSecond}, connections: sockets.size, rejectedConnections}); json(response, 404, {error: 'not found'}); });
+  const server = createServer(async (request, response) => {
+    if (request.url === '/health') return json(response, 200, {service: 'spartan-signaling-reference', version: 1, ...broker.stats(), limits: {maxConnections: config.maxConnections, maxMessagesPerSecond: config.maxMessagesPerSecond}, connections: sockets.size, rejectedConnections});
+    if (!request.url?.startsWith('/admin/')) return json(response, 404, {error: 'not found'});
+    if (!config.adminSecret || !adminAuthorized(request, config.adminSecret)) return json(response, 401, {error: 'admin authorization required'});
+    if (request.url === '/admin/health' && request.method === 'GET') return json(response, 200, {service: 'spartan-signaling-reference', version: 1, ...broker.stats(), limits: {maxConnections: config.maxConnections, maxMessagesPerSecond: config.maxMessagesPerSecond}, connections: sockets.size, rejectedConnections});
+    if (request.url === '/admin/tickets' && request.method === 'POST') {
+      try {
+        const body = JSON.parse(await readBody(request));
+        const sessionId = text(body.sessionId); const role = text(body.role); const subject = text(body.subject || role); const ttlMs = body.ttlMs === undefined ? undefined : Number(body.ttlMs);
+        const ticket = broker.issueTicket({sessionId, role, subject, ...(ttlMs === undefined ? {} : {ttlMs})});
+        return json(response, 201, {version: 1, sessionId, role, subject, ttlMs: ttlMs ?? 10 * 60 * 1000, ticket});
+      } catch (error) { return json(response, 400, {error: error instanceof Error ? error.message : String(error)}); }
+    }
+    response.setHeader('allow', 'GET, POST'); return json(response, 405, {error: 'method or admin route not allowed'});
+  });
   server.on('upgrade', (request, socket) => {
     const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
     if (!isOriginAllowed(request.headers.origin, config.allowedOrigins)) { rejectedConnections += 1; reject(socket, '403 Forbidden'); return; }
@@ -94,7 +125,7 @@ export function createSignalingServer(options = {}) {
 if (pathEqualsMain()) {
   try {
     const args = parseArguments(process.argv.slice(2)); const allowedOrigins = String(args.get('allowed-origins') || process.env.SPARTAN_SIGNALING_ALLOWED_ORIGINS || '').split(',').map(text).filter(Boolean);
-    const service = createSignalingServer({secret: args.get('secret') || process.env.SPARTAN_SIGNALING_SECRET, bind: args.get('bind') || process.env.SPARTAN_SIGNALING_BIND, port: args.get('port') || process.env.SPARTAN_SIGNALING_PORT, allowedOrigins, maxConnections: args.get('max-connections') || process.env.SPARTAN_SIGNALING_MAX_CONNECTIONS, maxMessagesPerSecond: args.get('max-messages-per-second') || process.env.SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND});
+    const service = createSignalingServer({secret: args.get('secret') || process.env.SPARTAN_SIGNALING_SECRET, adminSecret: args.get('admin-secret') || process.env.SPARTAN_SIGNALING_ADMIN_SECRET, bind: args.get('bind') || process.env.SPARTAN_SIGNALING_BIND, port: args.get('port') || process.env.SPARTAN_SIGNALING_PORT, allowedOrigins, maxConnections: args.get('max-connections') || process.env.SPARTAN_SIGNALING_MAX_CONNECTIONS, maxMessagesPerSecond: args.get('max-messages-per-second') || process.env.SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND});
     service.start().then(address => console.log(JSON.stringify({service: 'spartan-signaling-reference', endpoint: `ws://${address.address === '0.0.0.0' ? '127.0.0.1' : address.address}:${address.port}/signal`, health: `http://${address.address === '0.0.0.0' ? '127.0.0.1' : address.address}:${address.port}/health`, allowedOrigins: service.config.allowedOrigins, limits: {maxConnections: service.config.maxConnections, maxMessagesPerSecond: service.config.maxMessagesPerSecond}, warning: 'Reference signaling only; use TLS, secret management, clustered session storage, and separately provisioned STUN/TURN in production.'}))).catch(error => { console.error(error.message); process.exitCode = 1; });
   } catch (error) {
     console.error(error.message);

@@ -35,6 +35,15 @@ export SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND=240
 The health response reports configured limits and rejected connection counts,
 but never returns tickets, subjects, or session payloads.
 
+For operator tooling, optionally set a separate
+`SPARTAN_SIGNALING_ADMIN_SECRET`. With that secret, use `Authorization: Bearer
+<secret>` over a private TLS-admin route: `GET /admin/health` returns the same
+bounded operational counters, and `POST /admin/tickets` accepts
+`{"sessionId":"...","role":"client|host","subject":"...","ttlMs":60000}`
+and returns a short-lived scoped ticket. The admin secret must be delivered by
+a secret manager and must never be placed in browser configuration, URLs, or
+logs. The admin API is disabled when the secret is empty.
+
 The container runs as the unprivileged `node` user, with a read-only root
 filesystem, dropped Linux capabilities, a small no-exec temporary filesystem,
 and `no-new-privileges`. The secret is supplied at runtime and is never baked

@@ -33,3 +33,16 @@ test('signaling health endpoint exposes bounded operational state', async () => 
     await service.close();
   }
 });
+
+test('opt-in admin API protects health and mints scoped tickets without exposing admin secret', async () => {
+  const adminSecret = 'admin-secret-for-test';
+  const service = createSignalingServer({secret: 'test-secret', adminSecret, bind: '127.0.0.1', port: 0});
+  try {
+    const address = await service.start(); const endpoint = `http://127.0.0.1:${address.port}`;
+    const denied = await fetch(`${endpoint}/admin/health`); assert.equal(denied.status, 401);
+    const health = await fetch(`${endpoint}/admin/health`, {headers: {authorization: `Bearer ${adminSecret}`}}); const healthBody = await health.json();
+    assert.equal(health.status, 200); assert.equal('adminSecret' in healthBody, false);
+    const ticketResponse = await fetch(`${endpoint}/admin/tickets`, {method: 'POST', headers: {'content-type': 'application/json', authorization: `Bearer ${adminSecret}`}, body: JSON.stringify({sessionId: 'ses-admin-01', role: 'host', subject: 'host-01', ttlMs: 60000})});
+    const ticket = await ticketResponse.json(); assert.equal(ticketResponse.status, 201); assert.equal(ticket.sessionId, 'ses-admin-01'); assert.equal(ticket.role, 'host'); assert.equal(typeof ticket.ticket, 'string');
+  } finally { await service.close(); }
+});
