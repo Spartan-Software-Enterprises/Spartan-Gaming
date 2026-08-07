@@ -34,6 +34,7 @@ async function start() {
       const media = typeof RTCPeerConnection === 'function' ? createWebRtcTransport() : undefined;
       runtime = createSessionRuntime({manager, signaling, media});
       runtime.on('stream', stream => { elements.video.srcObject = stream; elements.video.play().catch(() => {}); });
+      runtime.on('telemetry', sample => { apply({type: 'telemetry.health', rttMs: sample.rttMs, packetLossPct: sample.packetLossPct}); apply({type: 'quality.changed', profile: manager.quality.id}); });
       runtime.on('error', error => apply({type: 'error', message: error.message || 'Transport error'}));
       const offer = await runtime.start({backend: {id: backendId, backendType: 'remote-play'}});
       elements.transport.textContent = media ? 'WebRTC · adaptive' : 'WebSocket signaling';

@@ -29,7 +29,7 @@
 - [x] Adaptive bitrate and resolution policy.
 - [x] Bounded reconnection and session recovery policy with player control.
 - [ ] Hardware decode detection.
-- [ ] Input, decode, render, and network telemetry.
+- [x] Input, decode, render, and network telemetry foundation from browser/WebRTC health signals.
 - [x] Screenshots and local recording.
 - [ ] LAN self-hosted reference stream.
 - [ ] Provider and emulator capability detection harness.
