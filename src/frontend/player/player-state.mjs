@@ -1,7 +1,7 @@
 const VALID_STATES = new Set(['idle', 'preparing', 'negotiating', 'connected', 'reconnecting', 'ended', 'error']);
 
 export function createPlayerState(overrides = {}) {
-  const state = {status: 'idle', quality: 'balanced', mediaState: 'waiting', latencyMs: null, packetLossPct: 0, overlayVisible: true, diagnosticsVisible: false, gamepadConnected: false, error: null, ...overrides};
+  const state = {status: 'idle', quality: 'balanced', mediaState: 'waiting', latencyMs: null, packetLossPct: 0, overlayVisible: true, diagnosticsVisible: false, gamepadConnected: false, negotiated: null, error: null, ...overrides};
   if (!VALID_STATES.has(state.status)) throw new TypeError(`unsupported player status: ${state.status}`);
   return Object.freeze(state);
 }
@@ -17,8 +17,18 @@ export function reducePlayerState(state, event) {
   if (event.type === 'toggle.overlay') next.overlayVisible = !current.overlayVisible;
   if (event.type === 'toggle.diagnostics') next.diagnosticsVisible = !current.diagnosticsVisible;
   if (event.type === 'gamepad.connection') next.gamepadConnected = Boolean(event.connected);
+  if (event.type === 'session.negotiated') next.negotiated = event.capabilities || null;
   if (event.type === 'error') { next.status = 'error'; next.error = String(event.message || 'Session error'); }
   return createPlayerState(next);
 }
 
 export function formatLatency(latencyMs) { return Number.isFinite(latencyMs) ? `${Math.round(latencyMs)} ms` : '—'; }
+
+export function formatNegotiatedCapabilities(capabilities) {
+  if (!capabilities) return 'Pending';
+  const transport = capabilities.transports?.[0] || 'unknown';
+  const video = capabilities.video?.codec || 'unknown';
+  const audio = capabilities.audio?.codec || 'unknown';
+  const resolution = capabilities.video?.maxWidth && capabilities.video?.maxHeight ? `${capabilities.video.maxWidth}×${capabilities.video.maxHeight}` : 'unknown size';
+  return `${transport} · ${video} · ${audio} · ${resolution}`;
+}
