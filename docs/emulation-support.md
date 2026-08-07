@@ -52,6 +52,8 @@ The libretro adapter must support:
 
 The first user-facing emulation center is available at `src/frontend/emulation/index.html`. It loads this catalog, shows runtime/license metadata, accepts explicit local game and firmware selections, and creates launch plans without uploading or bundling content.
 
+`src/frontend/emulation/integration.mjs` resolves each catalog entry into a runtime plan: browser-WASM candidate, Libretro core host, or signed native adapter. It also declares renderer, controller, save-state, shader, rewind, touch, netplay-candidate, and firmware requirements. A launch plan fails closed when a core declares firmware requirements and the user has not selected firmware; the frontend never downloads or distributes ROMs, BIOS, keys, or firmware.
+
 | Project | Systems | Preferred mode | Role |
 | --- | --- | --- | --- |
 | RetroArch/libretro | Many classic and modern systems | Browser/native | Unified frontend and core ecosystem |
