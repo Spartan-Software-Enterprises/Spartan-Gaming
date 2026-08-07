@@ -30,6 +30,9 @@ Before accepting an offer, the agent intersects the client’s transports,
 video, audio, and input capabilities with its own and returns only the
 selected contract. Offers with no compatible transport or codec receive an
 explicit rejected answer and are not added to the active-session set.
+Pairing codes are checked without consumption during that negotiation step;
+the one-time code is consumed only after a compatible offer is accepted, so a
+failed capability attempt does not strand a valid retry.
 
 The health response also reports the selected platform adapter, detected `ffmpeg`/GStreamer tools, and conservative readiness flags. A detected encoder tool is evidence only that a future media adapter may be possible; it is not a claim that capture, WebRTC publication, or game launching is implemented.
 

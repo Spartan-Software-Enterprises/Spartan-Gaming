@@ -26,6 +26,7 @@ export function createPairingAuthority({code = createPairingCode(), expiresAt = 
     get expiresAt() { return new Date(expiresAt).toISOString(); },
     get used() { return used; },
     get expired() { return Date.now() >= expiresAt; },
-    verify(candidate) { if (used || Date.now() >= expiresAt) return false; let normalized; try { normalized = normalizePairingCode(candidate); } catch { return false; } if (!equal(normalized, expected)) return false; used = true; return true; },
+    matches(candidate) { if (used || Date.now() >= expiresAt) return false; let normalized; try { normalized = normalizePairingCode(candidate); } catch { return false; } return equal(normalized, expected); },
+    verify(candidate) { if (!this.matches(candidate)) return false; used = true; return true; },
   });
 }

@@ -50,9 +50,10 @@ function handleMessage(connection, text, session) {
   let message;
   try { message = validateTransportMessage(JSON.parse(text)); } catch { connection.close(); return; }
   if (message.type === 'session.offer' && !session.accepted) {
-    if (message.payload.hostId !== hostId || !pairing.verify(message.payload.pairingCode)) { connection.close(); return; }
+    if (message.payload.hostId !== hostId || !pairing.matches(message.payload.pairingCode)) { connection.close(); return; }
     const negotiation = negotiateHostOffer({offer: message.payload, hostCapabilities: capabilities});
     if (!negotiation.accepted) { connection.send(createSessionEnvelope({sessionId: message.sessionId, type: 'session.answer', sequence: (message.sequence || 0) + 1, payload: {accepted: false, hostId, hostName, reason: negotiation.reason}})); connection.close(); return; }
+    if (!pairing.verify(message.payload.pairingCode)) { connection.close(); return; }
     session.accepted = true; session.sessionId = message.sessionId;
     session.negotiated = negotiation.capabilities;
     sessions.add(session); const answer = createSessionEnvelope({sessionId: message.sessionId, type: 'session.answer', sequence: (message.sequence || 0) + 1, payload: {accepted: true, hostId, hostName, capabilities: session.negotiated, hostCapabilities}});
