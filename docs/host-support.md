@@ -57,6 +57,13 @@ returns an SDP answer, forwards ICE candidates, and exposes input and quality
 callbacks to the host UI. It still requires an application to provision a
 short-lived host signaling ticket and obtain explicit display-capture consent.
 
+The user-facing `src/frontend/host/browser-studio.html` page is the reference
+application for that path. It keeps the endpoint, session ID, and role-scoped
+ticket in memory, requires an explicit display selection before connecting,
+shows a local preview and bounded activity log, and stops the publisher on
+navigation. It intentionally does not launch processes, record media, or
+inject native input.
+
 ## Compatibility targets
 
 The adapter boundary can support Spartan Host first, then user-owned Steam Remote Play, Sunshine/Moonlight-compatible endpoints, Parsec, Xbox Remote Play, and PlayStation Remote Play where official protocols and platform rules permit. Compatibility is not permission to bypass authentication, DRM, anti-cheat, or undocumented service controls.
