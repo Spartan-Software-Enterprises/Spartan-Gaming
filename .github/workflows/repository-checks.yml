@@ -17,12 +17,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for file in README.md ROADMAP.md CONTRIBUTING.md SECURITY.md CODE_OF_CONDUCT.md LICENSE; do
-            test -s "$file"
-          done
+          ./scripts/check-repository.sh
       - name: Check for accidental credential files
         shell: bash
         run: |
           set -euo pipefail
           ! find . -path './.git' -prune -o \( -name '*.pem' -o -name '*.key' -o -name '.env' \) -print | grep -q .
-
