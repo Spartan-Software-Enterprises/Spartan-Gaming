@@ -50,3 +50,32 @@ export function createInputInjectionPlan({platform, event, permissions = {}} = {
 }
 
 export function inputAdapterIsReady(capabilities) { return ['ready', 'active'].includes(normalizeInputAdapterCapabilities(capabilities).state); }
+
+/**
+ * Execute only normalized input operations through an explicitly supplied OS
+ * adapter. The adapter owns platform APIs; this boundary owns permissions,
+ * rate limiting, lifecycle, and the prohibition on shell-based dispatch.
+ */
+export function createNativeInputExecutor({platform, adapter, permissions = {}, maxEventsPerSecond = 240, clock = () => Date.now()} = {}) {
+  if (!PLATFORMS.has(platform)) throw new TypeError(`unsupported input platform: ${platform}`);
+  if (!adapter || adapter.platform !== platform || typeof adapter.execute !== 'function') throw new TypeError('native input adapter must match the platform and implement execute(operation)');
+  const limit = Number(maxEventsPerSecond);
+  if (!Number.isInteger(limit) || limit < 1 || limit > 1000) throw new RangeError('maxEventsPerSecond must be an integer between 1 and 1000');
+  let state = 'ready'; let windowStart = Number(clock()); let eventCount = 0;
+  const checkRate = () => { const now = Number(clock()); if (!Number.isFinite(now)) throw new TypeError('clock must return a finite number'); if (now - windowStart >= 1000) { windowStart = now; eventCount = 0; } if (eventCount >= limit) throw new Error('native input rate limit exceeded'); eventCount += 1; };
+  const executor = {
+    get state() { return state; },
+    get adapter() { return adapter; },
+    async dispatch(event) {
+      if (state !== 'ready' && state !== 'active') throw new Error(`native input executor is ${state}`);
+      const plan = createInputInjectionPlan({platform, event, permissions});
+      if (!plan.permission.granted) throw new Error(`native input permission not granted: ${plan.permission.name}`);
+      checkRate();
+      state = 'active';
+      try { await adapter.execute(plan.operation); return plan; }
+      catch (error) { state = 'failed'; throw error; }
+    },
+    close() { if (state === 'closed') return; state = 'closed'; adapter.close?.(); },
+  };
+  return Object.freeze(executor);
+}

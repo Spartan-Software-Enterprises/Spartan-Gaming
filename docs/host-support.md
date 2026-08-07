@@ -36,6 +36,12 @@ and Linux `uinput` adapters. Plans declare the required permission (`remote-inpu
 adapter is installed. The reference agent records the latest plan in health
 output rather than injecting OS input.
 
+`createNativeInputExecutor` is the next executable boundary. It accepts only a
+platform-matched adapter with an `execute(operation)` method, reuses the
+permissioned normalized plans, applies a bounded event rate, and exposes
+explicit close/failure states. OS-specific adapters remain separate packages;
+the core never shells out or interprets arbitrary executable arguments.
+
 `host/audio.mjs` adds the return-audio boundary for Windows WASAPI, macOS
 CoreAudio, and Linux PipeWire/PulseAudio. It validates microphone/session
 permissions, creates bounded FFmpeg PCM capture plans, and composes an Opus or

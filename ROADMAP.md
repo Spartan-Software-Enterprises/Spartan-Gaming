@@ -58,6 +58,7 @@
 - [x] Validated session-scoped STUN/TURN configuration contract (relay deployment and credential service pending).
 - [x] User-facing transport and relay policy controls (runtime provider/host wiring pending).
 - [x] Controller, keyboard, pointer, and rumble forwarding contract (native OS injection pending).
+- [x] Shell-free native input executor boundary with permissions and rate limiting (OS adapter implementations pending).
 - [ ] Native OS input injection, audio return, and end-to-end haptics.
 - [x] Cross-platform audio capture and publisher readiness contract (native audio publisher pending).
 - [x] Browser-to-host control-plane quality and input envelopes (OS adapters pending).
