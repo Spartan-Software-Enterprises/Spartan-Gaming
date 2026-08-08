@@ -43,21 +43,24 @@ export function classifyNetworkHealth(sample) {
   return 'good';
 }
 
-export function createQualityController({initialProfile = 'balanced', profiles = QUALITY_PROFILES, upgradeAfter = 3} = {}) {
+export function createQualityController({initialProfile = 'balanced', profiles = QUALITY_PROFILES, upgradeAfter = 3, adaptiveBitrate = true, adaptiveResolution = true} = {}) {
   const available = Object.freeze([...profiles]);
   let current = profileIndex(initialProfile) < available.length ? initialProfile : available[Math.floor(available.length / 2)].id;
+  let fixedProfile = available.find(profile => profile.id === current) || available[0];
   let goodSamples = 0;
+  const requestProfile = profile => Object.freeze({...profile, ...(adaptiveBitrate ? {} : {bitrateKbps: fixedProfile.bitrateKbps}), ...(adaptiveResolution ? {} : {maxWidth: fixedProfile.maxWidth, maxHeight: fixedProfile.maxHeight, maxFramerate: fixedProfile.maxFramerate})});
   return {
     get profile() { return available.find(profile => profile.id === current) || available[0]; },
     ingest(sample) {
       const health = normalizeHealthTelemetry(sample); const classification = classifyNetworkHealth(health); const before = current; const index = available.findIndex(profile => profile.id === current);
+      if (!adaptiveBitrate && !adaptiveResolution) return Object.freeze({classification, changed: false, previousProfile: before, profile: this.profile, health, reason: 'adaptive-disabled'});
       if (classification === 'poor' && index < available.length - 1) { current = available[index + 1].id; goodSamples = 0; }
       else if (classification === 'fair') { goodSamples = 0; }
       else { goodSamples += 1; if (goodSamples >= upgradeAfter && index > 0) { current = available[index - 1].id; goodSamples = 0; } }
       const changed = before !== current;
       return Object.freeze({classification, changed, previousProfile: before, profile: this.profile, health, reason: changed ? (profileIndex(current) > profileIndex(before) ? 'network-degraded' : 'network-recovered') : 'hold'});
     },
-    setProfile(id) { if (!available.some(profile => profile.id === id)) throw new Error(`unknown quality profile: ${id}`); const previousProfile = current; current = id; goodSamples = 0; return Object.freeze({changed: previousProfile !== current, previousProfile, profile: this.profile, reason: 'manual'}); },
-    request() { const profile = this.profile; return Object.freeze({type: 'quality.request', profile: profile.id, maxWidth: profile.maxWidth, maxHeight: profile.maxHeight, maxFramerate: profile.maxFramerate, bitrateKbps: profile.bitrateKbps}); },
+    setProfile(id) { if (!available.some(profile => profile.id === id)) throw new Error(`unknown quality profile: ${id}`); const previousProfile = current; current = id; fixedProfile = this.profile; goodSamples = 0; return Object.freeze({changed: previousProfile !== current, previousProfile, profile: this.profile, reason: 'manual'}); },
+    request() { const profile = requestProfile(this.profile); return Object.freeze({type: 'quality.request', profile: profile.id, maxWidth: profile.maxWidth, maxHeight: profile.maxHeight, maxFramerate: profile.maxFramerate, bitrateKbps: profile.bitrateKbps}); },
   };
 }

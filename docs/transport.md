@@ -83,6 +83,11 @@ short-lived `client` ticket, then joins the broker before sending an SDP offer.
 Browser Host Studio uses the corresponding `host` ticket for the same session.
 
 When degraded telemetry changes the active quality profile, the runtime sends a validated `quality.request` envelope back through signaling. The session player also exposes an explicit Ultra/High/Balanced/Low/Emergency selector that uses the same validated request path; selecting a profile resets the adaptive controller’s recovery counter without disabling future adaptation. Browser Host applies bounded bitrate, framerate, and track-dimension requests to supported WebRTC video sender encodings; when the captured track exposes dimensions it uses `scaleResolutionDownBy` to enforce lower adaptive resolutions, and reports unsupported or failed controls in its diagnostics. Native host adapters remain responsible for their encoder APIs. The reference host records requests but cannot encode media. `input.event` envelopes are likewise delivered to the host control plane only after the session and pairing checks succeed.
+The **Adaptive bitrate** and **Adaptive resolution** settings independently
+control which fields telemetry-driven profile changes may alter. With one
+disabled, its value stays at the current manual profile while the other may
+adapt; with both disabled, telemetry is measurement-only and does not change
+the active quality profile. Manual quality selection remains authoritative.
 The player emits normalized controller and keyboard actions as protocol v1 `input.event` envelopes through the `spartan:input` browser event. Gamepad values include deadzone processing and signed analog ranges; adapters are responsible for forwarding these envelopes over the active data channel and applying the selected controller profile on the host side. The browser does not transmit raw device identity or full Gamepad objects.
 
 Session preferences now carry the selected built-in controller layout and a
