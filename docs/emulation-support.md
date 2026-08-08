@@ -63,6 +63,12 @@ from runtime selection. The registry is portable through an explicit export,
 and launch plans include the selected profile and readiness evidence for a
 future signed host handoff.
 
+When firmware or BIOS files are selected, the browser computes a bounded
+SHA-256 digest locally with Web Crypto and shows it in the current-session
+launch plan and remembered metadata. The file source itself is never included
+in the digest record or browser storage; users can compare the digest with a
+trusted dump or compatibility reference before launching.
+
 `src/frontend/adapters/manifest-registry.mjs` provides the trust boundary for
 future installed cores and native adapters. Manifests require version, license,
 platform, capability, and SHA-256 integrity metadata. Signed records resolve as
