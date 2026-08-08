@@ -67,6 +67,7 @@
 - [x] Concrete optional Werift video-track/RTP transport adapter.
 - [x] Dependency-free H.264/VP9/AV1/Opus RTP packetizers for package-backed native hosts.
 - [x] Optional Werift host session runtime and encoded RTP publisher composition.
+- [x] Opt-in reference-agent bridge from authenticated WebSocket sessions into native Werift media hosts.
 - [x] Optional Werift shared-peer audio track and native host audio publisher composition.
 - [x] Host capability negotiation reflects whether an active WebRTC audio track is actually available.
 - [x] Native pipeline/Werift host composition factory with lifecycle teardown.

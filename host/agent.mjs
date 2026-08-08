@@ -10,6 +10,8 @@ import {createInputInjectionPlan, createNativeInputExecutor} from './input.mjs';
 import {createHostSignalingClient} from './signaling.mjs';
 import {negotiateHostOffer} from './session.mjs';
 import {createReferenceGameLaunch} from './reference-launch.mjs';
+import {loadWerift} from './werift-adapter.mjs';
+import {createNativeWeriftConnection} from './native-agent.mjs';
 
 const args = new Map();
 for (let index = 2; index < process.argv.length; index += 1) { const value = process.argv[index]; if (value.startsWith('--')) args.set(value.slice(2), process.argv[index + 1]?.startsWith('--') ? true : process.argv[++index]); }
@@ -26,14 +28,22 @@ const pairingCode = args.get('pairing-code') || createPairingCode();
 const pairing = createPairingAuthority({code: pairingCode});
 const hostRuntime = await detectHostRuntime({bindingOptions: {environment: process.env}});
 const environment = hostRuntime.environment;
-const capabilities = {transports: ['websocket'], video: {codecs: ['h264', 'vp9'], maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false}, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: environment.inputAdapter.gamepad, keyboard: environment.inputAdapter.keyboard, pointer: environment.inputAdapter.pointer, rumble: environment.inputAdapter.rumble}};
 const inputEnabled = args.get('enable-input') === true || args.get('enable-input') === 'true';
+const nativeMediaEnabled = args.get('enable-native-media') === true || args.get('enable-native-media') === 'true';
+const nativeAudioEnabled = args.get('enable-native-audio') === true || args.get('enable-native-audio') === 'true';
+let weriftModule = null;
+if (nativeMediaEnabled) {
+  try { weriftModule = await loadWerift(); } catch { throw new Error('native media requires the optional werift package; install it before using --enable-native-media'); }
+  if (!hostRuntime.bindings?.capture?.plan) throw new Error('native media requires an installed platform binding with capture.plan()');
+}
+const capabilities = {transports: nativeMediaEnabled ? ['webrtc'] : ['websocket'], video: {codecs: ['h264', 'vp9'], maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false}, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: environment.inputAdapter.gamepad, keyboard: environment.inputAdapter.keyboard, pointer: environment.inputAdapter.pointer, rumble: environment.inputAdapter.rumble}};
 const inputExecutor = inputEnabled && hostRuntime.bindings?.input && environment.readiness.osInput ? createNativeInputExecutor({platform: environment.platform, adapter: hostRuntime.bindings.input, permissions: {'remote-input': true, 'virtual-gamepad': true}}) : null;
 const gameLaunchEnabled = args.get('enable-game-launch') === true || args.get('enable-game-launch') === 'true';
 let configuredGameArgs = args.get('game-args-json') ? JSON.parse(String(args.get('game-args-json'))) : (args.get('game-arg') ? [String(args.get('game-arg'))] : []);
 if (!Array.isArray(configuredGameArgs)) throw new TypeError('game-args-json must contain an array');
 const gameLaunch = gameLaunchEnabled ? createReferenceGameLaunch({platform: environment.platform, runtimeId: args.get('runtime-id'), runtimeKind: args.get('runtime-kind') || 'native-emulator', runtimeVersion: args.get('runtime-version') || 'unversioned', runtimePath: args.get('runtime-path'), gamePath: args.get('game-path'), hostContentId: args.get('host-content-id'), args: configuredGameArgs, cwd: args.get('game-cwd'), spawnImpl: undefined, maxOutputBytes: 64 * 1024, stopTimeoutMs: 2_000}) : null;
-const hostCapabilities = normalizeHostCapabilities({media: {state: 'not-configured', capture: false, encode: false, audio: false, transports: ['webrtc']}, process: {mode: gameLaunch ? 'managed' : 'none', launch: Boolean(gameLaunch), emulator: Boolean(gameLaunch)}, publisher: environment.publisher, audioPublisher: environment.audioPublisher, inputAdapter: environment.inputAdapter, webrtc: environment.webrtc, input: capabilities.input});
+const nativeRuntimeProfile = gameLaunch ? {id: String(args.get('runtime-id')), kind: String(args.get('runtime-kind') || 'native-emulator'), version: String(args.get('runtime-version') || 'unversioned'), trust: 'signed', enabled: true, executablePath: String(args.get('runtime-path'))} : null;
+const hostCapabilities = normalizeHostCapabilities({media: {state: nativeMediaEnabled ? 'ready' : 'not-configured', capture: nativeMediaEnabled, encode: nativeMediaEnabled, audio: nativeMediaEnabled && nativeAudioEnabled, transports: nativeMediaEnabled ? ['webrtc'] : ['webrtc']}, process: {mode: gameLaunch ? 'managed' : 'none', launch: Boolean(gameLaunch), emulator: Boolean(gameLaunch)}, publisher: nativeMediaEnabled ? {state: 'ready', transports: ['webrtc'], video: capabilities.video, audio: capabilities.audio} : environment.publisher, audioPublisher: nativeMediaEnabled && nativeAudioEnabled ? {state: 'ready', codecs: ['opus'], channels: 2} : environment.audioPublisher, inputAdapter: environment.inputAdapter, webrtc: nativeMediaEnabled ? {adapters: [{id: 'werift', state: 'available'}]} : environment.webrtc, input: capabilities.input});
 const sessions = new Set(); let inputEvents = 0; let lastQuality = null; let lastInputPlan = null; let lastInputExecution = {state: inputExecutor ? 'ready' : 'disabled', reason: inputEnabled && !inputExecutor ? 'native input adapter is unavailable or not ready' : null};
 
 function json(response, status, body) { response.writeHead(status, {'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store'}); response.end(JSON.stringify(body)); }
@@ -59,6 +69,19 @@ function parseFrames(buffer, onMessage, socket) {
 async function handleMessage(connection, text, session) {
   let message;
   try { message = validateTransportMessage(JSON.parse(text)); } catch { connection.close(); return; }
+  if (nativeMediaEnabled && session.native) { session.native.receive(message); return; }
+  if (nativeMediaEnabled && message.type === 'session.offer' && !session.accepted) {
+    if (message.payload.hostId !== hostId || !pairing.matches(message.payload.pairingCode)) { connection.close(); return; }
+    if (message.payload.launch && (!gameLaunch || !gameLaunch.matches(message.payload.launch))) { connection.send(createSessionEnvelope({sessionId: message.sessionId, type: 'session.answer', sequence: (message.sequence || 0) + 1, payload: {accepted: false, hostId, hostName, reason: 'launch request does not match host-local runtime or content'}})); connection.close(); return; }
+    if (!pairing.verify(message.payload.pairingCode)) { connection.close(); return; }
+    let native;
+    try {
+      native = createNativeWeriftConnection({connection, sessionId: message.sessionId, bindings: hostRuntime.bindings, module: weriftModule, platform: environment.platform, permissions: {'screen-capture': true, 'remote-input': inputEnabled, 'virtual-gamepad': inputEnabled, ...(nativeAudioEnabled ? {microphone: true, 'microphone-capture': true} : {})}, includeAudio: nativeAudioEnabled, runtimeProfile: nativeRuntimeProfile, gamePath: args.get('game-path') ? String(args.get('game-path')) : null, gameArgs: configuredGameArgs, gameCwd: args.get('game-cwd'), gameEnv: undefined, hostContentId: args.get('host-content-id') ? String(args.get('host-content-id')) : null, hostId, hostName, capabilities, onInput: () => { inputEvents += 1; }, onQuality: quality => { lastQuality = quality; }});
+      session.native = native; session.sessionId = message.sessionId;
+      const connected = new Promise((resolve, reject) => { const offConnected = native.host.on('connected', value => { offConnected?.(); offError?.(); resolve(value); }); const offError = native.host.on('error', error => { offConnected?.(); offError?.(); reject(error); }); });
+      await native.start(); native.receive(message); await connected; session.accepted = true; sessions.add(session); return;
+    } catch (error) { session.native = null; native?.close(); connection.send(createSessionEnvelope({sessionId: message.sessionId, type: 'session.answer', sequence: (message.sequence || 0) + 1, payload: {accepted: false, hostId, hostName, reason: `native media start failed: ${error.message}`}})); connection.close(); return; }
+  }
   if (message.type === 'session.offer' && !session.accepted) {
     if (message.payload.hostId !== hostId || !pairing.matches(message.payload.pairingCode)) { connection.close(); return; }
     const negotiation = negotiateHostOffer({offer: message.payload, hostCapabilities: capabilities});
@@ -93,12 +116,12 @@ server.on('upgrade', (request, socket) => {
   const connection = {send: value => socket.write(frame(JSON.stringify(value))), close: () => socket.end(closeFrame())};
   const session = {accepted: false, sessionId: null, negotiated: null}; let buffer = Buffer.alloc(0);
   socket.on('data', chunk => { buffer = parseFrames(Buffer.concat([buffer, chunk]), text => handleMessage(connection, text, session), socket); });
-  socket.on('close', () => { sessions.delete(session); if (session.gameStarted) { void gameLaunch?.launcher.stop(); session.gameStarted = false; } });
+  socket.on('close', () => { sessions.delete(session); session.native?.close(); if (session.gameStarted) { void gameLaunch?.launcher.stop(); session.gameStarted = false; } });
   socket.on('error', () => {});
 });
 server.listen(port, bind, () => {
   const actualPort = server.address().port;
-  console.log(JSON.stringify({service: 'spartan-host-reference', endpoint: `ws://${bind}:${actualPort}/session`, health: `http://${bind}:${actualPort}/health`, hostId, hostName, pairingCode: args.get('quiet') ? undefined : pairingCode, pairingExpiresAt: pairing.expiresAt, signalingEndpoint: signalEndpoint || undefined, warning: gameLaunch ? 'Reference control plane with optional configured game launch; media capture/encoding remain separate.' : 'Reference control plane only; media capture/encoding and process launch are not configured.'}));
+    console.log(JSON.stringify({service: nativeMediaEnabled ? 'spartan-host-native' : 'spartan-host-reference', endpoint: `ws://${bind}:${actualPort}/session`, health: `http://${bind}:${actualPort}/health`, hostId, hostName, pairingCode: args.get('quiet') ? undefined : pairingCode, pairingExpiresAt: pairing.expiresAt, signalingEndpoint: signalEndpoint || undefined, warning: nativeMediaEnabled ? 'Native media mode is enabled; capture, encoding, WebRTC, and optional audio run through installed platform bindings.' : (gameLaunch ? 'Reference control plane with optional configured game launch; media capture/encoding remain separate.' : 'Reference control plane only; media capture/encoding and process launch are not configured.')}));
   if (!signalEndpoint && !signalSessionId && !signalTicket) return;
   if (!signalEndpoint || !signalSessionId || !signalTicket) { console.error('Outbound signaling requires --signal-endpoint, --signal-session, and --signal-ticket.'); process.exitCode = 1; return; }
   let signalingClient;

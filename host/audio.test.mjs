@@ -38,8 +38,8 @@ test('audio publisher forwards bounded encoded chunks and tears down cleanly', a
 test('RTP audio publisher delegates packetization and transport delivery', async () => {
   const output = {listeners: new Set(), on(type, handler) { if (type === 'data') this.listeners.add(handler); }, off(type, handler) { if (type === 'data') this.listeners.delete(handler); }, emit(value) { for (const handler of this.listeners) handler(value); }};
   const pipeline = {audioOutput: output, async start() {}, async stop() {}}; const transport = {packets: [], send(packet) { this.packets.push(packet); }}; const packetizer = {push(chunk, metadata) { return [{chunk, timestamp: metadata.timestamp}]; }};
-  const result = createRtpAudioPublisher({pipeline, packetizer, transport, permissionGranted: true}); await result.publisher.start(); output.emit(Buffer.from('voice')); await result.publisher.stop();
-  assert.equal(result.packetsSent, 1); assert.deepEqual(transport.packets[0].chunk, Buffer.from('voice')); assert.equal(transport.packets[0].timestamp, 0);
+  const result = createRtpAudioPublisher({pipeline, packetizer, transport, permissionGranted: true}); await result.publisher.start(); output.emit(Buffer.from('voice')); output.emit(Buffer.from('voice-2')); await result.publisher.stop();
+  assert.equal(result.packetsSent, 2); assert.deepEqual(transport.packets[0].chunk, Buffer.from('voice')); assert.equal(transport.packets[0].timestamp, 0); assert.equal(transport.packets[1].timestamp, 960);
 });
 
 test('audio publisher requires explicit capture permission', () => {

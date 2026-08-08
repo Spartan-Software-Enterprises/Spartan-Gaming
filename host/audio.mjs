@@ -90,7 +90,7 @@ export function createRtpAudioPublisher({pipeline, packetizer, transport, codec 
   let packetsSent = 0; let timestamp = 0;
   const publisher = createAudioPublisher({pipeline, codec, permissionGranted, maxChunkBytes, sink: {
     open: metadata => transport.open?.(metadata),
-    write: chunk => { const packets = packetizer.push(chunk, {codec, timestamp}); timestamp += 1; if (!packets || typeof packets[Symbol.iterator] !== 'function') throw new TypeError('audio packetizer.push must return an iterable of RTP packets'); for (const packet of packets) { transport.send(packet); packetsSent += 1; } },
+    write: chunk => { const packets = packetizer.push(chunk, {codec, timestamp}); timestamp = (timestamp + 960) >>> 0; if (!packets || typeof packets[Symbol.iterator] !== 'function') throw new TypeError('audio packetizer.push must return an iterable of RTP packets'); for (const packet of packets) { transport.send(packet); packetsSent += 1; } },
     close: () => transport.close?.(),
     error: error => transport.error?.(error),
   }});
