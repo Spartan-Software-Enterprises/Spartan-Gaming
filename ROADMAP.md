@@ -88,7 +88,7 @@
 - [ ] iOS/iPadOS compatibility strategy.
 - [x] WebTransport experimental datagram transport contract (server deployment and production fallback policy pending).
 - [ ] HDR, AV1, high-refresh, and multi-monitor support.
-- [ ] Provider SDK and community compatibility database.
+- [x] Community provider compatibility catalog foundation (Provider SDK and hosted database remain pending).
 - [x] Signed adapter and core manifest registry contract with WebCrypto verification (release service and packaged adapters pending).
 - [x] Release-safe adapter update planning with strict version/platform/trust filtering (installer and release service pending).
 - [x] Consent-gated frontend-to-native adapter install request contract (native updater and package signing pending).

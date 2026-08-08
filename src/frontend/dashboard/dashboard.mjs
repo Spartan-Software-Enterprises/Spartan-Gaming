@@ -13,9 +13,11 @@ import { resolveResumeEntry, resolveResumePresentation } from './resume.mjs';
 import { createReadinessStatus } from '../readiness/status.mjs';
 import { createWorkspaceStore } from '../workspaces/workspaces.mjs';
 import { createFavoritesStore } from './library-state.mjs';
+import { createCommunityProviderCatalogStore, mergeCommunityProviders } from '../providers/community-catalog.mjs';
 
 const launchHistory = createLaunchHistoryStore();
 const workspaceStore = createWorkspaceStore();
+const communityCatalogStore = createCommunityProviderCatalogStore();
 let activeWorkspace = workspaceStore.active;
 let favoritesStore = createFavoritesStore({workspaceId: activeWorkspace.id});
 const requestedFilter = new URLSearchParams(globalThis.location?.search || '').get('filter');
@@ -94,7 +96,7 @@ async function loadCatalog() {
     const [providers, emulators] = await Promise.all([fetch('../../../providers/catalog.json').then(response => response.json()), fetch('../../../emulators/catalog.json').then(response => response.json())]);
     validateCatalogManifest(providers, 'provider');
     validateCatalogManifest(emulators, 'emulator');
-    state.catalog = createFrontendCatalog({ providers: providers.providers, emulators: emulators.projects }).entries;
+    state.catalog = createFrontendCatalog({ providers: mergeCommunityProviders({providers: providers.providers, community: communityCatalogStore.list()}), emulators: emulators.projects }).entries;
     state.adapters = createCatalogAdapterRegistry(state.catalog, {providerProfiles: state.providerProfiles, report: () => state.report || {}});
     updateReadinessStatus();
     render();

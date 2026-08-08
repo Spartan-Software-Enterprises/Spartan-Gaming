@@ -54,6 +54,8 @@ We must never bypass DRM, bot detection, authentication controls, anti-cheat, re
 
 Every provider profile should expose supported platforms and regions, sign-in and subscription requirements, controller types, recommended quality, codec and hardware-acceleration expectations, fullscreen/input behavior, known limitations, official launch/support URLs, and a report-compatibility action.
 
+The Provider Profiles surface also accepts a versioned community catalog. Community entries are metadata-only, HTTPS-only, marked as untrusted, limited to support level C/D, stored locally, and prevented from overriding built-in provider IDs. Importing a catalog never loads scripts, credentials, cookies, or executable adapters; hosted signing and a future Provider SDK remain separate work.
+
 The shared resolver in `src/frontend/providers/integration.mjs` now turns catalog entries plus saved provider profiles into immutable integration descriptors. It selects the requested official/browser/host mode, recommends controller and quality profiles for major console/cloud-PC services, exposes watch/chat/creator surfaces, and returns reachability-only health metadata. It never claims authentication, API approval, embed permission, or a provider’s current regional availability.
 
 The provider manager’s **Check availability** action uses
