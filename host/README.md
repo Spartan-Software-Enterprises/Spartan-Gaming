@@ -26,6 +26,11 @@ isolated behind a firewall.
 
 The agent accepts one correctly paired `session.offer`, returns a protocol-valid `session.answer`, and rejects replayed or expired pairing codes. It is intentionally dependency-free and runs anywhere Node.js 20 runs. This is a control-plane reference only: it does not launch games, capture or encode media, inject OS input, provide TLS, or operate STUN/TURN. Those capabilities belong in platform-specific host adapters and the production signaling/deployment layer.
 
+At startup the agent also performs optional native-package discovery. Installed
+platform bindings contribute only truthful, serializable readiness and input
+capabilities; missing packages leave those paths unconfigured. Raw native
+objects are retained for composition and are never returned by `/health`.
+
 Werift and browser-host answers report `hostCapabilities.media.audio` from the
 actual active audio path: it is true only when the host has an audio track or
 an explicitly enabled native audio publisher.

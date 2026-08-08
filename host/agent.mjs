@@ -5,7 +5,7 @@ import {createSessionEnvelope} from '../src/frontend/session/session.mjs';
 import {validateTransportMessage} from '../src/frontend/transport/transport.mjs';
 import {createPairingAuthority, createPairingCode} from './pairing.mjs';
 import {normalizeHostCapabilities} from './capabilities.mjs';
-import {detectHostEnvironment} from './environment.mjs';
+import {detectHostRuntime} from './environment.mjs';
 import {createInputInjectionPlan} from './input.mjs';
 import {createHostSignalingClient} from './signaling.mjs';
 import {negotiateHostOffer} from './session.mjs';
@@ -23,8 +23,9 @@ const signalSessionId = args.get('signal-session') ? String(args.get('signal-ses
 const signalTicket = args.get('signal-ticket') ? String(args.get('signal-ticket')) : null;
 const pairingCode = args.get('pairing-code') || createPairingCode();
 const pairing = createPairingAuthority({code: pairingCode});
-const capabilities = {transports: ['websocket'], video: {codecs: ['h264', 'vp9'], maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false}, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: true, keyboard: true, pointer: true, rumble: true}};
-const environment = detectHostEnvironment();
+const hostRuntime = await detectHostRuntime({bindingOptions: {environment: process.env}});
+const environment = hostRuntime.environment;
+const capabilities = {transports: ['websocket'], video: {codecs: ['h264', 'vp9'], maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false}, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: environment.inputAdapter.gamepad, keyboard: environment.inputAdapter.keyboard, pointer: environment.inputAdapter.pointer, rumble: environment.inputAdapter.rumble}};
 const hostCapabilities = normalizeHostCapabilities({media: {state: 'not-configured', capture: false, encode: false, audio: false, transports: ['webrtc']}, process: {mode: 'none'}, publisher: environment.publisher, audioPublisher: environment.audioPublisher, inputAdapter: environment.inputAdapter, webrtc: environment.webrtc, input: capabilities.input});
 const sessions = new Set(); let inputEvents = 0; let lastQuality = null; let lastInputPlan = null;
 

@@ -221,3 +221,10 @@ virtual gamepad for normalized buttons and axes. It is built with
 `npm run native:build-linux`, installed into the isolated native artifact, and
 verified in Linux CI. The package still intentionally reports no haptics,
 portal consent workflow, or hardware encoder selection.
+
+The reference host calls `detectHostRuntime()` during startup. It loads the
+optional package when installed, exposes only its serializable readiness and
+input capabilities through `/health` and session negotiation, and keeps the
+raw binding object private to host composition. If the package is absent or
+does not report a capability, the host advertises that path as unconfigured;
+remote input is never enabled merely because the host has a desktop OS.

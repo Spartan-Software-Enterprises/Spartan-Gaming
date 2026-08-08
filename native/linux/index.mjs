@@ -19,7 +19,7 @@ export async function createBindings(options = {}) {
   if (!nativeInput || typeof nativeInput.execute !== 'function') return reference;
   return Object.freeze({
     ...reference,
-    capabilities: Object.freeze({...reference.capabilities, input: true, gamepad: true, technologies: Object.freeze({...reference.capabilities.technologies, input: 'Linux uinput virtual gamepad'})}),
+    capabilities: Object.freeze({...reference.capabilities, input: true, keyboard: false, pointer: false, gamepad: true, rumble: false, technologies: Object.freeze({...reference.capabilities.technologies, input: 'Linux uinput virtual gamepad'})}),
     input: nativeInput,
     async close() { nativeInput.close?.(); await reference.close?.(); },
   });
