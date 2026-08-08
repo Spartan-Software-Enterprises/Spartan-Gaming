@@ -1,5 +1,6 @@
 const MODE_ORDER = Object.freeze({browser: ['browser-first', 'official-launch', 'official-embed', 'official-api', 'user-owned-host', 'self-hosted'], official: ['official-launch', 'official-embed', 'browser-first', 'official-api', 'user-owned-host', 'self-hosted'], native: ['user-owned-host', 'self-hosted', 'official-launch', 'browser-first', 'official-embed', 'official-api']});
 const REGION_LABELS = Object.freeze({automatic: 'Automatic', 'north-america': 'North America', europe: 'Europe', 'asia-pacific': 'Asia Pacific', 'latin-america': 'Latin America'});
+const EMBED_TARGETS = Object.freeze({twitch: /^[A-Za-z0-9_]{1,25}$/, 'youtube-live': /^[A-Za-z0-9_-]{6,32}$/});
 const SPECIAL_PROFILES = Object.freeze({
   'xbox-cloud-gaming': {controllerProfile: 'Xbox layout', quality: 'prefer-latency', notes: ['Xbox account, subscription, and supported-region checks remain provider-owned.']},
   'xbox-remote-play': {controllerProfile: 'Xbox layout', quality: 'prefer-latency', notes: ['Remote features and console ownership must be enabled in the official account.']},
@@ -24,19 +25,33 @@ const SPECIAL_PROFILES = Object.freeze({
 
 function surfaceList(entry) { return Object.freeze((entry.capabilities || []).filter(capability => ['video', 'chat', 'clips', 'voice', 'screen-share', 'watch-parties', 'creator-dashboard', 'broadcast-management', 'friends', 'party-links', 'self-hosting'].includes(capability))); }
 
+function createOfficialEmbedUrl(entry, profile = {}) {
+  const target = typeof profile.embedTarget === 'string' ? profile.embedTarget.trim() : '';
+  const pattern = EMBED_TARGETS[entry.id];
+  if (!pattern || !pattern.test(target)) return null;
+  if (entry.id === 'twitch') {
+    const parent = typeof profile.embedParent === 'string' ? profile.embedParent.trim().toLowerCase() : '';
+    if (!/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(parent)) return null;
+    return `https://player.twitch.tv/?channel=${encodeURIComponent(target)}&parent=${encodeURIComponent(parent)}`;
+  }
+  if (entry.id === 'youtube-live') return `https://www.youtube.com/embed/${encodeURIComponent(target)}`;
+  return null;
+}
+
 export function createProviderIntegration(entry, {profile = {}, report = {}} = {}) {
   if (!entry || entry.backendType !== 'provider') throw new TypeError('A normalized provider entry is required');
   const preset = SPECIAL_PROFILES[entry.id] || {};
   const regionHint = Object.hasOwn(REGION_LABELS, profile.region) ? profile.region : 'automatic';
+  const embedUrl = createOfficialEmbedUrl(entry, profile);
   const preferred = MODE_ORDER[profile.launchMode] || MODE_ORDER.browser;
-  const mode = preferred.find(candidate => entry.integrationModes?.includes(candidate)) || entry.integrationModes?.[0];
+  const mode = preferred.find(candidate => entry.integrationModes?.includes(candidate) && (candidate !== 'official-embed' || embedUrl)) || entry.integrationModes?.find(candidate => candidate !== 'official-embed') || (embedUrl ? 'official-embed' : undefined);
   const missingCapabilities = (entry.capabilities || []).filter(capability => capability === 'gamepad' && report.input?.gamepad === false);
   const requirements = Object.freeze([...(entry.requirements || [])]);
   const notes = [...(preset.notes || [])];
   if (regionHint !== 'automatic') notes.push(`Region hint: ${REGION_LABELS[regionHint]}. The provider decides actual availability.`);
   if (profile.autoFullscreen === true) notes.push('Fullscreen is requested after the provider surface is ready when the browser permits it.');
   if (missingCapabilities.length) notes.push('Connect a supported controller before starting this service.');
-  return Object.freeze({providerId: entry.id, mode, controllerProfile: preset.controllerProfile || (entry.capabilities?.includes('gamepad') ? 'Auto-detect' : null), quality: profile.quality && profile.quality !== 'balanced' ? profile.quality : (preset.quality || 'balanced'), regionHint, regionLabel: REGION_LABELS[regionHint], autoFullscreen: profile.autoFullscreen !== false, surfaces: surfaceList(entry), requirements, missingCapabilities: Object.freeze(missingCapabilities), health: Object.freeze({strategy: 'reachability-only', url: entry.url, authenticated: false}), notes: Object.freeze(notes)});
+  return Object.freeze({providerId: entry.id, mode, embedUrl, controllerProfile: preset.controllerProfile || (entry.capabilities?.includes('gamepad') ? 'Auto-detect' : null), quality: profile.quality && profile.quality !== 'balanced' ? profile.quality : (preset.quality || 'balanced'), regionHint, regionLabel: REGION_LABELS[regionHint], autoFullscreen: profile.autoFullscreen !== false, surfaces: surfaceList(entry), requirements, missingCapabilities: Object.freeze(missingCapabilities), health: Object.freeze({strategy: 'reachability-only', url: entry.url, authenticated: false}), notes: Object.freeze(notes)});
 }
 
 export function providerTroubleshooting(integration) {

@@ -31,11 +31,11 @@ export function resolveLaunchPlan(entry, {allowedModes, preferEmbedded = false, 
   const modes = Array.isArray(allowedModes) ? allowedModes : integration?.mode ? [integration.mode, ...(entry.integrationModes || [])] : entry.integrationModes || [entry.launchMode];
   const plans = entry.backendType === 'provider' ? PROVIDER_MODE_PLANS : EMULATOR_MODE_PLANS;
   const orderedModes = preferEmbedded ? [...modes].sort(mode => mode === 'official-embed' ? -1 : 0) : modes;
-  const selectedMode = orderedModes.find(mode => plans[mode]);
+  const selectedMode = orderedModes.find(mode => plans[mode] && (mode !== 'official-embed' || integration.embedUrl));
   if (!selectedMode) return {backendId: entry.id, status: 'unsupported', action: 'show-support-error', reason: 'No supported integration mode is available in the current shell', availableModes: [...modes], readiness: Object.freeze({status: compatibility.status, reason: compatibility.reason, nextAction: 'show-support-error', issues})};
   const plan = plans[selectedMode];
   const nextAction = runtimeReadiness.status === 'native-adapter-required' ? 'choose-runtime' : runtimeReadiness.status === 'browser-capability-missing' ? 'run-diagnostics' : runtimeReadiness.status === 'host-not-ready' || (runtimeReadiness.status === 'configuration-required' && plan.action === 'configure-host') ? 'configure-host' : runtimeReadiness.status === 'configuration-required' ? 'open-service' : plan.action;
-  return Object.freeze({backendId: entry.id, status: 'ready', mode: selectedMode, ...plan, url: plan.action === 'open-url' || plan.action === 'embed-url' || plan.action === 'configure-api' ? entry.url : undefined, requirements: Object.freeze([...(entry.requirements || [])]), capabilities: Object.freeze([...(entry.capabilities || [])]), integration, readiness: Object.freeze({...runtimeReadiness, nextAction, issues})});
+  return Object.freeze({backendId: entry.id, status: 'ready', mode: selectedMode, ...plan, url: plan.action === 'embed-url' ? integration.embedUrl : plan.action === 'open-url' || plan.action === 'configure-api' ? entry.url : undefined, requirements: Object.freeze([...(entry.requirements || [])]), capabilities: Object.freeze([...(entry.capabilities || [])]), integration, readiness: Object.freeze({...runtimeReadiness, nextAction, issues})});
 }
 
 export function createCatalogAdapterRegistry(entries, options = {}) {

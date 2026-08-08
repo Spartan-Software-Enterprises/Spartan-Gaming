@@ -23,7 +23,7 @@ const settings = createSettingsStore().read();
 let activeWorkspace = workspaceStore.active;
 let favoritesStore = createFavoritesStore({workspaceId: activeWorkspace.id});
 const requestedFilter = new URLSearchParams(globalThis.location?.search || '').get('filter');
-const state = { catalog: [], adapters: null, compatibility: null, report: null, filter: ['all', 'cloud', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(favoritesStore.list()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, applyGlobalProviderPreferences(profile, settings)])) };
+const state = { catalog: [], adapters: null, compatibility: null, report: null, filter: ['all', 'cloud', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(favoritesStore.list()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, applyGlobalProviderPreferences({...profile, embedParent: globalThis.location?.hostname || ''}, settings)])) };
 const cards = document.querySelector('[data-cards]');
 const toast = document.querySelector('[data-toast]');
 const sessionStatus = document.querySelector('[data-session-status]');
