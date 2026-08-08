@@ -2,12 +2,14 @@ const STATES = new Set(['idle', 'loading', 'ready', 'running', 'paused', 'stoppe
 
 function events() { const listeners = new Map(); return {on(type, handler) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(handler); return () => listeners.get(type)?.delete(handler); }, emit(type, value) { for (const handler of listeners.get(type) || []) handler(value); }}; }
 function required(value, name) { if (!value || typeof value !== 'object') throw new TypeError(`${name} is required`); return value; }
-function selectedFile(file, name) { if (!file || file.userSelected !== true) throw new Error(`${name} must be explicitly selected by the user`); return Object.freeze({...file}); }
+function selectedFile(file, name) { if (!file || file.userSelected !== true) throw new Error(`${name} must be explicitly selected by the user`); const selected = {...file}; if (file.source && typeof file.source.arrayBuffer === 'function') Object.defineProperty(selected, 'source', {value: file.source, enumerable: false, configurable: false, writable: false}); return Object.freeze(selected); }
 
 /**
  * Adapt a browser-WASM or browser-hosted libretro implementation to the
  * frontend session lifecycle. The adapter owns emulation internals; this
  * boundary owns state, user-file validation, input routing, and teardown.
+ * Selected File/Blob data is exposed to the adapter as a non-persisted
+ * `source` property; metadata stores intentionally omit it.
  */
 export function createBrowserEmulatorRuntime({adapter, canvas = null} = {}) {
   required(adapter, 'browser emulator adapter');

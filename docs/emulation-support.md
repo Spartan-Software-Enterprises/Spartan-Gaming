@@ -88,8 +88,11 @@ adapter boundary. A separately supplied adapter must implement `load`,
 exposed through one lifecycle with explicit `idle`, `loading`, `ready`,
 `running`, `paused`, `stopped`, and `error` states. Game, firmware, and save
 files must carry the current-session `userSelected` marker before they reach an
-adapter. The frontend owns lifecycle and teardown but never evaluates a local
-executable path or silently reads remembered file metadata.
+adapter. For a currently selected browser `File` or `Blob`, the adapter
+receives that source through a non-enumerable, memory-only `source` property;
+remembered library entries and storage serialization contain metadata only.
+The frontend owns lifecycle and teardown but never evaluates a local executable
+path or silently reads remembered file metadata.
 
 | Project | Systems | Preferred mode | Role |
 | --- | --- | --- | --- |

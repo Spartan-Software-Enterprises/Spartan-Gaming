@@ -7,6 +7,12 @@ function clone(value) { return JSON.parse(JSON.stringify(value)); }
 export const DEFAULT_EMULATION_POLICY = Object.freeze({shipRoms: false, shipBios: false, allowUserSelectedFiles: true, requireLicenseMetadata: true});
 export const EMULATION_LIBRARY_KEY = 'spartan-gaming.emulation-library.v1';
 
+function freezeFileRecord(metadata, source) {
+  const record = {...metadata};
+  if (source && typeof source.arrayBuffer === 'function') Object.defineProperty(record, 'source', {value: source, enumerable: false, configurable: false, writable: false});
+  return Object.freeze(record);
+}
+
 const FRONTEND_PREFERENCES = Object.freeze({'Automatic': 'automatic', 'Spartan runtime': 'spartan-runtime', 'Libretro host': 'libretro-host', 'Native adapter': 'native-adapter'});
 
 export function resolveEmulationPreferences(settings = {}) {
@@ -17,11 +23,11 @@ export function resolveEmulationPreferences(settings = {}) {
 
 export function createUserFileRecord(file, {kind = 'game', userSelected = true} = {}) {
   const name = requiredString(file?.name, 'file.name'); if (!['game', 'firmware', 'save', 'media'].includes(kind)) throw new TypeError('unsupported emulation file kind'); const size = Math.max(0, Number(file.size) || 0); const lastModified = Math.max(0, Number(file.lastModified) || 0); const extension = (name.match(EXTENSION)?.[1] || '').toLowerCase();
-  return Object.freeze({id: `${kind}:${name}:${size}:${lastModified}`, name, kind, extension, size, lastModified, userSelected: Boolean(userSelected)});
+  return freezeFileRecord({id: `${kind}:${name}:${size}:${lastModified}`, name, kind, extension, size, lastModified, userSelected: Boolean(userSelected)}, userSelected ? file : null);
 }
 
 export function createEmulationLibraryIndex(files = []) {
-  if (!Array.isArray(files)) throw new TypeError('files must be an array'); const unique = new Map(); for (const file of files) { const record = file.id ? Object.freeze({...file}) : createUserFileRecord(file); unique.set(record.id, record); } return Object.freeze([...unique.values()]);
+  if (!Array.isArray(files)) throw new TypeError('files must be an array'); const unique = new Map(); for (const file of files) { const record = file.id ? freezeFileRecord({...file}, file.source) : createUserFileRecord(file); unique.set(record.id, record); } return Object.freeze([...unique.values()]);
 }
 
 export function createEmulationLibraryStore({storage = globalThis.localStorage, maxEntries = 200} = {}) {
