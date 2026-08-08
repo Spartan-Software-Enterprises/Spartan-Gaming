@@ -179,10 +179,14 @@ the host's launch authority.
 
 `createNativeWeriftHostFromPlatformBindings` is the package-backed assembly
 factory. Given a verified platform binding, explicit capture/microphone grants,
-and injected RTP packetizers, it creates the shell-free video and optional
-audio pipelines, connects them to Werift tracks, and routes negotiated input
-events through the guarded executor. This keeps platform APIs in the native
-package while making the portable host lifecycle testable end to end.
+and optional RTP packetizers, it creates the shell-free video and optional audio
+pipelines, connects them to Werift tracks, and routes negotiated input events
+through the guarded executor. If packetizers are not supplied, the factory uses
+the dependency-free packetizers in `host/rtp-packetizer.mjs`: H.264 supports
+Annex-B and AVCC with RFC 6184 single-NAL/FU-A framing, VP9 and AV1 use their
+minimal payload descriptors, and Opus preserves one encoded frame per RTP
+packet. A production encoder must still emit the selected codec's elementary
+stream; the packetizer does not transcode media.
 
 `host/launch-request.mjs` validates the corresponding metadata-only native
 emulator handoff at the host boundary. A native host may accept it only when

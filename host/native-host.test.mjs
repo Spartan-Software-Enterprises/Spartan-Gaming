@@ -62,6 +62,13 @@ test('platform bindings compose into a shell-free native Werift host', () => {
   host.close(); assert.equal(host.inputExecutor.state, 'closed');
 });
 
+test('platform bindings install default video and audio packetizers when none are injected', () => {
+  const signal = {on() { return () => {}; }, async connect() {}, send() {}, close() {}};
+  const bindings = {platform: 'linux', capture: {plan() { return {platform: 'linux', output: {target: 'stdout'}, process: {shell: false, args: []}}; }}, audio: {plan() { return {platform: 'linux', channels: 2, sampleRate: 48000, output: {target: 'stdout'}, process: {shell: false, args: []}}; }}, input: {platform: 'linux', async execute() {}}};
+  const host = createNativeWeriftHostFromPlatformBindings({bindings, includeAudio: true, audioPacketizer: undefined, permissions: {'screen-capture': true, microphone: true}, signaling: signal, module: fakeWerift(), packetizer: undefined, sessionId: 'ses-default-packetizers'});
+  assert.equal(host.audioPublisher, null); assert.equal(host.pipeline.state, 'idle'); host.close();
+});
+
 test('platform bindings reject native game launch configuration without an opaque host content ID', () => {
   const signal = {on() { return () => {}; }, async connect() {}, send() {}, close() {}};
   const bindings = {platform: 'linux', capture: {plan() { return {platform: 'linux', output: {target: 'stdout'}, process: {shell: false, args: []}}; }}, input: {platform: 'linux', async execute() {}}};

@@ -72,10 +72,11 @@ export function createRtpMediaPublisher({pipeline, packetizer, transport, codec 
   if (!packetizer || typeof packetizer.push !== 'function') throw new TypeError('packetizer must implement push(chunk, metadata)');
   if (!transport || typeof transport.send !== 'function') throw new TypeError('transport must implement send(packet)');
   let packetsSent = 0; let timestamp = 0;
+  const timestampStep = codec === 'opus' ? 960 : 1500;
   const publisher = createEncodedMediaPublisher({pipeline, codec, maxChunkBytes, sink: {
     open: metadata => { transport.open?.(metadata); },
     write: chunk => {
-      const packets = packetizer.push(chunk, {codec, timestamp}); timestamp += 1;
+      const packets = packetizer.push(chunk, {codec, timestamp}); timestamp = (timestamp + timestampStep) >>> 0;
       if (!packets || typeof packets[Symbol.iterator] !== 'function') throw new TypeError('packetizer.push must return an iterable of RTP packets');
       for (const packet of packets) { transport.send(packet); packetsSent += 1; }
     },

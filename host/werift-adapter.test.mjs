@@ -17,6 +17,12 @@ test('Werift RTP publisher composes encoded chunks with an injected packetizer',
   const result = createWeriftRtpPublisher({module, pipeline, packetizer, codec: 'h264'}); await result.publisher.start(); output.emit(Buffer.from('frame')); await result.publisher.stop();
   assert.equal(result.packetsSent, 1); assert.deepEqual(result.adapter.track.packets[0].payload, Buffer.from('frame')); assert.equal(result.adapter.track.packets[0].timestamp, 0); assert.equal(result.adapter.track.stopped, true);
 });
+
+test('Werift RTP publisher advances video timestamps at a 60fps clock', async () => {
+  const module = fakeWerift(); const output = {listeners: new Set(), on(type, handler) { if (type === 'data') this.listeners.add(handler); }, off(type, handler) { if (type === 'data') this.listeners.delete(handler); }, emit(value) { for (const handler of this.listeners) handler(value); }};
+  const timestamps = []; const result = createWeriftRtpPublisher({module, pipeline: {videoOutput: output, async start() {}, async stop() {}}, packetizer: {push(chunk, metadata) { timestamps.push(metadata.timestamp); return [{payload: chunk}]; }}});
+  await result.publisher.start(); output.emit(Buffer.from('a')); output.emit(Buffer.from('b')); await result.publisher.stop(); assert.deepEqual(timestamps, [0, 1500]);
+});
 test('Werift audio transport shares a peer and publishes RTP audio', async () => { const module = fakeWerift(); const video = createWeriftVideoTransport({module}); const audio = createWeriftAudioTransport({module, peer: video.peer}); assert.equal(audio.track.options.kind, 'audio'); assert.equal(video.peer.tracks.length, 2); const output = {listeners: new Set(), on(type, handler) { if (type === 'data') this.listeners.add(handler); }, off(type, handler) { if (type === 'data') this.listeners.delete(handler); }, emit(value) { for (const handler of this.listeners) handler(value); }}; const result = createWeriftAudioRtpPublisher({module, pipeline: {audioOutput: output, async start() {}, async stop() {}}, packetizer: {push: chunk => [{payload: chunk}]}, peer: video.peer, permissionGranted: true}); await result.publisher.start(); output.emit(Buffer.from('voice')); await result.publisher.stop(); assert.equal(result.packetsSent, 1); assert.deepEqual(result.adapter.track.packets[0].payload, Buffer.from('voice')); audio.close(); video.close(); });
 
 test('Werift session answers SDP offers and forwards ICE lifecycle events', async () => {

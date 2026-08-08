@@ -6,6 +6,7 @@ import {createEncoderPlan} from './media.mjs';
 import {createAudioEncoderPlan} from './audio.mjs';
 import {createGameLaunchPlan, createGameLauncher} from './game-launcher.mjs';
 import {matchesHostLaunchRequest} from './launch-request.mjs';
+import {createRtpPacketizer} from './rtp-packetizer.mjs';
 
 function required(value, name) { if (!value || typeof value !== 'object') throw new TypeError(`${name} is required`); return value; }
 
@@ -79,13 +80,14 @@ export function createNativeWeriftHostFromPlatformBindings({bindings, platform =
   const capturePermissionGranted = captureOptions.permissionGranted === true || permissions['screen-capture'] === true || permissions['screen-recording'] === true;
   const capturePlan = bindings.capture.plan({...captureOptions, width, height, framerate, permissionGranted: capturePermissionGranted});
   const encoderPlan = createEncoderPlan({codec, width, height, framerate, bitrateKbps});
+  const videoPacketizer = options.packetizer || createRtpPacketizer({codec, ssrc: options.ssrc ?? 1, RtpPacket: options.module?.RtpPacket, RtpHeader: options.module?.RtpHeader});
   const gameLauncher = runtimeProfile && gamePath ? createGameLauncher({plan: createGameLaunchPlan({platform, runtimeProfile, gamePath, args: gameArgs, cwd: gameCwd, env: gameEnv}) , spawnImpl: options.spawnImpl, maxOutputBytes: options.maxOutputBytes, stopTimeoutMs: options.stopTimeoutMs}) : null;
   const gameName = gamePath?.split(/[\\/]/).pop();
   let audioPipeline = null;
   let audioPermissionGranted = false;
   if (includeAudio) {
     if (typeof bindings.audio?.plan !== 'function') throw new TypeError('platform bindings must provide audio.plan(options) when audio is enabled');
-    if (!audioPacketizer) throw new TypeError('audioPacketizer is required when audio is enabled');
+    audioPacketizer ||= createRtpPacketizer({codec: audioCodec, ssrc: options.audioSsrc ?? 2, RtpPacket: options.module?.RtpPacket, RtpHeader: options.module?.RtpHeader});
     audioPermissionGranted = audioOptions.permissionGranted === true || permissions.microphone === true || permissions['microphone-capture'] === true;
     const audioCapturePlan = bindings.audio.plan({...audioOptions, permissionGranted: audioPermissionGranted});
     const audioEncoderPlan = createAudioEncoderPlan({codec: audioCodec, bitrateKbps: audioBitrateKbps, channels: audioCapturePlan.channels, sampleRate: audioCapturePlan.sampleRate});
@@ -96,6 +98,7 @@ export function createNativeWeriftHostFromPlatformBindings({bindings, platform =
     platform,
     capturePlan,
     encoderPlan,
+    packetizer: videoPacketizer,
     codec,
     audioPipeline,
     audioPacketizer,
