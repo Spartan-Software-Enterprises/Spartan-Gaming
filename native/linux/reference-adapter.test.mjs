@@ -22,6 +22,10 @@ test('Linux reference input maps only normalized keyboard and pointer operations
   assert.deepEqual(inputCommand({kind: 'pointer', action: 'pointer:wheel', deltaX: 120, deltaY: 0}), {args: ['click', '7']});
   assert.equal(keyName('ControlLeft'), 'ctrl');
   assert.equal(keyName('F12'), 'f12');
+  assert.equal(keyName('Home'), 'home');
+  assert.equal(keyName('End'), 'end');
+  assert.equal(keyName('Insert'), 'insert');
+  assert.equal(keyName('Delete'), 'delete');
   assert.throws(() => inputCommand({kind: 'button', control: 'a'}), /does not implement/);
 });
 

@@ -291,8 +291,11 @@ audio plans through shell-free process arguments after explicit permission; and
 maps normalized keyboard and pointer operations to X11 `xdotool` argv calls,
 including normalized left/middle/right button down/up and wheel transitions.
 The desktop input adapters also preserve browser key codes for left/right
-Control, Shift, Alt, and Meta, Caps Lock, navigation keys, and F1–F12 so
-modifier chords and PC-game shortcuts do not collapse into generic text keys.
+Control, Shift, Alt, and Meta, Caps Lock, the digit row, navigation and
+editing keys (Home, End, Page Up/Down, Insert, Delete), and F1–F12 so modifier
+chords and PC-game shortcuts do not collapse into generic text keys. Windows
+SendInput, macOS CGEvent, and the Linux X11 reference keep the same browser
+`code` vocabulary, including macOS's distinct forward-delete mapping.
 Gamepad/uinput, portal consent UI, hardware encoder selection, and signed
 distribution are intentionally not claimed by this reference adapter. The
 compiled `@spartan-gaming/native-linux` package now adds a Node-API `uinput`
