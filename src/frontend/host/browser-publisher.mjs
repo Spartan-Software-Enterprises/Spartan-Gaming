@@ -1,5 +1,5 @@
 const MAX = Object.freeze({width: 7680, height: 4320, framerate: 240, bitrateKbps: 100000});
-const DEFAULT_QUALITY = Object.freeze({profile: 'custom', bitrateKbps: 10000, maxFramerate: 60});
+const DEFAULT_QUALITY = Object.freeze({profile: 'custom', maxWidth: 1920, maxHeight: 1080, bitrateKbps: 10000, maxFramerate: 60});
 
 function bounded(value, fallback, maximum) { const number = Number(value); return Number.isFinite(number) && number > 0 ? Math.min(maximum, number) : fallback; }
 function boundedInteger(value, fallback, minimum, maximum) { const number = Number(value); return Number.isFinite(number) && number > 0 ? Math.min(maximum, Math.max(minimum, Math.floor(number))) : fallback; }
@@ -18,14 +18,17 @@ export function createBrowserCaptureConstraints({width = 1920, height = 1080, fr
   return Object.freeze({video: Object.freeze({width: Object.freeze({ideal: bounded(width, 1920, MAX.width)}), height: Object.freeze({ideal: bounded(height, 1080, MAX.height)}), frameRate: Object.freeze({ideal: bounded(framerate, 60, MAX.framerate)}), displaySurface: surface}), audio: Boolean(audio)});
 }
 
-export function normalizeBrowserQualityRequest({profile = DEFAULT_QUALITY.profile, bitrateKbps = DEFAULT_QUALITY.bitrateKbps, maxFramerate = DEFAULT_QUALITY.maxFramerate} = {}) {
-  return Object.freeze({profile: typeof profile === 'string' && profile.trim() ? profile.trim() : DEFAULT_QUALITY.profile, bitrateKbps: boundedInteger(bitrateKbps, DEFAULT_QUALITY.bitrateKbps, 250, MAX.bitrateKbps), maxFramerate: boundedInteger(maxFramerate, DEFAULT_QUALITY.maxFramerate, 1, MAX.framerate)});
+export function normalizeBrowserQualityRequest({profile = DEFAULT_QUALITY.profile, maxWidth = DEFAULT_QUALITY.maxWidth, maxHeight = DEFAULT_QUALITY.maxHeight, bitrateKbps = DEFAULT_QUALITY.bitrateKbps, maxFramerate = DEFAULT_QUALITY.maxFramerate} = {}) {
+  return Object.freeze({profile: typeof profile === 'string' && profile.trim() ? profile.trim() : DEFAULT_QUALITY.profile, maxWidth: boundedInteger(maxWidth, DEFAULT_QUALITY.maxWidth, 320, MAX.width), maxHeight: boundedInteger(maxHeight, DEFAULT_QUALITY.maxHeight, 180, MAX.height), bitrateKbps: boundedInteger(bitrateKbps, DEFAULT_QUALITY.bitrateKbps, 250, MAX.bitrateKbps), maxFramerate: boundedInteger(maxFramerate, DEFAULT_QUALITY.maxFramerate, 1, MAX.framerate)});
 }
 
-export function createVideoEncodingParameters(request, parameters = {}) {
+export function createVideoEncodingParameters(request, parameters = {}, trackSettings = {}) {
   const quality = normalizeBrowserQualityRequest(request);
   if (!Array.isArray(parameters.encodings) || parameters.encodings.length === 0) return null;
-  return {...parameters, encodings: parameters.encodings.map(encoding => ({...encoding, maxBitrate: quality.bitrateKbps * 1000, maxFramerate: quality.maxFramerate}))};
+  const trackWidth = Number(trackSettings.width); const trackHeight = Number(trackSettings.height);
+  const hasTrackDimensions = Number.isFinite(trackWidth) && trackWidth > 0 && Number.isFinite(trackHeight) && trackHeight > 0;
+  const scale = hasTrackDimensions ? Math.min(64, Math.max(1, Math.max(trackWidth / quality.maxWidth, trackHeight / quality.maxHeight))) : null;
+  return {...parameters, encodings: parameters.encodings.map(encoding => ({...encoding, maxBitrate: quality.bitrateKbps * 1000, maxFramerate: quality.maxFramerate, ...(scale ? {scaleResolutionDownBy: Number(scale.toFixed(3))} : {})}))};
 }
 
 export function createBrowserWebRtcPublisher({RTCPeerConnectionImpl = globalThis.RTCPeerConnection, mediaDevices = globalThis.navigator?.mediaDevices, configuration = {}, createPeer} = {}) {
@@ -71,7 +74,7 @@ export function createBrowserWebRtcPublisher({RTCPeerConnectionImpl = globalThis
       for (const sender of senders || []) {
         if (sender?.track?.kind !== 'video' || typeof sender.getParameters !== 'function' || typeof sender.setParameters !== 'function') continue;
         try {
-          const parameters = createVideoEncodingParameters(quality, await sender.getParameters());
+          const parameters = createVideoEncodingParameters(quality, await sender.getParameters(), sender.track.getSettings?.() || {});
           if (!parameters) continue;
           await sender.setParameters(parameters);
           appliedSenders += 1;

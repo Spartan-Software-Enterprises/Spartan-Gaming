@@ -11,8 +11,9 @@ test('microphone constraints are explicit and device-scoped', () => { assert.dee
 
 test('browser quality requests and sender parameters are bounded', () => {
   const quality = normalizeBrowserQualityRequest({profile: ' low ', bitrateKbps: 999999, maxFramerate: 0});
-  assert.deepEqual(quality, {profile: 'low', bitrateKbps: 100000, maxFramerate: 60});
+  assert.deepEqual(quality, {profile: 'low', maxWidth: 1920, maxHeight: 1080, bitrateKbps: 100000, maxFramerate: 60});
   assert.deepEqual(createVideoEncodingParameters({bitrateKbps: 2500, maxFramerate: 30}, {encodings: [{rid: 'main'}]}), {encodings: [{rid: 'main', maxBitrate: 2500000, maxFramerate: 30}]});
+  assert.deepEqual(createVideoEncodingParameters({maxWidth: 1280, maxHeight: 720, bitrateKbps: 2500, maxFramerate: 30}, {encodings: [{rid: 'main'}]}, {width: 1920, height: 1080}), {encodings: [{rid: 'main', maxBitrate: 2500000, maxFramerate: 30, scaleResolutionDownBy: 1.5}]});
   assert.equal(createVideoEncodingParameters({}, {}), null);
 });
 
@@ -33,11 +34,12 @@ test('browser publisher requests microphone only when explicitly enabled and com
 });
 
 test('browser publisher applies quality requests to video sender encodings', async () => {
-  const sender = {track: {kind: 'video'}, getParameters: () => ({encodings: [{rid: 'main'}]}), async setParameters(parameters) { this.parameters = parameters; }};
+  const sender = {track: {kind: 'video', getSettings: () => ({width: 1920, height: 1080})}, getParameters: () => ({encodings: [{rid: 'main'}]}), async setParameters(parameters) { this.parameters = parameters; }};
   const peer = {getSenders: () => [sender], close() {}};
   const publisher = createBrowserWebRtcPublisher({createPeer: () => peer});
   const result = await publisher.applyQualityRequest({profile: 'high', bitrateKbps: 12000, maxFramerate: 90});
   assert.equal(result.status, 'applied'); assert.equal(result.appliedSenders, 1); assert.equal(sender.parameters.encodings[0].maxBitrate, 12000000); assert.equal(sender.parameters.encodings[0].maxFramerate, 90);
+  assert.equal(sender.parameters.encodings[0].scaleResolutionDownBy, 1);
 });
 
 test('browser publisher reports unsupported quality controls without throwing', async () => {
