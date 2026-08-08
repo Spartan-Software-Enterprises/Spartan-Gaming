@@ -46,6 +46,21 @@ jobs:
         run: npm run test:browser-adapter
       - name: Validate Linux reference adapter contract
         run: npm run test:native-linux
+      - name: Install Node-API headers for desktop native package
+        if: matrix.platform != 'linux'
+        run: npm install --ignore-scripts --no-audit --no-fund node-api-headers@1.9.0
+      - name: Build Windows native input package
+        if: matrix.platform == 'windows'
+        run: npm run native:plan -- --platform windows --execute
+      - name: Test installed Windows native input package
+        if: matrix.platform == 'windows'
+        run: npm run test:native-windows-package
+      - name: Build macOS native input package
+        if: matrix.platform == 'mac'
+        run: npm run native:plan -- --platform macos --execute
+      - name: Test installed macOS native input package
+        if: matrix.platform == 'mac'
+        run: npm run test:native-macos-package
 
   native-linux-package:
     name: native Linux package

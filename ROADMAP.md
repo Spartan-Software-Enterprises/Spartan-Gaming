@@ -56,7 +56,7 @@
 
 ## Milestone 3: self-hosted stack
 
-- [ ] Windows and Linux host agent (native composition boundary, optional runtime package discovery, and plan-first cross-platform package workflow implemented; platform packaging and adapters pending).
+- [ ] Windows and Linux host agent (native composition boundary, optional runtime package discovery, guarded input execution, and platform package workflow implemented; media/audio packaging remains pending).
 - [x] Secure device pairing UX and frontend contract (agent/signaling implementation pending).
 - [x] Dependency-free reference host control plane (media and OS adapters pending).
 - [x] Shell-free managed process lifecycle with bounded output and pipeline rollback.
@@ -77,7 +77,7 @@
 - [x] User-facing transport and relay policy controls (runtime provider/host wiring pending).
 - [x] Controller, keyboard, pointer, and rumble forwarding contract (native OS injection pending).
 - [x] Shell-free native input executor boundary with permissions and rate limiting (OS adapter implementations pending).
-- [ ] Native OS input injection, audio return, and end-to-end haptics (explicitly enabled host execution now routes through the guarded executor; Linux reference capture/audio and compiled uinput/gamepad package added; portal/haptics and Windows/macOS implementations remain pending).
+- [ ] Native OS input injection, audio return, and end-to-end haptics (explicitly enabled host execution now routes through the guarded executor; Linux uinput plus Windows SendInput and macOS Core Graphics keyboard/pointer packages added; native capture/audio, virtual gamepad, portal consent, and haptics remain pending).
 - [x] Cross-platform audio capture and publisher readiness contract (native audio publisher pending).
 - [x] Shell-free audio publisher and RTP handoff boundary with permission gating (native capture/codec adapters pending).
 - [x] Browser-to-host control-plane quality and input envelopes (OS adapters pending).
@@ -107,7 +107,7 @@
 - [x] Verified installed-adapter activation boundary with pointer, package, platform, and factory checks (concrete OS API packages remain pending).
 - [x] Signed package kind contract and platform-native binding kit for capture, audio, and input (OS-specific binding implementations remain package-owned).
 - [x] Optional platform native-binding discovery and strict adapter composition (binary package implementations remain separately distributed).
-- [x] Reproducible per-platform native package manifest and CMake configure/build/install contract (compiled binary sources remain separately distributed).
+- [x] Reproducible per-platform native package manifest and CMake configure/build/install contract (Windows, macOS, and Linux native input sources are checked in and built on their target CI runners).
 - [x] Unified frontend runtime readiness contract for browser, native adapter, and self-hosted host layers.
 - [x] Capability-driven desktop, ChromeOS, handheld, mobile, and television presentation profiles with safe forced-mode fallback.
 - [x] Capability-aware display policy that bounds HDR, codec, refresh-rate, and multi-display session requests without claiming native routing.

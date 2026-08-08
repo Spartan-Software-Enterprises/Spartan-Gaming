@@ -51,12 +51,12 @@ changing the package contract.
 `host/media.mjs` provides the next boundary for those platform implementations. It generates shell-free FFmpeg capture plans for Linux X11/PipeWire, Windows desktop capture, and macOS AVFoundation, validates basic permission context, and generates codec/bitrate encoder plans for H.264, VP9, and AV1. These plans target a future WebRTC publisher and are deliberately not executed by the reference agent.
 
 The native package manifest and `npm run native:plan -- --matrix` provide the
-cross-platform CMake workflow for the future Windows, macOS, and Linux binding
+cross-platform CMake workflow for the Windows, macOS, and Linux binding
 packages. The command is plan-first, keeps source/build/install directories
-isolated, reports whether each external native source directory exists, and
-requires `--execute` before invoking CMake. Missing source directories and
-platform API implementations remain an explicit planned state; a plan is not a
-claim that capture, audio, or OS input is already available.
+isolated, reports source readiness, and requires `--execute` before invoking
+CMake. All three packages now have checked-in input implementations; capture,
+audio, gamepad, and haptics remain capability-specific rather than being
+claimed by package presence alone.
 
 `host/publisher.mjs` composes those plans into a transport-neutral publisher
 contract. It reports `unconfigured` or `plan-only` until a native capture
@@ -106,9 +106,12 @@ package never reaches module loading.
 the three desktop platforms. Windows packages advertise Graphics Capture,
 WASAPI, and SendInput bindings; macOS packages advertise ScreenCaptureKit,
 CoreAudio, and CGEvent/HID bindings; Linux packages advertise PipeWire/portal,
-PipeWire/PulseAudio, and uinput bindings. The kit delegates only declared
-operations (`start`/`stop` for capture and audio, `execute` for input) and
-fails closed when a package does not provide its required native methods.
+PipeWire/PulseAudio, and uinput bindings. The checked-in Windows and macOS
+packages currently implement keyboard and pointer input through SendInput and
+Core Graphics respectively; capture, audio, virtual gamepad, and haptics stay
+unavailable until their corresponding APIs are implemented. The kit delegates
+only declared operations (`start`/`stop` for capture and audio, `execute` for
+input) and fails closed when a package does not provide its required methods.
 
 `host/native-binding-loader.mjs` discovers the optional binary packages
 `@spartan-gaming/native-windows`, `@spartan-gaming/native-macos`, and
@@ -231,3 +234,15 @@ remote input is never enabled merely because the host has a desktop OS.
 For an operator-approved host session, `host/agent.mjs --enable-input` routes
 normalized input events through the same permission and rate-limit executor;
 the default agent mode remains observation-only.
+
+## Windows and macOS input packages
+
+`native/windows` and `native/macos` are the first concrete non-Linux native
+packages. Their CMake targets compile Node-API addons on the target OS and
+install a small ESM package wrapper. Windows uses `SendInput` for normalized
+keyboard and relative pointer events; macOS uses `CGEventPost` and Core
+Graphics for the same operations. Both require the operator to grant the
+platform's remote-control/accessibility permission, expose no gamepad or
+haptics capability, and fail closed when the binary is missing or the OS
+permission is denied. Their build and installed-package contracts run on the
+Windows and macOS CI runners.

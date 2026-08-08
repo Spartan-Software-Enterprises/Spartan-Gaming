@@ -29,8 +29,9 @@ std::string string_property(napi_env env, napi_value object, const char* name) {
   if (!property(env, object, name, &value)) return {};
   size_t length = 0;
   napi_get_value_string_utf8(env, value, nullptr, 0, &length);
-  std::string result(length, '\0');
+  std::string result(length + 1, '\0');
   napi_get_value_string_utf8(env, value, result.data(), length + 1, &length);
+  result.resize(length);
   return result;
 }
 
