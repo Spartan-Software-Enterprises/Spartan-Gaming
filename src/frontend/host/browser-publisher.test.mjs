@@ -7,7 +7,7 @@ test('browser capture constraints are bounded, explicit, and consent-safe', () =
   assert.equal(createBrowserCaptureConstraints({displaySurface: 'unsupported'}).video.displaySurface, 'monitor');
 });
 
-test('microphone constraints are explicit and device-scoped', () => { assert.deepEqual(createMicrophoneConstraints({deviceId: ' mic-1 '}), {echoCancellation: true, noiseSuppression: true, autoGainControl: true, deviceId: {exact: 'mic-1'}}); });
+test('microphone constraints are explicit, device-scoped, and configurable for noise suppression', () => { assert.deepEqual(createMicrophoneConstraints({deviceId: ' mic-1 ', noiseSuppression: false}), {echoCancellation: true, noiseSuppression: false, autoGainControl: true, deviceId: {exact: 'mic-1'}}); });
 
 test('browser quality requests and sender parameters are bounded', () => {
   const quality = normalizeBrowserQualityRequest({profile: ' low ', bitrateKbps: 999999, maxFramerate: 0});
@@ -30,7 +30,7 @@ test('browser publisher captures user-approved display media, answers offers, fo
 test('browser publisher requests microphone only when explicitly enabled and composes its track', async () => {
   const displayTrack = {stop() {}}; const microphoneTrack = {stop() {}}; const stream = {getTracks: () => [displayTrack, microphoneTrack], addTrack(track) { this.added = track; }, getAudioTracks: () => [microphoneTrack]}; const calls = []; const peer = {addTrack: (...args) => calls.push(args), close() {}};
   const publisher = createBrowserWebRtcPublisher({createPeer: () => peer, mediaDevices: {async getDisplayMedia() { return stream; }, async getUserMedia(constraints) { calls.push(['microphone', constraints]); return {getAudioTracks: () => [microphoneTrack]}; }}});
-  await publisher.capture({microphone: true, microphoneDeviceId: 'mic-1'}); assert.equal(calls[0][0], 'microphone'); assert.deepEqual(calls[0][1].audio.deviceId, {exact: 'mic-1'}); assert.equal(calls.filter(call => call[0] === 'microphone').length, 1);
+  await publisher.capture({microphone: true, microphoneDeviceId: 'mic-1', microphoneNoiseSuppression: false}); assert.equal(calls[0][0], 'microphone'); assert.deepEqual(calls[0][1].audio.deviceId, {exact: 'mic-1'}); assert.equal(calls[0][1].audio.noiseSuppression, false); assert.equal(calls.filter(call => call[0] === 'microphone').length, 1);
 });
 
 test('browser publisher applies quality requests to video sender encodings', async () => {

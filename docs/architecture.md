@@ -133,6 +133,13 @@ option, and the selected input is combined with the user-approved display stream
 in memory. If permission, device access, or track composition fails, all capture
 tracks are stopped and the host does not start.
 
+The saved `media.audioInput` preference can disable microphone capture in the
+studio (`No microphone`) or leave the explicit user checkbox available for the
+system-default/ask-each-time paths. `media.micNoiseSuppression` is translated
+into the browser's microphone constraints only after the user has opted into
+microphone capture; settings never grant device permission or persist a device
+identifier.
+
 User-owned host connections use the secure boundary in `src/frontend/host/host.mjs`; see [host support](host-support.md) for endpoint, pairing, and transport rules.
 
 Browser signaling and media transport primitives live in `src/frontend/transport/transport.mjs`; see [transport](transport.md) for the WebSocket and WebRTC boundary.

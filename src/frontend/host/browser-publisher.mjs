@@ -48,7 +48,7 @@ export function createBrowserWebRtcPublisher({RTCPeerConnectionImpl = globalThis
       if (options.microphone === true) {
         if (typeof mediaDevices.getUserMedia !== 'function') { stream.getTracks().forEach(track => track.stop?.()); stream = null; throw new Error('Microphone capture is unavailable in this browser'); }
         try {
-          const microphone = await mediaDevices.getUserMedia({audio: createMicrophoneConstraints({deviceId: options.microphoneDeviceId})});
+          const microphone = await mediaDevices.getUserMedia({audio: createMicrophoneConstraints({deviceId: options.microphoneDeviceId, noiseSuppression: options.microphoneNoiseSuppression !== false})});
           const microphoneTracks = microphone?.getAudioTracks?.() || [];
           if (!microphoneTracks.length || typeof stream.addTrack !== 'function') throw new Error('Microphone capture returned no usable audio track');
           microphoneTracks.forEach(track => stream.addTrack(track));
