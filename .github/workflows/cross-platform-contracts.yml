@@ -38,3 +38,5 @@ jobs:
         run: npm run chromium:validate -- --platform ${{ matrix.platform }}
       - name: Validate native package plan contract
         run: npm run native:plan -- --matrix --json
+      - name: Validate signed browser adapter loader contract
+        run: npm run test:browser-adapter

@@ -106,6 +106,19 @@ downloaded as user files; imports require a fresh explicit file selection and
 are passed to the adapter only for the active runtime. No save-state bytes are
 written to browser storage by the frontend.
 
+`src/frontend/emulation/browser-adapter-loader.mjs` provides the
+manifest-driven handoff for separately distributed browser adapters. A caller
+must provide explicit consent and a trusted signer key; the loader then fetches
+only an HTTPS entrypoint with credentials omitted, enforces a 50 MiB response
+bound, checks the module's SHA-256 digest, verifies the signed canonical
+manifest descriptor through WebCrypto, and validates the exported adapter
+lifecycle. The adapter is returned for explicit registration with the current
+browser session and is never written to storage. The signed descriptor covers
+the adapter ID, version, kind, supported platforms, capabilities, license,
+module integrity, and entrypoint. Relative module imports are intentionally not
+assumed; a distributed browser adapter should be self-contained or use its own
+bundling boundary.
+
 | Project | Systems | Preferred mode | Role |
 | --- | --- | --- | --- |
 | RetroArch/libretro | Many classic and modern systems | Browser/native | Unified frontend and core ecosystem |
