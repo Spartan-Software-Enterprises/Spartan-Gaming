@@ -47,3 +47,9 @@ export const BUILTIN_CONTROLLER_PROFILES = Object.freeze([
   createControllerProfile({id: 'playstation-layout', name: 'PlayStation layout', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0'}}),
   createControllerProfile({id: 'keyboard-mouse', name: 'Keyboard and mouse', bindings: {confirm: 'key-Enter', cancel: 'key-Escape', menu: 'key-Tab', pause: 'key-P'}}),
 ]);
+
+export function resolveControllerProfile({profileId = 'auto', profiles = [], fallback = null} = {}) {
+  const requested = String(profileId || '').trim().toLowerCase();
+  if (!requested || requested === 'auto') return fallback;
+  return [...BUILTIN_CONTROLLER_PROFILES, ...profiles].find(profile => profile.id === requested || profile.name.toLowerCase() === requested) || fallback;
+}
