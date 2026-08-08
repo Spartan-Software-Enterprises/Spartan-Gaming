@@ -1,7 +1,7 @@
 const VALID_STATES = new Set(['idle', 'preparing', 'negotiating', 'connected', 'reconnecting', 'ended', 'error']);
 
 export function createPlayerState(overrides = {}) {
-  const state = {status: 'idle', quality: 'balanced', mediaState: 'waiting', latencyMs: null, packetLossPct: 0, overlayVisible: true, diagnosticsVisible: false, gamepadConnected: false, negotiated: null, error: null, ...overrides};
+  const state = {status: 'idle', quality: 'balanced', mediaState: 'waiting', latencyMs: null, packetLossPct: 0, decodeFps: null, framesDropped: 0, jitterMs: null, bitrateKbps: null, overlayVisible: true, diagnosticsVisible: false, gamepadConnected: false, negotiated: null, error: null, ...overrides};
   if (!VALID_STATES.has(state.status)) throw new TypeError(`unsupported player status: ${state.status}`);
   return Object.freeze(state);
 }
@@ -13,7 +13,7 @@ export function reducePlayerState(state, event) {
   if (event.type === 'session.state') next.status = event.status;
   if (event.type === 'quality.changed') next.quality = event.profile;
   if (event.type === 'media.state') next.mediaState = String(event.state || 'waiting');
-  if (event.type === 'telemetry.health') { next.latencyMs = Number.isFinite(event.rttMs) ? Math.round(event.rttMs) : next.latencyMs; next.packetLossPct = Number.isFinite(event.packetLossPct) ? event.packetLossPct : next.packetLossPct; }
+  if (event.type === 'telemetry.health') { next.latencyMs = Number.isFinite(event.rttMs) ? Math.round(event.rttMs) : next.latencyMs; next.packetLossPct = Number.isFinite(event.packetLossPct) ? event.packetLossPct : next.packetLossPct; next.decodeFps = Number.isFinite(event.decodeFps) ? Math.max(0, Math.round(event.decodeFps)) : next.decodeFps; next.framesDropped = Number.isFinite(event.framesDropped) ? Math.max(0, Math.round(event.framesDropped)) : next.framesDropped; next.jitterMs = Number.isFinite(event.jitterMs) ? Math.max(0, Math.round(event.jitterMs)) : next.jitterMs; next.bitrateKbps = Number.isFinite(event.bitrateKbps) ? Math.max(0, Math.round(event.bitrateKbps)) : next.bitrateKbps; }
   if (event.type === 'toggle.overlay') next.overlayVisible = !current.overlayVisible;
   if (event.type === 'toggle.diagnostics') next.diagnosticsVisible = !current.diagnosticsVisible;
   if (event.type === 'gamepad.connection') next.gamepadConnected = Boolean(event.connected);
@@ -23,6 +23,7 @@ export function reducePlayerState(state, event) {
 }
 
 export function formatLatency(latencyMs) { return Number.isFinite(latencyMs) ? `${Math.round(latencyMs)} ms` : '—'; }
+export function formatRate(kbps) { return Number.isFinite(kbps) ? (kbps >= 1000 ? `${(kbps / 1000).toFixed(1)} Mbps` : `${Math.round(kbps)} Kbps`) : '—'; }
 
 export function formatNegotiatedCapabilities(capabilities) {
   if (!capabilities) return 'Pending';

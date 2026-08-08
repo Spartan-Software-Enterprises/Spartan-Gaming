@@ -100,6 +100,13 @@ Universal controller input is normalized in `src/frontend/input/input.mjs`. It a
 
 Adaptive streaming policy is implemented in `src/frontend/session/quality.mjs`. Health telemetry is bounded before use, classified into good/fair/poor network states, and converted into a shared profile request. Degradation steps down quickly; recovery requires consecutive healthy samples to avoid oscillation.
 
+The WebRTC telemetry collector derives only bounded, aggregate health values from
+the peer connection: round-trip time, packet loss, decode rate, dropped frames,
+jitter, and receive bitrate. The player diagnostics panel displays those values
+without exposing raw reports, SSRCs, credentials, or media content. Bitrate and
+decode rate are calculated from consecutive samples, so an initial sample safely
+reports zero rather than inventing a measurement.
+
 User-owned host connections use the secure boundary in `src/frontend/host/host.mjs`; see [host support](host-support.md) for endpoint, pairing, and transport rules.
 
 Browser signaling and media transport primitives live in `src/frontend/transport/transport.mjs`; see [transport](transport.md) for the WebSocket and WebRTC boundary.

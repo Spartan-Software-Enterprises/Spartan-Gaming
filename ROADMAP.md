@@ -49,6 +49,7 @@
 - [x] Bounded reconnection and session recovery policy with player control.
 - [x] Per-codec hardware decode detection through MediaCapabilities with safe fallback.
 - [x] Input, decode, render, and network telemetry foundation from browser/WebRTC health signals.
+- [x] Live player telemetry dashboard for RTT, packet loss, decode FPS, dropped frames, jitter, and receive bitrate.
 - [x] HDR, multi-display, and refresh-rate capability/policy contracts (native output routing and end-to-end HDR validation pending).
 - [x] Screenshots and local recording.
 - [x] LAN self-hosted reference stream (browser display/system-audio capture over WebRTC; native host packaging remains pending).
