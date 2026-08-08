@@ -19,6 +19,7 @@ import {QUALITY_PROFILES} from '../session/quality.mjs';
 import {createTouchControlEvent, createTouchControlLayout, normalizeTouchLayout} from '../input/touch-controls.mjs';
 import {preparePlayerSession} from './preflight.mjs';
 import {clearPendingLaunchHandoff, readPendingLaunchHandoff} from '../launch/handoff.mjs';
+import {canSelectAudioOutput, listAudioOutputDevices, selectAudioOutput} from './audio-output.mjs';
 
 const query = new URLSearchParams(location.search);
 const pendingHostPair = readPendingHostPair(sessionStorage); clearPendingHostPair(sessionStorage);
@@ -34,7 +35,7 @@ const immersive = createImmersiveController({target: document.querySelector('[da
 let runtime = null;
 const elements = {
   status: document.querySelector('[data-status]'), message: document.querySelector('[data-stage-message]'), quality: document.querySelector('[data-quality]'), qualitySelect: document.querySelector('[data-quality-select]'), qualityDetail: document.querySelector('[data-quality-detail]'),
-  latency: document.querySelector('[data-latency]'), latencyDetail: document.querySelector('[data-latency-detail]'), loss: document.querySelector('[data-loss]'), decodeFps: document.querySelector('[data-decode-fps]'), dropped: document.querySelector('[data-dropped]'), jitter: document.querySelector('[data-jitter]'), bitrate: document.querySelector('[data-bitrate]'), gamepad: document.querySelector('[data-gamepad]'), audio: document.querySelector('[data-audio]'), negotiated: document.querySelector('[data-negotiated]'), diagnostics: document.querySelector('[data-diagnostics]'), overlay: document.querySelectorAll('[data-overlay]'), stage: document.querySelector('[data-stage]'), video: document.querySelector('[data-video]'), demo: document.querySelector('[data-demo-answer]'), connectionForm: document.querySelector('[data-connection-form]'), connectionEndpoint: document.querySelector('[data-connection-endpoint]'), connectionSession: document.querySelector('[data-connection-session]'), connectionTicket: document.querySelector('[data-connection-ticket]'), sessionName: document.querySelector('[data-session-name]'), transport: document.querySelector('[data-transport]'),
+  latency: document.querySelector('[data-latency]'), latencyDetail: document.querySelector('[data-latency-detail]'), loss: document.querySelector('[data-loss]'), decodeFps: document.querySelector('[data-decode-fps]'), dropped: document.querySelector('[data-dropped]'), jitter: document.querySelector('[data-jitter]'), bitrate: document.querySelector('[data-bitrate]'), gamepad: document.querySelector('[data-gamepad]'), audio: document.querySelector('[data-audio]'), audioOutput: document.querySelector('[data-audio-output]'), negotiated: document.querySelector('[data-negotiated]'), diagnostics: document.querySelector('[data-diagnostics]'), overlay: document.querySelectorAll('[data-overlay]'), stage: document.querySelector('[data-stage]'), video: document.querySelector('[data-video]'), demo: document.querySelector('[data-demo-answer]'), connectionForm: document.querySelector('[data-connection-form]'), connectionEndpoint: document.querySelector('[data-connection-endpoint]'), connectionSession: document.querySelector('[data-connection-session]'), connectionTicket: document.querySelector('[data-connection-ticket]'), sessionName: document.querySelector('[data-session-name]'), transport: document.querySelector('[data-transport]'),
 };
 let state = createPlayerState({status: 'negotiating'});
 let recording = null;
@@ -59,6 +60,16 @@ function apply(event) {
   if (state.status === 'connected' && sessionPreferences.preferences.autoFullscreen && !autoFullscreenAttempted) { autoFullscreenAttempted = true; immersive.enter().catch(() => {}); }
   if (state.status === 'error') elements.message.textContent = state.error; if (state.status === 'ended') elements.message.textContent = 'This session has ended. Return to the library to choose another backend.';
   if (state.status === 'connected' && state.mediaState === 'not-configured') elements.message.textContent = 'Host paired successfully. Media capture and encoding are not configured on this host.';
+}
+
+async function loadAudioOutputs() {
+  if (!elements.audioOutput) return;
+  if (!canSelectAudioOutput(elements.video)) { elements.audioOutput.disabled = true; elements.audioOutput.innerHTML = '<option value="">Browser default (selection unavailable)</option>'; return; }
+  try {
+    const devices = await listAudioOutputDevices();
+    elements.audioOutput.disabled = false;
+    elements.audioOutput.innerHTML = `<option value="">Browser default</option>${devices.map(device => `<option value="${device.deviceId.replaceAll('&', '&amp;').replaceAll('"', '&quot;')}">${device.label.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</option>`).join('')}`;
+  } catch { elements.audioOutput.disabled = true; elements.audioOutput.innerHTML = '<option value="">Audio outputs unavailable</option>'; }
 }
 
 async function prepareSession() {
@@ -135,6 +146,7 @@ async function takeScreenshot() { try { const blob = await captureVideoFrame(ele
 async function toggleRecording() { try { if (!recording) recording = createRecordingController({stream: elements.video.srcObject}); if (recording.state === 'recording') { const blob = await recording.stop(); downloadBlob(blob, `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.webm`); elements.message.textContent = 'Recording saved locally.'; elements.record.classList.remove('capture-active'); } else { recording.start(); elements.message.textContent = 'Recording locally. Press record again to stop.'; elements.record.classList.add('capture-active'); } } catch (error) { elements.message.textContent = error.message; } }
 
 document.querySelector('[data-action="audio"]').addEventListener('click', () => { audioEnabled = !audioEnabled; setMediaAudioEnabled(elements.video, audioEnabled); elements.audio.textContent = audioEnabled ? (describeMediaStream(elements.video.srcObject).hasAudio ? 'Active' : 'Waiting') : 'Muted'; const button = document.querySelector('[data-action="audio"]'); button.textContent = audioEnabled ? '🔊' : '🔇'; button.setAttribute('aria-label', audioEnabled ? 'Mute session audio' : 'Unmute session audio'); });
+elements.audioOutput?.addEventListener('change', async event => { try { await selectAudioOutput(elements.video, event.target.value); elements.message.textContent = event.target.value ? 'Session audio output changed.' : 'Session audio is using the browser default output.'; } catch (error) { event.target.value = ''; elements.message.textContent = error.message; } });
 elements.qualitySelect?.addEventListener('change', event => requestQuality(event.target.value));
 document.querySelector('[data-action="fullscreen"]').addEventListener('click', () => immersive.toggle().catch(error => { elements.message.textContent = error.message; }));
 elements.screenshot = document.querySelector('[data-action="screenshot"]'); elements.record = document.querySelector('[data-action="record"]'); elements.screenshot.addEventListener('click', takeScreenshot); elements.record.addEventListener('click', toggleRecording); elements.reconnect = document.querySelector('[data-action="reconnect"]'); elements.reconnect.addEventListener('click', requestReconnect);
@@ -148,4 +160,4 @@ window.addEventListener('keydown', event => keyboardInput(event, true)); window.
 window.addEventListener('gamepadconnected', () => apply({type: 'gamepad.connection', connected: true})); window.addEventListener('gamepaddisconnected', () => apply({type: 'gamepad.connection', connected: false}));
 setInterval(() => { const gamepads = navigator.getGamepads?.() || []; const connected = inputPolicy.allows('gamepad') && [...gamepads].some(Boolean); if (connected !== state.gamepadConnected) apply({type: 'gamepad.connection', connected}); if (!inputPolicy.allows('gamepad')) return; const pad = [...gamepads].find(Boolean); if (!pad) return; const normalized = mapper.normalize(pad); const previous = previousGamepad.get(normalized.index); normalized.buttons.forEach((button, index) => { if (!previous || button.pressed !== previous.buttons[index]?.pressed || button.value !== previous.buttons[index]?.value) { const event = mapper.mapButton(index, button.pressed, button.value); if (event) emitInput({...event, source: 'gamepad', control: `button-${index}`}); } }); normalized.axes.forEach((value, index) => { if (!previous || Math.abs(value - (previous.axes[index] || 0)) > 0.08) { const event = mapper.mapAxis(index, value); if (event) emitInput({...event, source: 'gamepad', control: `axis-${index}`}); } }); previousGamepad.set(normalized.index, normalized); }, 100);
 const suppliedStream = window.__SPARTAN_MEDIA_STREAM__; if (suppliedStream && typeof MediaStream !== 'undefined' && suppliedStream instanceof MediaStream) { const mediaState = attachMediaStreamTarget({video: elements.video, stream: suppliedStream, audioEnabled}); elements.audio.textContent = mediaState.hasAudio ? 'Active' : 'No track'; elements.video.play().catch(() => {}); }
-start(); apply({type: 'session.state', status: 'negotiating'});
+loadAudioOutputs(); start(); apply({type: 'session.state', status: 'negotiating'});

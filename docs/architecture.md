@@ -107,6 +107,12 @@ without exposing raw reports, SSRCs, credentials, or media content. Bitrate and
 decode rate are calculated from consecutive samples, so an initial sample safely
 reports zero rather than inventing a measurement.
 
+When the browser exposes `HTMLMediaElement.setSinkId`, the player also offers a
+capability-gated audio-output selector backed by `mediaDevices.enumerateDevices`.
+Device IDs remain session-local and are not written to settings, profile exports,
+URLs, or telemetry. Browsers without output routing support keep the stream on
+the default sink and show a non-actionable fallback state.
+
 User-owned host connections use the secure boundary in `src/frontend/host/host.mjs`; see [host support](host-support.md) for endpoint, pairing, and transport rules.
 
 Browser signaling and media transport primitives live in `src/frontend/transport/transport.mjs`; see [transport](transport.md) for the WebSocket and WebRTC boundary.
