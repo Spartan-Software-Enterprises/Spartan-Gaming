@@ -82,6 +82,7 @@ export function createSessionManager({clock = () => new Date().toISOString(), id
       if (backend.pairingCode) payload.pairingCode = backend.pairingCode;
       return createSessionEnvelope({sessionId: session.id, type: 'session.offer', sequence, sentAt: clock(), payload});
     },
+    setQuality(profileId) { if (!session || !['preparing', 'negotiating', 'connected', 'reconnecting'].includes(state)) throw new Error('Quality can only be changed during an active session'); quality.setProfile(profileId); session.quality = quality.profile; return quality.request(); },
     receive(message) {
       if (!session || message?.sessionId !== session.id) throw new Error('Message belongs to another session');
       sequence = Math.max(sequence, Number.isInteger(message.sequence) ? message.sequence : sequence);

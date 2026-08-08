@@ -41,6 +41,7 @@ export function createQualityController({initialProfile = 'balanced', profiles =
       const changed = before !== current;
       return Object.freeze({classification, changed, previousProfile: before, profile: this.profile, health, reason: changed ? (profileIndex(current) > profileIndex(before) ? 'network-degraded' : 'network-recovered') : 'hold'});
     },
+    setProfile(id) { if (!available.some(profile => profile.id === id)) throw new Error(`unknown quality profile: ${id}`); const previousProfile = current; current = id; goodSamples = 0; return Object.freeze({changed: previousProfile !== current, previousProfile, profile: this.profile, reason: 'manual'}); },
     request() { const profile = this.profile; return Object.freeze({type: 'quality.request', profile: profile.id, maxWidth: profile.maxWidth, maxHeight: profile.maxHeight, maxFramerate: profile.maxFramerate, bitrateKbps: profile.bitrateKbps}); },
   };
 }

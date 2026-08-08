@@ -41,6 +41,7 @@
 - [x] WebRTC/session runtime bridge for signaling, SDP/ICE, media tracks, input, and reconnect envelopes.
 - [x] Local browser-to-browser LAN demo coordinator for authenticated signaling and WebRTC display streaming.
 - [x] Adaptive bitrate and resolution policy.
+- [x] In-session manual quality selection using validated quality requests.
 - [x] Bounded reconnection and session recovery policy with player control.
 - [x] Per-codec hardware decode detection through MediaCapabilities with safe fallback.
 - [x] Input, decode, render, and network telemetry foundation from browser/WebRTC health signals.

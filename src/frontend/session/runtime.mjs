@@ -52,6 +52,7 @@ export function createSessionRuntime({manager = createSessionManager(), signalin
       send(outbound); telemetry?.start(); bus.emit('offer', outbound); return outbound;
     },
     send,
+    requestQuality(profileId) { const request = manager.setQuality(profileId); return send(createSessionEnvelope({sessionId, type: 'quality.request', sequence: ++sequence, sentAt: clock(), payload: request})); },
     receive,
     requestReconnect() { return reconnectController.start().result; },
     cancelReconnect() { return reconnectController.cancel(); },

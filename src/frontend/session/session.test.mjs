@@ -48,6 +48,8 @@ test('session manager records negotiated capabilities from a compatible answer',
   assert.equal(manager.negotiated.audio.channels, 1);
 });
 
+test('session manager creates a manual quality request for an active session', () => { const manager = createSessionManager({idFactory: () => 'ses-quality'}); const offer = manager.start({backend: {id: 'host'}}); assert.equal(manager.setQuality('high').profile, 'high'); assert.equal(manager.qualityRequest.profile, 'high'); assert.throws(() => manager.setQuality('unknown'), /unknown quality profile/); assert.equal(offer.payload.quality.profile, 'balanced'); });
+
 test('session manager refuses an incompatible answer before connecting', () => {
   const manager = createSessionManager({idFactory: () => 'ses-incompatible'});
   const offer = manager.start({backend: {id: 'host'}, capabilities: {transports: ['webrtc'], video: {codecs: ['av1']}, audio: {codecs: ['opus']}}});
