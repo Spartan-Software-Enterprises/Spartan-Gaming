@@ -31,6 +31,12 @@ platform bindings contribute only truthful, serializable readiness and input
 capabilities; missing packages leave those paths unconfigured. Raw native
 objects are retained for composition and are never returned by `/health`.
 
+Remote input remains disabled by default. A host operator may explicitly start
+the agent with `--enable-input` after installing and permissioning a ready
+platform input package; events then pass through the normalized, permissioned,
+rate-limited native input executor. The flag does not enable media capture or
+other host capabilities.
+
 Werift and browser-host answers report `hostCapabilities.media.audio` from the
 actual active audio path: it is true only when the host has an audio track or
 an explicitly enabled native audio publisher.

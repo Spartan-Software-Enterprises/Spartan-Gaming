@@ -6,7 +6,7 @@ import {validateTransportMessage} from '../src/frontend/transport/transport.mjs'
 import {createPairingAuthority, createPairingCode} from './pairing.mjs';
 import {normalizeHostCapabilities} from './capabilities.mjs';
 import {detectHostRuntime} from './environment.mjs';
-import {createInputInjectionPlan} from './input.mjs';
+import {createInputInjectionPlan, createNativeInputExecutor} from './input.mjs';
 import {createHostSignalingClient} from './signaling.mjs';
 import {negotiateHostOffer} from './session.mjs';
 
@@ -27,7 +27,9 @@ const hostRuntime = await detectHostRuntime({bindingOptions: {environment: proce
 const environment = hostRuntime.environment;
 const capabilities = {transports: ['websocket'], video: {codecs: ['h264', 'vp9'], maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false}, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: environment.inputAdapter.gamepad, keyboard: environment.inputAdapter.keyboard, pointer: environment.inputAdapter.pointer, rumble: environment.inputAdapter.rumble}};
 const hostCapabilities = normalizeHostCapabilities({media: {state: 'not-configured', capture: false, encode: false, audio: false, transports: ['webrtc']}, process: {mode: 'none'}, publisher: environment.publisher, audioPublisher: environment.audioPublisher, inputAdapter: environment.inputAdapter, webrtc: environment.webrtc, input: capabilities.input});
-const sessions = new Set(); let inputEvents = 0; let lastQuality = null; let lastInputPlan = null;
+const inputEnabled = args.get('enable-input') === true || args.get('enable-input') === 'true';
+const inputExecutor = inputEnabled && hostRuntime.bindings?.input && environment.readiness.osInput ? createNativeInputExecutor({platform: environment.platform, adapter: hostRuntime.bindings.input, permissions: {'remote-input': true, 'virtual-gamepad': true}}) : null;
+const sessions = new Set(); let inputEvents = 0; let lastQuality = null; let lastInputPlan = null; let lastInputExecution = {state: inputExecutor ? 'ready' : 'disabled', reason: inputEnabled && !inputExecutor ? 'native input adapter is unavailable or not ready' : null};
 
 function json(response, status, body) { response.writeHead(status, {'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store'}); response.end(JSON.stringify(body)); }
 function frame(text) { const body = Buffer.from(text); const size = body.length; if (size < 126) return Buffer.concat([Buffer.from([0x81, size]), body]); if (size < 65536) { const header = Buffer.alloc(4); header[0] = 0x81; header[1] = 126; header.writeUInt16BE(size, 2); return Buffer.concat([header, body]); } throw new Error('WebSocket message is too large'); }
@@ -65,13 +67,13 @@ function handleMessage(connection, text, session) {
   }
   if (message.sessionId !== session.sessionId) { connection.close(); return; }
   if (message.type === 'quality.request') { lastQuality = {profile: String(message.payload.profile || 'balanced'), maxWidth: Number(message.payload.maxWidth) || 0, maxHeight: Number(message.payload.maxHeight) || 0, maxFramerate: Number(message.payload.maxFramerate) || 0, bitrateKbps: Number(message.payload.bitrateKbps) || 0}; return; }
-  if (message.type === 'input.event') { inputEvents += 1; session.lastInputAt = message.sentAt; try { lastInputPlan = createInputInjectionPlan({platform: environment.platform, event: {type: 'input.event', ...message.payload}}); } catch (error) { lastInputPlan = {state: 'failed', reason: error.message}; } return; }
+  if (message.type === 'input.event') { inputEvents += 1; session.lastInputAt = message.sentAt; try { const event = {type: 'input.event', ...message.payload}; lastInputPlan = createInputInjectionPlan({platform: environment.platform, event, permissions: {'remote-input': Boolean(inputExecutor), 'virtual-gamepad': Boolean(inputExecutor)}}); if (!inputExecutor) { lastInputExecution = {state: 'disabled', reason: 'start the host with --enable-input after installing a ready native input adapter'}; return; } lastInputExecution = {state: 'dispatching', reason: null}; inputExecutor.dispatch(event).then(() => { lastInputExecution = {state: 'active', reason: null}; }).catch(error => { lastInputExecution = {state: 'failed', reason: error.message}; }); } catch (error) { lastInputPlan = {state: 'failed', reason: error.message}; lastInputExecution = {state: 'failed', reason: error.message}; } return; }
   if (message.type === 'session.reconnect') { const answer = createSessionEnvelope({sessionId: message.sessionId, type: 'session.answer', sequence: (message.sequence || 0) + 1, payload: {accepted: true, hostId, capabilities: session.negotiated || capabilities, hostCapabilities}}); connection.send(answer); return; }
   if (message.type === 'session.close') { sessions.delete(session); connection.close(); }
 }
 
 const server = createServer((request, response) => {
-  if (request.url === '/health') return json(response, 200, {service: 'spartan-host-reference', version: 1, hostId, hostName, pairingExpiresAt: pairing.expiresAt, pairingUsed: pairing.used, activeSessions: sessions.size, inputEvents, lastInputPlan, lastQuality, capabilities, hostCapabilities, environment});
+  if (request.url === '/health') return json(response, 200, {service: 'spartan-host-reference', version: 1, hostId, hostName, pairingExpiresAt: pairing.expiresAt, pairingUsed: pairing.used, activeSessions: sessions.size, inputEvents, lastInputPlan, lastInputExecution, lastQuality, capabilities, hostCapabilities, environment});
   json(response, 404, {error: 'not found'});
 });
 server.on('upgrade', (request, socket) => {
@@ -94,3 +96,4 @@ server.listen(port, bind, () => {
   signalingClient = createHostSignalingClient({endpoint: signalEndpoint, sessionId: signalSessionId, ticket: signalTicket, onMessage: message => handleMessage(signalingClient, JSON.stringify(message), signalSession), onError: error => console.error(`host signaling error: ${error.message}`), onClose: () => console.error('host signaling connection closed')});
   signalingClient.connect().catch(error => { console.error(`host signaling connection failed: ${error.message}`); process.exitCode = 1; });
 });
+server.on('close', () => inputExecutor?.close());

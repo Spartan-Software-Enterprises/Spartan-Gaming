@@ -228,3 +228,6 @@ input capabilities through `/health` and session negotiation, and keeps the
 raw binding object private to host composition. If the package is absent or
 does not report a capability, the host advertises that path as unconfigured;
 remote input is never enabled merely because the host has a desktop OS.
+For an operator-approved host session, `host/agent.mjs --enable-input` routes
+normalized input events through the same permission and rate-limit executor;
+the default agent mode remains observation-only.
