@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import path from 'node:path';
 import test from 'node:test';
 import {createChromiumBuildPlan, createChromiumDevelopmentBuildMatrix, parseBuildArguments} from './build.mjs';
 
@@ -23,4 +24,9 @@ test('Chromium build plans reject unsafe or unsupported targets', () => {
   assert.throws(() => createChromiumBuildPlan({platform: 'linux', source: '/external/chromium', out: process.cwd()}), /outside/);
 });
 
-test('Chromium development matrix covers each desktop artifact without sharing output directories', () => { const matrix = createChromiumDevelopmentBuildMatrix({source: '/external/chromium', outRoot: '/external/builds/spartan'}); assert.deepEqual(matrix.map(plan => plan.platform), ['linux', 'mac', 'windows']); assert.deepEqual(matrix.map(plan => plan.out), ['/external/builds/spartan/linux', '/external/builds/spartan/mac', '/external/builds/spartan/windows']); assert.deepEqual(matrix.map(plan => plan.binary), ['chrome', 'Chromium.app', 'chrome.exe']); });
+test('Chromium development matrix covers each desktop artifact without sharing output directories', () => {
+  const matrix = createChromiumDevelopmentBuildMatrix({source: '/external/chromium', outRoot: '/external/builds/spartan'});
+  assert.deepEqual(matrix.map(plan => plan.platform), ['linux', 'mac', 'windows']);
+  assert.deepEqual(matrix.map(plan => plan.out), ['linux', 'mac', 'windows'].map(platform => path.resolve('/external/builds/spartan', platform)));
+  assert.deepEqual(matrix.map(plan => plan.binary), ['chrome', 'Chromium.app', 'chrome.exe']);
+});
