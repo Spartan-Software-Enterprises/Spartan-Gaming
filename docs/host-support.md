@@ -316,6 +316,9 @@ and macOS uses AVFoundation/CoreAudio plans. Capture and microphone starts
 require explicit permission flags and never spawn until permission is granted.
 The Windows package exposes XInput rumble for controller indexes 0 through 3,
 and macOS uses GameController/CoreHaptics for attached supported controllers;
-both packages still expose no virtual gamepad injection. Both packages fail
+the Linux package composes its uinput virtual gamepad/force-feedback path with
+the reference keyboard and pointer path so installing the gamepad binding does
+not remove desktop input support. Windows and macOS still expose no virtual
+gamepad injection. All packages fail
 closed when the binary is missing or the OS permission is denied; their build
 and installed-package contracts run on the Windows and macOS CI runners.
