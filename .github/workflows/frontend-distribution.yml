@@ -23,7 +23,7 @@ jobs:
             platform: windows
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
       - name: Build portable frontend distribution
@@ -38,7 +38,7 @@ jobs:
           await readFile('out/spartan-frontend/emulators/catalog.json');
           console.log(`verified ${manifest.product} ${manifest.artifact} on ${process.platform}`);
       - name: Upload frontend artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: spartan-frontend-${{ matrix.platform }}
           path: out/spartan-frontend
