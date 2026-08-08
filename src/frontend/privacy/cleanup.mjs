@@ -2,6 +2,7 @@ export const TRANSIENT_SESSION_KEYS = Object.freeze([
   'spartan-gaming.pending-host-pair.v1',
   'spartan-gaming.pending-launch-handoff.v1',
   'spartan-gaming.launch-intent.v1',
+  'spartan-gaming.session-recovery.v1',
 ]);
 
 export function clearTransientSessionData(storage = globalThis.sessionStorage, keys = TRANSIENT_SESSION_KEYS) {

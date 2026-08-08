@@ -24,14 +24,17 @@ import {createMediaSessionController} from './media-session.mjs';
 import {clearTransientSessionData} from '../privacy/cleanup.mjs';
 import {describeNegotiationAdjustments, formatNegotiationAdjustments} from '../session/negotiation-notices.mjs';
 import {createSessionDiagnosticsBundle, createSessionTelemetryLog, serializeSessionDiagnostics} from '../session/telemetry-log.mjs';
+import {clearSessionRecoveryHandoff, readSessionRecoveryHandoff, saveSessionRecoveryHandoff} from '../session/recovery-handoff.mjs';
 
 const query = new URLSearchParams(location.search);
 const pendingHostPair = readPendingHostPair(sessionStorage); clearPendingHostPair(sessionStorage);
 const pendingLaunch = readPendingLaunchHandoff(sessionStorage);
-let connectionSessionId = query.get('session') || pendingHostPair?.sessionId || '';
+const storedRecovery = readSessionRecoveryHandoff(sessionStorage);
+let connectionSessionId = query.get('session') || pendingHostPair?.sessionId || storedRecovery?.sessionId || '';
 const manager = createSessionManager({idFactory: () => connectionSessionId || `ses-${crypto.randomUUID()}`});
 const transportPolicy = readTransportPolicy();
 let sessionPreferences = readSessionPreferences();
+const recoveryHandoff = sessionPreferences.preferences.restoreSession && !pendingHostPair ? storedRecovery : null;
 let inputPolicy = createInputPermissionPolicy(sessionPreferences.capabilities);
 let haptics = createHapticsController({enabled: inputPolicy.allows('rumble')});
 let mapper = createInputMapper();
@@ -55,9 +58,9 @@ let negotiationAdjustments = [];
 const telemetryLog = createSessionTelemetryLog({enabled: false});
 const previousGamepad = new Map();
 
-elements.connectionEndpoint.value = query.get('signal') || pendingHostPair?.endpoint || '';
-elements.connectionSession.value = query.get('session') || pendingHostPair?.sessionId || 'ses-browser-host';
-elements.connectionTicket.value = query.get('ticket') || pendingHostPair?.ticket || '';
+elements.connectionEndpoint.value = query.get('signal') || pendingHostPair?.endpoint || recoveryHandoff?.endpoint || '';
+elements.connectionSession.value = query.get('session') || pendingHostPair?.sessionId || recoveryHandoff?.sessionId || 'ses-browser-host';
+elements.connectionTicket.value = query.get('ticket') || pendingHostPair?.ticket || recoveryHandoff?.ticket || '';
 installLanHandoffListener({handoffId: query.get('handoff'), target: 'client', onHandoff: handoff => { elements.connectionEndpoint.value = handoff.endpoint; elements.connectionSession.value = handoff.sessionId; elements.connectionTicket.value = handoff.ticket; elements.message.textContent = 'LAN session details received. Press Connect securely to join.'; }});
 if (!inputPolicy.allows('gamepad')) elements.gamepad.textContent = 'Disabled by settings';
 elements.stage.style.touchAction = 'none';
@@ -103,12 +106,13 @@ async function prepareSession() {
 }
 
 async function connect(connectionValues = {}) {
-  const backendId = query.get('backend') || 'spartan-host'; const backendName = query.get('name') || pendingHostPair?.name || 'Spartan Host'; elements.sessionName.textContent = backendName; mediaSession.update({title: backendName, artist: 'Spartan Gaming', album: 'Cloud gaming session'});
+  const backendId = query.get('backend') || pendingHostPair?.backendId || recoveryHandoff?.backendId || 'spartan-host'; const backendName = query.get('name') || pendingHostPair?.name || recoveryHandoff?.backendName || 'Spartan Host'; elements.sessionName.textContent = backendName; mediaSession.update({title: backendName, artist: 'Spartan Gaming', album: 'Cloud gaming session'});
   const connection = normalizePlayerConnection(connectionValues);
   const authenticated = hasAuthenticatedPlayerConnection(connection);
   if (!connection.endpoint) throw new Error('Signaling endpoint is required');
   if (!authenticated && !connectionValues.allowUnauthenticated) throw new Error('A short-lived client ticket is required for signaling');
   if (authenticated) connectionSessionId = connection.sessionId;
+  if (authenticated && sessionPreferences.preferences.restoreSession) saveSessionRecoveryHandoff(sessionStorage, {endpoint: connection.endpoint, sessionId: connection.sessionId, ticket: connection.ticket, backendId, backendType: 'remote-play', backendName, hostId: pendingHostPair?.hostId || recoveryHandoff?.hostId});
   const selectedSignaling = resolveSignalingTransport({endpoint: connection.endpoint, policy: transportPolicy});
   const join = authenticated ? {sessionId: connection.sessionId, role: 'client', ticket: connection.ticket} : undefined;
   const signaling = selectedSignaling === 'webtransport' ? createWebTransportSignalTransport({endpoint: connection.endpoint, join}) : createWebSocketSignalTransport({endpoint: connection.endpoint, join});
@@ -136,14 +140,14 @@ async function connect(connectionValues = {}) {
     if (reconnect.state === 'succeeded') elements.message.textContent = 'Session reconnected.';
   });
   runtime.on('input.event', message => { const event = message.payload || {}; if (event.source === 'host' && event.kind === 'rumble' && inputPolicy.allows('rumble')) haptics.play({gamepadIndex: event.gamepadIndex, durationMs: event.durationMs, strongMagnitude: event.strongMagnitude ?? event.value, weakMagnitude: event.weakMagnitude ?? event.value}); });
-  const offer = await runtime.start({backend: {id: backendId, backendType: 'remote-play', hostId: pendingHostPair?.hostId, pairingCode: pendingHostPair?.pairingCode}, capabilities: sessionPreferences.capabilities, preferences: sessionPreferences.preferences, ...(pendingLaunch ? {launch: pendingLaunch.request} : {})});
+  const offer = await runtime.start({backend: {id: backendId, backendType: 'remote-play', hostId: pendingHostPair?.hostId || recoveryHandoff?.hostId, pairingCode: pendingHostPair?.pairingCode}, capabilities: sessionPreferences.capabilities, preferences: sessionPreferences.preferences, ...(pendingLaunch ? {launch: pendingLaunch.request} : {})});
   if (pendingLaunch) clearPendingLaunchHandoff(sessionStorage);
   elements.transport.textContent = `${selectedSignaling === 'webtransport' ? 'WebTransport' : 'WebSocket'} signaling${media ? ' · WebRTC media' : ''}`;
   elements.connectionForm.hidden = true; window.dispatchEvent(new CustomEvent('spartan:session-offer', {detail: offer}));
 }
 
 async function start() {
-  const endpoint = query.get('signal') || pendingHostPair?.endpoint; const ticket = query.get('ticket') || pendingHostPair?.ticket; const sessionId = query.get('session') || pendingHostPair?.sessionId;
+  const endpoint = query.get('signal') || pendingHostPair?.endpoint || recoveryHandoff?.endpoint; const ticket = query.get('ticket') || pendingHostPair?.ticket || recoveryHandoff?.ticket; const sessionId = query.get('session') || pendingHostPair?.sessionId || recoveryHandoff?.sessionId;
   try {
     await prepareSession();
     installTouchControls();
@@ -193,11 +197,11 @@ elements.screenshot = document.querySelector('[data-action="screenshot"]'); elem
 document.querySelector('[data-action="export-session"]')?.addEventListener('click', exportSessionDiagnostics);
 document.querySelector('[data-action="overlay"]').addEventListener('click', () => apply({type: 'toggle.overlay'}));
 document.querySelector('[data-action="diagnostics"]').addEventListener('click', () => apply({type: 'toggle.diagnostics'}));
-document.querySelector('[data-action="end"]').addEventListener('click', () => { instantReplay?.stop?.(); instantReplay = null; if (runtime) runtime.close(); else if (manager.state === 'connected' || manager.state === 'reconnecting') manager.close(); if (sessionPreferences.preferences.clearOnExit) clearTransientSessionData(sessionStorage); mediaSession.dispose(); apply({type: 'session.state', status: 'ended'}); });
+document.querySelector('[data-action="end"]').addEventListener('click', () => { instantReplay?.stop?.(); instantReplay = null; if (runtime) runtime.close(); else if (manager.state === 'connected' || manager.state === 'reconnecting') manager.close(); clearSessionRecoveryHandoff(sessionStorage); if (sessionPreferences.preferences.clearOnExit) clearTransientSessionData(sessionStorage); mediaSession.dispose(); apply({type: 'session.state', status: 'ended'}); });
 elements.demo.addEventListener('click', acceptHostAnswer);
 window.addEventListener('spartan:telemetry', event => { const sample = event.detail || {}; try { const telemetry = createSessionEnvelope({sessionId: manager.session.id, type: 'telemetry.health', payload: sample}); if (runtime) runtime.receive(telemetry); else manager.receive(telemetry); apply({type: 'telemetry.health', rttMs: sample.rttMs, packetLossPct: sample.packetLossPct, decodeFps: sample.decodeFps, framesDropped: sample.framesDropped, jitterMs: sample.jitterMs, bitrateKbps: sample.bitrateKbps}); apply({type: 'quality.changed', profile: manager.quality.id}); } catch { apply({type: 'error', message: 'Invalid session telemetry received'}); } });
 window.addEventListener('keydown', event => keyboardInput(event, true)); window.addEventListener('keyup', event => keyboardInput(event, false));
-window.addEventListener('blur', () => applyFocusPolicy(true)); window.addEventListener('focus', () => applyFocusPolicy(false)); window.addEventListener('pagehide', () => { if (sessionPreferences.preferences.clearOnExit) { runtime?.close?.(); clearTransientSessionData(sessionStorage); } }); document.addEventListener('visibilitychange', () => applyFocusPolicy(document.visibilityState !== 'visible'));
+window.addEventListener('blur', () => applyFocusPolicy(true)); window.addEventListener('focus', () => applyFocusPolicy(false)); window.addEventListener('pagehide', () => { if (sessionPreferences.preferences.clearOnExit) { runtime?.close?.(); clearSessionRecoveryHandoff(sessionStorage); clearTransientSessionData(sessionStorage); } }); document.addEventListener('visibilitychange', () => applyFocusPolicy(document.visibilityState !== 'visible'));
 ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(type => elements.stage.addEventListener(type, pointerInput, {passive: false}));
 window.addEventListener('gamepadconnected', () => apply({type: 'gamepad.connection', connected: true})); window.addEventListener('gamepaddisconnected', () => apply({type: 'gamepad.connection', connected: false}));
 setInterval(() => { const gamepads = navigator.getGamepads?.() || []; const connected = inputPolicy.allows('gamepad') && [...gamepads].some(Boolean); if (connected !== state.gamepadConnected) apply({type: 'gamepad.connection', connected}); if (!inputPolicy.allows('gamepad')) return; const pad = [...gamepads].find(Boolean); if (!pad) return; const normalized = mapper.normalize(pad); const previous = previousGamepad.get(normalized.index); normalized.buttons.forEach((button, index) => { if (!previous || button.pressed !== previous.buttons[index]?.pressed || button.value !== previous.buttons[index]?.value) { const event = mapper.mapButton(index, button.pressed, button.value); if (event) emitInput({...event, source: 'gamepad', control: `button-${index}`}); } }); normalized.axes.forEach((value, index) => { if (!previous || Math.abs(value - (previous.axes[index] || 0)) > 0.08) { const event = mapper.mapAxis(index, value); if (event) emitInput({...event, source: 'gamepad', control: `axis-${index}`}); } }); previousGamepad.set(normalized.index, normalized); }, 100);

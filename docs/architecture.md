@@ -154,6 +154,14 @@ transient session handoffs on explicit session end and `pagehide`. This does
 not clear persistent profiles/settings, browser-wide cookies/cache, or
 cross-origin provider state; those remain under browser and provider controls.
 
+With `general.restoreSession` enabled, authenticated Spartan-managed player
+connections can survive a page refresh through a ten-minute, session-storage-
+only recovery handoff. It contains the short-lived signaling ticket and
+connection metadata, never appears in URLs or persistent settings, is removed
+on explicit end, and is rejected when expired or malformed. Provider account
+credentials and unauthenticated pairing codes are never captured by this
+handoff.
+
 Browser signaling and media transport primitives live in `src/frontend/transport/transport.mjs`; see [transport](transport.md) for the WebSocket and WebRTC boundary.
 
 ## Cross-platform strategy

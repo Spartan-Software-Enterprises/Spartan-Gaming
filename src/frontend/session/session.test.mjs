@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createAdapterRegistry, createSessionEnvelope, createSessionManager, negotiateCapabilities, normalizeCapabilities} from './session.mjs';
+import './recovery-handoff.test.mjs';
 
 test('capability negotiation selects compatible transport and codecs', () => {
   const result = negotiateCapabilities({transports: ['websocket', 'webrtc'], video: {codecs: ['h264'], maxWidth: 1920, maxHeight: 1080, maxFramerate: 60}, audio: {codecs: ['opus'], channels: 2}}, {transports: ['webrtc'], video: {codecs: ['av1', 'h264'], maxWidth: 1280, maxHeight: 720, maxFramerate: 30}, audio: {codecs: ['opus'], channels: 1}});
