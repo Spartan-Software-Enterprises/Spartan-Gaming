@@ -142,6 +142,13 @@ identifier.
 
 User-owned host connections use the secure boundary in `src/frontend/host/host.mjs`; see [host support](host-support.md) for endpoint, pairing, and transport rules.
 
+Controller preferences are carried as explicit session capabilities: HID,
+adaptive triggers, and motion controls remain disabled unless the user opts in.
+The controller inspector applies the same HID gate before enumerating approved
+devices. Input polling is a bounded preference delivered to trusted adapters;
+the browser frontend does not claim to change hardware polling rates it cannot
+control.
+
 Browser signaling and media transport primitives live in `src/frontend/transport/transport.mjs`; see [transport](transport.md) for the WebSocket and WebRTC boundary.
 
 ## Cross-platform strategy

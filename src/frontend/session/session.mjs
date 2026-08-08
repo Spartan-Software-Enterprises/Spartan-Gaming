@@ -6,7 +6,7 @@ const DEFAULT_CAPABILITIES = Object.freeze({
   transports: ['webrtc', 'websocket'],
   video: {codecs: ['av1', 'vp9', 'h264'], maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false},
   audio: {codecs: ['opus', 'aac'], channels: 2},
-  input: {gamepad: true, keyboard: true, pointer: true, rumble: true},
+  input: {gamepad: true, keyboard: true, pointer: true, rumble: true, hid: false, adaptiveTriggers: false, gyro: false},
 });
 
 const transitions = Object.freeze({

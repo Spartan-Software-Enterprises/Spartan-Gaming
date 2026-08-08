@@ -16,3 +16,5 @@ test('input policy defaults to browser-safe local controls', () => {
   assert.equal(policy.allows('keyboard'), true);
   assert.equal(policy.allows('host'), false);
 });
+
+test('input policy keeps HID disabled until explicitly negotiated', () => { assert.equal(createInputPermissionPolicy().allows('hid'), false); assert.equal(createInputPermissionPolicy({input: {hid: true}}).allows('hid'), true); });

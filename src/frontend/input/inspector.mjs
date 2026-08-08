@@ -7,4 +7,6 @@ export function inspectGamepad(gamepad, {deadzone = 0.12} = {}) {
 
 export function detectInputCapabilities({navigatorRef = globalThis.navigator} = {}) { return Object.freeze({gamepad: typeof navigatorRef?.getGamepads === 'function', hid: Boolean(navigatorRef?.hid?.getDevices), vibration: typeof navigatorRef?.vibrate === 'function'}); }
 
+export function resolveControllerPreferences(settings = {}) { return Object.freeze({allowHid: settings['controllers.allowHid'] === true, adaptiveTriggers: settings['controllers.adaptiveTriggers'] === true, gyro: settings['controllers.gyro'] === true, inputPolling: ['Automatic', 'Standard', 'High frequency'].includes(settings['controllers.inputLatency']) ? settings['controllers.inputLatency'] : 'Automatic'}); }
+
 export async function listApprovedHidDevices({navigatorRef = globalThis.navigator} = {}) { if (typeof navigatorRef?.hid?.getDevices !== 'function') return []; const devices = await navigatorRef.hid.getDevices(); return devices.map(device => Object.freeze({productName: String(device.productName || 'HID device'), vendorId: Number(device.vendorId) || 0, productId: Number(device.productId) || 0, opened: Boolean(device.opened)})); }
