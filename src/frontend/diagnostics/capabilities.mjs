@@ -14,7 +14,7 @@ async function probeDisplays(navigatorValue, screenLike, matchMediaLike) {
   if (!screens.length && screenLike) screens = [screenLike];
   const displays = screens.map((screen, index) => displayRecord(screen, index)); const refreshRates = displays.map(display => display.refreshRate).filter(value => value !== null);
   const hdr = typeof matchMediaLike === 'function' ? Boolean(matchMediaLike('(dynamic-range: high)')?.matches) : false;
-  return Object.freeze({count: displays.length, extended: screens.length > 1 || screenLike?.isExtended === true, hdr, maxRefreshRate: refreshRates.length ? Math.max(...refreshRates) : null, displays: Object.freeze(displays)});
+  return Object.freeze({count: displays.length, extended: screens.length > 1 || screenLike?.isExtended === true, screenDetails: typeof navigatorValue?.getScreenDetails === 'function', hdr, maxRefreshRate: refreshRates.length ? Math.max(...refreshRates) : null, displays: Object.freeze(displays)});
 }
 
 async function probeHardwareDecode(mediaCapabilities, codecs) {

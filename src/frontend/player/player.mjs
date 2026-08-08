@@ -76,6 +76,7 @@ async function prepareSession() {
   if (sessionPreflightReady) return;
   const preflight = await preparePlayerSession();
   sessionPreferences = preflight.preferences;
+  immersive.setDisplayPreference(sessionPreferences.preferences.display);
   inputPolicy = preflight.inputPolicy;
   haptics = createHapticsController({enabled: inputPolicy.allows('rumble')});
   sessionPreflightReady = true;

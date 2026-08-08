@@ -101,7 +101,7 @@
 - [x] ChromeOS and television presentation modes across shared frontend surfaces (native packaging and certification remain platform work).
 - [x] iOS/iPadOS compatibility strategy (Web/PWA-first profile with an explicitly entitled alternative-engine path kept separate from default support).
 - [x] WebTransport experimental datagram transport contract (server deployment and production fallback policy pending).
-- [ ] HDR, AV1, high-refresh, and multi-monitor support.
+- [ ] HDR, AV1, high-refresh, and multi-monitor support (multi-display fullscreen targeting is implemented; end-to-end provider and native output validation remains pending).
 - [x] Community provider compatibility catalog foundation (Provider SDK and hosted database remain pending).
 - [x] Signed adapter and core manifest registry contract with WebCrypto verification (release service and packaged adapters pending).
 - [x] Release-safe adapter update planning with strict version/platform/trust filtering (installer and release service pending).
