@@ -16,7 +16,16 @@ The browser is responsible for user consent, endpoint validation, capability neg
 
 The host manager at `src/frontend/host/index.html` stores only non-secret host profiles in local browser storage. It can generate a `host.pair` request for a one-time code supplied by a running host agent, show the selected transport, and export/import endpoint preferences. It does not complete pairing by itself: the future host agent and signaling service must validate the request, exchange session-scoped credentials, and enforce expiry and replay protection.
 
-The repository includes `host/agent.mjs` as a dependency-free Node.js reference control plane. Run `npm run host -- --pairing-code ABCD23` to expose a local `ws://127.0.0.1:8787/session` endpoint and `/health`. It validates the pairing code once, answers protocol-v1 offers, records quality requests and input-event counts, and handles reconnect messages. It intentionally reports `media.state: not-configured`: capture, encode, game launch, OS input injection, TLS deployment, and TURN are production work still required for a usable remote stream.
+The repository includes `host/agent.mjs` as a dependency-free Node.js reference control plane. Run `npm run host -- --pairing-code ABCD23` to expose a local `ws://127.0.0.1:8787/session` endpoint and `/health`. It validates the pairing code once, answers protocol-v1 offers, records quality requests and input-event counts, and handles reconnect messages. It intentionally reports `media.state: not-configured`: capture, encode, OS input injection, TLS deployment, and TURN are production work still required for a usable remote stream.
+
+For a controlled local emulator launch, the reference agent can also own one
+host-local process lifecycle. Start it with `--enable-game-launch`,
+`--runtime-id`, `--runtime-kind`, `--runtime-version`, `--runtime-path`,
+`--game-path`, and `--host-content-id`. The agent accepts a browser launch
+descriptor only when its runtime identity, opaque content ID, and game filename
+match those flags; it starts the shell-free process after pairing and stops it
+when the session closes. These flags are intentionally opt-in, and the health
+endpoint exposes readiness and process state without returning local paths.
 
 For a deployed signaling service, the same agent can join as a host participant with `--signal-endpoint`, `--signal-session`, and `--signal-ticket`. The ticket is role-scoped, supplied out of band, held in memory, and never written to the health response. The direct endpoint and outbound signaling mode share the same session answer and input/quality handling path.
 
