@@ -8,7 +8,8 @@ export function normalizeProviderProfile(profile) { required(profile?.providerId
 export function applyGlobalProviderPreferences(profile = {}, settings = {}) {
   const explicitRegion = ['automatic', 'north-america', 'europe', 'asia-pacific', 'latin-america'].includes(profile.region) && profile.region !== 'automatic';
   const globalRegion = GLOBAL_REGION_VALUES[settings['providers.region']] || 'automatic';
-  return Object.freeze({...profile, region: explicitRegion ? profile.region : globalRegion});
+  const launchMode = settings['providers.preferOfficialApps'] === true && (!profile.launchMode || profile.launchMode === 'browser') ? 'official' : (profile.launchMode || 'browser');
+  return Object.freeze({...profile, region: explicitRegion ? profile.region : globalRegion, launchMode});
 }
 
 export function createProviderProfileStore({storage = globalThis.localStorage, key = PROVIDER_PROFILES_KEY} = {}) {

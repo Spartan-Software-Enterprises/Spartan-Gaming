@@ -38,7 +38,7 @@ let toastTimer;
 document.querySelector('.topbar')?.insertAdjacentHTML('beforeend', '<label class="workspace-picker" style="display:flex;align-items:center;gap:7px;color:#8d9aa7;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase"><span>Workspace</span><select data-workspace-select aria-label="Active workspace" style="min-width:118px;padding:8px 9px;border:1px solid #2a3540;border-radius:7px;background:#171e26;color:#e7edf3;font-size:11px;letter-spacing:0;text-transform:none"></select></label>');
 
 function renderWorkspaceControl() { const control = document.querySelector('[data-workspace-select]'); if (!control) return; control.innerHTML = workspaceStore.list().map(workspace => `<option value="${escapeHtml(workspace.id)}" ${workspace.id === activeWorkspace.id ? 'selected' : ''}>${escapeHtml(workspace.name)}</option>`).join(''); control.title = `${activeWorkspace.name} workspace`; }
-function workspaceProviderProfiles() { return Object.fromEntries(state.catalog.filter(entry => entry.backendType === 'provider').map(entry => [entry.id, applyWorkspaceProviderDefaults(activeWorkspace, state.providerProfiles[entry.id] || {})])); }
+function workspaceProviderProfiles() { return Object.fromEntries(state.catalog.filter(entry => entry.backendType === 'provider').map(entry => [entry.id, applyWorkspaceProviderDefaults(activeWorkspace, applyGlobalProviderPreferences(state.providerProfiles[entry.id] || {}, settings))])); }
 function rebuildAdapters() { if (!state.catalog.length) return; state.adapters = createCatalogAdapterRegistry(state.catalog, {providerProfiles: workspaceProviderProfiles(), report: () => state.report || {}}); }
 function saveFavorites() { favoritesStore.set([...state.favorites]); }
 function showToast(message) { toast.textContent = message; toast.classList.add('is-visible'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 2600); }
@@ -103,7 +103,8 @@ async function loadCatalog() {
     const [providers, emulators] = await Promise.all([fetch('../../../providers/catalog.json').then(response => response.json()), fetch('../../../emulators/catalog.json').then(response => response.json())]);
     validateCatalogManifest(providers, 'provider');
     validateCatalogManifest(emulators, 'emulator');
-    state.catalog = createFrontendCatalog({ providers: mergeCommunityProviders({providers: providers.providers, community: communityCatalogStore.list()}), emulators: emulators.projects }).entries;
+    const catalog = createFrontendCatalog({ providers: mergeCommunityProviders({providers: providers.providers, community: communityCatalogStore.list()}), emulators: emulators.projects });
+    state.catalog = settings['providers.showCatalog'] === false ? catalog.entries.filter(entry => entry.backendType !== 'provider') : catalog.entries;
     rebuildAdapters();
     updateReadinessStatus();
     render();
