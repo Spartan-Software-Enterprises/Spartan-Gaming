@@ -14,6 +14,7 @@
     "chromium:environment": "node scripts/chromium/check-environment.mjs",
     "chromium:bootstrap": "node scripts/chromium/bootstrap.mjs",
     "chromium:build": "node scripts/chromium/build.mjs",
+    "chromium:matrix": "node scripts/chromium/build.mjs --matrix",
     "chromium:validate": "node scripts/chromium/check-environment.mjs",
     "frontend:serve": "node scripts/frontend/serve.mjs",
     "frontend:build": "node scripts/frontend/build.mjs",

@@ -60,6 +60,17 @@ run it from the Visual Studio developer shell. On macOS, choose
 artifact. Universal packaging is a release-pipeline concern and must produce
 separately validated binaries.
 
+To inspect the complete desktop development matrix without compiling anything:
+
+```bash
+npm run chromium:matrix -- --source "$SPARTAN_CHROMIUM_SRC" --json
+```
+
+The matrix emits isolated Linux, macOS, and Windows output directories plus
+artifact and binary metadata. Add `--execute` only when running on a prepared
+external checkout; this repository never receives Chromium source or generated
+build output.
+
 Initial integration gates are browser shell branding, dashboard navigation,
 controller permissions, fullscreen/Pointer Lock/Keyboard Lock, hardware
 decode reporting, and the diagnostics overlay. The frontend can be developed

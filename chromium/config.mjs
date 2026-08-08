@@ -49,6 +49,10 @@ export function validateChromiumManifest(manifest) {
   }
   const ids = new Set(manifest.targets.map((target) => target.id));
   for (const id of ['linux', 'mac', 'windows']) if (!ids.has(id)) throw new Error(`missing target: ${id}`);
+  for (const target of manifest.targets) {
+    if (typeof target.artifact !== 'string' || !target.artifact.trim()) throw new Error(`target ${target.id} is missing artifact metadata`);
+    if (typeof target.binary !== 'string' || !target.binary.trim()) throw new Error(`target ${target.id} is missing binary metadata`);
+  }
   return true;
 }
 

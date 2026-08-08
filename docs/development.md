@@ -37,6 +37,10 @@ The upstream workflow is `fetch chromium`, `gclient sync`, followed by the
 repository's plan-first `npm run chromium:build -- --platform <target>`
 bootstrap. Add `--execute` only on a configured external checkout; the script
 then runs `gn gen` and `autoninja -C ... chrome` with fixed argument arrays.
+Use `npm run chromium:matrix -- --source <external-src> --json` to inspect the
+Linux, macOS, and Windows development-build plans and their artifact metadata;
+the matrix describes external outputs and does not produce binaries in this
+repository.
 Platform-specific prerequisites and signing steps remain owned by Chromium's
 current build documentation and must be rechecked when the branch is selected.
 
