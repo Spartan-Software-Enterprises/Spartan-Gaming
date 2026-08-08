@@ -59,6 +59,8 @@ required_files=(
   host/native-session.test.mjs
   host/platform-runtime.mjs
   host/platform-runtime.test.mjs
+  host/native-adapter-kit.mjs
+  host/native-adapter-kit.test.mjs
   host/executable-platform-host.mjs
   host/executable-platform-host.test.mjs
   host/adapter-runtime.mjs
@@ -315,6 +317,7 @@ node --check host/archive-readers.mjs
 node --check host/package-signing.mjs
 node --check host/native-session.mjs
 node --check host/platform-runtime.mjs
+node --check host/native-adapter-kit.mjs
 node --check host/executable-platform-host.mjs
 node --check host/adapter-runtime.mjs
 node --check release/package-signing-service.mjs

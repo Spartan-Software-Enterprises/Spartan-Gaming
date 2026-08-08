@@ -94,6 +94,14 @@ injected signature verification before loading a factory module. The factory
 must return a platform-matched executable adapter; an unverified or malformed
 package never reaches module loading.
 
+`host/native-adapter-kit.mjs` defines the package-facing native contract for
+the three desktop platforms. Windows packages advertise Graphics Capture,
+WASAPI, and SendInput bindings; macOS packages advertise ScreenCaptureKit,
+CoreAudio, and CGEvent/HID bindings; Linux packages advertise PipeWire/portal,
+PipeWire/PulseAudio, and uinput bindings. The kit delegates only declared
+operations (`start`/`stop` for capture and audio, `execute` for input) and
+fails closed when a package does not provide its required native methods.
+
 Its `createBoundary()` method additionally requires a `ready` registry
 descriptor and returns a guarded platform boundary. The
 `createExecutablePlatformHostFromInstalledAdapter()` factory uses that method

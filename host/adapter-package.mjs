@@ -7,6 +7,7 @@ import {createArchiveReader} from './archive-readers.mjs';
 const PLATFORMS = new Set(['win32', 'darwin', 'linux', 'universal']);
 const FORMATS = new Set(['zip', 'tar', 'tar.zst', 'directory']);
 const TYPES = new Set(['file', 'directory']);
+const KINDS = new Set(['capture', 'audio', 'input']);
 const MAX_FILES = 100_000;
 const MAX_TOTAL_BYTES = 5_000_000_000;
 
@@ -21,7 +22,8 @@ function safePath(value, name) {
 function safeDestination(destination) { const root = resolve(required(destination, 'destination')); if (root === sep) throw new TypeError('destination cannot be the filesystem root'); return root; }
 
 export function normalizeAdapterPackageManifest(record) {
-  const id = required(record?.id, 'package.id'); const version = required(record?.version, 'package.version'); const platform = required(record?.platform || 'universal', 'package.platform'); const format = required(record?.format, 'package.format');
+  const id = required(record?.id, 'package.id'); const version = required(record?.version, 'package.version'); const kind = required(record?.kind || 'input', 'package.kind'); const platform = required(record?.platform || 'universal', 'package.platform'); const format = required(record?.format, 'package.format');
+  if (!KINDS.has(kind)) throw new TypeError(`unsupported package kind: ${kind}`);
   if (!PLATFORMS.has(platform)) throw new TypeError(`unsupported package platform: ${platform}`);
   if (!FORMATS.has(format)) throw new TypeError(`unsupported package format: ${format}`);
   const signature = record.signature;
@@ -38,7 +40,7 @@ export function normalizeAdapterPackageManifest(record) {
   });
   const entrypoint = record.entrypoint === undefined || record.entrypoint === null ? null : safePath(record.entrypoint, 'package.entrypoint');
   if (entrypoint && (!seen.has(entrypoint) || files.find(entry => entry.path === entrypoint)?.type !== 'file')) throw new TypeError('package.entrypoint must reference a declared file');
-  return Object.freeze({id, version, platform, format, signature: Object.freeze({algorithm: String(signature.algorithm), signer: String(signature.signer), value: String(signature.value)}), files: Object.freeze(files), entrypoint, totalBytes});
+  return Object.freeze({id, version, kind, platform, format, signature: Object.freeze({algorithm: String(signature.algorithm), signer: String(signature.signer), value: String(signature.value)}), files: Object.freeze(files), entrypoint, totalBytes});
 }
 
 export function createPackageExtractionPlan({manifest, destination} = {}) {
