@@ -18,11 +18,15 @@ function freezeFileRecord(metadata, source) {
 function normalizeDigest(value) { if (value === undefined || value === null || value === '') return undefined; if (typeof value !== 'string' || !SHA256.test(value)) throw new TypeError('sha256 must be a 64-character hexadecimal digest'); return value.toLowerCase(); }
 
 const FRONTEND_PREFERENCES = Object.freeze({'Automatic': 'automatic', 'Spartan runtime': 'spartan-runtime', 'Libretro host': 'libretro-host', 'Native adapter': 'native-adapter'});
+const SHADER_PRESETS = new Set(['Off', 'Sharp bilinear', 'CRT subtle', 'CRT scanlines', 'LCD']);
+const SAVE_LOCATIONS = new Set(['Profile storage', 'Game folder', 'Custom folder']);
 
 export function resolveEmulationPreferences(settings = {}) {
   const frontend = FRONTEND_PREFERENCES[settings['emulation.frontend']] || 'automatic';
   const renderer = typeof settings['emulation.renderer'] === 'string' && settings['emulation.renderer'].trim() ? settings['emulation.renderer'] : 'Automatic';
-  return Object.freeze({preference: frontend, renderer});
+  const shaderPreset = SHADER_PRESETS.has(settings['emulation.shaderPreset']) ? settings['emulation.shaderPreset'] : 'Sharp bilinear';
+  const saveLocation = SAVE_LOCATIONS.has(settings['emulation.saveLocation']) ? settings['emulation.saveLocation'] : 'Profile storage';
+  return Object.freeze({preference: frontend, renderer, autoSaveStates: settings['emulation.autoSaveStates'] !== false, cloudSaves: settings['emulation.cloudSaves'] === true, saveLocation, integerScaling: settings['emulation.integerScaling'] !== false, vsync: settings['emulation.vsync'] !== false, shaderPreset, rewind: settings['emulation.rewind'] === true, netplay: settings['emulation.netplay'] === true});
 }
 
 export function createUserFileRecord(file, {kind = 'game', userSelected = true, sha256: suppliedDigest} = {}) {

@@ -128,6 +128,12 @@ downloaded as user files; imports require a fresh explicit file selection and
 are passed to the adapter only for the active runtime. No save-state bytes are
 written to browser storage by the frontend.
 
+The Emulation Center passes the bounded Emulation settings into the adapter's
+`load` call: renderer, shader preset, integer scaling, VSync, rewind, netplay,
+save location, and cloud-save intent. When **Auto-save on exit** is enabled and
+the adapter exposes `saveState`, stopping a browser runtime exports a local
+state file before teardown; unsupported adapters stop safely with a notice.
+
 `src/frontend/emulation/browser-adapter-loader.mjs` provides the
 manifest-driven handoff for separately distributed browser adapters. A caller
 must provide explicit consent and a trusted signer key; the loader then fetches
