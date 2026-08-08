@@ -12,6 +12,7 @@ let hosts = store.list();
 let selectedId = hosts[0]?.hostId || null;
 let timer;
 let browserPublisher = null;
+document.querySelector('.host-shell .notice')?.insertAdjacentHTML('beforeend', '<p><a class="secondary" href="./lan-demo.html">Open guided LAN session setup</a></p>');
 const escapeHtml = value => String(value).replace(/[&<>\'\"]/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character]));
 function showNotice(message) { notice.textContent = message; notice.classList.add('visible'); clearTimeout(timer); timer = setTimeout(() => notice.classList.remove('visible'), 2600); }
 function renderHosts() { document.querySelector('[data-count]').textContent = `${hosts.length} saved`; hostContainer.innerHTML = hosts.length ? hosts.map(host => `<button class="host-item ${host.hostId === selectedId ? 'active' : ''}" data-host="${escapeHtml(host.hostId)}"><strong>${escapeHtml(host.name)}</strong><small>${escapeHtml(host.endpoint)}</small></button>`).join('') : '<p class="loading">No hosts configured yet.</p>'; }

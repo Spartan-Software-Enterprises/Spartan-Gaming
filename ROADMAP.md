@@ -45,6 +45,7 @@
 - [x] HDR, multi-display, and refresh-rate capability/policy contracts (native output routing and end-to-end HDR validation pending).
 - [x] Screenshots and local recording.
 - [ ] LAN self-hosted reference stream.
+- [x] Guided same-origin LAN host/player handoff UX.
 - [x] Provider and emulator capability detection harness.
 - [x] Unified session lifecycle and error model.
 

@@ -14,6 +14,7 @@ import {createImmersiveController} from './immersive.mjs';
 import {attachMediaStreamTarget, describeMediaStream, observeMediaStream, setMediaAudioEnabled} from './media.mjs';
 import {hasAuthenticatedPlayerConnection, normalizePlayerConnection} from './connection.mjs';
 import {clearPendingHostPair, readPendingHostPair} from '../host/host.mjs';
+import {installLanHandoffListener} from '../host/lan-handoff.mjs';
 
 const query = new URLSearchParams(location.search);
 const pendingHostPair = readPendingHostPair(sessionStorage); clearPendingHostPair(sessionStorage);
@@ -41,6 +42,7 @@ const previousGamepad = new Map();
 elements.connectionEndpoint.value = query.get('signal') || pendingHostPair?.endpoint || '';
 elements.connectionSession.value = query.get('session') || pendingHostPair?.sessionId || 'ses-browser-host';
 elements.connectionTicket.value = query.get('ticket') || pendingHostPair?.ticket || '';
+installLanHandoffListener({handoffId: query.get('handoff'), target: 'client', onHandoff: handoff => { elements.connectionEndpoint.value = handoff.endpoint; elements.connectionSession.value = handoff.sessionId; elements.connectionTicket.value = handoff.ticket; elements.message.textContent = 'LAN session details received. Press Connect securely to join.'; }});
 if (!inputPolicy.allows('gamepad')) elements.gamepad.textContent = 'Disabled by settings';
 elements.stage.style.touchAction = 'none';
 

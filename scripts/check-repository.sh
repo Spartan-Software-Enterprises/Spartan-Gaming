@@ -176,6 +176,11 @@ required_files=(
   src/frontend/host/index.html
   src/frontend/host/host.css
   src/frontend/host/host-page.mjs
+  src/frontend/host/lan-handoff.mjs
+  src/frontend/host/lan-handoff.test.mjs
+  src/frontend/host/lan-demo.html
+  src/frontend/host/lan-demo.css
+  src/frontend/host/lan-demo.mjs
   src/frontend/host/browser-publisher.mjs
   src/frontend/host/browser-publisher.test.mjs
   src/frontend/host/browser-host-runtime.mjs
@@ -339,6 +344,8 @@ node --check src/frontend/adapters/manifest-registry.mjs
 node --check src/frontend/adapters/install.mjs
 node --check src/frontend/host/host.mjs
 node --check src/frontend/host/host-page.mjs
+node --check src/frontend/host/lan-handoff.mjs
+node --check src/frontend/host/lan-demo.mjs
 node --check src/frontend/host/browser-publisher.mjs
 node --check src/frontend/host/browser-host-runtime.mjs
 node --check src/frontend/host/browser-studio.mjs

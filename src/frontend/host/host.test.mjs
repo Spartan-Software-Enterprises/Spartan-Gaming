@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {clearPendingHostPair, createHostConnectionProfile, createHostProfileStore, createPairingRequest, createPendingHostPair, normalizeHostProfile, parseHostEndpoint, readPendingHostPair, savePendingHostPair, selectHostTransport} from './host.mjs';
+import './lan-handoff.test.mjs';
 
 test('host endpoints reject credentials and insecure remote URLs', () => { assert.throws(() => parseHostEndpoint('https://user:pass@example.test'), /credentials/); assert.throws(() => parseHostEndpoint('http://example.test'), /TLS/); assert.equal(parseHostEndpoint('http://localhost:8787').local, true); });
 test('transport selection prefers WebRTC among shared transports', () => { assert.equal(selectHostTransport({clientTransports: ['websocket', 'webrtc'], hostTransports: ['webrtc', 'websocket'], endpoint: 'wss://host.example/session'}), 'webrtc'); assert.throws(() => selectHostTransport({clientTransports: ['webtransport'], hostTransports: ['webtransport'], endpoint: 'http://example.test'}), /TLS/); });
