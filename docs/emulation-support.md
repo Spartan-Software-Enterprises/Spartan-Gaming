@@ -63,6 +63,13 @@ from runtime selection. The registry is portable through an explicit export,
 and launch plans include the selected profile and readiness evidence for a
 future signed host handoff.
 
+When **Scan game folders** is enabled in Settings → Emulation, the Emulation
+Center exposes the browser's directory picker so users can index a local game
+library in one selection. Relative paths are retained to distinguish duplicate
+file names, while only bounded metadata is remembered in browser storage; game
+bytes and directory handles remain session-only, so a folder must be selected
+again before launching after a reload.
+
 When firmware or BIOS files are selected, the browser computes a bounded
 SHA-256 digest locally with Web Crypto and shows it in the current-session
 launch plan and remembered metadata. The file source itself is never included
