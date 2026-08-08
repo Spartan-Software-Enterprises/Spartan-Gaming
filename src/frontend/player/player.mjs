@@ -106,7 +106,7 @@ async function connect(connectionValues = {}) {
   runtime.on('stream', stream => {
     instantReplay?.stop?.(); instantReplay = null;
     if (sessionPreferences.preferences.instantReplay) {
-      try { instantReplay = createInstantReplayController({stream, durationSeconds: sessionPreferences.preferences.replayLengthSeconds}); instantReplay.start(); if (elements.replay) elements.replay.disabled = false; }
+      try { instantReplay = createInstantReplayController({stream, durationSeconds: sessionPreferences.preferences.replayLengthSeconds, codec: sessionPreferences.preferences.recordingCodec}); instantReplay.start(); if (elements.replay) elements.replay.disabled = false; }
       catch { if (elements.replay) elements.replay.disabled = true; }
     }
     const mediaState = attachMediaStreamTarget({video: elements.video, stream, audioEnabled});
@@ -159,9 +159,18 @@ function keyboardInput(event, pressed) { if (event.target instanceof HTMLElement
 function pointerInput(event) { const source = event.pointerType === 'touch' ? 'touch' : 'pointer'; if (!inputPolicy.allows(source)) return; event.preventDefault(); if (event.type === 'pointerdown') elements.stage.setPointerCapture?.(event.pointerId); emitInput(createPointerInputEvent({event, rect: elements.stage.getBoundingClientRect()})); }
 
 function downloadBlob(blob, filename) { const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename; link.click(); URL.revokeObjectURL(link.href); }
-async function takeScreenshot() { try { const blob = await captureVideoFrame(elements.video); downloadBlob(blob, `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.png`); elements.message.textContent = 'Screenshot saved locally.'; } catch (error) { elements.message.textContent = error.message; } }
-async function toggleRecording() { try { if (!recording) recording = createRecordingController({stream: elements.video.srcObject}); if (recording.state === 'recording') { const blob = await recording.stop(); downloadBlob(blob, `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.webm`); elements.message.textContent = 'Recording saved locally.'; elements.record.classList.remove('capture-active'); } else { recording.start(); elements.message.textContent = 'Recording locally. Press record again to stop.'; elements.record.classList.add('capture-active'); } } catch (error) { elements.message.textContent = error.message; } }
-async function saveInstantReplay() { try { if (!instantReplay) throw new Error('Instant replay is unavailable until a stream is active.'); const blob = instantReplay.clip(); downloadBlob(blob, `spartan-replay-${new Date().toISOString().replaceAll(':', '-')}.webm`); elements.message.textContent = 'Instant replay saved locally.'; } catch (error) { elements.message.textContent = error.message; } }
+function captureExtension(blob, fallback = 'webm') { return blob?.type?.includes('mp4') ? 'mp4' : blob?.type?.includes('png') ? 'png' : fallback; }
+async function saveCaptureBlob(blob, filename, location = sessionPreferences.preferences.recordingLocation) {
+  if (['Ask each time', 'Custom folder'].includes(location) && typeof globalThis.showSaveFilePicker === 'function') {
+    const extension = captureExtension(blob, filename.split('.').pop());
+    const handle = await globalThis.showSaveFilePicker({suggestedName: filename.replace(/\.[^.]+$/, `.${extension}`), types: [{description: blob.type || 'Capture', accept: {[blob.type || 'application/octet-stream']: [`.${extension}`]}}]});
+    const writable = await handle.createWritable(); await writable.write(blob); await writable.close(); return;
+  }
+  downloadBlob(blob, filename.replace(/\.[^.]+$/, `.${captureExtension(blob, filename.split('.').pop())}`));
+}
+async function takeScreenshot() { try { const blob = await captureVideoFrame(elements.video); await saveCaptureBlob(blob, `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.png`); elements.message.textContent = 'Screenshot saved locally.'; } catch (error) { elements.message.textContent = error.message; } }
+async function toggleRecording() { try { if (!recording) recording = createRecordingController({stream: elements.video.srcObject, codec: sessionPreferences.preferences.recordingCodec}); if (recording.state === 'recording') { const blob = await recording.stop(); await saveCaptureBlob(blob, `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.webm`); elements.message.textContent = 'Recording saved locally.'; elements.record.classList.remove('capture-active'); } else { recording.start(); elements.message.textContent = 'Recording locally. Press record again to stop.'; elements.record.classList.add('capture-active'); } } catch (error) { elements.message.textContent = error.message; } }
+async function saveInstantReplay() { try { if (!instantReplay) throw new Error('Instant replay is unavailable until a stream is active.'); const blob = instantReplay.clip(); await saveCaptureBlob(blob, `spartan-replay-${new Date().toISOString().replaceAll(':', '-')}.webm`); elements.message.textContent = 'Instant replay saved locally.'; } catch (error) { elements.message.textContent = error.message; } }
 
 document.querySelector('[data-action="audio"]').addEventListener('click', () => { audioEnabled = !audioEnabled; setMediaAudioEnabled(elements.video, audioEnabled); elements.audio.textContent = audioEnabled ? (describeMediaStream(elements.video.srcObject).hasAudio ? 'Active' : 'Waiting') : 'Muted'; const button = document.querySelector('[data-action="audio"]'); button.textContent = audioEnabled ? '🔊' : '🔇'; button.setAttribute('aria-label', audioEnabled ? 'Mute session audio' : 'Unmute session audio'); });
 elements.audioOutput?.addEventListener('change', async event => { try { await selectAudioOutput(elements.video, event.target.value); elements.message.textContent = event.target.value ? 'Session audio output changed.' : 'Session audio is using the browser default output.'; } catch (error) { event.target.value = ''; elements.message.textContent = error.message; } });

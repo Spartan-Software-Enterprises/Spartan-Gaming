@@ -113,6 +113,13 @@ Device IDs remain session-local and are not written to settings, profile exports
 URLs, or telemetry. Browsers without output routing support keep the stream on
 the default sink and show a non-actionable fallback state.
 
+Session recording and instant replay honor the validated `media.recordingCodec`
+preference through an ordered `MediaRecorder` MIME-type list, while preserving
+browser-supported fallbacks. Screenshot, recording, and replay exports honor
+the recording destination preference where the File System Access save picker is
+available; otherwise they use the browser's normal download path because a web
+frontend cannot select an operating-system folder without user consent.
+
 The Browser Host Studio applies the same permission boundary to microphone
 capture: `getUserMedia` is called only after the user enables the microphone
 option, and the selected input is combined with the user-approved display stream
