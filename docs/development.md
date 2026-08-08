@@ -69,6 +69,17 @@ surface. Use `--port 0` for an ephemeral port or
 development/static frontend server, not a production TLS or authentication
 endpoint.
 
+Build the same surfaces into a portable static artifact with:
+
+```bash
+npm run frontend:build
+```
+
+The default output is `out/spartan-frontend`. It contains the canonical page
+mounts, PWA worker/assets, public provider and emulator catalogs, favicon, and
+`spartan-frontend-manifest.json`. The build refuses to write into the source or
+repository root and does not include host secrets, credentials, or game files.
+
 For a local browser-to-browser stream smoke test, run:
 
 ```bash

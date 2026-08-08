@@ -1,12 +1,12 @@
 export const CACHE_NAME = 'spartan-gaming-shell-v1';
 export const PRECACHE_URLS = Object.freeze([
-  '/src/frontend/dashboard/index.html', '/src/frontend/dashboard/dashboard.css', '/src/frontend/dashboard/dashboard.mjs',
-  '/src/frontend/player/index.html', '/src/frontend/player/player.css', '/src/frontend/player/player.mjs', '/src/frontend/player/connection.mjs',
-  '/src/frontend/settings/index.html', '/src/frontend/settings/settings.css', '/src/frontend/settings/settings.mjs',
-  '/src/frontend/host/index.html', '/src/frontend/host/host.css', '/src/frontend/host/host.mjs', '/src/frontend/host/host-page.mjs',
-  '/src/frontend/host/browser-studio.html', '/src/frontend/host/browser-studio.css', '/src/frontend/host/browser-studio.mjs',
-  '/src/frontend/diagnostics/index.html', '/src/frontend/diagnostics/diagnostics.css', '/src/frontend/diagnostics/diagnostics.mjs',
-  '/src/frontend/emulation/index.html', '/src/frontend/emulation/emulation.css', '/src/frontend/emulation/emulation-page.mjs', '/src/frontend/emulation/emulation.mjs', '/src/frontend/emulation/integration.mjs',
+  '/dashboard/index.html', '/dashboard/dashboard.css', '/dashboard/dashboard.mjs',
+  '/player/index.html', '/player/player.css', '/player/player.mjs', '/player/connection.mjs',
+  '/settings/index.html', '/settings/settings.css', '/settings/settings.mjs',
+  '/host/index.html', '/host/host.css', '/host/host.mjs', '/host/host-page.mjs',
+  '/host/browser-studio.html', '/host/browser-studio.css', '/host/browser-studio.mjs',
+  '/diagnostics/index.html', '/diagnostics/diagnostics.css', '/diagnostics/diagnostics.mjs',
+  '/emulation/index.html', '/emulation/emulation.css', '/emulation/emulation-page.mjs', '/emulation/emulation.mjs', '/emulation/integration.mjs',
   '/providers/catalog.json', '/emulators/catalog.json',
 ]);
 

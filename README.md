@@ -54,6 +54,9 @@ npm run frontend:serve
 
 Then open `http://127.0.0.1:4173/`. The dependency-free server exposes the
 dashboard, all frontend surfaces, and the public provider/emulator catalogs.
+Create a deployable static distribution with `npm run frontend:build`; it is
+written to `out/spartan-frontend` and includes a generated
+`spartan-frontend-manifest.json`.
 The first milestone will document the supported Chromium checkout and build
 configuration. See [CONTRIBUTING.md](CONTRIBUTING.md) and
 [docs/architecture.md](docs/architecture.md).
