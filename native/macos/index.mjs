@@ -1,5 +1,9 @@
+import {createRequire} from 'node:module';
+
+const require = createRequire(import.meta.url);
+
 async function loadNativeModule() {
-  try { return await import('./spartan-native-macos.node'); }
+  try { return require('./spartan-native-macos.node'); }
   catch (error) { throw new Error(`macOS native input package is unavailable: ${error.message}`); }
 }
 

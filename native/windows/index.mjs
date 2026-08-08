@@ -1,5 +1,9 @@
+import {createRequire} from 'node:module';
+
+const require = createRequire(import.meta.url);
+
 async function loadNativeModule() {
-  try { return await import('./spartan-native-windows.node'); }
+  try { return require('./spartan-native-windows.node'); }
   catch (error) { throw new Error(`Windows native input package is unavailable: ${error.message}`); }
 }
 

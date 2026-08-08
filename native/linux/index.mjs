@@ -1,7 +1,11 @@
 import {createBindings as createReferenceBindings} from './reference-adapter.mjs';
 
+import {createRequire} from 'node:module';
+
+const require = createRequire(import.meta.url);
+
 async function loadUinputModule() {
-  try { return await import('./spartan-native-linux.node'); }
+  try { return require('./spartan-native-linux.node'); }
   catch { return null; }
 }
 

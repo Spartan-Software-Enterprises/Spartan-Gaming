@@ -22,7 +22,11 @@ target_compile_definitions(spartan_native_windows PRIVATE WIN32_LEAN_AND_MEAN NO
 # Node-API is exported by node.exe rather than provided as a standalone
 # library. Generate the small import library from the versioned API definition
 # shipped by node-api-headers so MSVC links the addon without V8 internals.
-find_program(NODE_API_LIB_TOOL NAMES lib lib.exe)
+get_filename_component(MSVC_BIN_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)
+find_program(NODE_API_LIB_TOOL NAMES lib lib.exe PATHS "${MSVC_BIN_DIR}" NO_DEFAULT_PATH)
+if(NOT NODE_API_LIB_TOOL)
+  find_program(NODE_API_LIB_TOOL NAMES lib lib.exe)
+endif()
 if(NOT NODE_API_LIB_TOOL)
   message(FATAL_ERROR "MSVC lib.exe is required to generate the Node-API import library")
 endif()
