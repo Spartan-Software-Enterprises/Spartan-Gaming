@@ -133,7 +133,7 @@ The catalog loader is intentionally dependency-free. Browser UI code, native ada
 
 Session capability negotiation and lifecycle behavior are covered by `src/frontend/session/session.test.mjs`. Adapter implementations should use the registry and protocol envelope helpers rather than inventing provider-specific state transitions in UI code.
 
-The player derives bounded session capabilities and streaming preferences from `src/frontend/session/preferences.mjs`. Resolution, framerate, codec order, HDR, bitrate, adaptive behavior, jitter buffering, hardware decode preference, and controller permissions are included in the session offer; a host may negotiate a lower compatible profile.
+The player derives bounded session capabilities and streaming preferences from `src/frontend/session/preferences.mjs`. Before a session offer is created, `src/frontend/player/preflight.mjs` collects the same privacy-safe browser capability evidence used by Diagnostics and passes it into the display policy. Resolution, framerate, codec order, HDR, bitrate, adaptive behavior, jitter buffering, hardware decode preference, and controller permissions are included in the session offer; a host may negotiate a lower compatible profile. If probing is unavailable, the preflight remains usable with conservative requested defaults rather than preventing a provider or host handoff.
 
 Session answers carrying remote `capabilities` are negotiated against the client offer before the lifecycle enters `connected`. The normalized result is available as `manager.negotiated`; incompatible transports, codecs, or audio formats emit a structured runtime error and keep the session out of `connected`.
 

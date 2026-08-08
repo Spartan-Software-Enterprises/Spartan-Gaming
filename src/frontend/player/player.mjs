@@ -17,15 +17,16 @@ import {clearPendingHostPair, readPendingHostPair} from '../host/host.mjs';
 import {installLanHandoffListener} from '../host/lan-handoff.mjs';
 import {QUALITY_PROFILES} from '../session/quality.mjs';
 import {createTouchControlEvent, createTouchControlLayout, normalizeTouchLayout} from '../input/touch-controls.mjs';
+import {preparePlayerSession} from './preflight.mjs';
 
 const query = new URLSearchParams(location.search);
 const pendingHostPair = readPendingHostPair(sessionStorage); clearPendingHostPair(sessionStorage);
 let connectionSessionId = query.get('session') || pendingHostPair?.sessionId || '';
 const manager = createSessionManager({idFactory: () => connectionSessionId || `ses-${crypto.randomUUID()}`});
 const transportPolicy = readTransportPolicy();
-const sessionPreferences = readSessionPreferences();
-const inputPolicy = createInputPermissionPolicy(sessionPreferences.capabilities);
-const haptics = createHapticsController({enabled: inputPolicy.allows('rumble')});
+let sessionPreferences = readSessionPreferences();
+let inputPolicy = createInputPermissionPolicy(sessionPreferences.capabilities);
+let haptics = createHapticsController({enabled: inputPolicy.allows('rumble')});
 const mapper = createInputMapper();
 const immersive = createImmersiveController({target: document.querySelector('[data-stage]')});
 let runtime = null;
@@ -39,6 +40,7 @@ let inputSequence = 0;
 let audioEnabled = true;
 let autoFullscreenAttempted = false;
 let mediaObservation = null;
+let sessionPreflightReady = false;
 const previousGamepad = new Map();
 
 elements.connectionEndpoint.value = query.get('signal') || pendingHostPair?.endpoint || '';
@@ -55,6 +57,15 @@ function apply(event) {
   if (state.status === 'connected' && sessionPreferences.preferences.autoFullscreen && !autoFullscreenAttempted) { autoFullscreenAttempted = true; immersive.enter().catch(() => {}); }
   if (state.status === 'error') elements.message.textContent = state.error; if (state.status === 'ended') elements.message.textContent = 'This session has ended. Return to the library to choose another backend.';
   if (state.status === 'connected' && state.mediaState === 'not-configured') elements.message.textContent = 'Host paired successfully. Media capture and encoding are not configured on this host.';
+}
+
+async function prepareSession() {
+  if (sessionPreflightReady) return;
+  const preflight = await preparePlayerSession();
+  sessionPreferences = preflight.preferences;
+  inputPolicy = preflight.inputPolicy;
+  haptics = createHapticsController({enabled: inputPolicy.allows('rumble')});
+  sessionPreflightReady = true;
 }
 
 async function connect(connectionValues = {}) {
@@ -93,6 +104,8 @@ async function connect(connectionValues = {}) {
 async function start() {
   const endpoint = query.get('signal') || pendingHostPair?.endpoint; const ticket = query.get('ticket') || pendingHostPair?.ticket; const sessionId = query.get('session') || pendingHostPair?.sessionId;
   try {
+    await prepareSession();
+    installTouchControls();
     if (endpoint && ticket && sessionId) await connect({endpoint, ticket, sessionId});
     else if (endpoint && pendingHostPair) await connect({endpoint, allowUnauthenticated: true});
     else if (query.get('demo') === '1') { const offer = manager.start({backend: {id: query.get('backend') || 'spartan-host', backendType: 'remote-play'}, capabilities: sessionPreferences.capabilities, preferences: sessionPreferences.preferences}); elements.connectionForm.hidden = true; elements.transport.textContent = offer.payload.quality.profile === 'balanced' ? 'WebRTC · adaptive' : 'WebRTC'; setTimeout(acceptHostAnswer, 500); }
@@ -132,5 +145,4 @@ window.addEventListener('keydown', event => keyboardInput(event, true)); window.
 window.addEventListener('gamepadconnected', () => apply({type: 'gamepad.connection', connected: true})); window.addEventListener('gamepaddisconnected', () => apply({type: 'gamepad.connection', connected: false}));
 setInterval(() => { const gamepads = navigator.getGamepads?.() || []; const connected = inputPolicy.allows('gamepad') && [...gamepads].some(Boolean); if (connected !== state.gamepadConnected) apply({type: 'gamepad.connection', connected}); if (!inputPolicy.allows('gamepad')) return; const pad = [...gamepads].find(Boolean); if (!pad) return; const normalized = mapper.normalize(pad); const previous = previousGamepad.get(normalized.index); normalized.buttons.forEach((button, index) => { if (!previous || button.pressed !== previous.buttons[index]?.pressed || button.value !== previous.buttons[index]?.value) { const event = mapper.mapButton(index, button.pressed, button.value); if (event) emitInput({...event, source: 'gamepad', control: `button-${index}`}); } }); normalized.axes.forEach((value, index) => { if (!previous || Math.abs(value - (previous.axes[index] || 0)) > 0.08) { const event = mapper.mapAxis(index, value); if (event) emitInput({...event, source: 'gamepad', control: `axis-${index}`}); } }); previousGamepad.set(normalized.index, normalized); }, 100);
 const suppliedStream = window.__SPARTAN_MEDIA_STREAM__; if (suppliedStream && typeof MediaStream !== 'undefined' && suppliedStream instanceof MediaStream) { const mediaState = attachMediaStreamTarget({video: elements.video, stream: suppliedStream, audioEnabled}); elements.audio.textContent = mediaState.hasAudio ? 'Active' : 'No track'; elements.video.play().catch(() => {}); }
-installTouchControls();
 start(); apply({type: 'session.state', status: 'negotiating'});
