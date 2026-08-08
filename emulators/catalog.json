@@ -1,6 +1,6 @@
 {
   "catalogVersion": 1,
-  "updatedAt": "2026-08-07",
+  "updatedAt": "2026-08-08",
   "policy": {
     "shipRoms": false,
     "shipBios": false,
@@ -22,6 +22,9 @@
     {"id":"mame","name":"MAME","systems":["arcade"],"mode":"browser-or-native","priority":"tier-1","url":"https://www.mamedev.org/","license":"GPL-2.0-or-later"},
     {"id":"flycast","name":"Flycast","systems":["dreamcast","naomi","atomiswave"],"mode":"native-or-wasm-candidate","priority":"tier-2","url":"https://www.flycast.dev/","license":"GPL-2.0-or-later"},
     {"id":"xemu","name":"xemu","systems":["original-xbox"],"mode":"native","priority":"tier-2","url":"https://xemu.app/","license":"GPL-2.0-or-later"},
-    {"id":"scummvm","name":"ScummVM","systems":["adventure-engines"],"mode":"browser-or-native","priority":"tier-1","url":"https://www.scummvm.org/","license":"GPL-3.0-or-later"}
+    {"id":"scummvm","name":"ScummVM","systems":["adventure-engines"],"mode":"browser-or-native","priority":"tier-1","url":"https://www.scummvm.org/","license":"GPL-3.0-or-later"},
+    {"id":"dosbox-staging","name":"DOSBox Staging","systems":["dos"],"mode":"native-or-wasm-candidate","priority":"tier-1","url":"https://www.dosbox-staging.org/","license":"GPL-2.0-or-later"},
+    {"id":"ruffle","name":"Ruffle","systems":["flash","web-games"],"mode":"browser-or-native","priority":"tier-2","url":"https://ruffle.rs/","license":"MIT OR Apache-2.0"},
+    {"id":"sameboy","name":"SameBoy","systems":["game-boy","game-boy-color","super-game-boy"],"mode":"native-or-wasm-candidate","priority":"tier-2","url":"https://sameboy.github.io/","license":"GPL-3.0-or-later"}
   ]
 }

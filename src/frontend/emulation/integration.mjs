@@ -15,6 +15,9 @@ const CORE_PRESETS = Object.freeze({
   flycast: {controllerProfile: 'Xbox layout', renderer: 'Vulkan/OpenGL/WebGPU candidate', features: ['save-state', 'shaders', 'netplay-candidate', 'rumble'], notes: []},
   xemu: {controllerProfile: 'Xbox layout', renderer: 'Vulkan/DirectX', features: ['save-state', 'shader-cache', 'rumble'], notes: ['Xbox MCPX/BIOS and game data are user responsibilities.']},
   scummvm: {controllerProfile: 'Keyboard and mouse', renderer: 'WebGPU/Canvas', features: ['save-state', 'scaling', 'touch-controls'], notes: ['Only user-selected game data is mounted into the runtime.']},
+  'dosbox-staging': {controllerProfile: 'Keyboard and mouse', renderer: 'OpenGL/Vulkan/Canvas candidate', features: ['save-state', 'scaling', 'shader-filters', 'high-refresh'], notes: ['DOSBox Staging configuration and game files remain user-provided; Spartan does not ship DOS software or game content.']},
+  ruffle: {controllerProfile: 'Keyboard and mouse', renderer: 'WebAssembly/Canvas', features: ['local-file-playback', 'scaling', 'touch-controls', 'safe-browser-runtime'], notes: ['Ruffle runs user-selected Flash content through a sandboxed browser adapter; legacy content compatibility varies by title.']},
+  sameboy: {controllerProfile: 'Nintendo layout', renderer: 'OpenGL/Canvas candidate', features: ['save-state', 'rewind', 'scaling', 'debugger'], notes: ['Game Boy firmware and game files remain user-provided; browser support depends on a trusted adapter or libretro core.']},
 });
 
 function runtimeFor(core, preference) {

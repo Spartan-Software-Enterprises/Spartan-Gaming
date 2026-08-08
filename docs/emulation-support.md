@@ -138,6 +138,13 @@ remembered library entries and storage serialization contain metadata only.
 The frontend owns lifecycle and teardown but never evaluates a local executable
 path or silently reads remembered file metadata.
 
+The catalog also tracks DOSBox Staging, Ruffle, and SameBoy as current
+cross-platform integration targets. Ruffle is eligible for a browser/WASM
+adapter path; DOSBox Staging and SameBoy are native-adapter or trusted-core
+candidates until signed browser adapters are available. Their entries remain
+metadata-only: Spartan Gaming does not distribute Flash content, DOS software,
+ROMs, BIOS files, or emulator executables.
+
 When a registered browser adapter exposes save-state methods, the Emulation
 Center provides local Save state and Load state controls. Exported states are
 downloaded as user files; imports require a fresh explicit file selection and
