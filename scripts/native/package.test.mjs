@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
+import path from 'node:path';
 import test from 'node:test';
 import {createNativePackageMatrix, createNativePackagePlan, parseNativePackageArguments} from './package.mjs';
 
 test('native package CLI maps all desktop targets to isolated plans', () => {
   const matrix = createNativePackageMatrix({sourceRoot: '/external/spartan', outRoot: '/external/out', installRoot: '/external/install'});
   assert.deepEqual(matrix.map(plan => plan.platform), ['win32', 'darwin', 'linux']);
-  assert.deepEqual(matrix.map(plan => plan.out), ['/external/out/win32', '/external/out/darwin', '/external/out/linux']);
+  assert.deepEqual(matrix.map(plan => plan.out), ['win32', 'darwin', 'linux'].map(target => path.resolve('/external/out', target)));
   assert.ok(matrix.every(plan => plan.sourcePresent === false));
   assert.ok(matrix.every(plan => plan.commands[0].program === 'cmake'));
 });
