@@ -33,6 +33,7 @@
 - [x] Emulation Center browser-adapter registration point with lifecycle controls.
 - [x] Shared keyboard and gamepad input bridge for browser emulation adapters.
 - [x] Ephemeral selected-file handoff from the emulation UI to browser adapters without persisting content.
+- [x] Browser runtime save-state export/import with explicit local file selection.
 - [x] User-facing adapter and core readiness manager with signed-manifest import.
 
 ## Milestone 2: streaming client

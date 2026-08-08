@@ -100,6 +100,12 @@ remembered library entries and storage serialization contain metadata only.
 The frontend owns lifecycle and teardown but never evaluates a local executable
 path or silently reads remembered file metadata.
 
+When a registered browser adapter exposes save-state methods, the Emulation
+Center provides local Save state and Load state controls. Exported states are
+downloaded as user files; imports require a fresh explicit file selection and
+are passed to the adapter only for the active runtime. No save-state bytes are
+written to browser storage by the frontend.
+
 | Project | Systems | Preferred mode | Role |
 | --- | --- | --- | --- |
 | RetroArch/libretro | Many classic and modern systems | Browser/native | Unified frontend and core ecosystem |
