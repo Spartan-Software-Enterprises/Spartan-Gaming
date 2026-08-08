@@ -56,6 +56,14 @@ Every provider profile should expose supported platforms and regions, sign-in an
 
 The shared resolver in `src/frontend/providers/integration.mjs` now turns catalog entries plus saved provider profiles into immutable integration descriptors. It selects the requested official/browser/host mode, recommends controller and quality profiles for major console/cloud-PC services, exposes watch/chat/creator surfaces, and returns reachability-only health metadata. It never claims authentication, API approval, embed permission, or a provider’s current regional availability.
 
+The provider manager’s **Check availability** action uses
+`src/frontend/providers/health.mjs` for a credential-free `HEAD` request. It
+strips query strings, omits cookies, requires HTTPS for remote targets, bounds
+the timeout, and reports CORS-indeterminate results separately from HTTP
+failures. A reachable response proves only that the official URL responded;
+it does not prove login, subscription, regional eligibility, API approval, or
+stream playback.
+
 Provider accounts must remain isolated by profile. Provider tokens must never be stored in the game catalog or URL-history export.
 
 ## Implementation order
