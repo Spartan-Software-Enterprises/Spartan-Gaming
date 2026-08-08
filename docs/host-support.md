@@ -50,6 +50,14 @@ changing the package contract.
 
 `host/media.mjs` provides the next boundary for those platform implementations. It generates shell-free FFmpeg capture plans for Linux X11/PipeWire, Windows desktop capture, and macOS AVFoundation, validates basic permission context, and generates codec/bitrate encoder plans for H.264, VP9, and AV1. These plans target a future WebRTC publisher and are deliberately not executed by the reference agent.
 
+The native package manifest and `npm run native:plan -- --matrix` provide the
+cross-platform CMake workflow for the future Windows, macOS, and Linux binding
+packages. The command is plan-first, keeps source/build/install directories
+isolated, reports whether each external native source directory exists, and
+requires `--execute` before invoking CMake. Missing source directories and
+platform API implementations remain an explicit planned state; a plan is not a
+claim that capture, audio, or OS input is already available.
+
 `host/publisher.mjs` composes those plans into a transport-neutral publisher
 contract. It reports `unconfigured` or `plan-only` until a native capture
 adapter and WebRTC publisher are installed, and carries bounded codec,

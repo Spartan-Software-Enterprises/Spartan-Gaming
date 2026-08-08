@@ -55,7 +55,7 @@
 
 ## Milestone 3: self-hosted stack
 
-- [ ] Windows and Linux host agent (native composition boundary implemented; platform packaging and adapters pending).
+- [ ] Windows and Linux host agent (native composition boundary and plan-first cross-platform package workflow implemented; platform packaging and adapters pending).
 - [x] Secure device pairing UX and frontend contract (agent/signaling implementation pending).
 - [x] Dependency-free reference host control plane (media and OS adapters pending).
 - [x] Shell-free managed process lifecycle with bounded output and pipeline rollback.

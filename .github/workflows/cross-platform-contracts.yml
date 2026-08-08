@@ -36,3 +36,5 @@ jobs:
         run: npm run test:display
       - name: Validate Chromium target contract
         run: npm run chromium:validate -- --platform ${{ matrix.platform }}
+      - name: Validate native package plan contract
+        run: npm run native:plan -- --matrix --json
