@@ -23,6 +23,7 @@ import {canSelectAudioOutput, findPreferredAudioOutput, listAudioOutputDevices, 
 import {createMediaSessionController} from './media-session.mjs';
 import {clearTransientSessionData} from '../privacy/cleanup.mjs';
 import {describeNegotiationAdjustments, formatNegotiationAdjustments} from '../session/negotiation-notices.mjs';
+import {createSessionDiagnosticsBundle, createSessionTelemetryLog, serializeSessionDiagnostics} from '../session/telemetry-log.mjs';
 
 const query = new URLSearchParams(location.search);
 const pendingHostPair = readPendingHostPair(sessionStorage); clearPendingHostPair(sessionStorage);
@@ -50,6 +51,8 @@ let autoFullscreenAttempted = false;
 let focusPaused = false;
 let mediaObservation = null;
 let sessionPreflightReady = false;
+let negotiationAdjustments = [];
+const telemetryLog = createSessionTelemetryLog({enabled: false});
 const previousGamepad = new Map();
 
 elements.connectionEndpoint.value = query.get('signal') || pendingHostPair?.endpoint || '';
@@ -58,6 +61,7 @@ elements.connectionTicket.value = query.get('ticket') || pendingHostPair?.ticket
 installLanHandoffListener({handoffId: query.get('handoff'), target: 'client', onHandoff: handoff => { elements.connectionEndpoint.value = handoff.endpoint; elements.connectionSession.value = handoff.sessionId; elements.connectionTicket.value = handoff.ticket; elements.message.textContent = 'LAN session details received. Press Connect securely to join.'; }});
 if (!inputPolicy.allows('gamepad')) elements.gamepad.textContent = 'Disabled by settings';
 elements.stage.style.touchAction = 'none';
+elements.diagnostics.querySelector('h2')?.insertAdjacentHTML('afterend', '<button class="secondary" data-action="export-session" type="button">Export session report</button>');
 
 function apply(event) {
   state = reducePlayerState(state, event);
@@ -65,7 +69,8 @@ function apply(event) {
   const profile = QUALITY_PROFILES.find(item => item.id === state.quality) || QUALITY_PROFILES[2]; elements.status.textContent = labels[state.status]; elements.quality.textContent = profile.id[0].toUpperCase() + profile.id.slice(1); if (elements.qualitySelect) elements.qualitySelect.value = profile.id; elements.qualityDetail.textContent = `${elements.quality.textContent} · ${profile.maxWidth}×${profile.maxHeight} @ ${profile.maxFramerate}`; elements.latency.textContent = formatLatency(state.latencyMs); elements.latencyDetail.textContent = formatLatency(state.latencyMs); elements.loss.textContent = `${state.packetLossPct}%`; if (elements.decodeFps) elements.decodeFps.textContent = Number.isFinite(state.decodeFps) ? `${state.decodeFps} fps` : '—'; if (elements.dropped) elements.dropped.textContent = `${state.framesDropped}`; if (elements.jitter) elements.jitter.textContent = formatLatency(state.jitterMs); if (elements.bitrate) elements.bitrate.textContent = formatRate(state.bitrateKbps); elements.negotiated.textContent = formatNegotiatedCapabilities(state.negotiated); elements.diagnostics.classList.toggle('is-visible', state.diagnosticsVisible); elements.overlay.forEach(overlay => overlay.classList.toggle('is-hidden', !state.overlayVisible));
   if (state.status === 'connected' && sessionPreferences.preferences.autoFullscreen && !autoFullscreenAttempted) { autoFullscreenAttempted = true; immersive.enter().catch(() => {}); }
   if (state.status === 'error') elements.message.textContent = state.error; if (state.status === 'ended') elements.message.textContent = 'This session has ended. Return to the library to choose another backend.';
-  if (event.type === 'session.negotiated') { const notice = formatNegotiationAdjustments(describeNegotiationAdjustments({requested: sessionPreferences.capabilities, negotiated: state.negotiated})); if (notice) elements.message.textContent = notice; }
+  if (event.type === 'session.negotiated') { negotiationAdjustments = describeNegotiationAdjustments({requested: sessionPreferences.capabilities, negotiated: state.negotiated}); const notice = formatNegotiationAdjustments(negotiationAdjustments); if (notice) elements.message.textContent = notice; }
+  if (event.type === 'telemetry.health') telemetryLog.add(event);
   if (state.status === 'connected' && state.mediaState === 'not-configured') elements.message.textContent = 'Host paired successfully. Media capture and encoding are not configured on this host.';
 }
 
@@ -84,6 +89,7 @@ async function prepareSession() {
   if (sessionPreflightReady) return;
   const preflight = await preparePlayerSession();
   sessionPreferences = preflight.preferences;
+  telemetryLog.setEnabled(sessionPreferences.preferences.sessionTelemetry);
   immersive.setDisplayPreference(sessionPreferences.preferences.display);
   await loadAudioOutputs({applyPreference: true});
   if (elements.pip) elements.pip.disabled = !sessionPreferences.preferences.pictureInPicture || !canUsePictureInPicture(elements.video);
@@ -176,6 +182,7 @@ async function saveCaptureBlob(blob, filename, location = sessionPreferences.pre
 async function takeScreenshot() { try { const blob = await captureVideoFrame(elements.video); await saveCaptureBlob(blob, `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.png`); elements.message.textContent = 'Screenshot saved locally.'; } catch (error) { elements.message.textContent = error.message; } }
 async function toggleRecording() { try { if (!recording) recording = createRecordingController({stream: elements.video.srcObject, codec: sessionPreferences.preferences.recordingCodec}); if (recording.state === 'recording') { const blob = await recording.stop(); await saveCaptureBlob(blob, `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.webm`); elements.message.textContent = 'Recording saved locally.'; elements.record.classList.remove('capture-active'); } else { recording.start(); elements.message.textContent = 'Recording locally. Press record again to stop.'; elements.record.classList.add('capture-active'); } } catch (error) { elements.message.textContent = error.message; } }
 async function saveInstantReplay() { try { if (!instantReplay) throw new Error('Instant replay is unavailable until a stream is active.'); const blob = instantReplay.clip(); await saveCaptureBlob(blob, `spartan-replay-${new Date().toISOString().replaceAll(':', '-')}.webm`); elements.message.textContent = 'Instant replay saved locally.'; } catch (error) { elements.message.textContent = error.message; } }
+function exportSessionDiagnostics() { try { const bundle = createSessionDiagnosticsBundle({session: manager.session || {}, negotiated: state.negotiated, samples: telemetryLog.list(), adjustments: negotiationAdjustments}); const blob = new Blob([serializeSessionDiagnostics(bundle)], {type: 'application/json'}); downloadBlob(blob, `spartan-session-diagnostics-${new Date().toISOString().replaceAll(':', '-')}.json`); elements.message.textContent = telemetryLog.enabled ? 'Redacted session diagnostics exported.' : 'Session diagnostics exported without telemetry samples.'; } catch (error) { elements.message.textContent = error.message; } }
 
 document.querySelector('[data-action="audio"]').addEventListener('click', () => { audioEnabled = !audioEnabled; setMediaAudioEnabled(elements.video, audioEnabled); elements.audio.textContent = audioEnabled ? (describeMediaStream(elements.video.srcObject).hasAudio ? 'Active' : 'Waiting') : 'Muted'; const button = document.querySelector('[data-action="audio"]'); button.textContent = audioEnabled ? '🔊' : '🔇'; button.setAttribute('aria-label', audioEnabled ? 'Mute session audio' : 'Unmute session audio'); });
 elements.audioOutput?.addEventListener('change', async event => { try { await selectAudioOutput(elements.video, event.target.value); elements.message.textContent = event.target.value ? 'Session audio output changed.' : 'Session audio is using the browser default output.'; } catch (error) { event.target.value = ''; elements.message.textContent = error.message; } });
@@ -183,6 +190,7 @@ elements.qualitySelect?.addEventListener('change', event => requestQuality(event
 document.querySelector('[data-action="fullscreen"]').addEventListener('click', () => immersive.toggle().catch(error => { elements.message.textContent = error.message; }));
 document.querySelector('[data-action="pip"]').addEventListener('click', async () => { try { const active = await togglePictureInPicture(elements.video); const button = document.querySelector('[data-action="pip"]'); button.setAttribute('aria-label', active ? 'Exit Picture-in-Picture' : 'Enter Picture-in-Picture'); elements.message.textContent = active ? 'Picture-in-Picture enabled.' : 'Picture-in-Picture closed.'; } catch (error) { elements.message.textContent = error.message; } });
 elements.screenshot = document.querySelector('[data-action="screenshot"]'); elements.record = document.querySelector('[data-action="record"]'); elements.screenshot.addEventListener('click', takeScreenshot); elements.record.addEventListener('click', toggleRecording); elements.replay?.addEventListener('click', saveInstantReplay); elements.reconnect = document.querySelector('[data-action="reconnect"]'); elements.reconnect.addEventListener('click', requestReconnect);
+document.querySelector('[data-action="export-session"]')?.addEventListener('click', exportSessionDiagnostics);
 document.querySelector('[data-action="overlay"]').addEventListener('click', () => apply({type: 'toggle.overlay'}));
 document.querySelector('[data-action="diagnostics"]').addEventListener('click', () => apply({type: 'toggle.diagnostics'}));
 document.querySelector('[data-action="end"]').addEventListener('click', () => { instantReplay?.stop?.(); instantReplay = null; if (runtime) runtime.close(); else if (manager.state === 'connected' || manager.state === 'reconnecting') manager.close(); if (sessionPreferences.preferences.clearOnExit) clearTransientSessionData(sessionStorage); mediaSession.dispose(); apply({type: 'session.state', status: 'ended'}); });

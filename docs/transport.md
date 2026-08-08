@@ -77,6 +77,8 @@ routing and end-to-end HDR validation remain platform-adapter work.
 
 The player remains transport-neutral: an adapter can attach a negotiated `MediaStream` to its video target and forward health/input events to the session manager. Signaling authentication, host authorization, and process ownership stay outside the browser transport wrapper. A host/signaling service may supply short-lived ICE credentials to `createWebRtcTransport({ice})`; credentials must remain session-scoped and must never be stored in host profiles, exports, diagnostics, or URLs.
 
+The player’s **Export session report** action creates a bounded JSON bundle containing the backend kind, negotiated media contract, adjustment notices, and redacted aggregate telemetry samples. It excludes session IDs, endpoints, tickets, credentials, device IDs, and raw WebRTC reports. Samples are collected only while **Store local session telemetry** is enabled; disabling that setting clears the in-memory buffer.
+
 The session player provides the authenticated client entrypoint: its in-memory
 connection form accepts a signaling endpoint, matching session ID, and
 short-lived `client` ticket, then joins the broker before sending an SDP offer.
