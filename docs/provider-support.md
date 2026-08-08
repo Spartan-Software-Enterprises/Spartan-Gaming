@@ -56,7 +56,7 @@ Every provider profile should expose supported platforms and regions, sign-in an
 
 The Provider Profiles surface also accepts a versioned community catalog. Community entries are metadata-only, HTTPS-only, marked as untrusted, limited to support level C/D, stored locally, and prevented from overriding built-in provider IDs. Importing a catalog never loads scripts, credentials, cookies, or executable adapters; hosted signing and a future Provider SDK remain separate work.
 
-The shared resolver in `src/frontend/providers/integration.mjs` now turns catalog entries plus saved provider profiles into immutable integration descriptors. It selects the requested official/browser/host mode, recommends controller and quality profiles for major console/cloud-PC services, exposes watch/chat/creator surfaces, and returns reachability-only health metadata. It never claims authentication, API approval, embed permission, or a provider’s current regional availability.
+The shared resolver in `src/frontend/providers/integration.mjs` now turns catalog entries plus saved provider profiles into immutable integration descriptors. It selects the requested official/browser/host mode, recommends controller and quality profiles for major cloud, console, remote-play, cloud-PC, streaming, and self-hosted services, exposes watch/chat/creator surfaces, carries a bounded region hint and fullscreen request, and returns reachability-only health metadata. Region is advisory only: Spartan Gaming never claims authentication, API approval, embed permission, or a provider’s current regional availability.
 
 The provider manager’s **Check availability** action uses
 `src/frontend/providers/health.mjs` for a credential-free `HEAD` request. It

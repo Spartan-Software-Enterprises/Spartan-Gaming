@@ -43,7 +43,7 @@ function renderResume() {
 function openProviderSurface(entry, plan) {
   const integration = plan.integration || {};
   document.querySelector('[data-provider-title]').textContent = entry.name;
-  document.querySelector('[data-provider-detail]').textContent = `${integration.surfaces?.length ? integration.surfaces.join(' · ') : entry.kind} · ${integration.quality || 'balanced'} quality preference`;
+  document.querySelector('[data-provider-detail]').textContent = `${integration.surfaces?.length ? integration.surfaces.join(' · ') : entry.kind} · ${integration.quality || 'balanced'} quality · ${integration.regionLabel || 'Automatic'} region`;
   document.querySelector('[data-provider-frame]').src = plan.url;
   const external = document.querySelector('[data-provider-external]'); external.href = plan.url;
   const notes = [...(integration.notes || []), ...(plan.readiness?.issues || []).map(issue => issue.message), ...(integration.requirements?.length ? [`Setup: ${integration.requirements.join(', ')}`] : []), 'Authentication and provider permissions remain on the official service.'];

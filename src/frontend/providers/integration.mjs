@@ -1,10 +1,22 @@
 const MODE_ORDER = Object.freeze({browser: ['browser-first', 'official-launch', 'official-embed', 'official-api', 'user-owned-host', 'self-hosted'], official: ['official-launch', 'official-embed', 'browser-first', 'official-api', 'user-owned-host', 'self-hosted'], native: ['user-owned-host', 'self-hosted', 'official-launch', 'browser-first', 'official-embed', 'official-api']});
+const REGION_LABELS = Object.freeze({automatic: 'Automatic', 'north-america': 'North America', europe: 'Europe', 'asia-pacific': 'Asia Pacific', 'latin-america': 'Latin America'});
 const SPECIAL_PROFILES = Object.freeze({
   'xbox-cloud-gaming': {controllerProfile: 'Xbox layout', quality: 'prefer-latency', notes: ['Xbox account, subscription, and supported-region checks remain provider-owned.']},
   'xbox-remote-play': {controllerProfile: 'Xbox layout', quality: 'prefer-latency', notes: ['Remote features and console ownership must be enabled in the official account.']},
   'playstation-plus-cloud': {controllerProfile: 'PlayStation layout', quality: 'prefer-latency', notes: ['PlayStation account, plan, and region eligibility remain provider-owned.']},
   'playstation-remote-play': {controllerProfile: 'PlayStation layout', quality: 'prefer-latency', notes: ['Remote Play must be enabled on the user-owned console.']},
+  'nvidia-geforce-now': {controllerProfile: 'Auto-detect', quality: 'prefer-latency', notes: ['Membership, game ownership, queue, and supported-region checks remain provider-owned.']},
+  'amazon-luna': {controllerProfile: 'Auto-detect', quality: 'prefer-latency', notes: ['Amazon account, channel membership, and supported-region checks remain provider-owned.']},
+  boosteroid: {controllerProfile: 'Auto-detect', quality: 'prefer-latency', notes: ['Subscription, game ownership, queue, and supported-region checks remain provider-owned.']},
+  blacknut: {controllerProfile: 'Auto-detect', quality: 'balanced', notes: ['Subscription, catalog, and supported-region checks remain provider-owned.']},
+  antstream: {controllerProfile: 'Auto-detect', quality: 'balanced', notes: ['Subscription and catalog availability remain provider-owned.']},
   'shadow-pc': {controllerProfile: 'Keyboard and mouse', quality: 'balanced', notes: ['Cloud-PC keyboard, pointer, clipboard, and multi-monitor behavior depends on the official web client.']},
+  parsec: {controllerProfile: 'Keyboard and mouse', quality: 'prefer-latency', notes: ['The host must be online and configured by the session owner in the official client.']},
+  'sunshine-moonlight': {controllerProfile: 'Auto-detect', quality: 'prefer-latency', notes: ['Pairing, host availability, and network access remain user-owned host responsibilities.']},
+  'steam-remote-play': {controllerProfile: 'Auto-detect', quality: 'prefer-latency', notes: ['The Steam client and user-owned host must be online and authorized by the account owner.']},
+  'steam-broadcasting': {controllerProfile: null, quality: 'prefer-quality', notes: ['Broadcast discovery, chat, and social actions use official Steam surfaces only.']},
+  kick: {controllerProfile: null, quality: 'prefer-quality', notes: ['Watch, chat, clips, and creator actions use official site/API surfaces only.']},
+  discord: {controllerProfile: null, quality: 'prefer-quality', notes: ['Voice, screen share, and account permissions use official Discord surfaces only.']},
   'twitch': {controllerProfile: null, quality: 'prefer-quality', notes: ['Watch, chat, clips, and creator actions use official site/API surfaces only.']},
   'youtube-live': {controllerProfile: null, quality: 'prefer-quality', notes: ['Watch and creator actions use official site/API surfaces only.']},
   'owncast': {controllerProfile: null, quality: 'prefer-quality', notes: ['Custom instances must be supplied by the user; no instance discovery or credential capture is performed.']},
@@ -15,11 +27,16 @@ function surfaceList(entry) { return Object.freeze((entry.capabilities || []).fi
 export function createProviderIntegration(entry, {profile = {}, report = {}} = {}) {
   if (!entry || entry.backendType !== 'provider') throw new TypeError('A normalized provider entry is required');
   const preset = SPECIAL_PROFILES[entry.id] || {};
+  const regionHint = Object.hasOwn(REGION_LABELS, profile.region) ? profile.region : 'automatic';
   const preferred = MODE_ORDER[profile.launchMode] || MODE_ORDER.browser;
   const mode = preferred.find(candidate => entry.integrationModes?.includes(candidate)) || entry.integrationModes?.[0];
   const missingCapabilities = (entry.capabilities || []).filter(capability => capability === 'gamepad' && report.input?.gamepad === false);
   const requirements = Object.freeze([...(entry.requirements || [])]);
-  return Object.freeze({providerId: entry.id, mode, controllerProfile: preset.controllerProfile || (entry.capabilities?.includes('gamepad') ? 'Auto-detect' : null), quality: profile.quality && profile.quality !== 'balanced' ? profile.quality : (preset.quality || 'balanced'), surfaces: surfaceList(entry), requirements, missingCapabilities: Object.freeze(missingCapabilities), health: Object.freeze({strategy: 'reachability-only', url: entry.url, authenticated: false}), notes: Object.freeze([...(preset.notes || []), ...(missingCapabilities.length ? ['Connect a supported controller before starting this service.'] : [])])});
+  const notes = [...(preset.notes || [])];
+  if (regionHint !== 'automatic') notes.push(`Region hint: ${REGION_LABELS[regionHint]}. The provider decides actual availability.`);
+  if (profile.autoFullscreen === true) notes.push('Fullscreen is requested after the provider surface is ready when the browser permits it.');
+  if (missingCapabilities.length) notes.push('Connect a supported controller before starting this service.');
+  return Object.freeze({providerId: entry.id, mode, controllerProfile: preset.controllerProfile || (entry.capabilities?.includes('gamepad') ? 'Auto-detect' : null), quality: profile.quality && profile.quality !== 'balanced' ? profile.quality : (preset.quality || 'balanced'), regionHint, regionLabel: REGION_LABELS[regionHint], autoFullscreen: profile.autoFullscreen !== false, surfaces: surfaceList(entry), requirements, missingCapabilities: Object.freeze(missingCapabilities), health: Object.freeze({strategy: 'reachability-only', url: entry.url, authenticated: false}), notes: Object.freeze(notes)});
 }
 
 export function providerTroubleshooting(integration) {
