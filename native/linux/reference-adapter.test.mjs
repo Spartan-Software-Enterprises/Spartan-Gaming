@@ -26,6 +26,17 @@ test('Linux reference input maps only normalized keyboard and pointer operations
   assert.equal(keyName('End'), 'end');
   assert.equal(keyName('Insert'), 'insert');
   assert.equal(keyName('Delete'), 'delete');
+  assert.equal(keyName('Comma'), 'comma');
+  assert.equal(keyName('Period'), 'period');
+  assert.equal(keyName('Semicolon'), 'semicolon');
+  assert.equal(keyName('Quote'), 'apostrophe');
+  assert.equal(keyName('Backquote'), 'grave');
+  assert.equal(keyName('Slash'), 'slash');
+  assert.equal(keyName('Backslash'), 'backslash');
+  assert.equal(keyName('Minus'), 'minus');
+  assert.equal(keyName('Equal'), 'equal');
+  assert.equal(keyName('BracketLeft'), 'bracketleft');
+  assert.equal(keyName('BracketRight'), 'bracketright');
   assert.throws(() => inputCommand({kind: 'button', control: 'a'}), /does not implement/);
 });
 

@@ -30,3 +30,8 @@ test('Windows native input contract preserves frontend pointer button transition
   assert.match(source, /VK_F12/);
   assert.match(source, /pointer:cancel/);
 });
+
+test('Windows native input contract maps browser punctuation codes', async () => {
+  const source = await (await import('node:fs/promises')).readFile(new URL('./src/bindings.cpp', import.meta.url), 'utf8');
+  for (const code of ['Comma', 'Period', 'Semicolon', 'Quote', 'Backquote', 'Slash', 'Backslash', 'Minus', 'Equal', 'BracketLeft', 'BracketRight']) assert.match(source, new RegExp(`"${code}"`));
+});

@@ -32,3 +32,8 @@ test('macOS native input contract preserves frontend pointer button transitions'
   assert.match(source, /kVK_ANSI_0/);
   assert.match(source, /pointer:cancel/);
 });
+
+test('macOS native input contract maps browser punctuation codes', async () => {
+  const source = await (await import('node:fs/promises')).readFile(new URL('./src/bindings.mm', import.meta.url), 'utf8');
+  for (const code of ['Comma', 'Period', 'Semicolon', 'Quote', 'Backquote', 'Slash', 'Backslash', 'Minus', 'Equal', 'BracketLeft', 'BracketRight']) assert.match(source, new RegExp(`"${code}"`));
+});

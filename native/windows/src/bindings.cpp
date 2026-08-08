@@ -67,6 +67,18 @@ WORD key_code(const std::string& control) {
   if (control == "Escape") return VK_ESCAPE;
   if (control == "Tab") return VK_TAB;
   if (control == "Backspace") return VK_BACK;
+  if (control == "Comma") return VK_OEM_COMMA;
+  if (control == "Period") return VK_OEM_PERIOD;
+  if (control == "Semicolon") return VK_OEM_1;
+  if (control == "Quote") return VK_OEM_7;
+  if (control == "Backquote") return VK_OEM_3;
+  if (control == "Slash") return VK_OEM_2;
+  if (control == "Backslash") return VK_OEM_5;
+  if (control == "Minus") return VK_OEM_MINUS;
+  if (control == "Equal") return VK_OEM_PLUS;
+  if (control == "BracketLeft") return VK_OEM_4;
+  if (control == "BracketRight") return VK_OEM_6;
+  if (control == "IntlBackslash") return VK_OEM_102;
   if (control == "ArrowUp") return VK_UP;
   if (control == "ArrowDown") return VK_DOWN;
   if (control == "ArrowLeft") return VK_LEFT;
