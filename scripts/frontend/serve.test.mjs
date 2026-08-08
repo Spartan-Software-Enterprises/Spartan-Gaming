@@ -11,7 +11,7 @@ async function withServer(run) {
 test('frontend server redirects the origin to the dashboard and serves catalogs', () => withServer(async origin => {
   const root = await fetch(origin, {redirect: 'manual'});
   assert.equal(root.status, 302);
-  assert.equal(root.headers.get('location'), '/dashboard/');
+  assert.equal(root.headers.get('location'), '/dashboard/?startup=1');
   const dashboard = await fetch(`${origin}/dashboard/`);
   assert.equal(dashboard.status, 200);
   const page = await fetch(`${origin}/dashboard/index.html`);

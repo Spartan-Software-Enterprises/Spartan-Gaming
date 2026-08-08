@@ -2,7 +2,7 @@
   "name": "Spartan Gaming",
   "short_name": "Spartan",
   "description": "Open-source Chromium gaming frontend for cloud gaming, streaming, emulation, and controllers.",
-  "start_url": "../dashboard/index.html",
+  "start_url": "../dashboard/?startup=1",
   "scope": "../",
   "display": "standalone",
   "background_color": "#080b10",

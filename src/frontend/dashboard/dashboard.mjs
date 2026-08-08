@@ -17,12 +17,15 @@ import { createSettingsStore } from '../settings/profile.mjs';
 import { launchExternalSurface } from '../launch/behavior.mjs';
 import { checkProviderCatalog } from '../providers/catalog-health.mjs';
 import { clearSessionRecoveryHandoff, readSessionRecoveryHandoff } from '../session/recovery-handoff.mjs';
+import { resolveStartupRoute } from '../startup/route.mjs';
 
 const launchHistory = createLaunchHistoryStore();
 const workspaceStore = createWorkspaceStore();
 const communityCatalogStore = createCommunityProviderCatalogStore();
 const settings = createSettingsStore().read();
 const recoveryHandoff = settings['general.restoreSession'] !== false ? readSessionRecoveryHandoff(sessionStorage) : null;
+const startupRoute = new URLSearchParams(globalThis.location?.search || '').get('startup') === '1' ? resolveStartupRoute(settings, {recovery: recoveryHandoff, lastLaunch: launchHistory.latest()}) : null;
+if (startupRoute && typeof globalThis.location?.replace === 'function') globalThis.location.replace(startupRoute);
 let activeWorkspace = workspaceStore.active;
 let favoritesStore = createFavoritesStore({workspaceId: activeWorkspace.id});
 const requestedFilter = new URLSearchParams(globalThis.location?.search || '').get('filter');

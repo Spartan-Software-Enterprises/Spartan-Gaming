@@ -50,7 +50,7 @@ export function chromiumBinaryPath({platform, out, binary} = {}) {
   return path.join(output, platform === 'windows' ? 'chrome.exe' : 'chrome');
 }
 
-export function createChromiumShellPlan({manifest = loadChromiumManifest(), platform, out, binary, url = 'http://127.0.0.1:4173/dashboard/', userDataDir = ''} = {}) {
+export function createChromiumShellPlan({manifest = loadChromiumManifest(), platform, out, binary, url = 'http://127.0.0.1:4173/dashboard/?startup=1', userDataDir = ''} = {}) {
   validateChromiumManifest(manifest);
   const selectedPlatform = platformFor(platform);
   const descriptor = manifest.targets.find(target => target.id === selectedPlatform);
@@ -73,7 +73,7 @@ export async function launchChromiumShell({plan, serve = false, frontendRoot, pu
   if (serve) {
     frontend = createFrontendServer({host: '127.0.0.1', port: 0, ...(frontendRoot ? {root: frontendRoot} : {}), ...(publicRoot ? {publicRoot} : {})});
     const address = await frontend.listen();
-    const url = `http://127.0.0.1:${address.port}/dashboard/`;
+    const url = `http://127.0.0.1:${address.port}/dashboard/?startup=1`;
     activePlan = createChromiumShellPlan({...plan, url});
   }
   try {

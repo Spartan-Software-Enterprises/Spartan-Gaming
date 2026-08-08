@@ -27,6 +27,6 @@ test('Chromium shell can orchestrate a local HTTP frontend without shell executi
   const running = await launchChromiumShell({plan: createChromiumShellPlan({platform: 'linux', binary: process.execPath}), serve: true, spawnImpl: (program, args, options) => { invocation = {program, args, options}; return {kill() {}}; }});
   assert.equal(invocation.program, process.execPath);
   assert.equal(invocation.options.shell, false);
-  assert.match(running.plan.url, /^http:\/\/127\.0\.0\.1:\d+\/dashboard\/$/);
+  assert.match(running.plan.url, /^http:\/\/127\.0\.0\.1:\d+\/dashboard\/\?startup=1$/);
   await running.close();
 });

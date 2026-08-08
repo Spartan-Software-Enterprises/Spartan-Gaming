@@ -51,7 +51,7 @@ function createAssetResolver({root = frontendRoot, publicRoot = repositoryRoot} 
       }
     }
     const firstSegment = decoded.split('/')[1];
-    if (firstSegment && ['adapters', 'dashboard', 'diagnostics', 'emulation', 'host', 'input', 'player', 'providers', 'settings', 'workspaces'].includes(firstSegment)) return {file: safePath(root, decoded)};
+    if (firstSegment && ['adapters', 'dashboard', 'diagnostics', 'emulation', 'host', 'input', 'player', 'providers', 'settings', 'startup', 'workspaces'].includes(firstSegment)) return {file: safePath(root, decoded)};
     if (decoded === '/favicon.ico') return {file: path.join(publicRoot, 'favicon.ico')};
     return {status: 404};
   };
@@ -89,7 +89,7 @@ export function createFrontendServer({host = '127.0.0.1', port = 4173, root = fr
       response.writeHead(405, {'allow': 'GET, HEAD'}); response.end('Method Not Allowed'); return;
     }
     const url = new URL(request.url || '/', `http://${request.headers.host || `${host}:${port}`}`);
-    if (url.pathname === '/') { response.writeHead(302, {'location': '/dashboard/'}); response.end(); return; }
+    if (url.pathname === '/') { response.writeHead(302, {'location': '/dashboard/?startup=1'}); response.end(); return; }
     if (url.pathname === '/dashboard' || url.pathname === '/dashboard/index.html') {
       if (url.pathname === '/dashboard') { response.writeHead(301, {'location': '/dashboard/'}); response.end(); return; }
     }
