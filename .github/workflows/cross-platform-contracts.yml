@@ -42,3 +42,16 @@ jobs:
         run: npm run test:browser-adapter
       - name: Validate Linux reference adapter contract
         run: npm run test:native-linux
+
+  native-linux-package:
+    name: native Linux package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - name: Build Linux Node-API package
+        run: npm run native:build-linux
+      - name: Test installed Linux package
+        run: npm run test:native-linux-package

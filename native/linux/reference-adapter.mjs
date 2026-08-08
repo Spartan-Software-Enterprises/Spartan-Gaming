@@ -1,7 +1,7 @@
 import {spawn, spawnSync} from 'node:child_process';
-import {createAudioCapturePlan} from '../../host/audio.mjs';
-import {createCapturePlan} from '../../host/media.mjs';
-import {createManagedProcess} from '../../host/process.mjs';
+const {createAudioCapturePlan} = await import('../../host/audio.mjs').catch(() => import('./host/audio.mjs'));
+const {createCapturePlan} = await import('../../host/media.mjs').catch(() => import('./host/media.mjs'));
+const {createManagedProcess} = await import('../../host/process.mjs').catch(() => import('./host/process.mjs'));
 
 const PLATFORM = 'linux';
 const DEFAULT_ENVIRONMENT = process.env;

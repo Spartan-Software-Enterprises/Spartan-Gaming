@@ -216,4 +216,8 @@ audio plans through shell-free process arguments after explicit permission; and
 maps normalized keyboard and pointer operations to X11 `xdotool` argv calls.
 Gamepad/uinput, portal consent UI, hardware encoder selection, and signed
 distribution are intentionally not claimed by this reference adapter. The
-compiled `@spartan-gaming/native-linux` package remains the production path.
+compiled `@spartan-gaming/native-linux` package now adds a Node-API `uinput`
+virtual gamepad for normalized buttons and axes. It is built with
+`npm run native:build-linux`, installed into the isolated native artifact, and
+verified in Linux CI. The package still intentionally reports no haptics,
+portal consent workflow, or hardware encoder selection.

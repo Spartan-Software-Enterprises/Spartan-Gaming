@@ -12,6 +12,8 @@
     "test:display": "node --test src/frontend/display/policy.test.mjs",
     "test:browser-adapter": "node --test src/frontend/emulation/browser-adapter-loader.test.mjs",
     "test:native-linux": "node --test native/linux/reference-adapter.test.mjs",
+    "native:build-linux": "node scripts/native/package.mjs --platform linux --execute",
+    "test:native-linux-package": "node --test native/linux/package.test.mjs",
     "native:plan": "node scripts/native/package.mjs",
     "host": "node host/agent.mjs",
     "signaling": "node signaling/agent.mjs",

@@ -19,10 +19,10 @@ test('native package CLI accepts platform aliases and preserves a plan-only defa
   assert.equal(parseNativePackageArguments(['--matrix', '--json', '--configuration', 'Debug']).configuration, 'Debug');
 });
 
-test('native package readiness distinguishes a reference source directory from a buildable CMake package', () => {
+test('native package readiness detects the buildable Linux package while other targets remain plan-only', () => {
   const plan = createNativePackagePlan({platform: 'linux'});
   assert.equal(plan.sourceDirectoryPresent, true);
-  assert.equal(plan.sourcePresent, false);
+  assert.equal(plan.sourcePresent, true);
 });
 
 test('native package CLI rejects malformed options and unsupported platforms', () => {
