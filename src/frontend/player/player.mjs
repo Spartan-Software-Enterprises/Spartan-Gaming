@@ -26,6 +26,7 @@ import {describeNegotiationAdjustments, formatNegotiationAdjustments} from '../s
 import {createSessionDiagnosticsBundle, createSessionTelemetryLog, serializeSessionDiagnostics} from '../session/telemetry-log.mjs';
 import {clearSessionRecoveryHandoff, readSessionRecoveryHandoff, saveSessionRecoveryHandoff} from '../session/recovery-handoff.mjs';
 import {createActiveProfileStorage} from '../profiles/storage.mjs';
+import {resolveSessionPauseAction} from './session-controls.mjs';
 
 const query = new URLSearchParams(location.search);
 const pendingHostPair = readPendingHostPair(sessionStorage); clearPendingHostPair(sessionStorage);
@@ -54,6 +55,7 @@ let inputSequence = 0;
 let audioEnabled = true;
 let autoFullscreenAttempted = false;
 let focusPaused = false;
+let sessionPaused = false;
 let mediaObservation = null;
 let sessionPreflightReady = false;
 let negotiationAdjustments = [];
@@ -67,6 +69,8 @@ installLanHandoffListener({handoffId: query.get('handoff'), target: 'client', on
 if (!inputPolicy.allows('gamepad')) elements.gamepad.textContent = 'Disabled by settings';
 elements.stage.style.touchAction = 'none';
 elements.diagnostics.querySelector('h2')?.insertAdjacentHTML('afterend', '<button class="secondary" data-action="export-session" type="button">Export session report</button>');
+document.querySelector('.overlay-bottom')?.insertAdjacentHTML('afterbegin', '<button class="icon-button" data-action="pause" aria-label="Pause session">Ⅱ</button>');
+elements.pause = document.querySelector('[data-action="pause"]');
 
 function apply(event) {
   state = reducePlayerState(state, event);
@@ -168,6 +172,20 @@ elements.connectionForm.addEventListener('submit', async event => {
 
 function acceptHostAnswer() { if (manager.state !== 'negotiating' && manager.state !== 'reconnecting') return; try { const answer = createSessionEnvelope({sessionId: manager.session.id, type: 'session.answer', payload: {accepted: true, capabilities: manager.session.capabilities, hostCapabilities: {media: {state: 'not-configured'}}}}); if (runtime) runtime.receive(answer); else manager.receive(answer); if (manager.state !== 'connected') return; apply({type: 'session.negotiated', capabilities: manager.negotiated}); apply({type: 'session.state', status: 'connected'}); apply({type: 'media.state', state: 'not-configured'}); elements.demo.classList.add('is-hidden'); } catch (error) { apply({type: 'error', message: error.message || 'Host answer rejected'}); } }
 function requestReconnect() { try { if (runtime?.reconnect.state === 'waiting') { runtime.cancelReconnect(); elements.message.textContent = 'Reconnect cancelled. Press reconnect to try again.'; return; } const envelope = runtime ? runtime.requestReconnect() : manager.requestReconnect(); apply({type: 'session.state', status: 'reconnecting'}); window.dispatchEvent(new CustomEvent('spartan:session-reconnect', {detail: envelope})); elements.message.textContent = `Reconnecting (attempt ${envelope.payload.attempt})…`; if (query.get('demo') === '1') setTimeout(acceptHostAnswer, Math.min(envelope.payload.delayMs, 700)); } catch (error) { apply({type: 'error', message: error.message}); } }
+function toggleSessionPause() {
+  const action = resolveSessionPauseAction({status: state.status, paused: sessionPaused});
+  if (!action.available) { elements.message.textContent = action.message; return; }
+  sessionPaused = action.paused;
+  if (sessionPaused) {
+    elements.video.pause();
+    try { runtime?.requestControl(action.action); } catch { /* local pause remains useful when no control plane is active */ }
+    elements.pause.textContent = action.glyph; elements.pause.setAttribute('aria-label', action.label); elements.message.textContent = action.message; mediaSession.setPlaybackState('paused');
+  } else {
+    elements.video.play?.().catch?.(() => {});
+    try { runtime?.requestControl(action.action); } catch { /* local resume remains useful when no control plane is active */ }
+    elements.pause.textContent = action.glyph; elements.pause.setAttribute('aria-label', action.label); elements.message.textContent = action.message; mediaSession.setPlaybackState('playing');
+  }
+}
 function applyFocusPolicy(isBlurred) { if (!sessionPreferences.preferences.pauseOnBlur || state.status !== 'connected') return; if (isBlurred && !focusPaused) { focusPaused = true; elements.video.pause(); try { runtime?.requestControl('pause'); } catch { /* focus changes must not interrupt teardown */ } } else if (!isBlurred && focusPaused) { focusPaused = false; elements.video.play?.().catch?.(() => {}); try { runtime?.requestControl('resume'); } catch { /* focus changes must not interrupt teardown */ } } }
 function emitInput(event) { if (!inputPolicy.allows(event.source)) return; try { const envelope = createInputEventEnvelope({sessionId: manager.session?.id, event, sequence: ++inputSequence}); if (runtime) runtime.send(envelope); window.dispatchEvent(new CustomEvent('spartan:input', {detail: envelope})); } catch { /* Input is best-effort while a session is ending. */ } }
 function requestQuality(profileId) { try { if (runtime) runtime.requestQuality(profileId); else manager.setQuality(profileId); apply({type: 'quality.changed', profile: profileId}); elements.message.textContent = `Quality set to ${profileId}.`; } catch (error) { elements.qualitySelect.value = state.quality; elements.message.textContent = error.message; } }
@@ -195,7 +213,7 @@ elements.audioOutput?.addEventListener('change', async event => { try { await se
 elements.qualitySelect?.addEventListener('change', event => requestQuality(event.target.value));
 document.querySelector('[data-action="fullscreen"]').addEventListener('click', () => immersive.toggle().catch(error => { elements.message.textContent = error.message; }));
 document.querySelector('[data-action="pip"]').addEventListener('click', async () => { try { const active = await togglePictureInPicture(elements.video); const button = document.querySelector('[data-action="pip"]'); button.setAttribute('aria-label', active ? 'Exit Picture-in-Picture' : 'Enter Picture-in-Picture'); elements.message.textContent = active ? 'Picture-in-Picture enabled.' : 'Picture-in-Picture closed.'; } catch (error) { elements.message.textContent = error.message; } });
-elements.screenshot = document.querySelector('[data-action="screenshot"]'); elements.record = document.querySelector('[data-action="record"]'); elements.screenshot.addEventListener('click', takeScreenshot); elements.record.addEventListener('click', toggleRecording); elements.replay?.addEventListener('click', saveInstantReplay); elements.reconnect = document.querySelector('[data-action="reconnect"]'); elements.reconnect.addEventListener('click', requestReconnect);
+elements.screenshot = document.querySelector('[data-action="screenshot"]'); elements.record = document.querySelector('[data-action="record"]'); elements.screenshot.addEventListener('click', takeScreenshot); elements.record.addEventListener('click', toggleRecording); elements.replay?.addEventListener('click', saveInstantReplay); elements.reconnect = document.querySelector('[data-action="reconnect"]'); elements.reconnect.addEventListener('click', requestReconnect); elements.pause?.addEventListener('click', toggleSessionPause);
 document.querySelector('[data-action="export-session"]')?.addEventListener('click', exportSessionDiagnostics);
 document.querySelector('[data-action="overlay"]').addEventListener('click', () => apply({type: 'toggle.overlay'}));
 document.querySelector('[data-action="diagnostics"]').addEventListener('click', () => apply({type: 'toggle.diagnostics'}));

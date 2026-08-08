@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createPlayerState, formatLatency, formatNegotiatedCapabilities, formatRate, reducePlayerState} from './player-state.mjs';
+import './session-controls.test.mjs';
 
 test('player state tracks session, quality, and telemetry events immutably', () => { let state = createPlayerState(); state = reducePlayerState(state, {type: 'session.state', status: 'connected'}); state = reducePlayerState(state, {type: 'quality.changed', profile: 'low'}); state = reducePlayerState(state, {type: 'telemetry.health', rttMs: 42, packetLossPct: 1.5, decodeFps: 59.6, framesDropped: 3, jitterMs: 4, bitrateKbps: 2400}); assert.equal(state.status, 'connected'); assert.equal(state.quality, 'low'); assert.equal(state.latencyMs, 42); assert.equal(state.decodeFps, 60); assert.equal(state.framesDropped, 3); assert.equal(state.jitterMs, 4); assert.equal(state.bitrateKbps, 2400); assert.equal(Object.isFrozen(state), true); });
 test('player controls toggle overlays and report errors', () => { let state = createPlayerState(); state = reducePlayerState(state, {type: 'toggle.overlay'}); assert.equal(state.overlayVisible, false); state = reducePlayerState(state, {type: 'error', message: 'Host unavailable'}); assert.equal(state.status, 'error'); assert.equal(state.error, 'Host unavailable'); });

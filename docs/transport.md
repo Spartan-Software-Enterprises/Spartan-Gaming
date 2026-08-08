@@ -97,6 +97,9 @@ blur/hidden visibility, then sends `resume` and resumes local playback when the
 window returns. Host runtimes expose this as an optional control callback so
 native or provider adapters can pause the owned game process when supported;
 unsupported backends may safely ignore the request.
+The player also exposes an explicit Pause/Resume control in the session
+overlay; it uses the same validated control envelope and remains useful as a
+local media pause when no host control plane is active.
 The player emits normalized controller and keyboard actions as protocol v1 `input.event` envelopes through the `spartan:input` browser event. Gamepad values include deadzone processing and signed analog ranges; adapters are responsible for forwarding these envelopes over the active data channel and applying the selected controller profile on the host side. The browser does not transmit raw device identity or full Gamepad objects.
 
 Session preferences now carry the selected built-in controller layout and a
