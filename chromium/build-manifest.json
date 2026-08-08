@@ -22,6 +22,6 @@
     "settingsEntry": "src/frontend/settings/index.html",
     "playerEntry": "src/frontend/player/index.html",
     "overlayEntry": "src/frontend/diagnostics/index.html",
-    "integrationStatus": "frontend-overlay-contract"
+    "integrationStatus": "external-chromium-app-shell-launcher"
   }
 }

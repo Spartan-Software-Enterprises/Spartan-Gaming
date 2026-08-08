@@ -71,6 +71,22 @@ artifact and binary metadata. Add `--execute` only when running on a prepared
 external checkout; this repository never receives Chromium source or generated
 build output.
 
+## Launch the Spartan shell
+
+After building Chromium, the shell launcher opens the existing Spartan
+frontend in the platform binary as a standalone app window. With `--serve`, it
+uses a real HTTP origin so service workers, fetch, and browser permissions work
+like the development server:
+
+```bash
+npm run chromium:launch -- --platform linux --out "$SPARTAN_CHROMIUM_SRC/out/SpartanGaming-linux" --serve --execute
+```
+
+Use `--binary PATH` for a customized output layout, `--url` for an existing
+HTTPS or loopback frontend server, and `--user-data-dir PATH` for an explicit
+external Chromium profile. The launcher rejects repository-owned binaries and
+profile paths and never enables shell execution.
+
 Initial integration gates are browser shell branding, dashboard navigation,
 controller permissions, fullscreen/Pointer Lock/Keyboard Lock, hardware
 decode reporting, and the diagnostics overlay. The frontend can be developed

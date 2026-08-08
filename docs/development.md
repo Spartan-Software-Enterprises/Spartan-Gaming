@@ -41,6 +41,11 @@ Use `npm run chromium:matrix -- --source <external-src> --json` to inspect the
 Linux, macOS, and Windows development-build plans and their artifact metadata;
 the matrix describes external outputs and does not produce binaries in this
 repository.
+After a platform build exists, `npm run chromium:launch -- --platform <target>
+--out <external-out> --serve --execute` starts the local frontend server and
+opens the dashboard in Chromium’s standalone app window. The launcher keeps
+binary/profile paths outside this repository, uses `shell: false`, and allows
+only HTTPS or loopback HTTP URLs.
 Platform-specific prerequisites and signing steps remain owned by Chromium's
 current build documentation and must be rechecked when the branch is selected.
 
