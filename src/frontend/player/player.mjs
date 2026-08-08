@@ -20,6 +20,7 @@ import {createTouchControlEvent, createTouchControlLayout, normalizeTouchLayout}
 import {preparePlayerSession} from './preflight.mjs';
 import {clearPendingLaunchHandoff, readPendingLaunchHandoff} from '../launch/handoff.mjs';
 import {canSelectAudioOutput, listAudioOutputDevices, selectAudioOutput} from './audio-output.mjs';
+import {createMediaSessionController} from './media-session.mjs';
 
 const query = new URLSearchParams(location.search);
 const pendingHostPair = readPendingHostPair(sessionStorage); clearPendingHostPair(sessionStorage);
@@ -37,6 +38,7 @@ const elements = {
   status: document.querySelector('[data-status]'), message: document.querySelector('[data-stage-message]'), quality: document.querySelector('[data-quality]'), qualitySelect: document.querySelector('[data-quality-select]'), qualityDetail: document.querySelector('[data-quality-detail]'), pip: document.querySelector('[data-action="pip"]'),
   latency: document.querySelector('[data-latency]'), latencyDetail: document.querySelector('[data-latency-detail]'), loss: document.querySelector('[data-loss]'), decodeFps: document.querySelector('[data-decode-fps]'), dropped: document.querySelector('[data-dropped]'), jitter: document.querySelector('[data-jitter]'), bitrate: document.querySelector('[data-bitrate]'), gamepad: document.querySelector('[data-gamepad]'), audio: document.querySelector('[data-audio]'), audioOutput: document.querySelector('[data-audio-output]'), negotiated: document.querySelector('[data-negotiated]'), diagnostics: document.querySelector('[data-diagnostics]'), overlay: document.querySelectorAll('[data-overlay]'), stage: document.querySelector('[data-stage]'), video: document.querySelector('[data-video]'), demo: document.querySelector('[data-demo-answer]'), connectionForm: document.querySelector('[data-connection-form]'), connectionEndpoint: document.querySelector('[data-connection-endpoint]'), connectionSession: document.querySelector('[data-connection-session]'), connectionTicket: document.querySelector('[data-connection-ticket]'), sessionName: document.querySelector('[data-session-name]'), transport: document.querySelector('[data-transport]'),
 };
+const mediaSession = createMediaSessionController({video: elements.video});
 let state = createPlayerState({status: 'negotiating'});
 let recording = null;
 let inputSequence = 0;
@@ -84,7 +86,7 @@ async function prepareSession() {
 }
 
 async function connect(connectionValues = {}) {
-  const backendId = query.get('backend') || 'spartan-host'; const backendName = query.get('name') || pendingHostPair?.name || 'Spartan Host'; elements.sessionName.textContent = backendName;
+  const backendId = query.get('backend') || 'spartan-host'; const backendName = query.get('name') || pendingHostPair?.name || 'Spartan Host'; elements.sessionName.textContent = backendName; mediaSession.update({title: backendName, artist: 'Spartan Gaming', album: 'Cloud gaming session'});
   const connection = normalizePlayerConnection(connectionValues);
   const authenticated = hasAuthenticatedPlayerConnection(connection);
   if (!connection.endpoint) throw new Error('Signaling endpoint is required');
@@ -100,6 +102,7 @@ async function connect(connectionValues = {}) {
     mediaObservation?.disconnect();
     mediaObservation = observeMediaStream(stream, nextState => { elements.audio.textContent = nextState.hasAudio ? (audioEnabled ? 'Active' : 'Muted') : 'No track'; });
     elements.audio.textContent = mediaState.hasAudio ? (audioEnabled ? 'Active' : 'Muted') : 'No track'; elements.video.play().catch(() => {});
+    mediaSession.setPlaybackState('playing');
   });
   runtime.on('stream', () => { apply({type: 'media.state', state: 'active'}); elements.demo.classList.add('is-hidden'); });
   runtime.on('session.answer', message => { const mediaState = message.payload?.hostCapabilities?.media?.state || (message.payload?.sdp ? 'negotiating' : 'not-configured'); apply({type: 'media.state', state: mediaState}); apply({type: 'session.negotiated', capabilities: manager.negotiated}); elements.demo.classList.add('is-hidden'); });
@@ -155,7 +158,7 @@ document.querySelector('[data-action="pip"]').addEventListener('click', async ()
 elements.screenshot = document.querySelector('[data-action="screenshot"]'); elements.record = document.querySelector('[data-action="record"]'); elements.screenshot.addEventListener('click', takeScreenshot); elements.record.addEventListener('click', toggleRecording); elements.reconnect = document.querySelector('[data-action="reconnect"]'); elements.reconnect.addEventListener('click', requestReconnect);
 document.querySelector('[data-action="overlay"]').addEventListener('click', () => apply({type: 'toggle.overlay'}));
 document.querySelector('[data-action="diagnostics"]').addEventListener('click', () => apply({type: 'toggle.diagnostics'}));
-document.querySelector('[data-action="end"]').addEventListener('click', () => { if (runtime) runtime.close(); else if (manager.state === 'connected' || manager.state === 'reconnecting') manager.close(); apply({type: 'session.state', status: 'ended'}); });
+document.querySelector('[data-action="end"]').addEventListener('click', () => { if (runtime) runtime.close(); else if (manager.state === 'connected' || manager.state === 'reconnecting') manager.close(); mediaSession.dispose(); apply({type: 'session.state', status: 'ended'}); });
 elements.demo.addEventListener('click', acceptHostAnswer);
 window.addEventListener('spartan:telemetry', event => { const sample = event.detail || {}; try { const telemetry = createSessionEnvelope({sessionId: manager.session.id, type: 'telemetry.health', payload: sample}); if (runtime) runtime.receive(telemetry); else manager.receive(telemetry); apply({type: 'telemetry.health', rttMs: sample.rttMs, packetLossPct: sample.packetLossPct, decodeFps: sample.decodeFps, framesDropped: sample.framesDropped, jitterMs: sample.jitterMs, bitrateKbps: sample.bitrateKbps}); apply({type: 'quality.changed', profile: manager.quality.id}); } catch { apply({type: 'error', message: 'Invalid session telemetry received'}); } });
 window.addEventListener('keydown', event => keyboardInput(event, true)); window.addEventListener('keyup', event => keyboardInput(event, false));

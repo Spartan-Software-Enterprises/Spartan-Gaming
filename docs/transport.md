@@ -37,6 +37,9 @@ The player also exposes capability-gated Picture-in-Picture for supported
 Chromium builds. The control only requests PiP after the user enables it in
 Gaming settings and uses the browser's media permission model; Spartan Gaming
 does not copy, upload, or persist the stream when the floating window is active.
+The same player registers Media Session metadata and play, pause, stop, and
+bounded seek actions when Chromium exposes `navigator.mediaSession`, allowing
+hardware media keys and supported OS controls to operate the active stream.
 
 The capability probe also records privacy-safe HDR availability, display count,
 extended-display state, and observed refresh-rate ceilings. Session preferences
