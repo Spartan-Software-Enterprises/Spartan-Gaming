@@ -49,6 +49,7 @@ test('session manager records negotiated capabilities from a compatible answer',
 });
 
 test('session manager creates a manual quality request for an active session', () => { const manager = createSessionManager({idFactory: () => 'ses-quality'}); const offer = manager.start({backend: {id: 'host'}}); assert.equal(manager.setQuality('high').profile, 'high'); assert.equal(manager.qualityRequest.profile, 'high'); assert.throws(() => manager.setQuality('unknown'), /unknown quality profile/); assert.equal(offer.payload.quality.profile, 'balanced'); });
+test('session manager uses bounded quality profiles from session preferences', () => { const manager = createSessionManager({idFactory: () => 'ses-ceiling'}); manager.start({backend: {id: 'host'}, preferences: {qualityPreset: 'high', qualityProfiles: [{id: 'high', maxWidth: 1280, maxHeight: 720, maxFramerate: 30, bitrateKbps: 5000}]}}); assert.deepEqual(manager.qualityRequest, {type: 'quality.request', profile: 'high', maxWidth: 1280, maxHeight: 720, maxFramerate: 30, bitrateKbps: 5000}); });
 
 test('session manager refuses an incompatible answer before connecting', () => {
   const manager = createSessionManager({idFactory: () => 'ses-incompatible'});

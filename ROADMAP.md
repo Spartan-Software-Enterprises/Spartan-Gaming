@@ -46,6 +46,7 @@
 - [x] Local browser-to-browser LAN demo coordinator for authenticated signaling and WebRTC display streaming.
 - [x] Adaptive bitrate and resolution policy.
 - [x] Telemetry-driven adaptive quality consumes bounded WebRTC bitrate and decode-rate samples.
+- [x] Streaming settings ceilings constrain every adaptive quality tier and request.
 - [x] In-session manual quality selection using validated quality requests.
 - [x] Bounded reconnection and session recovery policy with player control.
 - [x] Per-codec hardware decode detection through MediaCapabilities with safe fallback.

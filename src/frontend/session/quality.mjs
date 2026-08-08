@@ -6,6 +6,17 @@ export const QUALITY_PROFILES = Object.freeze([
   Object.freeze({id: 'emergency', maxWidth: 960, maxHeight: 540, maxFramerate: 30, bitrateKbps: 3000}),
 ]);
 
+function boundedLimit(value, fallback, minimum, maximum) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? Math.min(maximum, Math.max(minimum, Math.floor(number))) : fallback;
+}
+
+/** Create adaptive profiles constrained by the user's negotiated session ceiling. */
+export function createQualityProfiles({maxWidth = 3840, maxHeight = 2160, maxFramerate = 60, bitrateKbps = 25000} = {}) {
+  const limits = {maxWidth: boundedLimit(maxWidth, 3840, 320, 16384), maxHeight: boundedLimit(maxHeight, 2160, 180, 8640), maxFramerate: boundedLimit(maxFramerate, 60, 1, 240), bitrateKbps: boundedLimit(bitrateKbps, 25000, 250, 100000)};
+  return Object.freeze(QUALITY_PROFILES.map(profile => Object.freeze({...profile, maxWidth: Math.min(profile.maxWidth, limits.maxWidth), maxHeight: Math.min(profile.maxHeight, limits.maxHeight), maxFramerate: Math.min(profile.maxFramerate, limits.maxFramerate), bitrateKbps: Math.min(profile.bitrateKbps, limits.bitrateKbps)})));
+}
+
 function clamp(value, minimum, maximum) { return Math.max(minimum, Math.min(maximum, value)); }
 function profileIndex(id) { return Math.max(0, QUALITY_PROFILES.findIndex(profile => profile.id === id)); }
 
