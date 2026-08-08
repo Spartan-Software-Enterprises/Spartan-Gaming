@@ -28,6 +28,7 @@ import {clearSessionRecoveryHandoff, readSessionRecoveryHandoff, saveSessionReco
 import {createActiveProfileStorage} from '../profiles/storage.mjs';
 import {resolveSessionPauseAction} from './session-controls.mjs';
 import {formatDisplayNegotiation, resolveDisplayNegotiation} from '../display/negotiation.mjs';
+import {formatSessionVolume, setSessionVolume} from './volume.mjs';
 
 const query = new URLSearchParams(location.search);
 const pendingHostPair = readPendingHostPair(sessionStorage); clearPendingHostPair(sessionStorage);
@@ -46,7 +47,7 @@ const immersive = createImmersiveController({target: document.querySelector('[da
 let runtime = null;
 const elements = {
   status: document.querySelector('[data-status]'), message: document.querySelector('[data-stage-message]'), quality: document.querySelector('[data-quality]'), qualitySelect: document.querySelector('[data-quality-select]'), qualityDetail: document.querySelector('[data-quality-detail]'), pip: document.querySelector('[data-action="pip"]'),
-  latency: document.querySelector('[data-latency]'), latencyDetail: document.querySelector('[data-latency-detail]'), loss: document.querySelector('[data-loss]'), decodeFps: document.querySelector('[data-decode-fps]'), dropped: document.querySelector('[data-dropped]'), jitter: document.querySelector('[data-jitter]'), bitrate: document.querySelector('[data-bitrate]'), gamepad: document.querySelector('[data-gamepad]'), audio: document.querySelector('[data-audio]'), audioOutput: document.querySelector('[data-audio-output]'), replay: document.querySelector('[data-action="replay"]'), negotiated: document.querySelector('[data-negotiated]'), display: document.querySelector('[data-display]'), diagnostics: document.querySelector('[data-diagnostics]'), overlay: document.querySelectorAll('[data-overlay]'), stage: document.querySelector('[data-stage]'), video: document.querySelector('[data-video]'), demo: document.querySelector('[data-demo-answer]'), connectionForm: document.querySelector('[data-connection-form]'), connectionEndpoint: document.querySelector('[data-connection-endpoint]'), connectionSession: document.querySelector('[data-connection-session]'), connectionTicket: document.querySelector('[data-connection-ticket]'), sessionName: document.querySelector('[data-session-name]'), transport: document.querySelector('[data-transport]'),
+  latency: document.querySelector('[data-latency]'), latencyDetail: document.querySelector('[data-latency-detail]'), loss: document.querySelector('[data-loss]'), decodeFps: document.querySelector('[data-decode-fps]'), dropped: document.querySelector('[data-dropped]'), jitter: document.querySelector('[data-jitter]'), bitrate: document.querySelector('[data-bitrate]'), gamepad: document.querySelector('[data-gamepad]'), audio: document.querySelector('[data-audio]'), audioOutput: document.querySelector('[data-audio-output]'), sessionVolume: document.querySelector('[data-session-volume]'), sessionVolumeValue: document.querySelector('[data-session-volume-value]'), replay: document.querySelector('[data-action="replay"]'), negotiated: document.querySelector('[data-negotiated]'), display: document.querySelector('[data-display]'), diagnostics: document.querySelector('[data-diagnostics]'), overlay: document.querySelectorAll('[data-overlay]'), stage: document.querySelector('[data-stage]'), video: document.querySelector('[data-video]'), demo: document.querySelector('[data-demo-answer]'), connectionForm: document.querySelector('[data-connection-form]'), connectionEndpoint: document.querySelector('[data-connection-endpoint]'), connectionSession: document.querySelector('[data-connection-session]'), connectionTicket: document.querySelector('[data-connection-ticket]'), sessionName: document.querySelector('[data-session-name]'), transport: document.querySelector('[data-transport]'),
 };
 const mediaSession = createMediaSessionController({video: elements.video});
 let state = createPlayerState({status: 'negotiating'});
@@ -71,6 +72,9 @@ installLanHandoffListener({handoffId: query.get('handoff'), target: 'client', on
 if (!inputPolicy.allows('gamepad')) elements.gamepad.textContent = 'Disabled by settings';
 elements.stage.style.touchAction = 'none';
 elements.diagnostics.querySelector('h2')?.insertAdjacentHTML('afterend', '<button class="secondary" data-action="export-session" type="button">Export session report</button>');
+elements.diagnostics.querySelector('.audio-output-control')?.insertAdjacentHTML('beforeend', '<label for="session-volume">Game volume</label><input id="session-volume" data-session-volume type="range" min="0" max="100" step="1" value="100" aria-label="Game volume"><output data-session-volume-value for="session-volume">100%</output>');
+elements.sessionVolume = document.querySelector('[data-session-volume]');
+elements.sessionVolumeValue = document.querySelector('[data-session-volume-value]');
 elements.diagnostics.querySelector('dl')?.insertAdjacentHTML('afterbegin', '<div><dt>Display outcome</dt><dd data-display>Pending</dd></div>');
 elements.display = document.querySelector('[data-display]');
 document.querySelector('.overlay-bottom')?.insertAdjacentHTML('afterbegin', '<button class="icon-button" data-action="pause" aria-label="Pause session">Ⅱ</button>');
@@ -109,6 +113,8 @@ async function prepareSession() {
   if (elements.pip) elements.pip.disabled = !sessionPreferences.preferences.pictureInPicture || !canUsePictureInPicture(elements.video);
   if (elements.replay) elements.replay.disabled = !sessionPreferences.preferences.instantReplay;
   elements.video.volume = sessionPreferences.preferences.gameVolume;
+  if (elements.sessionVolume) elements.sessionVolume.value = String(Math.round(sessionPreferences.preferences.gameVolume * 100));
+  if (elements.sessionVolumeValue) elements.sessionVolumeValue.textContent = formatSessionVolume(sessionPreferences.preferences.gameVolume);
   if (sessionPreferences.preferences.showTelemetry && !state.diagnosticsVisible) apply({type: 'toggle.diagnostics'});
   mapper = createInputMapper({bindings: sessionPreferences.preferences.controllerBindings, deadzone: sessionPreferences.preferences.controllerDeadzone});
   inputPolicy = preflight.inputPolicy;
@@ -215,6 +221,7 @@ function exportSessionDiagnostics() { try { const bundle = createSessionDiagnost
 
 document.querySelector('[data-action="audio"]').addEventListener('click', () => { audioEnabled = !audioEnabled; setMediaAudioEnabled(elements.video, audioEnabled); elements.audio.textContent = audioEnabled ? (describeMediaStream(elements.video.srcObject).hasAudio ? 'Active' : 'Waiting') : 'Muted'; const button = document.querySelector('[data-action="audio"]'); button.textContent = audioEnabled ? '🔊' : '🔇'; button.setAttribute('aria-label', audioEnabled ? 'Mute session audio' : 'Unmute session audio'); });
 elements.audioOutput?.addEventListener('change', async event => { try { await selectAudioOutput(elements.video, event.target.value); elements.message.textContent = event.target.value ? 'Session audio output changed.' : 'Session audio is using the browser default output.'; } catch (error) { event.target.value = ''; elements.message.textContent = error.message; } });
+elements.sessionVolume?.addEventListener('input', event => { try { const volume = setSessionVolume(elements.video, Number(event.target.value) / 100); if (elements.sessionVolumeValue) elements.sessionVolumeValue.textContent = formatSessionVolume(volume); elements.message.textContent = `Game volume ${formatSessionVolume(volume)}.`; } catch (error) { elements.message.textContent = error.message; } });
 elements.qualitySelect?.addEventListener('change', event => requestQuality(event.target.value));
 document.querySelector('[data-action="fullscreen"]').addEventListener('click', () => immersive.toggle().catch(error => { elements.message.textContent = error.message; }));
 document.querySelector('[data-action="pip"]').addEventListener('click', async () => { try { const active = await togglePictureInPicture(elements.video); const button = document.querySelector('[data-action="pip"]'); button.setAttribute('aria-label', active ? 'Exit Picture-in-Picture' : 'Enter Picture-in-Picture'); elements.message.textContent = active ? 'Picture-in-Picture enabled.' : 'Picture-in-Picture closed.'; } catch (error) { elements.message.textContent = error.message; } });

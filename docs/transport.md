@@ -52,9 +52,11 @@ The player reports whether video and audio tracks arrived, starts audio
 enabled by default, and provides a local mute toggle without changing the
 remote stream or exposing device data.
 Session preferences also apply the saved game-volume ceiling to the active
-video element and open live diagnostics by default when **Show stream
-telemetry** is enabled; the in-session diagnostics toggle can still hide or
-show that panel afterward.
+video element. The live diagnostics panel also exposes a bounded game-volume
+slider so players can adjust the active stream without muting the session;
+the persisted preference remains the starting value for the next session.
+Diagnostics open by default when **Show stream telemetry** is enabled, and the
+in-session diagnostics toggle can still hide or show that panel afterward.
 
 When **Enable instant replay buffer** is enabled, the player starts a bounded
 local MediaRecorder ring buffer after a stream arrives. The **Save instant
