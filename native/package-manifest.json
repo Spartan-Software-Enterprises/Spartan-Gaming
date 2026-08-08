@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "product": "Spartan Gaming",
+  "buildSystem": "cmake",
+  "packages": [
+    {
+      "id": "native-windows",
+      "platform": "win32",
+      "packageName": "@spartan-gaming/native-windows",
+      "format": "node-addon",
+      "requiredApis": ["Windows Graphics Capture", "WASAPI", "SendInput"],
+      "sourceDirectory": "native/windows",
+      "artifactName": "spartan-native-windows.node"
+    },
+    {
+      "id": "native-macos",
+      "platform": "darwin",
+      "packageName": "@spartan-gaming/native-macos",
+      "format": "node-addon",
+      "requiredApis": ["ScreenCaptureKit", "CoreAudio", "CGEvent / IOHIDUserDevice"],
+      "sourceDirectory": "native/macos",
+      "artifactName": "spartan-native-macos.node"
+    },
+    {
+      "id": "native-linux",
+      "platform": "linux",
+      "packageName": "@spartan-gaming/native-linux",
+      "format": "node-addon",
+      "requiredApis": ["PipeWire / xdg-desktop-portal", "PipeWire / PulseAudio", "uinput"],
+      "sourceDirectory": "native/linux",
+      "artifactName": "spartan-native-linux.node"
+    }
+  ]
+}

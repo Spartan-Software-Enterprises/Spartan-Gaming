@@ -109,6 +109,13 @@ implementation: missing packages, malformed exports, and missing capability
 bindings are reported as unavailable. When a package is present, its bindings
 are passed through the native adapter kit before host startup.
 
+`native/package-manifest.json` and `host/native-package.mjs` provide the
+reproducible package distribution contract. Each desktop target has one
+scoped Node-API package, required platform APIs, an artifact name, and a
+three-step shell-free CMake plan (`configure`, `build`, `install`). Readiness
+stays `planned` until the package probe finds an installed binary; CMake being
+available alone is not reported as native capability readiness.
+
 Its `createBoundary()` method additionally requires a `ready` registry
 descriptor and returns a guarded platform boundary. The
 `createExecutablePlatformHostFromInstalledAdapter()` factory uses that method

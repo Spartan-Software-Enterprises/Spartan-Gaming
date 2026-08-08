@@ -28,6 +28,7 @@ required_files=(
   chromium/args/linux.gn
   chromium/args/mac.gn
   chromium/args/windows.gn
+  native/package-manifest.json
   scripts/chromium/check-environment.mjs
   scripts/chromium/bootstrap.mjs
   scripts/chromium/bootstrap.test.mjs
@@ -63,6 +64,8 @@ required_files=(
   host/native-adapter-kit.test.mjs
   host/native-binding-loader.mjs
   host/native-binding-loader.test.mjs
+  host/native-package.mjs
+  host/native-package.test.mjs
   host/executable-platform-host.mjs
   host/executable-platform-host.test.mjs
   host/adapter-runtime.mjs
@@ -321,6 +324,7 @@ node --check host/native-session.mjs
 node --check host/platform-runtime.mjs
 node --check host/native-adapter-kit.mjs
 node --check host/native-binding-loader.mjs
+node --check host/native-package.mjs
 node --check host/executable-platform-host.mjs
 node --check host/adapter-runtime.mjs
 node --check release/package-signing-service.mjs
