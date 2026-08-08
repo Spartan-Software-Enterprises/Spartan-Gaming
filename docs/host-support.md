@@ -102,6 +102,13 @@ PipeWire/PulseAudio, and uinput bindings. The kit delegates only declared
 operations (`start`/`stop` for capture and audio, `execute` for input) and
 fails closed when a package does not provide its required native methods.
 
+`host/native-binding-loader.mjs` discovers the optional binary packages
+`@spartan-gaming/native-windows`, `@spartan-gaming/native-macos`, and
+`@spartan-gaming/native-linux`. It never substitutes shell commands or a fake
+implementation: missing packages, malformed exports, and missing capability
+bindings are reported as unavailable. When a package is present, its bindings
+are passed through the native adapter kit before host startup.
+
 Its `createBoundary()` method additionally requires a `ready` registry
 descriptor and returns a guarded platform boundary. The
 `createExecutablePlatformHostFromInstalledAdapter()` factory uses that method
