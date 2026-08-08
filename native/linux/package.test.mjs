@@ -32,6 +32,8 @@ test('Linux native package contract covers the complete standard Gamepad button 
   assert.match(source, /BTN_THUMBL/);
   assert.match(source, /BTN_THUMBR/);
   assert.match(source, /BTN_DPAD_RIGHT/);
+  assert.match(source, /strongMagnitude/);
+  assert.match(source, /weakMagnitude/);
   assert.match(source, /button-/);
 });
 

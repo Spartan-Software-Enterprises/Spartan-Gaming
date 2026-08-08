@@ -134,15 +134,18 @@ napi_value execute(napi_env env, napi_callback_info info) {
   if (kind != "button" && kind != "axis" && kind != "rumble") return fail(env, "Linux uinput adapter supports button, axis, and rumble events only");
   if (!ensure_device()) return fail(env, "unable to open /dev/uinput; grant the host uinput permission");
   if (kind == "rumble") {
-    const double strength = number_property(env, argv[0], "value", 0.0);
-    const double bounded = strength < 0.0 ? 0.0 : strength > 1.0 ? 1.0 : strength;
+    const double value = number_property(env, argv[0], "value", 0.0);
+    const double strong = number_property(env, argv[0], "strongMagnitude", value);
+    const double weak = number_property(env, argv[0], "weakMagnitude", value);
+    const double bounded_strong = strong < 0.0 ? 0.0 : strong > 1.0 ? 1.0 : strong;
+    const double bounded_weak = weak < 0.0 ? 0.0 : weak > 1.0 ? 1.0 : weak;
     const double duration = number_property(env, argv[0], "durationMs", 0.0);
     const double delay = number_property(env, argv[0], "startDelay", 0.0);
     ff_effect effect{};
     effect.type = FF_RUMBLE;
     effect.id = rumble_effect_id;
-    effect.u.rumble.strong_magnitude = static_cast<__u16>(bounded * 65535.0);
-    effect.u.rumble.weak_magnitude = static_cast<__u16>(bounded * 65535.0);
+    effect.u.rumble.strong_magnitude = static_cast<__u16>(bounded_strong * 65535.0);
+    effect.u.rumble.weak_magnitude = static_cast<__u16>(bounded_weak * 65535.0);
     effect.replay.length = static_cast<__u16>(duration < 0.0 ? 0.0 : duration > 5000.0 ? 5000.0 : duration);
     effect.replay.delay = static_cast<__u16>(delay < 0.0 ? 0.0 : delay > 5000.0 ? 5000.0 : delay);
     if (ioctl(device_fd, EVIOCSFF, &effect) < 0) return fail(env, "failed to upload Linux force-feedback effect");
