@@ -84,6 +84,8 @@ WORD key_code(const std::string& control) {
   if (control == "BracketLeft") return VK_OEM_4;
   if (control == "BracketRight") return VK_OEM_6;
   if (control == "IntlBackslash") return VK_OEM_102;
+  if (control == "IntlRo") return VK_OEM_8;
+  if (control == "IntlYen") return VK_OEM_5;
   if (control == "ArrowUp") return VK_UP;
   if (control == "ArrowDown") return VK_DOWN;
   if (control == "ArrowLeft") return VK_LEFT;
