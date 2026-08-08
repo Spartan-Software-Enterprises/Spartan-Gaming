@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import {createHash, randomUUID} from 'node:crypto';
-import {createServer} from 'node:http';
+import {readFileSync} from 'node:fs';
+import {createServer as createHttpServer} from 'node:http';
+import {createServer as createHttpsServer} from 'node:https';
 import {createSessionEnvelope} from '../src/frontend/session/session.mjs';
 import {validateTransportMessage} from '../src/frontend/transport/transport.mjs';
 import {createPairingAuthority, createPairingCode} from './pairing.mjs';
@@ -24,6 +26,10 @@ if (!Number.isInteger(port) || port < 0 || port > 65535) throw new TypeError('po
 const signalEndpoint = args.get('signal-endpoint') ? String(args.get('signal-endpoint')) : null;
 const signalSessionId = args.get('signal-session') ? String(args.get('signal-session')) : null;
 const signalTicket = args.get('signal-ticket') ? String(args.get('signal-ticket')) : null;
+const tlsKey = String(args.get('tls-key') || process.env.SPARTAN_HOST_TLS_KEY || '').trim();
+const tlsCert = String(args.get('tls-cert') || process.env.SPARTAN_HOST_TLS_CERT || '').trim();
+if (Boolean(tlsKey) !== Boolean(tlsCert)) throw new TypeError('tls-key and tls-cert must be provided together');
+const secure = Boolean(tlsKey);
 const pairingCode = args.get('pairing-code') || createPairingCode();
 const pairing = createPairingAuthority({code: pairingCode});
 const hostRuntime = await detectHostRuntime({bindingOptions: {environment: process.env}});
@@ -105,10 +111,11 @@ async function handleMessage(connection, text, session) {
   if (message.type === 'session.close') { sessions.delete(session); if (session.gameStarted) { await gameLaunch?.launcher.stop(); session.gameStarted = false; } connection.close(); }
 }
 
-const server = createServer((request, response) => {
-  if (request.url === '/health') return json(response, 200, {service: 'spartan-host-reference', version: 1, hostId, hostName, pairingExpiresAt: pairing.expiresAt, pairingUsed: pairing.used, activeSessions: sessions.size, inputEvents, lastInputPlan, lastInputExecution, lastQuality, gameLaunch: gameLaunch ? {enabled: true, ...gameLaunch.descriptor, state: gameLaunch.launcher.state, pid: gameLaunch.launcher.pid} : {enabled: false}, capabilities, hostCapabilities, environment});
+const requestHandler = (request, response) => {
+  if (request.url === '/health') return json(response, 200, {service: 'spartan-host-reference', version: 1, secure, hostId, hostName, pairingExpiresAt: pairing.expiresAt, pairingUsed: pairing.used, activeSessions: sessions.size, inputEvents, lastInputPlan, lastInputExecution, lastQuality, gameLaunch: gameLaunch ? {enabled: true, ...gameLaunch.descriptor, state: gameLaunch.launcher.state, pid: gameLaunch.launcher.pid} : {enabled: false}, capabilities, hostCapabilities, environment});
   json(response, 404, {error: 'not found'});
-});
+};
+const server = secure ? createHttpsServer({key: readFileSync(tlsKey), cert: readFileSync(tlsCert)}, requestHandler) : createHttpServer(requestHandler);
 server.on('upgrade', (request, socket) => {
   const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
   if (url.pathname !== '/session' || request.headers.upgrade?.toLowerCase() !== 'websocket' || !request.headers['sec-websocket-key']) { socket.end('HTTP/1.1 404 Not Found\r\n\r\n'); return; }
@@ -121,7 +128,7 @@ server.on('upgrade', (request, socket) => {
 });
 server.listen(port, bind, () => {
   const actualPort = server.address().port;
-    console.log(JSON.stringify({service: nativeMediaEnabled ? 'spartan-host-native' : 'spartan-host-reference', endpoint: `ws://${bind}:${actualPort}/session`, health: `http://${bind}:${actualPort}/health`, hostId, hostName, pairingCode: args.get('quiet') ? undefined : pairingCode, pairingExpiresAt: pairing.expiresAt, signalingEndpoint: signalEndpoint || undefined, warning: nativeMediaEnabled ? 'Native media mode is enabled; capture, encoding, WebRTC, and optional audio run through installed platform bindings.' : (gameLaunch ? 'Reference control plane with optional configured game launch; media capture/encoding remain separate.' : 'Reference control plane only; media capture/encoding and process launch are not configured.')}));
+    console.log(JSON.stringify({service: nativeMediaEnabled ? 'spartan-host-native' : 'spartan-host-reference', endpoint: `${secure ? 'wss' : 'ws'}://${bind}:${actualPort}/session`, health: `${secure ? 'https' : 'http'}://${bind}:${actualPort}/health`, secure, hostId, hostName, pairingCode: args.get('quiet') ? undefined : pairingCode, pairingExpiresAt: pairing.expiresAt, signalingEndpoint: signalEndpoint || undefined, warning: nativeMediaEnabled ? 'Native media mode is enabled; capture, encoding, WebRTC, and optional audio run through installed platform bindings.' : (gameLaunch ? 'Reference control plane with optional configured game launch; media capture/encoding remain separate.' : 'Reference control plane only; media capture/encoding and process launch are not configured.')}));
   if (!signalEndpoint && !signalSessionId && !signalTicket) return;
   if (!signalEndpoint || !signalSessionId || !signalTicket) { console.error('Outbound signaling requires --signal-endpoint, --signal-session, and --signal-ticket.'); process.exitCode = 1; return; }
   let signalingClient;

@@ -9,6 +9,10 @@ npm run host -- --pairing-code ABCD23
 The default development endpoints are:
 
 - `http://127.0.0.1:8787/health` for a redacted health/capability document.
+
+For remote direct-host deployments, pass `--tls-key` and `--tls-cert` together
+to serve `wss://` and `https://` endpoints. Keep the private key outside the
+repository; a managed reverse proxy is preferred for certificate rotation.
 - `ws://127.0.0.1:8787/session` for protocol-v1 session offers.
 
 The host can also join a separate signaling service as a host participant:

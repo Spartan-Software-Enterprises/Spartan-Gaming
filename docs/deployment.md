@@ -45,6 +45,11 @@ health/admin HTTP routes with the same certificate. A production deployment
 should normally terminate TLS at a managed reverse proxy and rotate keys
 outside the application container.
 
+The direct host agent accepts the same deployment pattern with
+`SPARTAN_HOST_TLS_KEY` and `SPARTAN_HOST_TLS_CERT`, or `--tls-key` and
+`--tls-cert`. The frontend can then store the resulting `wss://.../session`
+endpoint in a host profile and retain the one-time pairing code boundary.
+
 The health response reports configured limits and rejected connection counts,
 but never returns tickets, subjects, or session payloads.
 
