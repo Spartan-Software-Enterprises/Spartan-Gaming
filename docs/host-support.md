@@ -69,6 +69,13 @@ macOS, and PipeWire or X11/Pulse fallback paths on Linux. It validates the
 selected plan platform before binding it to the native session; actual OS
 capture, encoding, audio, and input implementations remain injected adapters.
 
+`host/executable-platform-host.mjs` composes those platform plans with the
+native media pipeline, RTP media publisher, optional audio publisher, and
+permissioned input executor. This is the end-to-end host assembly boundary:
+the session lifecycle is now executable with injected platform adapters while
+remaining shell-free and testable on every desktop OS. Concrete Windows,
+macOS, and Linux API packages still belong outside the portable core.
+
 `host/input.mjs` is the matching input boundary. It maps normalized browser
 events to shell-free plans for Windows `SendInput`, macOS Core Graphics/HID,
 and Linux `uinput` adapters. Plans declare the required permission (`remote-input`,

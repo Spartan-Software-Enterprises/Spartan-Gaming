@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {createPlatformRuntimePlans} from './platform-runtime.mjs';
+import {createExecutablePlatformHost} from './executable-platform-host.mjs';
+
+function stream() { return {listeners: new Set(), on(type, handler) { if (type === 'data') this.listeners.add(handler); }, off(type, handler) { if (type === 'data') this.listeners.delete(handler); }, emit(value) { for (const handler of this.listeners) handler(value); }}; }
+function pipeline() { return {videoOutput: stream(), async start() {}, async stop() {}}; }
+
+test('executable platform host delivers media packets and permissioned input through one session', async () => { const plans = createPlatformRuntimePlans({platform: 'linux', environment: {DISPLAY: ':0.0'}, includeAudio: false}); const nativePipeline = pipeline(); const packets = []; const operations = []; const host = createExecutablePlatformHost({platform: 'linux', plans, pipeline: nativePipeline, packetizer: {push: (chunk, metadata) => [{chunk, timestamp: metadata.timestamp}]}, transport: {send: packet => packets.push(packet)}, inputAdapter: {platform: 'linux', execute: async operation => operations.push(operation)}, permissions: {'virtual-gamepad': true}}); await host.session.start(); nativePipeline.videoOutput.emit(Buffer.from('frame')); await host.session.dispatchInput({type: 'input.event', action: 'jump', kind: 'button', control: 'a', pressed: true, source: 'gamepad'}); assert.equal(packets.length, 1); assert.equal(packets[0].timestamp, 0); assert.equal(operations[0].control, 'a'); await host.session.stop(); });
+test('executable platform host rejects mismatched plan platforms before creating processes', () => { const plans = createPlatformRuntimePlans({platform: 'darwin', environment: {microphoneGranted: true, screenRecordingGranted: true}, includeAudio: false}); assert.throws(() => createExecutablePlatformHost({platform: 'win32', plans, packetizer: {push: () => []}, transport: {send() {}}}), /match/); });
