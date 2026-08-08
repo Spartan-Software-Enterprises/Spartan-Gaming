@@ -25,6 +25,7 @@ import {clearTransientSessionData} from '../privacy/cleanup.mjs';
 import {describeNegotiationAdjustments, formatNegotiationAdjustments} from '../session/negotiation-notices.mjs';
 import {createSessionDiagnosticsBundle, createSessionTelemetryLog, serializeSessionDiagnostics} from '../session/telemetry-log.mjs';
 import {clearSessionRecoveryHandoff, readSessionRecoveryHandoff, saveSessionRecoveryHandoff} from '../session/recovery-handoff.mjs';
+import {createActiveProfileStorage} from '../profiles/storage.mjs';
 
 const query = new URLSearchParams(location.search);
 const pendingHostPair = readPendingHostPair(sessionStorage); clearPendingHostPair(sessionStorage);
@@ -33,7 +34,8 @@ const storedRecovery = readSessionRecoveryHandoff(sessionStorage);
 let connectionSessionId = query.get('session') || pendingHostPair?.sessionId || storedRecovery?.sessionId || '';
 const manager = createSessionManager({idFactory: () => connectionSessionId || `ses-${crypto.randomUUID()}`});
 const transportPolicy = readTransportPolicy();
-let sessionPreferences = readSessionPreferences();
+const profileStorage = createActiveProfileStorage();
+let sessionPreferences = readSessionPreferences(globalThis.localStorage, undefined, {workspaceStorage: profileStorage});
 const recoveryHandoff = sessionPreferences.preferences.restoreSession && !pendingHostPair ? storedRecovery : null;
 let inputPolicy = createInputPermissionPolicy(sessionPreferences.capabilities);
 let haptics = createHapticsController({enabled: inputPolicy.allows('rumble')});
@@ -90,7 +92,7 @@ async function loadAudioOutputs({applyPreference = false} = {}) {
 
 async function prepareSession() {
   if (sessionPreflightReady) return;
-  const preflight = await preparePlayerSession();
+  const preflight = await preparePlayerSession({workspaceStorage: profileStorage});
   sessionPreferences = preflight.preferences;
   telemetryLog.setEnabled(sessionPreferences.preferences.sessionTelemetry);
   immersive.setDisplayPreference(sessionPreferences.preferences.display);

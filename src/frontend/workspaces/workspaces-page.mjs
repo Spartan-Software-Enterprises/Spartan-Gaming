@@ -1,7 +1,8 @@
 import '../pwa/register.mjs';
 import {createWorkspaceStore} from './workspaces.mjs';
+import {createActiveProfileStorage} from '../profiles/storage.mjs';
 
-const store = createWorkspaceStore(); const grid = document.querySelector('[data-workspaces]'); const toast = document.querySelector('[data-toast]'); let timer;
+const store = createWorkspaceStore({storage: createActiveProfileStorage()}); const grid = document.querySelector('[data-workspaces]'); const toast = document.querySelector('[data-toast]'); let timer;
 function escapeHtml(value) { return String(value).replace(/[&<>\'"]/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character])); }
 function showToast(message) { toast.textContent = message; toast.classList.add('is-visible'); clearTimeout(timer); timer = setTimeout(() => toast.classList.remove('is-visible'), 2400); }
 function render() { grid.innerHTML = store.list().map(workspace => `<article class="workspace-card ${workspace.id === store.active.id ? 'is-active' : ''}"><p class="eyebrow">${workspace.id === store.active.id ? 'ACTIVE WORKSPACE' : 'WORKSPACE'}</p><h2>${escapeHtml(workspace.name)}</h2><p>${escapeHtml(workspace.description)}</p><div class="workspace-meta"><span class="chip">${escapeHtml(workspace.quality)} quality</span><span class="chip">${escapeHtml(workspace.controllerProfile)} controller</span><span class="chip">${workspace.overlay ? 'Overlay on' : 'Overlay off'}</span></div><div class="card-actions"><button class="${workspace.id === store.active.id ? 'secondary' : 'primary'}" data-select="${escapeHtml(workspace.id)}">${workspace.id === store.active.id ? 'Selected' : 'Use workspace'}</button>${workspace.pinned ? '' : `<button class="secondary" data-remove="${escapeHtml(workspace.id)}">Remove</button>`}</div></article>`).join(''); }

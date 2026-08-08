@@ -4,8 +4,9 @@ import {createHostPreflight} from './readiness.mjs';
 import {createBrowserWebRtcPublisher} from './browser-publisher.mjs';
 import {consumeLaunchIntent} from '../launch/intent.mjs';
 import {readPendingLaunchHandoff} from '../launch/handoff.mjs';
+import {createActiveProfileStorage} from '../profiles/storage.mjs';
 
-const store = createHostProfileStore();
+const store = createHostProfileStore({storage: createActiveProfileStorage()});
 const hostContainer = document.querySelector('[data-hosts]');
 const editor = document.querySelector('[data-editor]');
 const notice = document.querySelector('[data-notice]');

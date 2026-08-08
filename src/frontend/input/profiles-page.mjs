@@ -1,7 +1,8 @@
 import '../pwa/register.mjs';
 import {BUILTIN_CONTROLLER_PROFILES, createControllerProfile, createControllerProfileStore, updateControllerBinding} from './profiles.mjs';
+import {createActiveProfileStorage} from '../profiles/storage.mjs';
 
-const store = createControllerProfileStore({storage: window.localStorage});
+const store = createControllerProfileStore({storage: createActiveProfileStorage({storage: window.localStorage})});
 const controls = ['button-0', 'button-1', 'button-2', 'button-3', 'button-8', 'button-9', 'axis-0-negative', 'axis-0-positive', 'axis-1-negative', 'axis-1-positive', 'key-Enter', 'key-Escape', 'key-Tab', 'key-P'];
 let profiles = [...BUILTIN_CONTROLLER_PROFILES, ...store.list()]; let active = profiles[0];
 const list = document.querySelector('[data-profile-list]'); const bindings = document.querySelector('[data-bindings]'); const notice = document.querySelector('[data-notice]');

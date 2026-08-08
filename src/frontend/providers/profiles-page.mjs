@@ -3,8 +3,9 @@ import {createProviderProfileStore} from './profiles.mjs';
 import {checkProviderReachability} from './health.mjs';
 import {consumeLaunchIntent} from '../launch/intent.mjs';
 import {createCommunityProviderCatalogStore, mergeCommunityProviders} from './community-catalog.mjs';
+import {createActiveProfileStorage} from '../profiles/storage.mjs';
 
-const store = createProviderProfileStore();
+const store = createProviderProfileStore({storage: createActiveProfileStorage()});
 const communityCatalog = createCommunityProviderCatalogStore();
 const providerContainer = document.querySelector('[data-providers]');
 const editor = document.querySelector('[data-editor]');

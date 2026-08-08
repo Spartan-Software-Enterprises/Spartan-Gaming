@@ -18,18 +18,20 @@ import { launchExternalSurface } from '../launch/behavior.mjs';
 import { checkProviderCatalog } from '../providers/catalog-health.mjs';
 import { clearSessionRecoveryHandoff, readSessionRecoveryHandoff } from '../session/recovery-handoff.mjs';
 import { resolveStartupRoute } from '../startup/route.mjs';
+import { createActiveProfileStorage } from '../profiles/storage.mjs';
 
-const launchHistory = createLaunchHistoryStore();
-const workspaceStore = createWorkspaceStore();
+const profileStorage = createActiveProfileStorage();
+const launchHistory = createLaunchHistoryStore({storage: profileStorage});
+const workspaceStore = createWorkspaceStore({storage: profileStorage});
 const communityCatalogStore = createCommunityProviderCatalogStore();
 const settings = createSettingsStore().read();
 const recoveryHandoff = settings['general.restoreSession'] !== false ? readSessionRecoveryHandoff(sessionStorage) : null;
 const startupRoute = new URLSearchParams(globalThis.location?.search || '').get('startup') === '1' ? resolveStartupRoute(settings, {recovery: recoveryHandoff, lastLaunch: launchHistory.latest()}) : null;
 if (startupRoute && typeof globalThis.location?.replace === 'function') globalThis.location.replace(startupRoute);
 let activeWorkspace = workspaceStore.active;
-let favoritesStore = createFavoritesStore({workspaceId: activeWorkspace.id});
+let favoritesStore = createFavoritesStore({storage: profileStorage, workspaceId: activeWorkspace.id});
 const requestedFilter = new URLSearchParams(globalThis.location?.search || '').get('filter');
-const state = { catalog: [], adapters: null, compatibility: null, report: null, providerHealth: new Map(), filter: ['all', 'cloud', 'watch', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(favoritesStore.list()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), recovery: recoveryHandoff, providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, applyGlobalProviderPreferences({...profile, embedParent: globalThis.location?.hostname || ''}, settings)])) };
+const state = { catalog: [], adapters: null, compatibility: null, report: null, providerHealth: new Map(), filter: ['all', 'cloud', 'watch', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(favoritesStore.list()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), recovery: recoveryHandoff, providerProfiles: Object.fromEntries(createProviderProfileStore({storage: profileStorage}).list().map(profile => [profile.providerId, applyGlobalProviderPreferences({...profile, embedParent: globalThis.location?.hostname || ''}, settings)])) };
 document.querySelector('.filters')?.insertAdjacentHTML('beforeend', '<button class="filter" data-filter="watch">Watch &amp; stream</button>');
 const cards = document.querySelector('[data-cards]');
 const toast = document.querySelector('[data-toast]');
@@ -119,7 +121,7 @@ async function loadCatalog() {
   } catch (error) { cards.innerHTML = '<div class="empty">The library could not load. Check the catalog files and try again.</div>'; console.error(error); }
 }
 document.querySelector('[data-search]').addEventListener('input', event => { state.search = event.target.value; render(); });
-document.querySelector('[data-workspace-select]')?.addEventListener('change', event => { activeWorkspace = workspaceStore.setActive(event.target.value); favoritesStore = createFavoritesStore({workspaceId: activeWorkspace.id}); state.favorites = new Set(favoritesStore.list()); rebuildAdapters(); render(); showToast(`Using ${activeWorkspace.name} workspace`); });
+document.querySelector('[data-workspace-select]')?.addEventListener('change', event => { activeWorkspace = workspaceStore.setActive(event.target.value); favoritesStore = createFavoritesStore({storage: profileStorage, workspaceId: activeWorkspace.id}); state.favorites = new Set(favoritesStore.list()); rebuildAdapters(); render(); showToast(`Using ${activeWorkspace.name} workspace`); });
 document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => { state.filter = button.dataset.filter; document.querySelectorAll('[data-filter]').forEach(item => item.classList.toggle('is-active', item === button)); render(); }));
 document.querySelectorAll('[data-filter]').forEach(button => button.classList.toggle('is-active', button.dataset.filter === state.filter));
 document.addEventListener('click', event => {

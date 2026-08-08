@@ -11,10 +11,12 @@ import {createBrowserEmulatorRuntime} from './browser-runtime.mjs';
 import {createBrowserEmulatorInputBridge} from './browser-input.mjs';
 import {createNativeHostLaunchRequest} from './host-launch.mjs';
 import {savePendingLaunchHandoff} from '../launch/handoff.mjs';
+import {createActiveProfileStorage} from '../profiles/storage.mjs';
 
-const runtimeStore = createRuntimeProfileStore();
+const profileStorage = createActiveProfileStorage();
+const runtimeStore = createRuntimeProfileStore({storage: profileStorage});
 const state = {cores: [], gameFiles: [], firmwareFiles: [], rememberedFiles: [], runtimeProfiles: runtimeStore.list(), report: null, capabilitiesReady: false, preferences: resolveEmulationPreferences()};
-const library = createEmulationLibraryStore();
+const library = createEmulationLibraryStore({storage: profileStorage});
 const browserAdapters = createBrowserEmulatorAdapterRegistry(discoverBrowserEmulatorAdapters());
 let activeBrowserRuntime = null;
 let activeBrowserInput = null;
