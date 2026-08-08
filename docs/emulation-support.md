@@ -119,6 +119,13 @@ module integrity, and entrypoint. Relative module imports are intentionally not
 assumed; a distributed browser adapter should be self-contained or use its own
 bundling boundary.
 
+The Emulation Center exposes this boundary as a two-step session flow: choose
+a manifest file, review the signer, and approve loading. The application shell
+supplies `globalThis.__SPARTAN_TRUSTED_ADAPTER_SIGNERS__`; without a configured
+trusted key the load fails closed. A successful load registers the adapter in
+the in-memory browser registry and immediately makes it available to matching
+runtime plans.
+
 | Project | Systems | Preferred mode | Role |
 | --- | --- | --- | --- |
 | RetroArch/libretro | Many classic and modern systems | Browser/native | Unified frontend and core ecosystem |

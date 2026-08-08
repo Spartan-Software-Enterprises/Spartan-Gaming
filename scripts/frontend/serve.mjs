@@ -67,7 +67,7 @@ async function sendFile(response, file, method = 'GET') {
         connection: 'close',
         'content-length': info.size,
         'content-type': MIME_TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream',
-      'content-security-policy': "default-src 'self'; base-uri 'self'; object-src 'none'; frame-src https:; connect-src 'self' https: wss:; img-src 'self' data: blob:; media-src 'self' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self'",
+      'content-security-policy': "default-src 'self'; base-uri 'self'; object-src 'none'; frame-src https:; connect-src 'self' https: wss:; img-src 'self' data: blob:; media-src 'self' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' blob:",
       'cross-origin-opener-policy': 'same-origin',
       'cross-origin-resource-policy': 'same-origin',
       'referrer-policy': 'strict-origin-when-cross-origin',

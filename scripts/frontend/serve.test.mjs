@@ -18,11 +18,15 @@ test('frontend server redirects the origin to the dashboard and serves catalogs'
   assert.equal(page.status, 200);
   assert.match(await page.text(), /Spartan Gaming/);
   assert.match(page.headers.get('content-security-policy'), /connect-src 'self' https: wss:/);
+  assert.match(page.headers.get('content-security-policy'), /script-src 'self' blob:/);
   assert.equal(page.headers.get('cross-origin-opener-policy'), 'same-origin');
   assert.equal(page.headers.get('x-content-type-options'), 'nosniff');
   const catalog = await fetch(`${origin}/providers/catalog.json`);
   assert.equal(catalog.status, 200);
   assert.equal((await catalog.json()).catalogVersion, 1);
+  const emulation = await fetch(`${origin}/emulation/emulation-page.mjs`);
+  assert.equal(emulation.status, 200);
+  assert.match(await emulation.text(), /loadVerifiedBrowserEmulatorAdapter/);
 }));
 
 test('frontend server exposes the service worker aliases and rejects traversal', () => withServer(async origin => {
