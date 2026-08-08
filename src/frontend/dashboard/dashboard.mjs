@@ -23,12 +23,14 @@ const settings = createSettingsStore().read();
 let activeWorkspace = workspaceStore.active;
 let favoritesStore = createFavoritesStore({workspaceId: activeWorkspace.id});
 const requestedFilter = new URLSearchParams(globalThis.location?.search || '').get('filter');
-const state = { catalog: [], adapters: null, compatibility: null, report: null, filter: ['all', 'cloud', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(favoritesStore.list()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, applyGlobalProviderPreferences({...profile, embedParent: globalThis.location?.hostname || ''}, settings)])) };
+const state = { catalog: [], adapters: null, compatibility: null, report: null, filter: ['all', 'cloud', 'watch', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(favoritesStore.list()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, applyGlobalProviderPreferences({...profile, embedParent: globalThis.location?.hostname || ''}, settings)])) };
+document.querySelector('.filters')?.insertAdjacentHTML('beforeend', '<button class="filter" data-filter="watch">Watch &amp; stream</button>');
 const cards = document.querySelector('[data-cards]');
 const toast = document.querySelector('[data-toast]');
 const sessionStatus = document.querySelector('[data-session-status]');
 const statusPill = sessionStatus.closest('.status-pill');
 const providerDialog = document.querySelector('[data-provider-dialog]');
+const WATCH_KINDS = new Set(['live-streaming', 'social-streaming', 'self-hosted-live-streaming']);
 const sessionManager = createSessionManager({idFactory: () => `ses-${crypto.randomUUID()}`});
 let sessionStatusId = 'idle';
 let toastTimer;
@@ -75,7 +77,7 @@ function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, character 
 function visibleEntries() {
   const query = state.search.toLowerCase().trim();
   return state.catalog.filter(entry => {
-    const matchesType = state.filter === 'all' || (state.filter === 'emulator' ? entry.backendType === 'emulator' : state.filter === 'cloud' ? entry.backendType === 'provider' : state.filter === 'favorites' ? state.favorites.has(entry.id) : state.recent.has(entry.id));
+    const matchesType = state.filter === 'all' || (state.filter === 'emulator' ? entry.backendType === 'emulator' : state.filter === 'cloud' ? entry.backendType === 'provider' : state.filter === 'watch' ? WATCH_KINDS.has(entry.kind) : state.filter === 'favorites' ? state.favorites.has(entry.id) : state.recent.has(entry.id));
     const haystack = `${entry.name} ${entry.description || ''} ${(entry.systems || []).join(' ')}`.toLowerCase();
     return matchesType && (!query || haystack.includes(query));
   });

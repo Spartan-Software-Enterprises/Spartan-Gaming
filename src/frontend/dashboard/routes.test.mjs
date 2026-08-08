@@ -5,6 +5,6 @@ import {resolveDashboardSection} from './routes.mjs';
 test('dashboard sections resolve to real frontend destinations or filters', () => {
   assert.deepEqual(resolveDashboardSection('providers'), {kind: 'navigate', href: '../providers/index.html'});
   assert.deepEqual(resolveDashboardSection('emulation'), {kind: 'navigate', href: '../emulation/index.html'});
-  assert.deepEqual(resolveDashboardSection('watch'), {kind: 'filter', filter: 'cloud'});
+  assert.deepEqual(resolveDashboardSection('watch'), {kind: 'filter', filter: 'watch'});
   assert.equal(resolveDashboardSection('unknown'), undefined);
 });
