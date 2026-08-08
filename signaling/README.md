@@ -35,3 +35,10 @@ when browsers should be restricted to known frontend origins; configure
 `SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND` for deployment capacity. The
 health response exposes limits and rejected-connection counts without
 exposing tickets or session contents.
+
+For a directly TLS-terminated reference deployment, provide both
+`SPARTAN_SIGNALING_TLS_KEY` and `SPARTAN_SIGNALING_TLS_CERT` (or pass
+`--tls-key` and `--tls-cert`). The service then exposes `wss://` for signaling
+and `https://` for health/admin routes; supplying only one path fails closed.
+Keep private keys outside the repository and prefer a managed reverse proxy or
+certificate service for production rotation.

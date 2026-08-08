@@ -32,6 +32,19 @@ export SPARTAN_SIGNALING_MAX_CONNECTIONS=512
 export SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND=240
 ```
 
+The reference signaling process supports direct TLS when both certificate
+paths are supplied:
+
+```bash
+export SPARTAN_SIGNALING_TLS_KEY=/run/secrets/signaling.key
+export SPARTAN_SIGNALING_TLS_CERT=/run/secrets/signaling.crt
+```
+
+This changes the advertised endpoint from `ws://` to `wss://` and protects the
+health/admin HTTP routes with the same certificate. A production deployment
+should normally terminate TLS at a managed reverse proxy and rotate keys
+outside the application container.
+
 The health response reports configured limits and rejected connection counts,
 but never returns tickets, subjects, or session payloads.
 

@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import {createHash, timingSafeEqual} from 'node:crypto';
-import {createServer} from 'node:http';
+import {readFileSync} from 'node:fs';
+import {createServer as createHttpServer} from 'node:http';
+import {createServer as createHttpsServer} from 'node:https';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createSignalingBroker} from './broker.mjs';
@@ -16,11 +18,14 @@ function portNumber(value, fallback = 8790) { const number = Number(value); retu
 
 export function normalizeServiceOptions(options = {}) {
   const allowedOrigins = Array.isArray(options.allowedOrigins) ? [...new Set(options.allowedOrigins.map(text).filter(Boolean))] : [];
+  const tlsKey = text(options.tlsKey); const tlsCert = text(options.tlsCert);
+  if (Boolean(tlsKey) !== Boolean(tlsCert)) throw new TypeError('tlsKey and tlsCert must be provided together');
   return Object.freeze({
     secret: text(options.secret), bind: text(options.bind) || '127.0.0.1', port: portNumber(options.port),
     adminSecret: text(options.adminSecret),
     allowedOrigins: Object.freeze(allowedOrigins), maxConnections: positiveInteger(options.maxConnections, DEFAULT_MAX_CONNECTIONS, 10000),
     maxMessagesPerSecond: positiveInteger(options.maxMessagesPerSecond, DEFAULT_MAX_MESSAGES_PER_SECOND, 10000), maxFrameBytes: positiveInteger(options.maxFrameBytes, DEFAULT_MAX_FRAME_BYTES, DEFAULT_MAX_FRAME_BYTES),
+    tls: Object.freeze({enabled: Boolean(tlsKey), keyPath: tlsKey || null, certPath: tlsCert || null}),
   });
 }
 
@@ -83,11 +88,11 @@ export function parseFrames(buffer, onMessage, socket, maxFrameBytes = DEFAULT_M
 export function createSignalingServer(options = {}) {
   const config = normalizeServiceOptions(options); if (!config.secret) throw new TypeError('secret is required');
   const broker = createSignalingBroker({secret: config.secret, ...(options.brokerOptions || {})}); const sockets = new Set(); let rejectedConnections = 0;
-  const server = createServer(async (request, response) => {
-    if (request.url === '/health') return json(response, 200, {service: 'spartan-signaling-reference', version: 1, ...broker.stats(), limits: {maxConnections: config.maxConnections, maxMessagesPerSecond: config.maxMessagesPerSecond}, connections: sockets.size, rejectedConnections});
+  const requestHandler = async (request, response) => {
+    if (request.url === '/health') return json(response, 200, {service: 'spartan-signaling-reference', version: 1, ...broker.stats(), secure: config.tls.enabled, limits: {maxConnections: config.maxConnections, maxMessagesPerSecond: config.maxMessagesPerSecond}, connections: sockets.size, rejectedConnections});
     if (!request.url?.startsWith('/admin/')) return json(response, 404, {error: 'not found'});
     if (!config.adminSecret || !adminAuthorized(request, config.adminSecret)) return json(response, 401, {error: 'admin authorization required'});
-    if (request.url === '/admin/health' && request.method === 'GET') return json(response, 200, {service: 'spartan-signaling-reference', version: 1, ...broker.stats(), limits: {maxConnections: config.maxConnections, maxMessagesPerSecond: config.maxMessagesPerSecond}, connections: sockets.size, rejectedConnections});
+    if (request.url === '/admin/health' && request.method === 'GET') return json(response, 200, {service: 'spartan-signaling-reference', version: 1, ...broker.stats(), secure: config.tls.enabled, limits: {maxConnections: config.maxConnections, maxMessagesPerSecond: config.maxMessagesPerSecond}, connections: sockets.size, rejectedConnections});
     if (request.url === '/admin/tickets' && request.method === 'POST') {
       try {
         const body = JSON.parse(await readBody(request));
@@ -97,7 +102,8 @@ export function createSignalingServer(options = {}) {
       } catch (error) { return json(response, 400, {error: error instanceof Error ? error.message : String(error)}); }
     }
     response.setHeader('allow', 'GET, POST'); return json(response, 405, {error: 'method or admin route not allowed'});
-  });
+  };
+  const server = config.tls.enabled ? createHttpsServer({key: readFileSync(config.tls.keyPath), cert: readFileSync(config.tls.certPath)}, requestHandler) : createHttpServer(requestHandler);
   server.on('upgrade', (request, socket) => {
     const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
     if (!isOriginAllowed(request.headers.origin, config.allowedOrigins)) { rejectedConnections += 1; reject(socket, '403 Forbidden'); return; }
@@ -126,8 +132,8 @@ export function createSignalingServer(options = {}) {
 if (pathEqualsMain()) {
   try {
     const args = parseArguments(process.argv.slice(2)); const allowedOrigins = String(args.get('allowed-origins') || process.env.SPARTAN_SIGNALING_ALLOWED_ORIGINS || '').split(',').map(text).filter(Boolean);
-    const service = createSignalingServer({secret: args.get('secret') || process.env.SPARTAN_SIGNALING_SECRET, adminSecret: args.get('admin-secret') || process.env.SPARTAN_SIGNALING_ADMIN_SECRET, bind: args.get('bind') || process.env.SPARTAN_SIGNALING_BIND, port: args.get('port') || process.env.SPARTAN_SIGNALING_PORT, allowedOrigins, maxConnections: args.get('max-connections') || process.env.SPARTAN_SIGNALING_MAX_CONNECTIONS, maxMessagesPerSecond: args.get('max-messages-per-second') || process.env.SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND});
-    service.start().then(address => console.log(JSON.stringify({service: 'spartan-signaling-reference', endpoint: `ws://${address.address === '0.0.0.0' ? '127.0.0.1' : address.address}:${address.port}/signal`, health: `http://${address.address === '0.0.0.0' ? '127.0.0.1' : address.address}:${address.port}/health`, allowedOrigins: service.config.allowedOrigins, limits: {maxConnections: service.config.maxConnections, maxMessagesPerSecond: service.config.maxMessagesPerSecond}, warning: 'Reference signaling only; use TLS, secret management, clustered session storage, and separately provisioned STUN/TURN in production.'}))).catch(error => { console.error(error.message); process.exitCode = 1; });
+    const service = createSignalingServer({secret: args.get('secret') || process.env.SPARTAN_SIGNALING_SECRET, adminSecret: args.get('admin-secret') || process.env.SPARTAN_SIGNALING_ADMIN_SECRET, bind: args.get('bind') || process.env.SPARTAN_SIGNALING_BIND, port: args.get('port') || process.env.SPARTAN_SIGNALING_PORT, allowedOrigins, maxConnections: args.get('max-connections') || process.env.SPARTAN_SIGNALING_MAX_CONNECTIONS, maxMessagesPerSecond: args.get('max-messages-per-second') || process.env.SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND, tlsKey: args.get('tls-key') || process.env.SPARTAN_SIGNALING_TLS_KEY, tlsCert: args.get('tls-cert') || process.env.SPARTAN_SIGNALING_TLS_CERT});
+    service.start().then(address => { const host = address.address === '0.0.0.0' ? '127.0.0.1' : address.address; const protocol = service.config.tls.enabled ? 'wss' : 'ws'; const httpProtocol = service.config.tls.enabled ? 'https' : 'http'; console.log(JSON.stringify({service: 'spartan-signaling-reference', endpoint: `${protocol}://${host}:${address.port}/signal`, health: `${httpProtocol}://${host}:${address.port}/health`, secure: service.config.tls.enabled, allowedOrigins: service.config.allowedOrigins, limits: {maxConnections: service.config.maxConnections, maxMessagesPerSecond: service.config.maxMessagesPerSecond}, warning: 'Reference signaling only; use secret management, clustered session storage, and separately provisioned STUN/TURN in production.'})); }).catch(error => { console.error(error.message); process.exitCode = 1; });
   } catch (error) {
     console.error(error.message);
     process.exitCode = 1;

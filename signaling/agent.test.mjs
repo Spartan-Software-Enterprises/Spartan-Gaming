@@ -9,6 +9,14 @@ test('signaling service defaults are bounded and origins are opt-in', () => {
   assert.equal(isOriginAllowed(undefined, []), true);
   assert.equal(isOriginAllowed('https://game.example', ['https://game.example']), true);
   assert.equal(isOriginAllowed('https://evil.example', ['https://game.example']), false);
+  assert.equal(config.tls.enabled, false);
+});
+
+test('signaling TLS configuration is opt-in and requires a certificate pair', () => {
+  const config = normalizeServiceOptions({secret: 'test', tlsKey: '/run/secrets/signaling.key', tlsCert: '/run/secrets/signaling.crt'});
+  assert.deepEqual(config.tls, {enabled: true, keyPath: '/run/secrets/signaling.key', certPath: '/run/secrets/signaling.crt'});
+  assert.throws(() => normalizeServiceOptions({secret: 'test', tlsKey: '/run/secrets/signaling.key'}), /provided together/);
+  assert.throws(() => normalizeServiceOptions({secret: 'test', tlsCert: '/run/secrets/signaling.crt'}), /provided together/);
 });
 
 test('signaling message rate limiter resets each window', () => {
@@ -29,6 +37,7 @@ test('signaling health endpoint exposes bounded operational state', async () => 
     assert.equal(body.connections, 0);
     assert.equal(body.rejectedConnections, 0);
     assert.equal(body.sessions, 0);
+    assert.equal(body.secure, false);
   } finally {
     await service.close();
   }
