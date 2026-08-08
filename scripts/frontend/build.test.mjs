@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import {buildFrontendDistribution} from './build.mjs';
+import {createFrontendServer} from './serve.mjs';
 
 test('frontend distribution build packages pages, catalogs, service worker, and manifest', async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), 'spartan-frontend-build-'));
@@ -22,3 +23,15 @@ test('frontend distribution build refuses source and repository roots as output'
   await assert.rejects(() => buildFrontendDistribution({outputRoot: path.resolve('.')}), /repository root/);
 });
 
+test('frontend server can serve the packaged distribution root', async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), 'spartan-frontend-serve-build-'));
+  const result = await buildFrontendDistribution({outputRoot: path.join(root, 'dist')});
+  const frontend = createFrontendServer({root: result.output, publicRoot: result.output, port: 0, logger: {warn() {}}});
+  const address = await frontend.listen();
+  try {
+    const page = await fetch(`http://127.0.0.1:${address.port}/dashboard/`);
+    const catalog = await fetch(`http://127.0.0.1:${address.port}/providers/catalog.json`);
+    assert.equal(page.status, 200);
+    assert.equal(catalog.status, 200);
+  } finally { await frontend.close(); await rm(root, {recursive: true, force: true}); }
+});

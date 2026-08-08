@@ -69,6 +69,11 @@ surface. Use `--port 0` for an ephemeral port or
 development/static frontend server, not a production TLS or authentication
 endpoint.
 
+The same server can preview a packaged artifact with
+`npm run frontend:serve -- --root out/spartan-frontend --public-root out/spartan-frontend`.
+When no root is supplied it serves the repository source tree and public
+catalog directories.
+
 Build the same surfaces into a portable static artifact with:
 
 ```bash

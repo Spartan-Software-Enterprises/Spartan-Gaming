@@ -7,11 +7,6 @@ import {fileURLToPath} from 'node:url';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const frontendRoot = path.join(repositoryRoot, 'src/frontend');
-const mounts = Object.freeze([
-  Object.freeze({urlPrefix: '/src/frontend', root: frontendRoot}),
-  Object.freeze({urlPrefix: '/providers', root: path.join(repositoryRoot, 'providers')}),
-  Object.freeze({urlPrefix: '/emulators', root: path.join(repositoryRoot, 'emulators')}),
-]);
 const MIME_TYPES = Object.freeze({
   '.css': 'text/css; charset=utf-8',
   '.html': 'text/html; charset=utf-8',
@@ -39,22 +34,27 @@ function decodePath(pathname) {
   }
 }
 
-function resolveAsset(pathname) {
-  const decoded = decodePath(pathname);
-  if (!decoded) return {status: 400};
-  if (decoded === '/service-worker.mjs') return {file: path.join(frontendRoot, 'service-worker.mjs')};
-  if (decoded.startsWith('/pwa/')) return {file: safePath(path.join(frontendRoot, 'pwa'), decoded.slice('/pwa'.length))};
-  for (const mount of mounts) {
-    if (decoded === mount.urlPrefix || decoded.startsWith(`${mount.urlPrefix}/`)) {
-      return {file: safePath(mount.root, decoded.slice(mount.urlPrefix.length) || '/')};
+function createAssetResolver({root = frontendRoot, publicRoot = repositoryRoot} = {}) {
+  const mounts = Object.freeze([
+    Object.freeze({urlPrefix: '/src/frontend', root}),
+    Object.freeze({urlPrefix: '/providers', root: path.join(publicRoot, 'providers')}),
+    Object.freeze({urlPrefix: '/emulators', root: path.join(publicRoot, 'emulators')}),
+  ]);
+  return pathname => {
+    const decoded = decodePath(pathname);
+    if (!decoded) return {status: 400};
+    if (decoded === '/service-worker.mjs') return {file: path.join(root, 'service-worker.mjs')};
+    if (decoded.startsWith('/pwa/')) return {file: safePath(path.join(root, 'pwa'), decoded.slice('/pwa'.length))};
+    for (const mount of mounts) {
+      if (decoded === mount.urlPrefix || decoded.startsWith(`${mount.urlPrefix}/`)) {
+        return {file: safePath(mount.root, decoded.slice(mount.urlPrefix.length) || '/')};
+      }
     }
-  }
-  const firstSegment = decoded.split('/')[1];
-  if (firstSegment && ['dashboard', 'diagnostics', 'emulation', 'host', 'input', 'player', 'providers', 'settings', 'workspaces'].includes(firstSegment)) {
-    return {file: safePath(frontendRoot, decoded)};
-  }
-  if (decoded === '/favicon.ico') return {file: path.join(repositoryRoot, 'favicon.ico')};
-  return {status: 404};
+    const firstSegment = decoded.split('/')[1];
+    if (firstSegment && ['dashboard', 'diagnostics', 'emulation', 'host', 'input', 'player', 'providers', 'settings', 'workspaces'].includes(firstSegment)) return {file: safePath(root, decoded)};
+    if (decoded === '/favicon.ico') return {file: path.join(publicRoot, 'favicon.ico')};
+    return {status: 404};
+  };
 }
 
 async function sendFile(response, file, method = 'GET') {
@@ -81,8 +81,9 @@ async function sendFile(response, file, method = 'GET') {
   }
 }
 
-export function createFrontendServer({host = '127.0.0.1', port = 4173, logger = console} = {}) {
+export function createFrontendServer({host = '127.0.0.1', port = 4173, root = frontendRoot, publicRoot = repositoryRoot, logger = console} = {}) {
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new TypeError('port must be an integer between 0 and 65535');
+  const resolveAsset = createAssetResolver({root: path.resolve(root), publicRoot: path.resolve(publicRoot)});
   const server = createServer(async (request, response) => {
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       response.writeHead(405, {'allow': 'GET, HEAD'}); response.end('Method Not Allowed'); return;
@@ -105,6 +106,8 @@ function readArgument(name, fallback) { const index = process.argv.indexOf(`--${
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const host = String(readArgument('host', '127.0.0.1'));
   const port = Number(readArgument('port', 4173));
-  const frontend = createFrontendServer({host, port});
+  const root = path.resolve(readArgument('root', frontendRoot));
+  const publicRoot = path.resolve(readArgument('public-root', root === frontendRoot ? repositoryRoot : root));
+  const frontend = createFrontendServer({host, port, root, publicRoot});
   frontend.listen().then(address => console.log(JSON.stringify({service: 'spartan-frontend', url: `http://${address.address === '::' ? `[${address.address}]` : address.address}:${address.port}/dashboard/`, host: address.address, port: address.port}))).catch(error => { console.error(error.message); process.exitCode = 1; });
 }
