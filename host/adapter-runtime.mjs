@@ -1,0 +1,33 @@
+import {promises as defaultFs} from 'node:fs';
+import {isAbsolute, join, relative, resolve} from 'node:path';
+import {pathToFileURL} from 'node:url';
+import {normalizeAdapterPackageManifest} from './adapter-package.mjs';
+
+const PLATFORMS = new Set(['win32', 'darwin', 'linux']);
+const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/;
+function required(value, name) { if (typeof value !== 'string' || !value.trim()) throw new TypeError(`${name} must be a non-empty string`); return value.trim(); }
+function segment(value, name) { const result = required(value, name); if (!SAFE_SEGMENT.test(result) || result === '.' || result === '..') throw new TypeError(`${name} contains an unsafe path segment`); return result; }
+function inside(root, target) { const tail = relative(root, target); if (!tail || tail.startsWith('..') || isAbsolute(tail)) throw new Error('adapter path escapes the install root'); return target; }
+async function readJson(fsImpl, path, name) { try { return JSON.parse(await fsImpl.readFile(path, 'utf8')); } catch (error) { throw new Error(`unable to read ${name}: ${error.message}`); } }
+
+/** Activate only a verified, platform-matched adapter package from an install root. */
+export function createInstalledAdapterRuntime({installRoot, id, platform, fsImpl = defaultFs, loadModule = specifier => import(specifier), verifyManifest} = {}) {
+  const root = resolve(required(installRoot, 'installRoot')); const adapterId = segment(id, 'id');
+  if (!PLATFORMS.has(platform)) throw new TypeError(`unsupported adapter runtime platform: ${platform}`);
+  if (!fsImpl || typeof fsImpl.readFile !== 'function') throw new TypeError('filesystem adapter must implement readFile');
+  if (typeof loadModule !== 'function' || typeof verifyManifest !== 'function') throw new TypeError('loadModule and verifyManifest are required');
+  const currentPath = inside(root, join(root, adapterId, 'current.json'));
+  async function inspect() {
+    const pointer = await readJson(fsImpl, currentPath, 'adapter pointer');
+    if (pointer.id !== adapterId) throw new Error('installed adapter pointer id mismatch');
+    const version = segment(pointer.version, 'installed adapter version'); const target = inside(root, join(root, adapterId, version));
+    const manifest = normalizeAdapterPackageManifest(await readJson(fsImpl, join(target, 'manifest.json'), 'adapter package manifest'));
+    if (manifest.id !== adapterId || manifest.version !== version) throw new Error('installed adapter manifest identity mismatch');
+    if (manifest.platform !== 'universal' && manifest.platform !== platform) throw new Error('installed adapter platform mismatch');
+    if (!manifest.entrypoint) throw new Error('installed adapter has no entrypoint');
+    if (pointer.integrity && pointer.integrity !== manifest.signature.value && pointer.integrity !== manifest.files.find(file => file.path === manifest.entrypoint)?.integrity) throw new Error('installed adapter pointer integrity mismatch');
+    const entrypoint = inside(target, resolve(target, ...manifest.entrypoint.split('/')));
+    return Object.freeze({pointer: Object.freeze(pointer), manifest, target, entrypoint});
+  }
+  return Object.freeze({async inspect() { return inspect(); }, async load() { const record = await inspect(); if (!await verifyManifest({manifest: record.manifest, target: record.target})) throw new Error('installed adapter manifest verification failed'); const module = await loadModule(pathToFileURL(record.entrypoint).href); if (typeof module?.createPlatformAdapter !== 'function') throw new TypeError('adapter entrypoint must export createPlatformAdapter'); const adapter = await module.createPlatformAdapter({platform, manifest: record.manifest}); if (!adapter || adapter.platform !== platform || typeof adapter.execute !== 'function') throw new TypeError('adapter factory returned an invalid platform adapter'); return Object.freeze({manifest: record.manifest, adapter}); }});
+}

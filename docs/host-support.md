@@ -82,6 +82,12 @@ platform/kind boundary as capability reporting. Explicit `inputAdapter` values
 remain available for direct tests and specialized deployments, while missing
 or non-ready implementations fail closed before remote input is delivered.
 
+`host/adapter-runtime.mjs` is the activation boundary for extracted packages.
+It validates the current pointer, package identity, platform, entrypoint, and
+injected signature verification before loading a factory module. The factory
+must return a platform-matched executable adapter; an unverified or malformed
+package never reaches module loading.
+
 `host/input.mjs` is the matching input boundary. It maps normalized browser
 events to shell-free plans for Windows `SendInput`, macOS Core Graphics/HID,
 and Linux `uinput` adapters. Plans declare the required permission (`remote-input`,
