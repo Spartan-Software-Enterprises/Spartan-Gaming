@@ -26,5 +26,7 @@ test('Windows native input contract preserves frontend pointer button transition
   assert.match(source, /MOUSEEVENTF_LEFTDOWN/);
   assert.match(source, /MOUSEEVENTF_RIGHTUP/);
   assert.match(source, /MOUSEEVENTF_WHEEL/);
+  assert.match(source, /VK_LCONTROL/);
+  assert.match(source, /VK_F12/);
   assert.match(source, /pointer:cancel/);
 });

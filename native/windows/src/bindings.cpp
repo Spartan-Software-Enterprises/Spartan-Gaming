@@ -71,6 +71,24 @@ WORD key_code(const std::string& control) {
   if (control == "ArrowDown") return VK_DOWN;
   if (control == "ArrowLeft") return VK_LEFT;
   if (control == "ArrowRight") return VK_RIGHT;
+  if (control == "ControlLeft") return VK_LCONTROL;
+  if (control == "ControlRight") return VK_RCONTROL;
+  if (control == "ShiftLeft") return VK_LSHIFT;
+  if (control == "ShiftRight") return VK_RSHIFT;
+  if (control == "AltLeft") return VK_LMENU;
+  if (control == "AltRight") return VK_RMENU;
+  if (control == "MetaLeft") return VK_LWIN;
+  if (control == "MetaRight") return VK_RWIN;
+  if (control == "CapsLock") return VK_CAPITAL;
+  if (control == "Home") return VK_HOME;
+  if (control == "End") return VK_END;
+  if (control == "PageUp") return VK_PRIOR;
+  if (control == "PageDown") return VK_NEXT;
+  if (control == "Insert") return VK_INSERT;
+  if (control == "Delete") return VK_DELETE;
+  if (control == "F1") return VK_F1; if (control == "F2") return VK_F2; if (control == "F3") return VK_F3; if (control == "F4") return VK_F4;
+  if (control == "F5") return VK_F5; if (control == "F6") return VK_F6; if (control == "F7") return VK_F7; if (control == "F8") return VK_F8;
+  if (control == "F9") return VK_F9; if (control == "F10") return VK_F10; if (control == "F11") return VK_F11; if (control == "F12") return VK_F12;
   return 0;
 }
 

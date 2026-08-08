@@ -26,5 +26,7 @@ test('macOS native input contract preserves frontend pointer button transitions'
   assert.match(source, /kCGEventLeftMouseDown/);
   assert.match(source, /kCGEventRightMouseUp/);
   assert.match(source, /CGEventCreateScrollWheelEvent/);
+  assert.match(source, /kVK_RightCommand/);
+  assert.match(source, /kVK_F12/);
   assert.match(source, /pointer:cancel/);
 });

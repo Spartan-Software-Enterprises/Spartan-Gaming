@@ -24,7 +24,7 @@ function keyName(control) {
   const value = required(control, 'input.control');
   if (/^Key[A-Z]$/.test(value)) return value.slice(3).toLowerCase();
   if (/^Digit[0-9]$/.test(value)) return value.slice(5);
-  return ({Space: 'space', Enter: 'Return', Escape: 'Escape', ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left', ArrowRight: 'Right', Tab: 'Tab', Backspace: 'BackSpace'}[value] || value).toLowerCase();
+  return ({Space: 'space', Enter: 'Return', Escape: 'Escape', ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left', ArrowRight: 'Right', Tab: 'Tab', Backspace: 'BackSpace', ControlLeft: 'ctrl', ControlRight: 'ctrl', ShiftLeft: 'shift', ShiftRight: 'shift', AltLeft: 'alt', AltRight: 'alt', MetaLeft: 'super', MetaRight: 'super', CapsLock: 'Caps_Lock', PageUp: 'Prior', PageDown: 'Next', F1: 'F1', F2: 'F2', F3: 'F3', F4: 'F4', F5: 'F5', F6: 'F6', F7: 'F7', F8: 'F8', F9: 'F9', F10: 'F10', F11: 'F11', F12: 'F12'}[value] || value).toLowerCase();
 }
 
 function inputCommand(operation) {
@@ -134,4 +134,4 @@ export async function createBindings({environment = DEFAULT_ENVIRONMENT, spawnIm
   return Object.freeze({platform: PLATFORM, capabilities: Object.freeze({capture: captureReady, audio: audioReady, input: inputReady, keyboard: inputReady, pointer: inputReady, gamepad: false, rumble: false, technologies: Object.freeze({capture: 'FFmpeg x11grab/PipeWire', audio: 'FFmpeg Pulse/PipeWire', input: 'X11 XTest via xdotool'}), requires: Object.freeze(['screen-capture-permission', 'audio-session-permission', 'remote-input-permission'])}), capture, audio, input, async close() { await Promise.allSettled([capture.stop(), audio.stop()]); input.close(); }});
 }
 
-export {inputCommand};
+export {inputCommand, keyName};

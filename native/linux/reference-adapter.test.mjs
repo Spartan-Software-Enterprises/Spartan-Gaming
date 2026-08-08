@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createBindings, inputCommand} from './reference-adapter.mjs';
+import {createBindings, inputCommand, keyName} from './reference-adapter.mjs';
 
 function probe(command) { return {status: ['ffmpeg', 'xdotool', 'pactl'].includes(command) ? 0 : 1}; }
 
@@ -20,6 +20,8 @@ test('Linux reference input maps only normalized keyboard and pointer operations
   assert.deepEqual(inputCommand({kind: 'pointer', action: 'pointer:up', control: 'button-2'}), {args: ['mouseup', '3']});
   assert.deepEqual(inputCommand({kind: 'pointer', action: 'pointer:wheel', deltaY: -120}), {args: ['click', '4']});
   assert.deepEqual(inputCommand({kind: 'pointer', action: 'pointer:wheel', deltaX: 120, deltaY: 0}), {args: ['click', '7']});
+  assert.equal(keyName('ControlLeft'), 'ctrl');
+  assert.equal(keyName('F12'), 'f12');
   assert.throws(() => inputCommand({kind: 'button', control: 'a'}), /does not implement/);
 });
 
