@@ -8,7 +8,7 @@ import { applyGlobalProviderPreferences, createProviderProfileStore } from '../p
 import { createLaunchIntent, saveLaunchIntent } from '../launch/intent.mjs';
 import { createLaunchHistoryStore } from '../launch/history.mjs';
 import { resolveDashboardSection } from './routes.mjs';
-import { resolveResumeEntry, resolveResumePresentation } from './resume.mjs';
+import { resolveRecoveryPresentation, resolveResumeEntry, resolveResumePresentation } from './resume.mjs';
 import { createReadinessStatus } from '../readiness/status.mjs';
 import { applyWorkspaceProviderDefaults, createWorkspaceStore, resolveWorkspaceLaunchBehavior } from '../workspaces/workspaces.mjs';
 import { createFavoritesStore } from './library-state.mjs';
@@ -16,15 +16,17 @@ import { createCommunityProviderCatalogStore, mergeCommunityProviders } from '..
 import { createSettingsStore } from '../settings/profile.mjs';
 import { launchExternalSurface } from '../launch/behavior.mjs';
 import { checkProviderCatalog } from '../providers/catalog-health.mjs';
+import { clearSessionRecoveryHandoff, readSessionRecoveryHandoff } from '../session/recovery-handoff.mjs';
 
 const launchHistory = createLaunchHistoryStore();
 const workspaceStore = createWorkspaceStore();
 const communityCatalogStore = createCommunityProviderCatalogStore();
 const settings = createSettingsStore().read();
+const recoveryHandoff = settings['general.restoreSession'] !== false ? readSessionRecoveryHandoff(sessionStorage) : null;
 let activeWorkspace = workspaceStore.active;
 let favoritesStore = createFavoritesStore({workspaceId: activeWorkspace.id});
 const requestedFilter = new URLSearchParams(globalThis.location?.search || '').get('filter');
-const state = { catalog: [], adapters: null, compatibility: null, report: null, providerHealth: new Map(), filter: ['all', 'cloud', 'watch', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(favoritesStore.list()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, applyGlobalProviderPreferences({...profile, embedParent: globalThis.location?.hostname || ''}, settings)])) };
+const state = { catalog: [], adapters: null, compatibility: null, report: null, providerHealth: new Map(), filter: ['all', 'cloud', 'watch', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(favoritesStore.list()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), recovery: recoveryHandoff, providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, applyGlobalProviderPreferences({...profile, embedParent: globalThis.location?.hostname || ''}, settings)])) };
 document.querySelector('.filters')?.insertAdjacentHTML('beforeend', '<button class="filter" data-filter="watch">Watch &amp; stream</button>');
 const cards = document.querySelector('[data-cards]');
 const toast = document.querySelector('[data-toast]');
@@ -46,7 +48,7 @@ function updateReadinessStatus() { const status = createReadinessStatus({catalog
 function setSessionStatus(status) { sessionStatusId = status; updateReadinessStatus(); }
 function providerHealthLabel(entry) { const health = state.providerHealth.get(entry.id); if (!health) return ''; if (health.status === 'checking') return ' · Checking'; if (health.status === 'reachable') return ` · Reachable${health.latencyMs ? ` ${health.latencyMs}ms` : ''}`; if (health.status === 'unavailable') return ' · Unavailable'; if (health.status === 'timeout') return ' · Timed out'; return ' · Check inconclusive'; }
 function renderResume() {
-  const presentation = resolveResumePresentation(state.lastLaunch); const title = document.querySelector('[data-resume-title]'); const copy = document.querySelector('[data-resume-copy]'); const button = document.querySelector('[data-action="resume"]');
+  const presentation = resolveRecoveryPresentation(state.recovery) || resolveResumePresentation(state.lastLaunch); const title = document.querySelector('[data-resume-title]'); const copy = document.querySelector('[data-resume-copy]'); const button = document.querySelector('[data-action="resume"]');
   title.textContent = presentation.title; copy.textContent = presentation.copy; button.textContent = presentation.actionLabel;
 }
 function openProviderSurface(entry, plan) {
@@ -61,6 +63,7 @@ function openProviderSurface(entry, plan) {
 }
 function closeProviderSurface() { document.querySelector('[data-provider-frame]').src = 'about:blank'; if (typeof providerDialog.close === 'function' && providerDialog.open) providerDialog.close(); else providerDialog.removeAttribute('open'); }
 function launchEntry(entry, plan) {
+  if (state.recovery) { clearSessionRecoveryHandoff(sessionStorage); state.recovery = null; }
   state.recent.add(entry.id);
   state.lastLaunch = launchHistory.record({backendId: entry.id, backendType: entry.backendType, name: entry.name, mode: plan.mode, action: plan.action, at: new Date().toISOString()});
   renderResume();
@@ -125,6 +128,7 @@ document.addEventListener('click', event => {
 document.querySelector('[data-provider-close]').addEventListener('click', closeProviderSurface);
 providerDialog.addEventListener('close', () => { document.querySelector('[data-provider-frame]').src = 'about:blank'; });
 document.querySelector('[data-action="resume"]').addEventListener('click', () => {
+  if (state.recovery) { window.location.assign('../player/index.html'); return; }
   if (!state.lastLaunch) { const offer = beginSession({id: 'spartan-host', backendType: 'remote-play'}); if (offer) window.location.assign('../player/index.html?backend=spartan-host'); return; }
   const entry = resolveResumeEntry(state.lastLaunch, state.catalog); const plan = entry && state.adapters?.get(entry.id)?.resolve();
   if (!entry || !plan || plan.status === 'unsupported') { showToast('The last connection is no longer available in the current catalog.'); return; }

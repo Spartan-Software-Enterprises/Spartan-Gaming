@@ -6,6 +6,12 @@ export function resolveResumePresentation(record) {
   return Object.freeze({title, copy, actionLabel});
 }
 
+export function resolveRecoveryPresentation(handoff) {
+  if (!handoff) return null;
+  const title = handoff.backendName || 'Secure Spartan session';
+  return Object.freeze({title, copy: 'A short-lived Spartan Host connection is ready to continue in this browser session.', actionLabel: '▶ Resume secure session'});
+}
+
 export function resolveResumeEntry(record, catalog = []) {
   if (!record || !Array.isArray(catalog)) return undefined;
   return catalog.find(entry => entry.id === record.backendId);

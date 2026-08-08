@@ -1,8 +1,8 @@
 export const CACHE_NAME = 'spartan-gaming-shell-v2';
 export const OFFLINE_FALLBACK = '/dashboard/index.html';
 export const PRECACHE_URLS = Object.freeze([
-  '/dashboard/index.html', '/dashboard/dashboard.css', '/dashboard/dashboard.mjs',
-  '/player/index.html', '/player/player.css', '/player/player.mjs', '/player/connection.mjs',
+  '/dashboard/index.html', '/dashboard/dashboard.css', '/dashboard/dashboard.mjs', '/dashboard/resume.mjs',
+  '/player/index.html', '/player/player.css', '/player/player.mjs', '/player/connection.mjs', '/session/recovery-handoff.mjs',
   '/settings/index.html', '/settings/settings.css', '/settings/settings.mjs',
   '/host/index.html', '/host/host.css', '/host/host.mjs', '/host/host-page.mjs',
   '/host/browser-studio.html', '/host/browser-studio.css', '/host/browser-studio.mjs',

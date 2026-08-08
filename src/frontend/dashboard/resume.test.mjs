@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {resolveResumeEntry, resolveResumePresentation} from './resume.mjs';
+import {resolveRecoveryPresentation, resolveResumeEntry, resolveResumePresentation} from './resume.mjs';
 import './library-state.test.mjs';
 
 test('resume presentation defaults to the host session and describes recent backends', () => {
@@ -14,4 +14,9 @@ test('resume lookup is limited to the current normalized catalog', () => {
   assert.equal(resolveResumeEntry({backendId: 'known'}, catalog), catalog[0]);
   assert.equal(resolveResumeEntry({backendId: 'missing'}, catalog), undefined);
   assert.equal(resolveResumeEntry({backendId: 'known'}, null), undefined);
+});
+
+test('recovery presentation exposes no connection secret', () => {
+  assert.deepEqual(resolveRecoveryPresentation({backendName: 'Office host', endpoint: 'wss://signal.example', ticket: 'secret'}), {title: 'Office host', copy: 'A short-lived Spartan Host connection is ready to continue in this browser session.', actionLabel: '▶ Resume secure session'});
+  assert.equal(resolveRecoveryPresentation(null), null);
 });
