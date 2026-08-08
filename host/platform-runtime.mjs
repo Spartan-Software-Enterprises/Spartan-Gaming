@@ -1,4 +1,4 @@
-import {createAudioCapturePlan, createAudioPublisherPlan} from './audio.mjs';
+import {createAudioCapturePlan, createAudioEncoderPlan, createAudioPublisherPlan} from './audio.mjs';
 import {createCapturePlan, createEncoderPlan} from './media.mjs';
 import {createNativeHostSession} from './native-session.mjs';
 
@@ -12,8 +12,9 @@ export function createPlatformRuntimePlans({platform, environment = {}, source, 
   if (!PLATFORMS.has(platform)) throw new TypeError(`unsupported platform: ${platform}`);
   const selectedCapture = captureDefaults(platform, environment, source); const capturePlan = createCapturePlan({platform, ...selectedCapture, width, height, framerate, audio: includeAudio, environment}); const encoderPlan = createEncoderPlan({codec, width, height, framerate, bitrateKbps});
   const audioPlan = includeAudio ? createAudioCapturePlan({platform, ...audioDefaults(platform, environment, audioSource), environment}) : null;
+  const audioEncoder = audioPlan ? createAudioEncoderPlan({channels: audioPlan.channels, sampleRate: audioPlan.sampleRate}) : null;
   const audioPublisherPlan = audioPlan ? createAudioPublisherPlan({capturePlan: audioPlan}) : null;
-  return Object.freeze({platform, capture: capturePlan, encoder: encoderPlan, audio: audioPlan, audioPublisher: audioPublisherPlan});
+  return Object.freeze({platform, capture: capturePlan, encoder: encoderPlan, audio: audioPlan, audioEncoder, audioPublisher: audioPublisherPlan});
 }
 
 /** Bind selected plans to injected publishers/input and the native lifecycle. */

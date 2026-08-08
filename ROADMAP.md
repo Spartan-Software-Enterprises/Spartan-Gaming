@@ -86,5 +86,6 @@
 - [x] Transactional native media/audio/input session orchestrator with rollback and reverse-order teardown (OS implementations remain adapter-specific).
 - [x] Platform runtime plan composition for Windows, macOS, and Linux capture/audio paths (concrete OS API adapters remain pending).
 - [x] Executable platform host composition connecting native media, RTP publishing, audio, and permissioned input into one session boundary (OS API packages remain pending).
+- [x] Executable platform audio capture-to-encode and RTP assembly with explicit microphone permission (OS audio APIs remain adapter-provided).
 - [x] Verified installed-adapter activation boundary with pointer, package, platform, and factory checks (concrete OS API packages remain pending).
 - [x] Unified frontend runtime readiness contract for browser, native adapter, and self-hosted host layers.

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createAudioCapturePlan, createAudioPublisher, createAudioPublisherPlan, createRtpAudioPublisher, listAudioBackends, normalizeAudioCapabilities, validateAudioPermission} from './audio.mjs';
+import {createAudioCapturePlan, createAudioEncoderPlan, createAudioPublisher, createAudioPublisherPlan, createRtpAudioPublisher, listAudioBackends, normalizeAudioCapabilities, validateAudioPermission} from './audio.mjs';
 
 test('audio backend matrix covers Windows, macOS, and Linux', () => {
   assert.deepEqual(listAudioBackends('win32').map(item => item.backend), ['wasapi']);
@@ -25,6 +25,8 @@ test('audio publisher plans bound codec bitrate and capabilities', () => {
   assert.deepEqual(capabilities.codecs, ['opus']);
   assert.equal(capabilities.channels, 8);
 });
+
+test('audio encoder plans are shell-free and match captured PCM parameters', () => { const plan = createAudioEncoderPlan({codec: 'opus', channels: 2, sampleRate: 48000}); assert.equal(plan.process.shell, false); assert.deepEqual(plan.process.args.slice(0, 13), ['-hide_banner', '-loglevel', 'warning', '-f', 'f32le', '-ar', '48000', '-ac', '2', '-i', 'pipe:0', '-c:a', 'libopus']); });
 
 test('audio publisher forwards bounded encoded chunks and tears down cleanly', async () => {
   const output = {listeners: new Set(), on(type, handler) { if (type === 'data') this.listeners.add(handler); }, off(type, handler) { if (type === 'data') this.listeners.delete(handler); }, emit(value) { for (const handler of this.listeners) handler(value); }};

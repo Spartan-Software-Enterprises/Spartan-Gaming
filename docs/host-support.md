@@ -76,6 +76,12 @@ the session lifecycle is now executable with injected platform adapters while
 remaining shell-free and testable on every desktop OS. Concrete Windows,
 macOS, and Linux API packages still belong outside the portable core.
 
+When audio packetization and transport are supplied, the same factory now
+builds a shell-free audio capture/encode pipeline from `plans.audio` and
+`plans.audioEncoder`, creates an RTP audio publisher, and starts/stops it
+transactionally with video and input. Audio still requires an explicit
+microphone permission grant; without one, the optional path remains absent.
+
 An installed package can provide a ready `createPlatformAdapterBoundary` and
 pass it as `adapterBoundary`; input operations then cross the same guarded
 platform/kind boundary as capability reporting. Explicit `inputAdapter` values
@@ -113,6 +119,10 @@ CoreAudio, and Linux PipeWire/PulseAudio. It validates microphone/session
 permissions, creates bounded FFmpeg PCM capture plans, and composes an Opus or
 AAC publisher plan. Audio remains `unconfigured` in the reference host until
 a native audio capture and WebRTC audio publisher are installed.
+
+It also exposes the bounded raw-f32le-to-Opus/AAC encoder plan used by the
+executable host composition; the actual capture device and RTP implementation
+remain injected platform adapters.
 
 The same module now provides `createAudioPublisher` and
 `createRtpAudioPublisher`. These accept an injected encoded audio pipeline,

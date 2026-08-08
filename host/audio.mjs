@@ -40,6 +40,14 @@ export function createAudioPublisherPlan({capturePlan, codec = 'opus', bitrateKb
   return Object.freeze({kind: 'audio-publisher', state: 'plan-only', ready: false, codec, bitrateKbps: bounded(bitrateKbps, 128, 16, 512), capture: Object.freeze({platform: capturePlan.platform, backend: capturePlan.backend, channels: capturePlan.channels, sampleRate: capturePlan.sampleRate, process: capturePlan.process}), requires: Object.freeze(['native-audio-capture', 'webrtc-audio-publisher'])});
 }
 
+/** Create a shell-free encoder plan for raw float PCM captured by the audio plan. */
+export function createAudioEncoderPlan({codec = 'opus', bitrateKbps = 128, channels = 2, sampleRate = 48000} = {}) {
+  if (!CODECS.has(codec)) throw new TypeError(`unsupported audio codec: ${codec}`);
+  const boundedChannels = bounded(channels, 2, 1, 8); const boundedRate = bounded(sampleRate, 48000, 8000, 192000); const boundedBitrate = bounded(bitrateKbps, 128, 16, 512);
+  const encoder = codec === 'opus' ? 'libopus' : 'aac';
+  return Object.freeze({kind: 'audio-encoder', codec, channels: boundedChannels, sampleRate: boundedRate, bitrateKbps: boundedBitrate, process: createProcessLaunchPlan({executable: 'ffmpeg', args: ['-hide_banner', '-loglevel', 'warning', '-f', 'f32le', '-ar', String(boundedRate), '-ac', String(boundedChannels), '-i', 'pipe:0', '-c:a', encoder, '-b:a', `${boundedBitrate}k`, '-f', codec === 'opus' ? 'opus' : 'adts', 'pipe:1']}), requires: Object.freeze(['native-audio-capture', 'webrtc-audio-publisher'])});
+}
+
 export function normalizeAudioCapabilities(audio = {}) {
   return Object.freeze({version: 1, state: ['unconfigured', 'plan-only', 'ready', 'active', 'failed'].includes(audio.state) ? audio.state : 'unconfigured', codecs: Object.freeze(Array.isArray(audio.codecs) && audio.codecs.length ? [...new Set(audio.codecs.filter(codec => CODECS.has(codec)))] : ['opus']), channels: bounded(audio.channels, 2, 1, 8), sampleRate: bounded(audio.sampleRate, 48000, 8000, 192000), requires: Object.freeze(Array.isArray(audio.requires) && audio.requires.length ? [...new Set(audio.requires.map(String))] : ['native-audio-capture', 'webrtc-audio-publisher'])});
 }
