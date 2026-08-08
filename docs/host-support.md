@@ -76,6 +76,12 @@ the session lifecycle is now executable with injected platform adapters while
 remaining shell-free and testable on every desktop OS. Concrete Windows,
 macOS, and Linux API packages still belong outside the portable core.
 
+An installed package can provide a ready `createPlatformAdapterBoundary` and
+pass it as `adapterBoundary`; input operations then cross the same guarded
+platform/kind boundary as capability reporting. Explicit `inputAdapter` values
+remain available for direct tests and specialized deployments, while missing
+or non-ready implementations fail closed before remote input is delivered.
+
 `host/input.mjs` is the matching input boundary. It maps normalized browser
 events to shell-free plans for Windows `SendInput`, macOS Core Graphics/HID,
 and Linux `uinput` adapters. Plans declare the required permission (`remote-input`,
