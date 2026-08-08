@@ -1,4 +1,5 @@
-export const CACHE_NAME = 'spartan-gaming-shell-v1';
+export const CACHE_NAME = 'spartan-gaming-shell-v2';
+export const OFFLINE_FALLBACK = '/dashboard/index.html';
 export const PRECACHE_URLS = Object.freeze([
   '/dashboard/index.html', '/dashboard/dashboard.css', '/dashboard/dashboard.mjs',
   '/player/index.html', '/player/player.css', '/player/player.mjs', '/player/connection.mjs',
@@ -10,5 +11,6 @@ export const PRECACHE_URLS = Object.freeze([
   '/providers/catalog.json', '/emulators/catalog.json',
 ]);
 
+export function isNavigationRequest(request) { return Boolean(request?.mode === 'navigate' || request?.destination === 'document' || request?.headers?.get?.('accept')?.includes?.('text/html')); }
 export function isCacheableRequest(request, locationLike = globalThis.location) { return request?.method === 'GET' && request?.url?.startsWith?.(`${locationLike?.origin || ''}/`) && !/\/signal|\/session|\/api\//.test(new URL(request.url).pathname); }
 export function isCatalogRequest(url) { return /\/(providers|emulators)\/catalog\.json$/.test(new URL(url, 'https://spartangaming.invalid').pathname); }
