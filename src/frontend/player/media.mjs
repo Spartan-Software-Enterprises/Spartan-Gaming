@@ -18,6 +18,20 @@ export function setMediaAudioEnabled(video, enabled) {
   return !video.muted;
 }
 
+export function canUsePictureInPicture(video, documentRef = globalThis.document) {
+  return Boolean(video && typeof video.requestPictureInPicture === 'function' && documentRef?.pictureInPictureEnabled !== false);
+}
+
+export async function togglePictureInPicture(video, documentRef = globalThis.document) {
+  if (!canUsePictureInPicture(video, documentRef)) throw new Error('Picture-in-Picture is unavailable in this browser');
+  if (documentRef?.pictureInPictureElement === video && typeof documentRef.exitPictureInPicture === 'function') {
+    await documentRef.exitPictureInPicture();
+    return false;
+  }
+  await video.requestPictureInPicture();
+  return true;
+}
+
 export function observeMediaStream(stream, onChange) {
   if (!stream || typeof stream.getTracks !== 'function') throw new TypeError('MediaStream-like value is required');
   if (typeof onChange !== 'function') throw new TypeError('onChange callback is required');

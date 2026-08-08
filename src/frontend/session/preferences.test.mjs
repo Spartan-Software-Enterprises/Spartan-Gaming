@@ -13,6 +13,7 @@ test('session preferences map streaming settings into bounded capabilities', () 
   assert.equal(result.preferences.bitrateKbps, 40000);
   assert.equal(result.preferences.qualityProfiles.find(profile => profile.id === 'high').maxWidth, 2560);
   assert.equal(result.preferences.autoFullscreen, true);
+  assert.equal(result.preferences.pictureInPicture, true);
   assert.equal(result.preferences.showOverlay, true);
 });
 
@@ -27,4 +28,5 @@ test('session preferences fall back safely for invalid settings', () => {
 });
 test('session preferences carry bounded display selection and refresh policy', () => { const result = createSessionPreferences({'media.display': 'Display 2', 'media.refreshRate': '240 Hz'}); assert.deepEqual(result.preferences.display, {kind: 'index', index: 1}); assert.equal(result.preferences.maxRefreshRate, 240); const ask = createSessionPreferences({'media.display': 'Ask each time', 'media.refreshRate': 'Automatic'}); assert.equal(ask.preferences.display, 'ask'); assert.equal(ask.preferences.maxRefreshRate, null); });
 test('session preferences carry the touch-control layout choice', () => { assert.equal(createSessionPreferences({'accessibility.touchLayout': 'Minimal'}).preferences.touchLayout, 'Minimal'); });
+test('session preferences honor the Picture-in-Picture setting', () => { assert.equal(createSessionPreferences({'gaming.pictureInPicture': false}).preferences.pictureInPicture, false); });
 test('session preferences apply observed display policy evidence without storing capabilities', () => { const result = createSessionPreferences({'media.hdr': true, 'media.refreshRate': '240 Hz', 'streaming.codec': 'Automatic'}, {graphics: {hdr: false}, display: {maxRefreshRate: 144}, media: {codecs: {av1: false, vp9: true, h264: true}}}); assert.equal(result.capabilities.video.hdr, false); assert.equal(result.capabilities.video.maxFramerate, 144); assert.deepEqual(result.capabilities.video.codecs, ['vp9', 'h264']); assert.equal(result.preferences.displayPolicy.maxRefreshRate, 144); });

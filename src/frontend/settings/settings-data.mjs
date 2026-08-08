@@ -38,6 +38,7 @@ export const settingsCategories = [
       select('gaming.sessionPriority', 'Session priority', 'Control how Spartan Gaming treats game processes and background tabs.', ['Balanced', 'Game priority', 'Maximum game priority'], 'Game priority'),
       toggle('gaming.autoSuspendTabs', 'Suspend unrelated tabs', 'Reduce memory and CPU use while a session is active.', true),
       toggle('gaming.showOverlay', 'Enable gaming overlay', 'Allow the session overlay for quality, input, capture, chat, and controls.', true),
+      toggle('gaming.pictureInPicture', 'Allow Picture-in-Picture', 'Keep a live game stream visible in a floating browser window while browsing other pages.', true),
       select('gaming.overlayPosition', 'Overlay position', 'Default location for the session overlay.', ['Top left', 'Top right', 'Bottom left', 'Bottom right'], 'Top right'),
       range('gaming.overlayOpacity', 'Overlay opacity', 'Opacity of the session overlay surface.', 20, 100, 5, 92, '%'),
       toggle('gaming.instantReplay', 'Enable instant replay buffer', 'Keep a rolling local buffer for clipping the last moments of a session.'),

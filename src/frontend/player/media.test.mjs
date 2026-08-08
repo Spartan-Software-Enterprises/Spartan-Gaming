@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {attachMediaStreamTarget, describeMediaStream, observeMediaStream, setMediaAudioEnabled} from './media.mjs';
+import {attachMediaStreamTarget, canUsePictureInPicture, describeMediaStream, observeMediaStream, setMediaAudioEnabled, togglePictureInPicture} from './media.mjs';
 
 const stream = {getTracks: () => [{kind: 'video'}, {kind: 'audio'}]};
 
@@ -20,6 +20,16 @@ test('media coordinator toggles audio without changing the media stream', () => 
   assert.equal(video.muted, true);
   assert.equal(setMediaAudioEnabled(video, true), true);
   assert.equal(video.srcObject, stream);
+});
+
+test('media coordinator gates and toggles Picture-in-Picture', async () => {
+  const documentRef = {pictureInPictureEnabled: true, pictureInPictureElement: null, async exitPictureInPicture() { this.pictureInPictureElement = null; }};
+  const video = {requestPictureInPicture: async () => { documentRef.pictureInPictureElement = video; }};
+  assert.equal(canUsePictureInPicture(video, documentRef), true);
+  assert.equal(await togglePictureInPicture(video, documentRef), true);
+  assert.equal(await togglePictureInPicture(video, documentRef), false);
+  assert.equal(canUsePictureInPicture({}, documentRef), false);
+  await assert.rejects(() => togglePictureInPicture({}, documentRef), /unavailable/);
 });
 
 test('media coordinator tracks dynamic add/remove events', () => {
