@@ -1,5 +1,6 @@
 export const WORKSPACE_STORAGE_KEY = 'spartan-gaming.workspaces.v1';
 const WORKSPACE_QUALITY = Object.freeze({ultra: 'prefer-quality', high: 'prefer-quality', balanced: 'balanced', low: 'prefer-latency'});
+const WORKSPACE_SESSION_QUALITY = Object.freeze({ultra: 'high', high: 'high', balanced: 'balanced', low: 'low'});
 const WORKSPACE_LAUNCH = Object.freeze({current: 'Current workspace', 'new-tab': 'New tab', 'new-window': 'New gaming window'});
 
 export const DEFAULT_WORKSPACES = Object.freeze([
@@ -14,6 +15,8 @@ function normalize(workspace) { required(workspace?.id, 'workspace.id'); require
 function validCollection(value) { return Array.isArray(value) && value.length > 0 && value.every(item => item && typeof item === 'object'); }
 
 export function applyWorkspaceProviderDefaults(workspace = {}, profile = {}) { return Object.freeze({...profile, quality: profile.quality && profile.quality !== 'balanced' ? profile.quality : (WORKSPACE_QUALITY[workspace.quality] || 'balanced')}); }
+export function resolveWorkspaceQualityPreset(workspace = {}) { return WORKSPACE_SESSION_QUALITY[workspace.quality] || null; }
+export function resolveWorkspaceControllerProfile(workspace = {}, fallback = 'Auto-detect') { return workspace.controllerProfile === 'keyboard' ? 'Keyboard and mouse' : workspace.controllerProfile && workspace.controllerProfile !== 'auto' ? workspace.controllerProfile : fallback; }
 export function resolveWorkspaceLaunchBehavior(workspace = {}, fallback = 'New tab') { return WORKSPACE_LAUNCH[workspace.launchBehavior] || fallback; }
 
 export function createWorkspaceStore({storage = globalThis.localStorage, initial = DEFAULT_WORKSPACES} = {}) {
