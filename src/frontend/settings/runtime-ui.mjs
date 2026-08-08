@@ -1,17 +1,27 @@
+import {detectDeviceMode, resolvePresentationProfile} from '../platform/device-mode.mjs';
+
 const ACCENTS = Object.freeze({Cyan: '#50e1d1', Violet: '#9a84ff', Lime: '#b8ef65', Amber: '#f5c563', Red: '#ff8f9c'});
 const THEMES = Object.freeze({'Spartan Dark': 'dark', 'Spartan Light': 'light', System: 'system', 'OLED Black': 'oled'});
 const DENSITIES = Object.freeze({Comfortable: 'comfortable', Compact: 'compact', 'Controller-first': 'controller'});
 
-export function resolveRuntimeUiSettings(settings = {}) {
+export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
   const accent = ACCENTS[settings['appearance.accent']] || ACCENTS.Cyan;
   const theme = THEMES[settings['appearance.theme']] || 'dark';
   const density = DENSITIES[settings['appearance.density']] || 'comfortable';
   const opacity = Number(settings['gaming.overlayOpacity']);
+  const detectedMode = environment.deviceMode || detectDeviceMode(environment);
+  const presentation = resolvePresentationProfile({settings, detectedMode, viewport: environment.viewport});
   return Object.freeze({
     accent,
     theme,
     density,
     uiScale: Math.max(80, Math.min(140, Number(settings['appearance.uiScale']) || 100)),
+    deviceMode: presentation.mode,
+    navigation: presentation.navigation,
+    touchControls: presentation.touchControls,
+    preferFullscreen: presentation.preferFullscreen,
+    effectiveUiScale: presentation.effectiveUiScale,
+    layoutColumns: presentation.columns,
     reduceMotion: settings['appearance.reduceMotion'] === true || settings['accessibility.reduceMotion'] === true,
     highContrast: settings['accessibility.highContrast'] === true,
     largeText: settings['accessibility.largeText'] === true,
@@ -43,14 +53,23 @@ html[data-spartan-overlay-position="Bottom left"] .overlay-top{right:auto;top:au
 html[data-spartan-overlay-position="Bottom right"] .overlay-top{left:auto;top:auto;bottom:22px}
 html[data-spartan-density="compact"] .card,html[data-spartan-density="compact"] .panel,html[data-spartan-density="compact"] .setting-row{padding-top:12px;padding-bottom:12px}
 html[data-spartan-density="controller"] button,html[data-spartan-density="controller"] select,html[data-spartan-density="controller"] input{min-height:44px}
+html[data-spartan-navigation="remote-controller"] button,html[data-spartan-navigation="remote-controller"] select,html[data-spartan-navigation="remote-controller"] input{min-height:52px;font-size:1.08em}
+html[data-spartan-navigation="remote-controller"] :focus-visible{outline-width:4px;outline-offset:5px}
+html[data-spartan-device-mode="television"] .content,html[data-spartan-device-mode="television"] .main{max-width:1440px;padding-left:6vw;padding-right:6vw}
+html[data-spartan-device-mode="television"] .cards{grid-template-columns:repeat(4,minmax(0,1fr))}
+html[data-spartan-device-mode="television"] .hero h2{font-size:clamp(36px,4vw,58px)}
+html[data-spartan-device-mode="mobile"] body,html[data-spartan-device-mode="handheld"] body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+html[data-spartan-device-mode="mobile"] .content,html[data-spartan-device-mode="handheld"] .content,html[data-spartan-device-mode="mobile"] .main,html[data-spartan-device-mode="handheld"] .main{padding-bottom:calc(45px + env(safe-area-inset-bottom))}
 `;
 
 export function applyRuntimeUiSettings(documentRef, settings = {}) {
   if (!documentRef?.documentElement) return resolveRuntimeUiSettings(settings);
-  const resolved = resolveRuntimeUiSettings(settings);
+  const resolved = resolveRuntimeUiSettings(settings, {navigatorRef: documentRef.defaultView?.navigator || globalThis.navigator, viewport: {width: documentRef.defaultView?.innerWidth}});
   const root = documentRef.documentElement;
   root.dataset.spartanTheme = resolved.theme;
   root.dataset.spartanDensity = resolved.density;
+  root.dataset.spartanDeviceMode = resolved.deviceMode;
+  root.dataset.spartanNavigation = resolved.navigation;
   root.dataset.spartanColorVision = resolved.colorVision;
   root.dataset.spartanOverlay = resolved.showOverlay ? 'visible' : 'hidden';
   root.dataset.spartanOverlayPosition = resolved.overlayPosition;
@@ -61,7 +80,7 @@ export function applyRuntimeUiSettings(documentRef, settings = {}) {
   root.style.setProperty('--spartan-accent', resolved.accent);
   root.style.setProperty('--accent', resolved.accent);
   root.style.setProperty('--cyan', resolved.accent);
-  root.style.setProperty('--spartan-ui-scale', `${resolved.uiScale / 100}`);
+  root.style.setProperty('--spartan-ui-scale', `${resolved.effectiveUiScale / 100}`);
   root.style.setProperty('--spartan-overlay-opacity', `${resolved.overlayOpacity / 100}`);
   if (!documentRef.getElementById(STYLE_ID)) {
     const style = documentRef.createElement('style'); style.id = STYLE_ID; style.textContent = RUNTIME_STYLES; documentRef.head?.append(style);

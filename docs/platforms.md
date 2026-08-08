@@ -12,6 +12,13 @@ Spartan Gaming is intended to be universal across practical Chromium-supported e
 | iOS/iPadOS | Conditional mobile target | Apple browser-engine, entitlement, distribution, and media constraints |
 | TV/embedded | Later exploration | Remote navigation, gamepad UX, television display and input constraints |
 
+The frontend now has a capability-driven presentation profile for desktop,
+ChromeOS, handheld, mobile, and television classes. Automatic detection is
+conservative and can be overridden in Settings; the profile changes focus
+targets, navigation hints, touch-control preference, fullscreen preference,
+safe-area spacing, and library density. It does not claim native packaging,
+TV certification, or iOS engine/entitlement support.
+
 ## Shared layers
 
 - Gaming dashboard and session model.

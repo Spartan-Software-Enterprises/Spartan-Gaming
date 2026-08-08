@@ -30,5 +30,7 @@ jobs:
         run: npm test --ignore-scripts
       - name: Run optional Werift adapter contract in isolation
         run: npm run test:werift
+      - name: Run device presentation contract
+        run: npm run test:platform
       - name: Validate Chromium target contract
         run: npm run chromium:validate -- --platform ${{ matrix.platform }}

@@ -108,3 +108,4 @@
 - [x] Optional platform native-binding discovery and strict adapter composition (binary package implementations remain separately distributed).
 - [x] Reproducible per-platform native package manifest and CMake configure/build/install contract (compiled binary sources remain separately distributed).
 - [x] Unified frontend runtime readiness contract for browser, native adapter, and self-hosted host layers.
+- [x] Capability-driven desktop, ChromeOS, handheld, mobile, and television presentation profiles with safe forced-mode fallback.
