@@ -290,7 +290,8 @@ Gamepad/uinput, portal consent UI, hardware encoder selection, and signed
 distribution are intentionally not claimed by this reference adapter. The
 compiled `@spartan-gaming/native-linux` package now adds a Node-API `uinput`
 virtual gamepad for normalized buttons, axes, and rumble effects. The binding
-accepts the shared frontend `button-N` and `axis-N` controls directly. It is built with
+accepts the shared frontend `button-N` and `axis-N` controls directly, including
+the standard trigger, stick-click, and d-pad button indexes. It is built with
 `npm run native:build-linux`, installed into the isolated native artifact, and
 verified in Linux CI. Rumble is advertised only when `/dev/uinput` is readable
 and writable; hosts without that device or permission fail closed. Portal

@@ -58,7 +58,7 @@ int button_code(const std::string& control) {
     char* end = nullptr;
     const long index = std::strtol(control.c_str() + 7, &end, 10);
     if (end == control.c_str() + 7 || *end != '\0') return -1;
-    const int indexed[] = {BTN_SOUTH, BTN_EAST, BTN_WEST, BTN_NORTH, BTN_TL, BTN_TR, BTN_SELECT, BTN_START, BTN_MODE, BTN_MODE, BTN_DPAD_UP, BTN_DPAD_DOWN, BTN_DPAD_LEFT, BTN_DPAD_RIGHT};
+    const int indexed[] = {BTN_SOUTH, BTN_EAST, BTN_WEST, BTN_NORTH, BTN_TL, BTN_TR, BTN_TL2, BTN_TR2, BTN_SELECT, BTN_START, BTN_THUMBL, BTN_THUMBR, BTN_DPAD_UP, BTN_DPAD_DOWN, BTN_DPAD_LEFT, BTN_DPAD_RIGHT};
     return index >= 0 && index < static_cast<long>(sizeof(indexed) / sizeof(indexed[0])) ? indexed[index] : -1;
   }
   if (control == "a" || control == "south") return BTN_SOUTH;
@@ -67,6 +67,10 @@ int button_code(const std::string& control) {
   if (control == "y" || control == "north") return BTN_NORTH;
   if (control == "lb" || control == "l1") return BTN_TL;
   if (control == "rb" || control == "r1") return BTN_TR;
+  if (control == "lt" || control == "l2") return BTN_TL2;
+  if (control == "rt" || control == "r2") return BTN_TR2;
+  if (control == "l3") return BTN_THUMBL;
+  if (control == "r3") return BTN_THUMBR;
   if (control == "back" || control == "select") return BTN_SELECT;
   if (control == "start") return BTN_START;
   if (control == "guide") return BTN_MODE;
@@ -107,10 +111,10 @@ bool ensure_device() {
   device_fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
   if (device_fd < 0) return false;
   if (ioctl(device_fd, UI_SET_EVBIT, EV_KEY) < 0 || ioctl(device_fd, UI_SET_EVBIT, EV_ABS) < 0 || ioctl(device_fd, UI_SET_EVBIT, EV_FF) < 0 || ioctl(device_fd, UI_SET_FFBIT, FF_RUMBLE) < 0) { close(device_fd); device_fd = -1; return false; }
-  const int buttons[] = {BTN_SOUTH, BTN_EAST, BTN_WEST, BTN_NORTH, BTN_TL, BTN_TR, BTN_SELECT, BTN_START, BTN_MODE, BTN_DPAD_UP, BTN_DPAD_DOWN, BTN_DPAD_LEFT, BTN_DPAD_RIGHT};
-  for (const int button : buttons) if (ioctl(device_fd, UI_SET_KEYBIT, button) < 0) return false;
+  const int buttons[] = {BTN_SOUTH, BTN_EAST, BTN_WEST, BTN_NORTH, BTN_TL, BTN_TR, BTN_TL2, BTN_TR2, BTN_SELECT, BTN_START, BTN_MODE, BTN_THUMBL, BTN_THUMBR, BTN_DPAD_UP, BTN_DPAD_DOWN, BTN_DPAD_LEFT, BTN_DPAD_RIGHT};
+  for (const int button : buttons) if (ioctl(device_fd, UI_SET_KEYBIT, button) < 0) { close(device_fd); device_fd = -1; return false; }
   const int axes[] = {ABS_X, ABS_Y, ABS_RX, ABS_RY, ABS_Z, ABS_RZ};
-  for (const int axis : axes) if (ioctl(device_fd, UI_SET_ABSBIT, axis) < 0) return false;
+  for (const int axis : axes) if (ioctl(device_fd, UI_SET_ABSBIT, axis) < 0) { close(device_fd); device_fd = -1; return false; }
   uinput_user_dev device{};
   std::strncpy(device.name, "Spartan Gaming Virtual Gamepad", UINPUT_MAX_NAME_SIZE - 1);
   device.id.bustype = BUS_USB;
