@@ -83,6 +83,14 @@ highest compatible verified release. The plan describes a proposed transition
 without downloading, installing, or replacing user files; packaged installers
 and a hosted release service remain separate native/release boundaries.
 
+The portable host now provides the final launch handoff for native profiles in
+`host/game-launcher.mjs`. A trusted, enabled runtime profile plus an explicit
+user-selected game path becomes a shell-free process plan. The native session
+starts the emulator before capture, rolls it back on media/audio failure, and
+stops it after stream teardown. This supports Dolphin, PCSX2, RPCS3, PPSSPP,
+DuckStation, melonDS, Azahar, MAME, Flycast, xemu, ScummVM, and compatible
+Libretro hosts without bundling copyrighted games or firmware.
+
 `src/frontend/adapters/install.mjs` is the explicit handoff to that future
 updater. It requires user consent, a signed ready update, HTTPS artifact
 metadata, matching SHA-256 integrity, a supported platform, and no credentials;

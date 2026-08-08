@@ -119,3 +119,11 @@ validated shell-free capture/encoder plans, starts capture/encode only after a
 validated session offer arrives, and tears both publishers down with the
 session. Production platform adapters still supply the actual capture plans,
 packetizers, optional Werift package, and relay configuration.
+
+`host/game-launcher.mjs` supplies the user-owned emulator handoff. A trusted
+native runtime profile and an explicitly selected local game file become a
+shell-free process plan. Pass the resulting launcher to
+`createNativeHostSession` or `createExecutablePlatformHost` to start the game
+before capture, roll it back when media/audio setup fails, and stop it after
+stream teardown. The host never packages or downloads ROMs, BIOS files, keys,
+or firmware.

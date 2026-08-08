@@ -148,6 +148,15 @@ permissioned normalized plans, applies a bounded event rate, and exposes
 explicit close/failure states. OS-specific adapters remain separate packages;
 the core never shells out or interprets arbitrary executable arguments.
 
+`host/game-launcher.mjs` is the matching user-owned emulation launch boundary.
+It turns a trusted native runtime profile and an explicitly selected local game
+file into a shell-free process plan, then owns the emulator process lifecycle.
+`createNativeHostSession` can start that launcher before media capture and stop
+it after audio/video teardown, rolling the game back if media setup fails.
+Paths are metadata and process arguments only; Spartan never downloads ROMs,
+BIOS files, keys, or executes a browser-provided path without the native host
+operator's explicit launch decision.
+
 `createNativeWeriftHostFromPlatformBindings` is the package-backed assembly
 factory. Given a verified platform binding, explicit capture/microphone grants,
 and injected RTP packetizers, it creates the shell-free video and optional
