@@ -33,7 +33,7 @@ export function createNativeWeriftHost({signaling, module, pipeline, capturePlan
     signaling,
     sessionId,
     sessionFactory: async ({onIceCandidate, onStateChange, launch}) => {
-        if (gameLauncher && launchValidator && (!launch || !launchValidator(launch))) throw new Error('native launch request does not match the configured host content');
+      if (gameLauncher && (!launchValidator || !launch || !launchValidator(launch))) throw new Error('native launch request does not match the configured host content');
       mediaPublisher = createWeriftRtpPublisher({module, pipeline: nativePipeline, packetizer, peerConfig, codec, ssrc, streamId, label, maxChunkBytes});
       if (audioPipeline || audioPacketizer) {
         if (!audioPipeline || !audioPacketizer) throw new TypeError('audioPipeline and audioPacketizer are required together');
@@ -75,6 +75,7 @@ export function createNativeWeriftHostFromPlatformBindings({bindings, platform =
   required(bindings, 'bindings');
   if (bindings.platform !== platform) throw new TypeError('platform bindings must match the requested platform');
   if (typeof bindings.capture?.plan !== 'function') throw new TypeError('platform bindings must provide capture.plan(options)');
+  if (runtimeProfile && gamePath && !hostContentId) throw new TypeError('hostContentId is required when native game launch is configured');
   const capturePermissionGranted = captureOptions.permissionGranted === true || permissions['screen-capture'] === true || permissions['screen-recording'] === true;
   const capturePlan = bindings.capture.plan({...captureOptions, width, height, framerate, permissionGranted: capturePermissionGranted});
   const encoderPlan = createEncoderPlan({codec, width, height, framerate, bitrateKbps});

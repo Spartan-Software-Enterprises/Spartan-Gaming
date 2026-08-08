@@ -57,23 +57,36 @@ test('native Werift host dispatches negotiated remote input through the guarded 
 test('platform bindings compose into a shell-free native Werift host', () => {
   const signal = {on() { return () => {}; }, async connect() {}, send() {}, close() {}};
   const bindings = {platform: 'win32', capture: {plan() { return {platform: 'win32', output: {target: 'stdout'}, process: {shell: false, args: []}}; }}, audio: {plan() { throw new Error('audio disabled'); }}, input: {platform: 'win32', async execute() {}}};
-  const host = createNativeWeriftHostFromPlatformBindings({bindings, includeAudio: false, permissions: {'screen-capture': true}, runtimeProfile: {id: 'dolphin-local', kind: 'native-emulator', version: '5.0', trust: 'signed', enabled: true, executablePath: process.execPath}, gamePath: '/games/mario.iso', signaling: signal, module: fakeWerift(), packetizer: {push: () => []}, sessionId: 'ses-package-host'});
+  const host = createNativeWeriftHostFromPlatformBindings({bindings, includeAudio: false, permissions: {'screen-capture': true}, runtimeProfile: {id: 'dolphin-local', kind: 'native-emulator', version: '5.0', trust: 'signed', enabled: true, executablePath: process.execPath}, gamePath: '/games/mario.iso', hostContentId: 'mario-iso', signaling: signal, module: fakeWerift(), packetizer: {push: () => []}, sessionId: 'ses-package-host'});
   assert.equal(host.pipeline.state, 'idle'); assert.equal(host.inputExecutor.state, 'ready'); assert.equal(host.gameLauncher.plan.kind, 'game-launch');
   host.close(); assert.equal(host.inputExecutor.state, 'closed');
+});
+
+test('platform bindings reject native game launch configuration without an opaque host content ID', () => {
+  const signal = {on() { return () => {}; }, async connect() {}, send() {}, close() {}};
+  const bindings = {platform: 'linux', capture: {plan() { return {platform: 'linux', output: {target: 'stdout'}, process: {shell: false, args: []}}; }}, input: {platform: 'linux', async execute() {}}};
+  assert.throws(() => createNativeWeriftHostFromPlatformBindings({bindings, includeAudio: false, runtimeProfile: {id: 'retro-local', kind: 'native-emulator', version: '1.0', trust: 'signed', enabled: true, executablePath: process.execPath}, gamePath: '/games/game.rom', signaling: signal, module: fakeWerift(), packetizer: {push: () => []}, sessionId: 'ses-package-host-invalid'}), /hostContentId is required/);
 });
 
 test('native Werift host starts and stops the selected game with the media session', async () => {
   const signaling = signal(); const videoOutput = {listeners: new Set(), on(type, handler) { if (type === 'data') this.listeners.add(handler); }, off(type, handler) { if (type === 'data') this.listeners.delete(handler); }};
   const log = []; const pipeline = {videoOutput, async start() { log.push('media:start'); }, async stop() { log.push('media:stop'); }};
   const gameLauncher = {async start() { log.push('game:start'); }, async stop() { log.push('game:stop'); }, get state() { return 'running'; }};
-  const host = createNativeWeriftHost({signaling, module: fakeWerift(), pipeline, gameLauncher, packetizer: {push: () => []}, sessionId: 'ses-native-game'});
-  const offer = createSessionEnvelope({sessionId: 'ses-native-game', type: 'session.offer', payload: {sdp: {type: 'offer', sdp: 'native-offer'}, transports: ['webrtc'], video: {codecs: ['h264']}, audio: {codecs: ['opus']}, input: {gamepad: true, keyboard: true, pointer: true, rumble: true}}});
+  const host = createNativeWeriftHost({signaling, module: fakeWerift(), pipeline, gameLauncher, launchValidator: () => true, packetizer: {push: () => []}, sessionId: 'ses-native-game'});
+  const offer = createSessionEnvelope({sessionId: 'ses-native-game', type: 'session.offer', payload: {sdp: {type: 'offer', sdp: 'native-offer'}, transports: ['webrtc'], video: {codecs: ['h264']}, audio: {codecs: ['opus']}, input: {gamepad: true, keyboard: true, pointer: true, rumble: true}, launch: {version: 1, kind: 'emulator', coreId: 'dolphin', runtime: {id: 'dolphin-local', kind: 'native-emulator', version: '5.0'}, hostContentId: 'mario-iso', content: {game: {name: 'mario.iso', size: 1}, firmware: []}, consent: {approved: true, at: '2026-08-08T00:00:00.000Z'}}}});
   await host.start(); signaling.emit('message', offer); await new Promise(resolve => setTimeout(resolve, 0)); assert.deepEqual(log, ['game:start', 'media:start']); host.close(); await new Promise(resolve => setTimeout(resolve, 0)); assert.deepEqual(log, ['game:start', 'media:start', 'media:stop', 'game:stop']);
 });
 
 test('native Werift host rejects a launch request that does not match configured host content', async () => {
   const signaling = signal(); const pipeline = {videoOutput: {on() {}, off() {}}, async start() {}, async stop() {}}; const host = createNativeWeriftHost({signaling, module: fakeWerift(), pipeline, gameLauncher: {async start() {}, async stop() {}}, launchValidator: () => false, packetizer: {push: () => []}, sessionId: 'ses-native-launch-reject'});
   const offer = createSessionEnvelope({sessionId: 'ses-native-launch-reject', type: 'session.offer', payload: {sdp: {type: 'offer', sdp: 'native-offer'}, transports: ['webrtc'], video: {codecs: ['h264']}, audio: {codecs: ['opus']}, input: {gamepad: true, keyboard: true, pointer: true, rumble: true}, launch: {version: 1, kind: 'emulator', coreId: 'dolphin', runtime: {id: 'wrong', kind: 'native-emulator', version: '1'}, hostContentId: 'wrong', content: {game: {name: 'game.iso', size: 1}, firmware: []}, consent: {approved: true, at: '2026-08-08T00:00:00.000Z'}}}});
+  const errors = []; host.on('error', error => errors.push(error)); await host.start(); signaling.emit('message', offer); await new Promise(resolve => setTimeout(resolve, 0)); assert.match(errors[0].message, /does not match/); host.close();
+});
+
+test('native Werift host rejects a session offer without a launch request when a game launcher is configured', async () => {
+  const signaling = signal(); const pipeline = {videoOutput: {on() {}, off() {}}, async start() {}, async stop() {}};
+  const host = createNativeWeriftHost({signaling, module: fakeWerift(), pipeline, gameLauncher: {async start() {}, async stop() {}}, launchValidator: () => true, packetizer: {push: () => []}, sessionId: 'ses-native-launch-missing'});
+  const offer = createSessionEnvelope({sessionId: 'ses-native-launch-missing', type: 'session.offer', payload: {sdp: {type: 'offer', sdp: 'native-offer'}, transports: ['webrtc'], video: {codecs: ['h264']}, audio: {codecs: ['opus']}, input: {gamepad: true, keyboard: true, pointer: true, rumble: true}}});
   const errors = []; host.on('error', error => errors.push(error)); await host.start(); signaling.emit('message', offer); await new Promise(resolve => setTimeout(resolve, 0)); assert.match(errors[0].message, /does not match/); host.close();
 });
 

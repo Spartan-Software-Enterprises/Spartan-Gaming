@@ -170,6 +170,13 @@ The same launcher can be supplied to `createNativeWeriftHost`; it is started
 only after the remote offer has passed capability negotiation, before video or
 audio publishers start, and is stopped during session teardown.
 
+When a native game launcher is configured, every accepted offer must include a
+consented metadata-only launch request and a validator must confirm its runtime,
+opaque host content ID, and game filename. The package-backed factory requires
+`hostContentId` alongside the configured runtime and game path; incomplete
+launch configuration fails during construction rather than silently widening
+the host's launch authority.
+
 `createNativeWeriftHostFromPlatformBindings` is the package-backed assembly
 factory. Given a verified platform binding, explicit capture/microphone grants,
 and injected RTP packetizers, it creates the shell-free video and optional
