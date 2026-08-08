@@ -178,6 +178,8 @@ required_files=(
   src/frontend/input/navigation.test.mjs
   src/frontend/compatibility/harness.mjs
   src/frontend/compatibility/harness.test.mjs
+  src/frontend/readiness/runtime.mjs
+  src/frontend/readiness/runtime.test.mjs
   src/frontend/providers/profiles.mjs
   src/frontend/providers/profiles.test.mjs
   src/frontend/providers/integration.mjs

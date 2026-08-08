@@ -2,6 +2,7 @@ import {createAdapterRegistry} from '../session/session.mjs';
 import {createProviderIntegration, providerTroubleshooting} from '../providers/integration.mjs';
 import {createEmulatorIntegration, emulatorTroubleshooting} from '../emulation/integration.mjs';
 import {evaluateCatalogCompatibility} from '../compatibility/harness.mjs';
+import {createRuntimeReadiness} from '../readiness/runtime.mjs';
 
 const PROVIDER_MODE_PLANS = Object.freeze({
   'browser-first': {kind: 'web', action: 'open-url', external: true},
@@ -26,14 +27,15 @@ export function resolveLaunchPlan(entry, {allowedModes, preferEmbedded = false, 
   const integration = entry.backendType === 'provider' ? createProviderIntegration(entry, {profile: providerProfile, report: providerProfile.report}) : createEmulatorIntegration(entry, {preference: providerProfile.emulationPreference, renderer: providerProfile.renderer, report: providerProfile.report, adapterRegistry: providerProfile.adapterRegistry, allowUnsignedAdapters: providerProfile.allowUnsignedAdapters === true, platform: providerProfile.platform});
   const compatibility = evaluateCatalogCompatibility(entry, providerProfile.report || {});
   const issues = entry.backendType === 'provider' ? providerTroubleshooting(integration) : emulatorTroubleshooting(integration);
+  const runtimeReadiness = createRuntimeReadiness({entry, report: providerProfile.report || {}, hostCapabilities: providerProfile.hostCapabilities, adapter: integration.adapter, clientTransports: providerProfile.clientTransports});
   const modes = Array.isArray(allowedModes) ? allowedModes : integration?.mode ? [integration.mode, ...(entry.integrationModes || [])] : entry.integrationModes || [entry.launchMode];
   const plans = entry.backendType === 'provider' ? PROVIDER_MODE_PLANS : EMULATOR_MODE_PLANS;
   const orderedModes = preferEmbedded ? [...modes].sort(mode => mode === 'official-embed' ? -1 : 0) : modes;
   const selectedMode = orderedModes.find(mode => plans[mode]);
   if (!selectedMode) return {backendId: entry.id, status: 'unsupported', action: 'show-support-error', reason: 'No supported integration mode is available in the current shell', availableModes: [...modes], readiness: Object.freeze({status: compatibility.status, reason: compatibility.reason, nextAction: 'show-support-error', issues})};
   const plan = plans[selectedMode];
-  const nextAction = compatibility.status === 'native-adapter-required' ? 'choose-runtime' : compatibility.status === 'browser-capability-missing' ? 'run-diagnostics' : compatibility.status === 'configuration-required' ? plan.action === 'configure-host' ? 'configure-host' : 'open-service' : plan.action;
-  return Object.freeze({backendId: entry.id, status: 'ready', mode: selectedMode, ...plan, url: plan.action === 'open-url' || plan.action === 'embed-url' || plan.action === 'configure-api' ? entry.url : undefined, requirements: Object.freeze([...(entry.requirements || [])]), capabilities: Object.freeze([...(entry.capabilities || [])]), integration, readiness: Object.freeze({status: compatibility.status, reason: compatibility.reason, missingCapabilities: compatibility.missingCapabilities, configuration: compatibility.configuration, nextAction, issues})});
+  const nextAction = runtimeReadiness.status === 'native-adapter-required' ? 'choose-runtime' : runtimeReadiness.status === 'browser-capability-missing' ? 'run-diagnostics' : runtimeReadiness.status === 'host-not-ready' || (runtimeReadiness.status === 'configuration-required' && plan.action === 'configure-host') ? 'configure-host' : runtimeReadiness.status === 'configuration-required' ? 'open-service' : plan.action;
+  return Object.freeze({backendId: entry.id, status: 'ready', mode: selectedMode, ...plan, url: plan.action === 'open-url' || plan.action === 'embed-url' || plan.action === 'configure-api' ? entry.url : undefined, requirements: Object.freeze([...(entry.requirements || [])]), capabilities: Object.freeze([...(entry.capabilities || [])]), integration, readiness: Object.freeze({...runtimeReadiness, nextAction, issues})});
 }
 
 export function createCatalogAdapterRegistry(entries, options = {}) {
