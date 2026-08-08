@@ -249,6 +249,8 @@ required_files=(
   src/frontend/emulation/browser-runtime.test.mjs
   src/frontend/emulation/browser-adapters.mjs
   src/frontend/emulation/browser-adapters.test.mjs
+  src/frontend/emulation/browser-input.mjs
+  src/frontend/emulation/browser-input.test.mjs
   src/frontend/emulation/runtime-profiles.mjs
   src/frontend/emulation/runtime-profiles.test.mjs
   src/frontend/emulation/index.html
@@ -408,6 +410,7 @@ node --check src/frontend/transport/policy.mjs
 node --check src/frontend/capture/capture.mjs
 node --check src/frontend/emulation/emulation.mjs
 node --check src/frontend/emulation/browser-runtime.mjs
+node --check src/frontend/emulation/browser-input.mjs
 node --check src/frontend/emulation/runtime-profiles.mjs
 node --check src/frontend/emulation/emulation-page.mjs
 node --check src/frontend/emulation/integration.mjs

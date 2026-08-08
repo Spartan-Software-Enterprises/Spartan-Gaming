@@ -15,12 +15,13 @@ export function applyDeadzone(value, deadzone = 0.12) {
 }
 
 export function normalizeGamepadState(gamepad, {deadzone = 0.12} = {}) {
-  if (!gamepad || !Array.isArray(gamepad.buttons) || !Array.isArray(gamepad.axes)) throw new TypeError('A Gamepad-like value is required');
+  if (!gamepad || !gamepad.buttons || !gamepad.axes || typeof gamepad.buttons.length !== 'number' || typeof gamepad.axes.length !== 'number') throw new TypeError('A Gamepad-like value is required');
+  const buttons = Array.from(gamepad.buttons); const axes = Array.from(gamepad.axes);
   return Object.freeze({
     id: String(gamepad.id || 'unknown'), index: Number.isInteger(gamepad.index) ? gamepad.index : 0,
     connected: gamepad.connected !== false,
-    buttons: Object.freeze(gamepad.buttons.map(button => Object.freeze({pressed: Boolean(button?.pressed), value: clamp(Number(button?.value) || 0, 0, 1)}))),
-    axes: Object.freeze(gamepad.axes.map(axis => applyDeadzone(clamp(Number(axis) || 0), deadzone))),
+    buttons: Object.freeze(buttons.map(button => Object.freeze({pressed: Boolean(button?.pressed), value: clamp(Number(button?.value) || 0, 0, 1)}))),
+    axes: Object.freeze(axes.map(axis => applyDeadzone(clamp(Number(axis) || 0), deadzone))),
     timestamp: Number(gamepad.timestamp) || Date.now(),
   });
 }
