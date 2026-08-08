@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {clearLaunchIntent, createLaunchIntent, readLaunchIntent, saveLaunchIntent} from './intent.mjs';
+import {clearLaunchIntent, consumeLaunchIntent, createLaunchIntent, readLaunchIntent, saveLaunchIntent} from './intent.mjs';
 
 const entry = {id: 'dolphin', backendType: 'emulator', launchMode: 'native', requirements: ['user-files'], capabilities: ['gamepad']};
 const plan = {backendId: 'dolphin', action: 'choose-runtime', mode: 'native', requirements: ['user-files'], capabilities: ['gamepad']};
@@ -24,5 +24,18 @@ test('launch intents persist only validated session-scoped data', () => {
 test('launch intents reject insecure URLs and malformed stored values', () => {
   assert.throws(() => createLaunchIntent({entry: {...entry, backendType: 'provider'}, plan: {...plan, action: 'open-url', url: 'http://example.test'}}), /HTTPS/);
   const storage = {getItem: () => '{bad json'};
+  assert.equal(readLaunchIntent(storage), null);
+});
+
+test('launch intent consumption is target-aware, one-shot, and age-bounded', () => {
+  const values = new Map(); const storage = {setItem: (key, value) => values.set(key, value), getItem: key => values.get(key), removeItem: key => values.delete(key)};
+  const createdAt = '2026-08-07T12:00:00.000Z';
+  saveLaunchIntent(storage, createLaunchIntent({entry, plan, createdAt}));
+  assert.equal(consumeLaunchIntent(storage, {backendType: 'provider', action: 'configure-host', now: Date.parse(createdAt) + 1000}), null);
+  assert.equal(readLaunchIntent(storage).backendId, 'dolphin');
+  const consumed = consumeLaunchIntent(storage, {backendType: 'emulator', action: 'choose-runtime', now: Date.parse(createdAt) + 1000});
+  assert.equal(consumed.backendId, 'dolphin'); assert.equal(readLaunchIntent(storage), null);
+  saveLaunchIntent(storage, createLaunchIntent({entry, plan, createdAt}));
+  assert.equal(consumeLaunchIntent(storage, {backendType: 'emulator', now: Date.parse(createdAt) + 10 * 60 * 1000 + 1}), null);
   assert.equal(readLaunchIntent(storage), null);
 });

@@ -2,6 +2,7 @@ import '../pwa/register.mjs';
 import {createHostConnectionProfile, createHostProfileStore, savePendingHostPair} from './host.mjs';
 import {createHostPreflight} from './readiness.mjs';
 import {createBrowserWebRtcPublisher} from './browser-publisher.mjs';
+import {consumeLaunchIntent} from '../launch/intent.mjs';
 
 const store = createHostProfileStore();
 const hostContainer = document.querySelector('[data-hosts]');
@@ -38,4 +39,6 @@ editor.addEventListener('click', async event => {
 });
 document.querySelector('[data-export]').addEventListener('click', () => { const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([store.export()], {type:'application/json'})); link.download = 'spartan-host-profiles.json'; link.click(); URL.revokeObjectURL(link.href); showNotice('Host profiles exported'); });
 document.querySelector('[data-import]').addEventListener('change', async event => { const file = event.target.files?.[0]; if (!file) return; try { hosts = store.import(await file.text()); selectedId = hosts[0]?.hostId || null; renderHosts(); renderEditor(); showNotice('Host profiles imported'); } catch (error) { showNotice(error.message); } event.target.value = ''; });
+const launchIntent = consumeLaunchIntent(sessionStorage, {backendType: 'provider', action: 'configure-host'});
 renderHosts(); renderEditor();
+if (launchIntent) showNotice(`${launchIntent.backendId} host setup handoff loaded`);

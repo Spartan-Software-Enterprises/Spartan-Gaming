@@ -33,3 +33,16 @@ export function readLaunchIntent(storage = globalThis.sessionStorage) {
 }
 
 export function clearLaunchIntent(storage = globalThis.sessionStorage) { storage?.removeItem?.(LAUNCH_INTENT_KEY); }
+
+export function consumeLaunchIntent(storage = globalThis.sessionStorage, {backendId, backendType, action, maxAgeMs = 10 * 60 * 1000, now = Date.now()} = {}) {
+  const intent = readLaunchIntent(storage);
+  if (!intent) return null;
+  const created = Date.parse(intent.createdAt);
+  const age = Number(now) - created;
+  if (!Number.isFinite(created) || !Number.isFinite(age) || age < 0 || age > maxAgeMs) { clearLaunchIntent(storage); return null; }
+  if (backendId && intent.backendId !== backendId) return null;
+  if (backendType && intent.backendType !== backendType) return null;
+  if (action && intent.action !== action) return null;
+  clearLaunchIntent(storage);
+  return intent;
+}
