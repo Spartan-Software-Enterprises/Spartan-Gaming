@@ -9,7 +9,7 @@ import {createPointerInputEvent} from '../input/pointer.mjs';
 import {createWebRtcTransport, createWebSocketSignalTransport, createWebTransportSignalTransport} from '../transport/transport.mjs';
 import {readTransportPolicy, resolveSignalingTransport} from './transport-config.mjs';
 import {createPlayerState, formatLatency, formatNegotiatedCapabilities, formatRate, reducePlayerState} from './player-state.mjs';
-import {captureVideoFrame, createRecordingController} from '../capture/capture.mjs';
+import {captureVideoFrame, createInstantReplayController, createRecordingController} from '../capture/capture.mjs';
 import {createImmersiveController} from './immersive.mjs';
 import {attachMediaStreamTarget, canUsePictureInPicture, describeMediaStream, observeMediaStream, setMediaAudioEnabled, togglePictureInPicture} from './media.mjs';
 import {hasAuthenticatedPlayerConnection, normalizePlayerConnection} from './connection.mjs';
@@ -36,11 +36,12 @@ const immersive = createImmersiveController({target: document.querySelector('[da
 let runtime = null;
 const elements = {
   status: document.querySelector('[data-status]'), message: document.querySelector('[data-stage-message]'), quality: document.querySelector('[data-quality]'), qualitySelect: document.querySelector('[data-quality-select]'), qualityDetail: document.querySelector('[data-quality-detail]'), pip: document.querySelector('[data-action="pip"]'),
-  latency: document.querySelector('[data-latency]'), latencyDetail: document.querySelector('[data-latency-detail]'), loss: document.querySelector('[data-loss]'), decodeFps: document.querySelector('[data-decode-fps]'), dropped: document.querySelector('[data-dropped]'), jitter: document.querySelector('[data-jitter]'), bitrate: document.querySelector('[data-bitrate]'), gamepad: document.querySelector('[data-gamepad]'), audio: document.querySelector('[data-audio]'), audioOutput: document.querySelector('[data-audio-output]'), negotiated: document.querySelector('[data-negotiated]'), diagnostics: document.querySelector('[data-diagnostics]'), overlay: document.querySelectorAll('[data-overlay]'), stage: document.querySelector('[data-stage]'), video: document.querySelector('[data-video]'), demo: document.querySelector('[data-demo-answer]'), connectionForm: document.querySelector('[data-connection-form]'), connectionEndpoint: document.querySelector('[data-connection-endpoint]'), connectionSession: document.querySelector('[data-connection-session]'), connectionTicket: document.querySelector('[data-connection-ticket]'), sessionName: document.querySelector('[data-session-name]'), transport: document.querySelector('[data-transport]'),
+  latency: document.querySelector('[data-latency]'), latencyDetail: document.querySelector('[data-latency-detail]'), loss: document.querySelector('[data-loss]'), decodeFps: document.querySelector('[data-decode-fps]'), dropped: document.querySelector('[data-dropped]'), jitter: document.querySelector('[data-jitter]'), bitrate: document.querySelector('[data-bitrate]'), gamepad: document.querySelector('[data-gamepad]'), audio: document.querySelector('[data-audio]'), audioOutput: document.querySelector('[data-audio-output]'), replay: document.querySelector('[data-action="replay"]'), negotiated: document.querySelector('[data-negotiated]'), diagnostics: document.querySelector('[data-diagnostics]'), overlay: document.querySelectorAll('[data-overlay]'), stage: document.querySelector('[data-stage]'), video: document.querySelector('[data-video]'), demo: document.querySelector('[data-demo-answer]'), connectionForm: document.querySelector('[data-connection-form]'), connectionEndpoint: document.querySelector('[data-connection-endpoint]'), connectionSession: document.querySelector('[data-connection-session]'), connectionTicket: document.querySelector('[data-connection-ticket]'), sessionName: document.querySelector('[data-session-name]'), transport: document.querySelector('[data-transport]'),
 };
 const mediaSession = createMediaSessionController({video: elements.video});
 let state = createPlayerState({status: 'negotiating'});
 let recording = null;
+let instantReplay = null;
 let inputSequence = 0;
 let audioEnabled = true;
 let autoFullscreenAttempted = false;
@@ -80,6 +81,7 @@ async function prepareSession() {
   sessionPreferences = preflight.preferences;
   immersive.setDisplayPreference(sessionPreferences.preferences.display);
   if (elements.pip) elements.pip.disabled = !sessionPreferences.preferences.pictureInPicture || !canUsePictureInPicture(elements.video);
+  if (elements.replay) elements.replay.disabled = !sessionPreferences.preferences.instantReplay;
   elements.video.volume = sessionPreferences.preferences.gameVolume;
   if (sessionPreferences.preferences.showTelemetry && !state.diagnosticsVisible) apply({type: 'toggle.diagnostics'});
   mapper = createInputMapper({bindings: sessionPreferences.preferences.controllerBindings, deadzone: sessionPreferences.preferences.controllerDeadzone});
@@ -101,6 +103,11 @@ async function connect(connectionValues = {}) {
   const media = typeof RTCPeerConnection === 'function' ? createWebRtcTransport({ice: {policy: transportPolicy.icePolicy}}) : undefined;
   runtime = createSessionRuntime({manager, signaling, media});
   runtime.on('stream', stream => {
+    instantReplay?.stop?.(); instantReplay = null;
+    if (sessionPreferences.preferences.instantReplay) {
+      try { instantReplay = createInstantReplayController({stream, durationSeconds: sessionPreferences.preferences.replayLengthSeconds}); instantReplay.start(); if (elements.replay) elements.replay.disabled = false; }
+      catch { if (elements.replay) elements.replay.disabled = true; }
+    }
     const mediaState = attachMediaStreamTarget({video: elements.video, stream, audioEnabled});
     mediaObservation?.disconnect();
     mediaObservation = observeMediaStream(stream, nextState => { elements.audio.textContent = nextState.hasAudio ? (audioEnabled ? 'Active' : 'Muted') : 'No track'; });
@@ -152,16 +159,17 @@ function pointerInput(event) { const source = event.pointerType === 'touch' ? 't
 function downloadBlob(blob, filename) { const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename; link.click(); URL.revokeObjectURL(link.href); }
 async function takeScreenshot() { try { const blob = await captureVideoFrame(elements.video); downloadBlob(blob, `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.png`); elements.message.textContent = 'Screenshot saved locally.'; } catch (error) { elements.message.textContent = error.message; } }
 async function toggleRecording() { try { if (!recording) recording = createRecordingController({stream: elements.video.srcObject}); if (recording.state === 'recording') { const blob = await recording.stop(); downloadBlob(blob, `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.webm`); elements.message.textContent = 'Recording saved locally.'; elements.record.classList.remove('capture-active'); } else { recording.start(); elements.message.textContent = 'Recording locally. Press record again to stop.'; elements.record.classList.add('capture-active'); } } catch (error) { elements.message.textContent = error.message; } }
+async function saveInstantReplay() { try { if (!instantReplay) throw new Error('Instant replay is unavailable until a stream is active.'); const blob = instantReplay.clip(); downloadBlob(blob, `spartan-replay-${new Date().toISOString().replaceAll(':', '-')}.webm`); elements.message.textContent = 'Instant replay saved locally.'; } catch (error) { elements.message.textContent = error.message; } }
 
 document.querySelector('[data-action="audio"]').addEventListener('click', () => { audioEnabled = !audioEnabled; setMediaAudioEnabled(elements.video, audioEnabled); elements.audio.textContent = audioEnabled ? (describeMediaStream(elements.video.srcObject).hasAudio ? 'Active' : 'Waiting') : 'Muted'; const button = document.querySelector('[data-action="audio"]'); button.textContent = audioEnabled ? '🔊' : '🔇'; button.setAttribute('aria-label', audioEnabled ? 'Mute session audio' : 'Unmute session audio'); });
 elements.audioOutput?.addEventListener('change', async event => { try { await selectAudioOutput(elements.video, event.target.value); elements.message.textContent = event.target.value ? 'Session audio output changed.' : 'Session audio is using the browser default output.'; } catch (error) { event.target.value = ''; elements.message.textContent = error.message; } });
 elements.qualitySelect?.addEventListener('change', event => requestQuality(event.target.value));
 document.querySelector('[data-action="fullscreen"]').addEventListener('click', () => immersive.toggle().catch(error => { elements.message.textContent = error.message; }));
 document.querySelector('[data-action="pip"]').addEventListener('click', async () => { try { const active = await togglePictureInPicture(elements.video); const button = document.querySelector('[data-action="pip"]'); button.setAttribute('aria-label', active ? 'Exit Picture-in-Picture' : 'Enter Picture-in-Picture'); elements.message.textContent = active ? 'Picture-in-Picture enabled.' : 'Picture-in-Picture closed.'; } catch (error) { elements.message.textContent = error.message; } });
-elements.screenshot = document.querySelector('[data-action="screenshot"]'); elements.record = document.querySelector('[data-action="record"]'); elements.screenshot.addEventListener('click', takeScreenshot); elements.record.addEventListener('click', toggleRecording); elements.reconnect = document.querySelector('[data-action="reconnect"]'); elements.reconnect.addEventListener('click', requestReconnect);
+elements.screenshot = document.querySelector('[data-action="screenshot"]'); elements.record = document.querySelector('[data-action="record"]'); elements.screenshot.addEventListener('click', takeScreenshot); elements.record.addEventListener('click', toggleRecording); elements.replay?.addEventListener('click', saveInstantReplay); elements.reconnect = document.querySelector('[data-action="reconnect"]'); elements.reconnect.addEventListener('click', requestReconnect);
 document.querySelector('[data-action="overlay"]').addEventListener('click', () => apply({type: 'toggle.overlay'}));
 document.querySelector('[data-action="diagnostics"]').addEventListener('click', () => apply({type: 'toggle.diagnostics'}));
-document.querySelector('[data-action="end"]').addEventListener('click', () => { if (runtime) runtime.close(); else if (manager.state === 'connected' || manager.state === 'reconnecting') manager.close(); mediaSession.dispose(); apply({type: 'session.state', status: 'ended'}); });
+document.querySelector('[data-action="end"]').addEventListener('click', () => { instantReplay?.stop?.(); instantReplay = null; if (runtime) runtime.close(); else if (manager.state === 'connected' || manager.state === 'reconnecting') manager.close(); mediaSession.dispose(); apply({type: 'session.state', status: 'ended'}); });
 elements.demo.addEventListener('click', acceptHostAnswer);
 window.addEventListener('spartan:telemetry', event => { const sample = event.detail || {}; try { const telemetry = createSessionEnvelope({sessionId: manager.session.id, type: 'telemetry.health', payload: sample}); if (runtime) runtime.receive(telemetry); else manager.receive(telemetry); apply({type: 'telemetry.health', rttMs: sample.rttMs, packetLossPct: sample.packetLossPct, decodeFps: sample.decodeFps, framesDropped: sample.framesDropped, jitterMs: sample.jitterMs, bitrateKbps: sample.bitrateKbps}); apply({type: 'quality.changed', profile: manager.quality.id}); } catch { apply({type: 'error', message: 'Invalid session telemetry received'}); } });
 window.addEventListener('keydown', event => keyboardInput(event, true)); window.addEventListener('keyup', event => keyboardInput(event, false));

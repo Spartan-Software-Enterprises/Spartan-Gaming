@@ -56,6 +56,12 @@ video element and open live diagnostics by default when **Show stream
 telemetry** is enabled; the in-session diagnostics toggle can still hide or
 show that panel afterward.
 
+When **Enable instant replay buffer** is enabled, the player starts a bounded
+local MediaRecorder ring buffer after a stream arrives. The **Save instant
+replay** control exports only the retained local chunks (15–120 seconds, as
+configured) and never sends the buffer to a host, provider, or Spartan service.
+Browsers without MediaRecorder support leave the control disabled.
+
 When WebRTC exposes `getStats()`, the runtime starts `src/frontend/session/telemetry.mjs`. The collector reduces inbound video and candidate-pair statistics to RTT, packet loss, decode rate, jitter, dropped frames, and byte counters, then emits bounded `telemetry.health` messages. Raw stats reports and browser/device identity are never forwarded.
 
 Codec hardware efficiency is detected separately in the diagnostics center through MediaCapabilities; runtime telemetry remains measurement-only and does not infer decoder hardware from performance alone.

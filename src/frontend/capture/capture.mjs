@@ -16,3 +16,24 @@ export function createRecordingController({stream, MediaRecorderImpl = globalThi
     stop() { if (state !== 'recording' || !recorder) return Promise.resolve(result); state = 'stopping'; return new Promise((resolve, reject) => { recorder.onstop = () => { result = new Blob(chunks, {type: mimeType || 'video/webm'}); state = 'stopped'; resolve(result); }; recorder.onerror = error => { state = 'error'; reject(error instanceof Error ? error : new Error('recording failed')); }; recorder.stop(); }); },
   };
 }
+
+export function createInstantReplayController({stream, durationSeconds = 30, MediaRecorderImpl = globalThis.MediaRecorder, mimeTypes = RECORDING_MIME_TYPES} = {}) {
+  if (!stream) throw new TypeError('a MediaStream is required for instant replay');
+  if (typeof MediaRecorderImpl !== 'function') throw new Error('MediaRecorder is unavailable in this browser');
+  const mimeType = mimeTypes.find(type => MediaRecorderImpl.isTypeSupported?.(type)) || '';
+  const maxChunks = Math.max(15, Math.min(120, Math.round(Number(durationSeconds) || 30))) + 1;
+  let recorder = null; let chunks = []; let state = 'idle'; let error = null;
+  const result = () => chunks.length ? new Blob(chunks, {type: mimeType || 'video/webm'}) : null;
+  return {
+    get state() { return state; }, get mimeType() { return mimeType; }, get error() { return error; }, get bufferedChunks() { return chunks.length; },
+    start() {
+      if (state === 'recording') return this;
+      chunks = []; error = null; recorder = new MediaRecorderImpl(stream, mimeType ? {mimeType} : undefined);
+      recorder.ondataavailable = event => { if (event.data?.size) { chunks.push(event.data); while (chunks.length > maxChunks) chunks.shift(); } };
+      recorder.onerror = event => { error = event instanceof Error ? event : new Error('instant replay recording failed'); state = 'error'; };
+      recorder.start(1000); state = 'recording'; return this;
+    },
+    clip() { if (state !== 'recording') throw new Error('instant replay is not recording'); const blob = result(); if (!blob) throw new Error('instant replay buffer is empty'); return blob; },
+    stop() { if (recorder && state === 'recording') recorder.stop?.(); state = state === 'error' ? state : 'stopped'; return result(); },
+  };
+}
