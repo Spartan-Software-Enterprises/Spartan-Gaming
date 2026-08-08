@@ -101,6 +101,23 @@ WORD key_code(const std::string& control) {
   if (control == "F1") return VK_F1; if (control == "F2") return VK_F2; if (control == "F3") return VK_F3; if (control == "F4") return VK_F4;
   if (control == "F5") return VK_F5; if (control == "F6") return VK_F6; if (control == "F7") return VK_F7; if (control == "F8") return VK_F8;
   if (control == "F9") return VK_F9; if (control == "F10") return VK_F10; if (control == "F11") return VK_F11; if (control == "F12") return VK_F12;
+  if (control == "F13") return VK_F13; if (control == "F14") return VK_F14; if (control == "F15") return VK_F15; if (control == "F16") return VK_F16;
+  if (control == "F17") return VK_F17; if (control == "F18") return VK_F18; if (control == "F19") return VK_F19; if (control == "F20") return VK_F20;
+  if (control == "F21") return VK_F21; if (control == "F22") return VK_F22; if (control == "F23") return VK_F23; if (control == "F24") return VK_F24;
+  if (control == "NumLock") return VK_NUMLOCK;
+  if (control == "PrintScreen") return VK_SNAPSHOT;
+  if (control == "ScrollLock") return VK_SCROLL;
+  if (control == "Pause") return VK_PAUSE;
+  if (control == "ContextMenu") return VK_APPS;
+  if (control == "Numpad0") return VK_NUMPAD0; if (control == "Numpad1") return VK_NUMPAD1; if (control == "Numpad2") return VK_NUMPAD2; if (control == "Numpad3") return VK_NUMPAD3;
+  if (control == "Numpad4") return VK_NUMPAD4; if (control == "Numpad5") return VK_NUMPAD5; if (control == "Numpad6") return VK_NUMPAD6; if (control == "Numpad7") return VK_NUMPAD7;
+  if (control == "Numpad8") return VK_NUMPAD8; if (control == "Numpad9") return VK_NUMPAD9;
+  if (control == "NumpadDecimal") return VK_DECIMAL;
+  if (control == "NumpadAdd") return VK_ADD;
+  if (control == "NumpadSubtract") return VK_SUBTRACT;
+  if (control == "NumpadMultiply") return VK_MULTIPLY;
+  if (control == "NumpadDivide") return VK_DIVIDE;
+  if (control == "NumpadEnter") return VK_RETURN;
   return 0;
 }
 

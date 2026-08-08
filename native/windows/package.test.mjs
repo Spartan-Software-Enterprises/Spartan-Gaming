@@ -35,3 +35,8 @@ test('Windows native input contract maps browser punctuation codes', async () =>
   const source = await (await import('node:fs/promises')).readFile(new URL('./src/bindings.cpp', import.meta.url), 'utf8');
   for (const code of ['Comma', 'Period', 'Semicolon', 'Quote', 'Backquote', 'Slash', 'Backslash', 'Minus', 'Equal', 'BracketLeft', 'BracketRight']) assert.match(source, new RegExp(`"${code}"`));
 });
+
+test('Windows native input contract maps numpad and system browser codes', async () => {
+  const source = await (await import('node:fs/promises')).readFile(new URL('./src/bindings.cpp', import.meta.url), 'utf8');
+  for (const code of ['Numpad0', 'Numpad9', 'NumpadDecimal', 'NumpadAdd', 'NumpadSubtract', 'NumpadMultiply', 'NumpadDivide', 'NumpadEnter', 'NumLock', 'PrintScreen', 'ScrollLock', 'Pause', 'ContextMenu', 'F13', 'F24']) assert.match(source, new RegExp(`"${code}"`));
+});

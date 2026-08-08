@@ -297,8 +297,13 @@ The desktop input adapters also preserve browser key codes for left/right
 Control, Shift, Alt, and Meta, Caps Lock, the digit row, navigation and
 editing keys (Home, End, Page Up/Down, Insert, Delete), punctuation
 (comma, period, semicolon, quote, backquote, slash, backslash, minus,
-equal, and brackets), and F1–F12 so modifier chords, PC-game shortcuts, and
-typed symbols do not collapse into generic text keys. Windows SendInput,
+equal, and brackets), F1–F24, and the numeric keypad (digits, decimal,
+add, subtract, multiply, divide, and enter) so modifier chords, PC-game
+shortcuts, and typed symbols do not collapse into generic text keys.
+Windows SendInput and macOS CGEvent also cover Num Lock, Print Screen,
+Scroll Lock, Pause, and the context-menu key where the OS exposes them;
+macOS injects the extended-keyboard F13–F20 range rather than those
+system keys, since its keycodes do not map them. Windows SendInput,
 macOS CGEvent, and the Linux X11 reference keep the same browser `code`
 vocabulary, including macOS's distinct forward-delete mapping.
 Gamepad/uinput, portal consent UI, hardware encoder selection, and signed

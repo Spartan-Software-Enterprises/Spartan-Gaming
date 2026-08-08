@@ -14,18 +14,18 @@ test('Linux reference bindings report capability readiness without hiding missin
 
 test('Linux reference input maps only normalized keyboard and pointer operations to shell-free argv', () => {
   assert.deepEqual(inputCommand({kind: 'key', control: 'KeyA', pressed: true}), {args: ['keydown', 'a']});
-  assert.deepEqual(inputCommand({kind: 'key', control: 'ArrowLeft', pressed: false}), {args: ['keyup', 'left']});
+  assert.deepEqual(inputCommand({kind: 'key', control: 'ArrowLeft', pressed: false}), {args: ['keyup', 'Left']});
   assert.deepEqual(inputCommand({kind: 'pointer', deltaX: 12.4, deltaY: -9.6}), {args: ['mousemove_relative', '--', '12', '-10']});
   assert.deepEqual(inputCommand({kind: 'pointer', action: 'pointer:down', control: 'button-0'}), {args: ['mousedown', '1']});
   assert.deepEqual(inputCommand({kind: 'pointer', action: 'pointer:up', control: 'button-2'}), {args: ['mouseup', '3']});
   assert.deepEqual(inputCommand({kind: 'pointer', action: 'pointer:wheel', deltaY: -120}), {args: ['click', '4']});
   assert.deepEqual(inputCommand({kind: 'pointer', action: 'pointer:wheel', deltaX: 120, deltaY: 0}), {args: ['click', '7']});
-  assert.equal(keyName('ControlLeft'), 'ctrl');
-  assert.equal(keyName('F12'), 'f12');
-  assert.equal(keyName('Home'), 'home');
-  assert.equal(keyName('End'), 'end');
-  assert.equal(keyName('Insert'), 'insert');
-  assert.equal(keyName('Delete'), 'delete');
+  assert.equal(keyName('ControlLeft'), 'Control_L');
+  assert.equal(keyName('F12'), 'F12');
+  assert.equal(keyName('Home'), 'Home');
+  assert.equal(keyName('End'), 'End');
+  assert.equal(keyName('Insert'), 'Insert');
+  assert.equal(keyName('Delete'), 'Delete');
   assert.equal(keyName('Comma'), 'comma');
   assert.equal(keyName('Period'), 'period');
   assert.equal(keyName('Semicolon'), 'semicolon');
@@ -37,6 +37,15 @@ test('Linux reference input maps only normalized keyboard and pointer operations
   assert.equal(keyName('Equal'), 'equal');
   assert.equal(keyName('BracketLeft'), 'bracketleft');
   assert.equal(keyName('BracketRight'), 'bracketright');
+  assert.equal(keyName('CapsLock'), 'Caps_Lock');
+  assert.equal(keyName('PageUp'), 'Page_Up');
+  assert.equal(keyName('PageDown'), 'Page_Down');
+  assert.equal(keyName('Numpad0'), 'KP_0');
+  assert.equal(keyName('NumpadEnter'), 'KP_Enter');
+  assert.equal(keyName('NumLock'), 'Num_Lock');
+  assert.equal(keyName('PrintScreen'), 'Print');
+  assert.equal(keyName('ScrollLock'), 'Scroll_Lock');
+  assert.equal(keyName('ContextMenu'), 'Menu');
   assert.throws(() => inputCommand({kind: 'button', control: 'a'}), /does not implement/);
 });
 
