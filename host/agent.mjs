@@ -9,6 +9,7 @@ import {createPairingAuthority, createPairingCode} from './pairing.mjs';
 import {normalizeHostCapabilities} from './capabilities.mjs';
 import {detectHostRuntime} from './environment.mjs';
 import {createInputInjectionPlan, createNativeInputExecutor} from './input.mjs';
+import {createRumbleBroadcastController} from './rumble-passthrough.mjs';
 import {createHostSignalingClient} from './signaling.mjs';
 import {negotiateHostOffer} from './session.mjs';
 import {createReferenceGameLaunch} from './reference-launch.mjs';
@@ -49,6 +50,8 @@ if (nativeMediaEnabled) {
 }
 const capabilities = {transports: nativeMediaEnabled ? ['webrtc'] : ['websocket'], video: {codecs: ['h264', 'vp9'], maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false}, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: environment.inputAdapter.gamepad, keyboard: environment.inputAdapter.keyboard, pointer: environment.inputAdapter.pointer, rumble: environment.inputAdapter.rumble}};
 const inputExecutor = inputEnabled && hostRuntime.bindings?.input && environment.readiness.osInput ? createNativeInputExecutor({platform: environment.platform, adapter: hostRuntime.bindings.input, permissions: {'remote-input': true, 'virtual-gamepad': environment.inputAdapter.gamepad === true}}) : null;
+const rumbleBroadcast = inputExecutor ? createRumbleBroadcastController({adapter: inputExecutor.adapter}) : null;
+rumbleBroadcast?.attach();
 const gameLaunchEnabled = args.get('enable-game-launch') === true || args.get('enable-game-launch') === 'true';
 let configuredGameArgs = args.get('game-args-json') ? JSON.parse(String(args.get('game-args-json'))) : (args.get('game-arg') ? [String(args.get('game-arg'))] : []);
 if (!Array.isArray(configuredGameArgs)) throw new TypeError('game-args-json must contain an array');
@@ -92,7 +95,7 @@ async function handleMessage(connection, text, session) {
       native = createNativeWeriftConnection({connection, sessionId: message.sessionId, bindings: hostRuntime.bindings, module: weriftModule, platform: environment.platform, permissions: {'screen-capture': true, 'remote-input': inputEnabled, 'virtual-gamepad': inputEnabled, ...(nativeAudioEnabled ? {microphone: true, 'microphone-capture': true} : {})}, includeAudio: nativeAudioEnabled, runtimeProfile: nativeRuntimeProfile, gamePath: args.get('game-path') ? String(args.get('game-path')) : null, gameArgs: configuredGameArgs, gameCwd: args.get('game-cwd'), gameEnv: undefined, hostContentId: args.get('host-content-id') ? String(args.get('host-content-id')) : null, hostId, hostName, capabilities, onInput: () => { inputEvents += 1; }, onQuality: quality => { lastQuality = quality; }});
       session.native = native; session.sessionId = message.sessionId;
       const connected = new Promise((resolve, reject) => { const offConnected = native.host.on('connected', value => { offConnected?.(); offError?.(); resolve(value); }); const offError = native.host.on('error', error => { offConnected?.(); offError?.(); reject(error); }); });
-      await native.start(); native.receive(message); await connected; session.accepted = true; sessions.add(session); return;
+      await native.start(); native.receive(message); await connected; session.accepted = true; sessions.add(session); if (rumbleBroadcast && session.send) rumbleBroadcast.add(session); return;
     } catch (error) { session.native = null; native?.close(); connection.send(createSessionEnvelope({sessionId: message.sessionId, type: 'session.answer', sequence: (message.sequence || 0) + 1, payload: {accepted: false, hostId, hostName, reason: `native media start failed: ${error.message}`}})); connection.close(); return; }
   }
   if (message.type === 'session.offer' && !session.accepted) {
@@ -107,7 +110,7 @@ async function handleMessage(connection, text, session) {
     }
     session.accepted = true; session.sessionId = message.sessionId;
     session.negotiated = negotiation.capabilities;
-    sessions.add(session); const answer = createSessionEnvelope({sessionId: message.sessionId, type: 'session.answer', sequence: (message.sequence || 0) + 1, payload: {accepted: true, hostId, hostName, capabilities: session.negotiated, hostCapabilities}});
+    sessions.add(session); if (rumbleBroadcast && session.send) rumbleBroadcast.add(session); const answer = createSessionEnvelope({sessionId: message.sessionId, type: 'session.answer', sequence: (message.sequence || 0) + 1, payload: {accepted: true, hostId, hostName, capabilities: session.negotiated, hostCapabilities}});
     connection.send(answer);
     return;
   }
@@ -131,10 +134,10 @@ server.on('upgrade', (request, socket) => {
   if (connections.size >= maxConnections) { rejectedConnections += 1; socket.end('HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n'); return; }
   if (url.pathname !== '/session' || request.headers.upgrade?.toLowerCase() !== 'websocket' || !request.headers['sec-websocket-key']) { rejectedConnections += 1; socket.end('HTTP/1.1 404 Not Found\r\n\r\n'); return; }
   connections.add(socket); let detached = false; const takeMessage = createMessageRateLimiter(maxMessagesPerSecond);
-  const cleanup = () => { if (detached) return; detached = true; connections.delete(socket); sessions.delete(session); session.native?.close(); if (session.gameStarted) { void gameLaunch?.launcher.stop(); session.gameStarted = false; } };
+  const cleanup = () => { if (detached) return; detached = true; connections.delete(socket); sessions.delete(session); rumbleBroadcast?.remove(session); session.native?.close(); if (session.gameStarted) { void gameLaunch?.launcher.stop(); session.gameStarted = false; } };
   socket.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${acceptKey(request.headers['sec-websocket-key'])}\r\n\r\n`);
   const connection = {send: value => socket.write(frame(JSON.stringify(value))), close: () => socket.end(closeFrame())};
-  const session = {accepted: false, sessionId: null, negotiated: null}; let buffer = Buffer.alloc(0);
+  const session = {accepted: false, sessionId: null, negotiated: null, send: connection.send}; let buffer = Buffer.alloc(0);
   socket.on('data', chunk => { if (!takeMessage()) { socket.end(closeFrame()); return; } buffer = parseFrames(Buffer.concat([buffer, chunk]), text => handleMessage(connection, text, session), socket); });
   socket.on('close', cleanup); socket.on('error', cleanup);
 });
@@ -148,4 +151,4 @@ server.listen(port, bind, () => {
   signalingClient = createHostSignalingClient({endpoint: signalEndpoint, sessionId: signalSessionId, ticket: signalTicket, onMessage: message => handleMessage(signalingClient, JSON.stringify(message), signalSession), onError: error => console.error(`host signaling error: ${error.message}`), onClose: () => console.error('host signaling connection closed')});
   signalingClient.connect().catch(error => { console.error(`host signaling connection failed: ${error.message}`); process.exitCode = 1; });
 });
-server.on('close', () => inputExecutor?.close());
+server.on('close', () => { rumbleBroadcast?.detach(); inputExecutor?.close(); });

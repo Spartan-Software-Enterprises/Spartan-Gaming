@@ -37,6 +37,34 @@ test('Linux native package contract covers the complete standard Gamepad button 
   assert.match(source, /button-/);
 });
 
+test('Linux native package observes host-local force feedback through the uinput FF handshake', async () => {
+  const source = await (await import('node:fs/promises')).readFile(new URL('./src/bindings.cpp', import.meta.url), 'utf8');
+  assert.match(source, /device\.ff_effects_max = 16/);
+  assert.match(source, /O_RDWR \| O_NONBLOCK/);
+  assert.match(source, /UI_BEGIN_FF_UPLOAD/);
+  assert.match(source, /UI_END_FF_UPLOAD/);
+  assert.match(source, /UI_BEGIN_FF_ERASE/);
+  assert.match(source, /UI_END_FF_ERASE/);
+  assert.match(source, /EV_UINPUT/);
+  assert.match(source, /readRumbleEvents/);
+});
+
+test('Linux package exposes the uinput rumble reader through the composed input adapter', async () => {
+  const calls = [];
+  const reference = {input: {execute: async operation => calls.push(['reference', operation.kind]), close() { calls.push(['reference', 'close']); }}, capabilities: {input: true, keyboard: true, pointer: true, rumble: false, technologies: {}}};
+  const native = {input: {execute: async operation => calls.push(['native', operation.control]), readRumbleEvents: () => [{strongMagnitude: 0.75, weakMagnitude: 0.25}], close() { calls.push(['native', 'close']); }}, capabilities: {gamepad: true, rumble: true}};
+  const input = composeLinuxInput({reference, native});
+  assert.deepEqual(input.readRumbleEvents(), [{strongMagnitude: 0.75, weakMagnitude: 0.25}]);
+  input.close();
+  assert.deepEqual(calls, [['native', 'close'], ['reference', 'close']]);
+});
+
+test('Linux package reports no rumble reader without a native uinput binding', () => {
+  const reference = {input: {execute: async operation => ['reference', operation.kind], close() {}}, capabilities: {input: true, keyboard: true, pointer: true, rumble: false, technologies: {}}};
+  const input = composeLinuxInput({reference});
+  assert.equal(typeof input.readRumbleEvents, 'undefined');
+});
+
 test('built Linux package exposes the universal binding shape and uinput capability', async t => {
   let module;
   try { module = await import(pathToFileURL(path.join(installRoot, 'index.mjs')).href); }
@@ -45,6 +73,7 @@ test('built Linux package exposes the universal binding shape and uinput capabil
   assert.equal(bindings.platform, 'linux');
   assert.equal(typeof bindings.input.execute, 'function');
   assert.equal(typeof bindings.input.close, 'function');
+  assert.equal(typeof bindings.input.readRumbleEvents, 'function');
   assert.equal(typeof bindings.capabilities.input, 'boolean');
   assert.equal(typeof bindings.capabilities.gamepad, 'boolean');
   assert.equal(typeof bindings.capabilities.rumble, 'boolean');

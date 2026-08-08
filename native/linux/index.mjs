@@ -23,6 +23,7 @@ export function composeLinuxInput({reference, native} = {}) {
       if (typeof referenceInput?.execute !== 'function') throw new Error(`Linux input adapter does not implement ${kind || 'unknown'} events`);
       return referenceInput.execute(operation);
     },
+    readRumbleEvents() { return typeof nativeInput.readRumbleEvents === 'function' ? nativeInput.readRumbleEvents() : []; },
     close() { nativeInput.close?.(); referenceInput?.close?.(); },
   });
 }

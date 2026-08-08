@@ -8,12 +8,17 @@
 #include <cerrno>
 #include <cstring>
 #include <cstdlib>
+#include <map>
 #include <string>
+#include <vector>
 
 namespace {
 
 int device_fd = -1;
 int rumble_effect_id = -1;
+bool device_readable = false;
+unsigned int ff_gain = 0xffff;
+std::map<int, ff_effect> rumble_effects;
 
 napi_value fail(napi_env env, const char* message) {
   napi_throw_error(env, nullptr, message);
@@ -108,7 +113,9 @@ bool write_event(unsigned short type, unsigned short code, int value) {
 
 bool ensure_device() {
   if (device_fd >= 0) return true;
-  device_fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
+  device_fd = open("/dev/uinput", O_RDWR | O_NONBLOCK);
+  device_readable = device_fd >= 0;
+  if (device_fd < 0) device_fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
   if (device_fd < 0) return false;
   if (ioctl(device_fd, UI_SET_EVBIT, EV_KEY) < 0 || ioctl(device_fd, UI_SET_EVBIT, EV_ABS) < 0 || ioctl(device_fd, UI_SET_EVBIT, EV_FF) < 0 || ioctl(device_fd, UI_SET_FFBIT, FF_RUMBLE) < 0) { close(device_fd); device_fd = -1; return false; }
   const int buttons[] = {BTN_SOUTH, BTN_EAST, BTN_WEST, BTN_NORTH, BTN_TL, BTN_TR, BTN_TL2, BTN_TR2, BTN_SELECT, BTN_START, BTN_MODE, BTN_THUMBL, BTN_THUMBR, BTN_DPAD_UP, BTN_DPAD_DOWN, BTN_DPAD_LEFT, BTN_DPAD_RIGHT};
@@ -121,6 +128,7 @@ bool ensure_device() {
   device.id.vendor = 0x5350;
   device.id.product = 0x0001;
   device.id.version = 1;
+  device.ff_effects_max = 16;
   for (const int axis : axes) { device.absmin[axis] = -32767; device.absmax[axis] = 32767; }
   if (write(device_fd, &device, sizeof(device)) != static_cast<ssize_t>(sizeof(device)) || ioctl(device_fd, UI_DEV_CREATE) < 0) { close(device_fd); device_fd = -1; return false; }
   usleep(20'000);
@@ -173,7 +181,72 @@ napi_value execute(napi_env env, napi_callback_info info) {
 
 napi_value close(napi_env env, napi_callback_info) {
   if (device_fd >= 0) { if (rumble_effect_id >= 0) ioctl(device_fd, EVIOCRMFF, rumble_effect_id); ioctl(device_fd, UI_DEV_DESTROY); ::close(device_fd); device_fd = -1; rumble_effect_id = -1; }
+  device_readable = false;
+  ff_gain = 0xffff;
+  rumble_effects.clear();
   napi_value result; napi_get_undefined(env, &result); return result;
+}
+
+napi_value read_ff_events(napi_env env, napi_callback_info) {
+  std::vector<double> strong;
+  std::vector<double> weak;
+  if (device_fd >= 0 && device_readable) {
+    const double gain_scale = static_cast<double>(ff_gain) / 65535.0;
+    for (;;) {
+      input_event ev{};
+      const ssize_t count = ::read(device_fd, &ev, sizeof(ev));
+      if (count == static_cast<ssize_t>(sizeof(ev))) {
+        if (ev.type == EV_UINPUT && ev.code == UI_FF_UPLOAD) {
+          uinput_ff_upload request{};
+          request.request_id = static_cast<__u32>(ev.value);
+          if (ioctl(device_fd, UI_BEGIN_FF_UPLOAD, &request) == 0) {
+            if (request.effect.type == FF_RUMBLE) rumble_effects[request.effect.id] = request.effect;
+            request.retval = 0;
+            ioctl(device_fd, UI_END_FF_UPLOAD, &request);
+          }
+        } else if (ev.type == EV_UINPUT && ev.code == UI_FF_ERASE) {
+          uinput_ff_erase request{};
+          request.request_id = static_cast<__u32>(ev.value);
+          if (ioctl(device_fd, UI_BEGIN_FF_ERASE, &request) == 0) {
+            const auto entry = rumble_effects.find(static_cast<int>(request.effect_id));
+            if (entry != rumble_effects.end()) { strong.push_back(0.0); weak.push_back(0.0); rumble_effects.erase(entry); }
+            request.retval = 0;
+            ioctl(device_fd, UI_END_FF_ERASE, &request);
+          }
+        } else if (ev.type == EV_FF) {
+          if (ev.code == FF_GAIN) {
+            ff_gain = ev.value < 0 ? 0 : ev.value > 0xffff ? 0xffff : static_cast<unsigned int>(ev.value);
+          } else if (ev.code != FF_AUTOCENTER) {
+            const auto entry = rumble_effects.find(static_cast<int>(ev.code));
+            if (entry != rumble_effects.end()) {
+              if (ev.value == 0) {
+                strong.push_back(0.0);
+                weak.push_back(0.0);
+              } else {
+                double s = static_cast<double>(entry->second.u.rumble.strong_magnitude) / 65535.0 * gain_scale;
+                double w = static_cast<double>(entry->second.u.rumble.weak_magnitude) / 65535.0 * gain_scale;
+                strong.push_back(s > 1.0 ? 1.0 : s);
+                weak.push_back(w > 1.0 ? 1.0 : w);
+              }
+            }
+          }
+        }
+      } else if (count < 0 && errno == EINTR) {
+        continue;
+      } else {
+        break;
+      }
+    }
+  }
+  napi_value result;
+  napi_create_array_with_length(env, strong.size(), &result);
+  for (size_t index = 0; index < strong.size(); index += 1) {
+    napi_value item; napi_create_object(env, &item);
+    napi_value s; napi_create_double(env, strong[index], &s); napi_set_named_property(env, item, "strongMagnitude", s);
+    napi_value w; napi_create_double(env, weak[index], &w); napi_set_named_property(env, item, "weakMagnitude", w);
+    napi_set_element(env, result, index, item);
+  }
+  return result;
 }
 
 napi_value create_bindings(napi_env env, napi_callback_info) {
@@ -183,7 +256,7 @@ napi_value create_bindings(napi_env env, napi_callback_info) {
   const bool uinput_ready = access("/dev/uinput", R_OK | W_OK) == 0;
   napi_value true_value; napi_get_boolean(env, uinput_ready, &true_value); napi_set_named_property(env, capabilities, "gamepad", true_value); napi_set_named_property(env, capabilities, "rumble", true_value);
   napi_value false_value; napi_get_boolean(env, false, &false_value); napi_set_named_property(env, capabilities, "keyboard", false_value); napi_set_named_property(env, capabilities, "pointer", false_value); napi_set_named_property(env, result, "capabilities", capabilities);
-  napi_value input; napi_create_object(env, &input); napi_value execute_fn; napi_create_function(env, "execute", NAPI_AUTO_LENGTH, execute, nullptr, &execute_fn); napi_set_named_property(env, input, "execute", execute_fn); napi_value close_fn; napi_create_function(env, "close", NAPI_AUTO_LENGTH, close, nullptr, &close_fn); napi_set_named_property(env, input, "close", close_fn); napi_set_named_property(env, result, "input", input);
+  napi_value input; napi_create_object(env, &input); napi_value execute_fn; napi_create_function(env, "execute", NAPI_AUTO_LENGTH, execute, nullptr, &execute_fn); napi_set_named_property(env, input, "execute", execute_fn); napi_value close_fn; napi_create_function(env, "close", NAPI_AUTO_LENGTH, close, nullptr, &close_fn); napi_set_named_property(env, input, "close", close_fn); napi_value read_fn; napi_create_function(env, "readRumbleEvents", NAPI_AUTO_LENGTH, read_ff_events, nullptr, &read_fn); napi_set_named_property(env, input, "readRumbleEvents", read_fn); napi_set_named_property(env, result, "input", input);
   return result;
 }
 
