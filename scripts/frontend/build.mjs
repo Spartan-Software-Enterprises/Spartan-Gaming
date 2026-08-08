@@ -7,7 +7,7 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 const sourceRoot = path.join(repositoryRoot, 'src/frontend');
 const defaultOutputRoot = path.join(repositoryRoot, 'out/spartan-frontend');
 const PUBLIC_DIRECTORIES = Object.freeze(['providers', 'emulators']);
-const ENTRYPOINTS = Object.freeze({dashboard: '/dashboard/', player: '/player/', settings: '/settings/', providers: '/providers/', emulation: '/emulation/', host: '/host/', diagnostics: '/diagnostics/'});
+const ENTRYPOINTS = Object.freeze({dashboard: '/dashboard/', player: '/player/', settings: '/settings/', providers: '/providers/', emulation: '/emulation/', adapters: '/adapters/', host: '/host/', diagnostics: '/diagnostics/'});
 
 function absolute(value, fallback) { return path.resolve(value || fallback); }
 function isInside(parent, child) { const relative = path.relative(parent, child); return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative)); }

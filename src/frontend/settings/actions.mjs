@@ -5,7 +5,7 @@ export const SETTINGS_ACTIONS = Object.freeze({
   'controllers.manageProfiles': route('../input/profiles.html'),
   'controllers.test': route('../input/inspector.html'),
   'emulation.importFirmware': route('../emulation/index.html'),
-  'emulation.manageCores': route('../emulation/index.html'),
+  'emulation.manageCores': route('../adapters/index.html'),
   'providers.manageProfiles': route('../providers/index.html'),
   'providers.manageHosts': route('../host/index.html'),
   'providers.clearSessions': Object.freeze({kind: 'status', message: 'Provider sign-out is completed on each official service; no provider credentials are stored here.'}),

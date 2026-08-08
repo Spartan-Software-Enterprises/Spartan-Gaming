@@ -162,6 +162,11 @@ required_files=(
   src/frontend/input/input.mjs
   src/frontend/input/input.test.mjs
   src/frontend/adapters/adapters.mjs
+  src/frontend/adapters/manager.mjs
+  src/frontend/adapters/manager.test.mjs
+  src/frontend/adapters/index.html
+  src/frontend/adapters/manager.css
+  src/frontend/adapters/manager-page.mjs
   src/frontend/adapters/adapters.test.mjs
   src/frontend/adapters/manifest-registry.mjs
   src/frontend/adapters/manifest-registry.test.mjs
@@ -328,6 +333,8 @@ node --check src/frontend/session/reconnect-controller.mjs
 node --check src/frontend/session/telemetry.mjs
 node --check src/frontend/input/input.mjs
 node --check src/frontend/adapters/adapters.mjs
+node --check src/frontend/adapters/manager.mjs
+node --check src/frontend/adapters/manager-page.mjs
 node --check src/frontend/adapters/manifest-registry.mjs
 node --check src/frontend/adapters/install.mjs
 node --check src/frontend/host/host.mjs

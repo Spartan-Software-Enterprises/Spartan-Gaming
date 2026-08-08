@@ -51,7 +51,7 @@ function createAssetResolver({root = frontendRoot, publicRoot = repositoryRoot} 
       }
     }
     const firstSegment = decoded.split('/')[1];
-    if (firstSegment && ['dashboard', 'diagnostics', 'emulation', 'host', 'input', 'player', 'providers', 'settings', 'workspaces'].includes(firstSegment)) return {file: safePath(root, decoded)};
+    if (firstSegment && ['adapters', 'dashboard', 'diagnostics', 'emulation', 'host', 'input', 'player', 'providers', 'settings', 'workspaces'].includes(firstSegment)) return {file: safePath(root, decoded)};
     if (decoded === '/favicon.ico') return {file: path.join(publicRoot, 'favicon.ico')};
     return {status: 404};
   };

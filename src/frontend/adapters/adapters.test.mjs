@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createCatalogAdapterRegistry, resolveLaunchPlan} from './adapters.mjs';
 import {createAdapterManifestRegistry} from './manifest-registry.mjs';
+import './manager.test.mjs';
 
 const cloud = {id: 'cloud', name: 'Cloud', backendType: 'provider', integrationModes: ['browser-first', 'official-launch'], url: 'https://example.test', requirements: ['account'], capabilities: ['gamepad']};
 const emulator = {id: 'emu', name: 'Emu', backendType: 'emulator', mode: 'browser-or-native', integrationModes: ['browser-or-native'], capabilities: ['gamepad']};
