@@ -247,6 +247,8 @@ required_files=(
   src/frontend/emulation/emulation.test.mjs
   src/frontend/emulation/browser-runtime.mjs
   src/frontend/emulation/browser-runtime.test.mjs
+  src/frontend/emulation/browser-adapters.mjs
+  src/frontend/emulation/browser-adapters.test.mjs
   src/frontend/emulation/runtime-profiles.mjs
   src/frontend/emulation/runtime-profiles.test.mjs
   src/frontend/emulation/index.html

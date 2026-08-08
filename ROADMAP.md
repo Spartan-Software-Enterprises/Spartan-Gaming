@@ -29,6 +29,7 @@
 - [x] Provider profiles for supported cloud, remote-play, and streaming services.
 - [x] Emulator/core profiles for libretro, Dolphin, PCSX2, RPCS3, PPSSPP, DuckStation, melonDS, Azahar, MAME, Flycast, xemu, and ScummVM.
 - [x] Browser-WASM/libretro runtime lifecycle contract with user-selected file gating.
+- [x] Emulation Center browser-adapter registration point with lifecycle controls.
 
 ## Milestone 2: streaming client
 

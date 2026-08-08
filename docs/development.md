@@ -178,7 +178,7 @@ Transport adapters are covered by `src/frontend/transport/transport.test.mjs` wi
 
 Local capture primitives are in `src/frontend/capture/capture.mjs`. Screenshots use a video frame and Canvas; recordings use MediaRecorder with WebM MIME fallback. No capture data is uploaded by the frontend.
 
-The emulation center is available at `src/frontend/emulation/index.html`. It reads the versioned core catalog, accepts only explicit user-selected game and firmware files, and produces a runtime launch plan without reading or distributing content outside the browser file selection boundary.
+The emulation center is available at `src/frontend/emulation/index.html`. It reads the versioned core catalog, accepts only explicit user-selected game and firmware files, and produces a runtime launch plan without reading or distributing content outside the browser file selection boundary. Browser-WASM adapters can register through `window.__SPARTAN_BROWSER_EMULATOR_ADAPTERS__`; the page then exposes the shared load/start/pause/stop lifecycle from `src/frontend/emulation/browser-runtime.mjs`. No emulator binary is bundled by this registration point, and the UI remains setup-only when no adapter is injected.
 
 Dashboard launch handoffs use a target-aware session-storage intent. Emulator,
 provider, and self-hosted surfaces consume only their matching action, clear it
