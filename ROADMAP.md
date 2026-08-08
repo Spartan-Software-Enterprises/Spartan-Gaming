@@ -74,4 +74,4 @@
 - [x] WebTransport experimental datagram transport contract (server deployment and production fallback policy pending).
 - [ ] HDR, AV1, high-refresh, and multi-monitor support.
 - [ ] Provider SDK and community compatibility database.
-- [ ] Signed adapter and core registry.
+- [x] Signed adapter and core manifest registry contract with WebCrypto verification (release service and packaged adapters pending).

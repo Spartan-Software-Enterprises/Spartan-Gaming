@@ -125,6 +125,8 @@ required_files=(
   src/frontend/input/input.test.mjs
   src/frontend/adapters/adapters.mjs
   src/frontend/adapters/adapters.test.mjs
+  src/frontend/adapters/manifest-registry.mjs
+  src/frontend/adapters/manifest-registry.test.mjs
   src/frontend/host/host.mjs
   src/frontend/host/host.test.mjs
   src/frontend/host/index.html
@@ -272,6 +274,7 @@ node --check src/frontend/session/runtime.mjs
 node --check src/frontend/session/telemetry.mjs
 node --check src/frontend/input/input.mjs
 node --check src/frontend/adapters/adapters.mjs
+node --check src/frontend/adapters/manifest-registry.mjs
 node --check src/frontend/host/host.mjs
 node --check src/frontend/host/host-page.mjs
 node --check src/frontend/host/browser-publisher.mjs
@@ -337,6 +340,7 @@ node --check src/frontend/capture/capture.mjs
 node --check src/frontend/emulation/emulation.mjs
 node --check src/frontend/emulation/emulation-page.mjs
 node --check src/frontend/emulation/integration.mjs
+node --test src/frontend/adapters/manifest-registry.test.mjs
 node --test scripts/chromium/config.test.mjs scripts/chromium/build.test.mjs scripts/chromium/bootstrap.test.mjs signaling/agent.test.mjs signaling/broker.test.mjs host/signaling.test.mjs host/session.test.mjs host/audio.test.mjs host/input.test.mjs host/publisher.test.mjs host/pairing.test.mjs host/capabilities.test.mjs host/adapters.test.mjs host/environment.test.mjs host/media.test.mjs src/frontend/catalog.test.mjs src/frontend/dashboard/routes.test.mjs src/frontend/launch/intent.test.mjs src/frontend/launch/history.test.mjs src/frontend/settings/profile.test.mjs src/frontend/settings/actions.test.mjs src/frontend/session/preferences.test.mjs src/frontend/input/policy.test.mjs src/frontend/input/haptics.test.mjs src/frontend/input/pointer.test.mjs src/frontend/host/readiness.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/session/recovery.test.mjs src/frontend/session/runtime.test.mjs src/frontend/session/telemetry.test.mjs src/frontend/input/input.test.mjs src/frontend/input/profiles.test.mjs src/frontend/input/inspector.test.mjs src/frontend/input/navigation.test.mjs src/frontend/compatibility/harness.test.mjs src/frontend/providers/integration.test.mjs src/frontend/providers/profiles.test.mjs src/frontend/adapters/adapters.test.mjs src/frontend/host/host.test.mjs src/frontend/player/player-state.test.mjs src/frontend/player/immersive.test.mjs src/frontend/player/media.test.mjs src/frontend/player/transport-config.test.mjs src/frontend/player/connection.test.mjs src/frontend/workspaces/workspaces.test.mjs src/frontend/diagnostics/capabilities.test.mjs src/frontend/diagnostics/focus.test.mjs src/frontend/transport/ice.test.mjs src/frontend/transport/policy.test.mjs src/frontend/transport/transport.test.mjs src/frontend/capture/capture.test.mjs src/frontend/emulation/integration.test.mjs src/frontend/emulation/emulation.test.mjs src/frontend/pwa/cache.test.mjs src/frontend/host/browser-studio.test.mjs
 
 if command -v git >/dev/null 2>&1; then

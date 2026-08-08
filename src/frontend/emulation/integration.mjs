@@ -22,20 +22,22 @@ function runtimeFor(core, preference) {
   return 'native-adapter';
 }
 
-export function createEmulatorIntegration(core, {preference = 'automatic', renderer = 'Automatic', report = {}} = {}) {
+export function createEmulatorIntegration(core, {preference = 'automatic', renderer = 'Automatic', report = {}, adapterRegistry = null, allowUnsignedAdapters = false, platform = report.browser?.platform} = {}) {
   if (!core?.id || !core.mode) throw new TypeError('A normalized emulator core is required');
   const preset = CORE_PRESETS[core.id] || {controllerProfile: 'Auto-detect', renderer: 'Automatic', features: ['save-state'], notes: []};
   const runtime = runtimeFor(core, RUNTIME_PREFERENCE[preference] || preference);
+  const adapter = adapterRegistry?.resolve?.(core.id, {kind: 'emulator', platform, allowUnsigned: allowUnsignedAdapters}) || null;
   const browserReady = runtime === 'browser-wasm' && (report.graphics?.webgpuAdapter === true || report.graphics?.webgl === true || report.graphics === undefined);
   const selectedRenderer = renderer === 'Automatic' ? preset.renderer : renderer;
   const firmwareRequired = ['pcsx2', 'rpcs3', 'xemu'].includes(core.id);
-  return Object.freeze({coreId: core.id, runtime, renderer: selectedRenderer, controllerProfile: preset.controllerProfile, features: Object.freeze([...preset.features]), browserReady, content: Object.freeze({gameFiles: true, firmwareFiles: firmwareRequired, userSelectedOnly: true, licenseRequired: true}), notes: Object.freeze([...preset.notes, ...(runtime === 'browser-wasm' && !browserReady ? ['Browser graphics capability is not confirmed; native adapter fallback is recommended.'] : [])])});
+  return Object.freeze({coreId: core.id, runtime, renderer: selectedRenderer, controllerProfile: preset.controllerProfile, features: Object.freeze([...preset.features]), browserReady, adapter, content: Object.freeze({gameFiles: true, firmwareFiles: firmwareRequired, userSelectedOnly: true, licenseRequired: true}), notes: Object.freeze([...preset.notes, ...(adapter?.status === 'blocked' ? [adapter.reason] : []), ...(runtime === 'browser-wasm' && !browserReady ? ['Browser graphics capability is not confirmed; native adapter fallback is recommended.'] : [])])});
 }
 
 export function emulatorTroubleshooting(integration) {
   const issues = [];
   if (integration.content.firmwareFiles) issues.push({severity: 'info', key: 'firmware', message: 'Select legally dumped firmware before preparing this launch.'});
-  if (integration.runtime === 'native-adapter') issues.push({severity: 'info', key: 'native-adapter', message: 'A signed native adapter is required for this runtime path.'});
+  if (integration.runtime === 'native-adapter' && integration.adapter?.status === 'blocked') issues.push({severity: 'error', key: 'adapter-trust', message: integration.adapter.reason});
+  else if (integration.runtime === 'native-adapter') issues.push({severity: 'info', key: 'native-adapter', message: 'A signed native adapter is required for this runtime path.'});
   if (!integration.browserReady && integration.runtime === 'browser-wasm') issues.push({severity: 'warning', key: 'graphics', message: 'WebGPU/WebGL readiness is not confirmed for the browser runtime.'});
   return Object.freeze(issues.map(issue => Object.freeze(issue)));
 }

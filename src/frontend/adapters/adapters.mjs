@@ -23,7 +23,7 @@ function assertEntry(entry) { if (!entry?.id || !entry.backendType) throw new Ty
 
 export function resolveLaunchPlan(entry, {allowedModes, preferEmbedded = false, providerProfile = {}} = {}) {
   assertEntry(entry);
-  const integration = entry.backendType === 'provider' ? createProviderIntegration(entry, {profile: providerProfile, report: providerProfile.report}) : createEmulatorIntegration(entry, {preference: providerProfile.emulationPreference, renderer: providerProfile.renderer, report: providerProfile.report});
+  const integration = entry.backendType === 'provider' ? createProviderIntegration(entry, {profile: providerProfile, report: providerProfile.report}) : createEmulatorIntegration(entry, {preference: providerProfile.emulationPreference, renderer: providerProfile.renderer, report: providerProfile.report, adapterRegistry: providerProfile.adapterRegistry, allowUnsignedAdapters: providerProfile.allowUnsignedAdapters === true, platform: providerProfile.platform});
   const compatibility = evaluateCatalogCompatibility(entry, providerProfile.report || {});
   const issues = entry.backendType === 'provider' ? providerTroubleshooting(integration) : emulatorTroubleshooting(integration);
   const modes = Array.isArray(allowedModes) ? allowedModes : integration?.mode ? [integration.mode, ...(entry.integrationModes || [])] : entry.integrationModes || [entry.launchMode];

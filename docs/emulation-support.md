@@ -54,6 +54,14 @@ The first user-facing emulation center is available at `src/frontend/emulation/i
 
 `src/frontend/emulation/integration.mjs` resolves each catalog entry into a runtime plan: browser-WASM candidate, Libretro core host, or signed native adapter. It also declares renderer, controller, save-state, shader, rewind, touch, netplay-candidate, and firmware requirements. A launch plan fails closed when a core declares firmware requirements and the user has not selected firmware; the frontend never downloads or distributes ROMs, BIOS, keys, or firmware.
 
+`src/frontend/adapters/manifest-registry.mjs` provides the trust boundary for
+future installed cores and native adapters. Manifests require version, license,
+platform, capability, and SHA-256 integrity metadata. Signed records resolve as
+ready; unsigned records resolve only when an explicit development override is
+enabled, and blocked or mismatched records cannot become launch authority. The
+WebCrypto verifier supports the registry's declared ECDSA P-256 and RSA-PSS
+SHA-256 signature formats.
+
 | Project | Systems | Preferred mode | Role |
 | --- | --- | --- | --- |
 | RetroArch/libretro | Many classic and modern systems | Browser/native | Unified frontend and core ecosystem |
