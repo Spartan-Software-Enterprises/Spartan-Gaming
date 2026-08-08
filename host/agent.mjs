@@ -119,6 +119,8 @@ async function handleMessage(connection, text, session) {
 }
 
 const requestHandler = (request, response) => {
+  if (!originAllowed(request.headers.origin)) return json(response, 403, {error: 'origin is not allowed'});
+  if (request.headers.origin && allowedOrigins.includes(request.headers.origin)) { response.setHeader('access-control-allow-origin', request.headers.origin); response.setHeader('vary', 'Origin'); }
   if (request.url === '/health') return json(response, 200, {service: 'spartan-host-reference', version: 1, secure, hostId, hostName, pairingExpiresAt: pairing.expiresAt, pairingUsed: pairing.used, activeSessions: sessions.size, connections: connections.size, rejectedConnections, limits: {maxConnections, maxMessagesPerSecond}, allowedOrigins, inputEvents, lastInputPlan, lastInputExecution, lastQuality, gameLaunch: gameLaunch ? {enabled: true, ...gameLaunch.descriptor, state: gameLaunch.launcher.state, pid: gameLaunch.launcher.pid} : {enabled: false}, capabilities, hostCapabilities, environment});
   json(response, 404, {error: 'not found'});
 };

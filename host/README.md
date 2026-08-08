@@ -17,7 +17,8 @@ repository; a managed reverse proxy is preferred for certificate rotation.
 
 Remote deployments should set `--allowed-origins` (or
 `SPARTAN_HOST_ALLOWED_ORIGINS`) to a comma-separated exact-origin allowlist.
-The agent also bounds concurrent sockets and per-connection message rate with
+The allowlist applies to both WebSocket upgrades and browser-readable health
+responses; the agent also bounds concurrent sockets and per-connection message rate with
 `--max-connections`/`SPARTAN_HOST_MAX_CONNECTIONS` and
 `--max-messages-per-second`/`SPARTAN_HOST_MAX_MESSAGES_PER_SECOND`.
 

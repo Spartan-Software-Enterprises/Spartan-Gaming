@@ -59,3 +59,13 @@ test('reference host launches a matched native game request and stops it on sess
     client.send(manager.close()); await new Promise(resolve => setTimeout(resolve, 80)); const stopped = await fetch(info.health).then(response => response.json()); assert.equal(stopped.gameLaunch.state, 'stopped');
   } finally { client.close(); child.kill(); await new Promise(resolve => child.once('exit', resolve)); }
 });
+
+test('reference host exposes health CORS only for configured origins', async () => {
+  const {child, info} = await startAgent(['--allowed-origins', 'https://game.example']);
+  try {
+    const allowed = await fetch(info.health, {headers: {origin: 'https://game.example'}});
+    assert.equal(allowed.status, 200); assert.equal(allowed.headers.get('access-control-allow-origin'), 'https://game.example');
+    const denied = await fetch(info.health, {headers: {origin: 'https://evil.example'}});
+    assert.equal(denied.status, 403);
+  } finally { child.kill(); await new Promise(resolve => child.once('exit', resolve)); }
+});
