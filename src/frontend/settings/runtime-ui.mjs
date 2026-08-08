@@ -1,4 +1,5 @@
 import {detectDeviceMode, resolvePresentationProfile} from '../platform/device-mode.mjs';
+import {detectRuntimePlatform, resolvePlatformCompatibility} from '../platform/compatibility.mjs';
 import {syncRuntimeControllerNavigation} from '../input/navigation.mjs';
 
 const ACCENTS = Object.freeze({Cyan: '#50e1d1', Violet: '#9a84ff', Lime: '#b8ef65', Amber: '#f5c563', Red: '#ff8f9c'});
@@ -12,6 +13,8 @@ export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
   const opacity = Number(settings['gaming.overlayOpacity']);
   const detectedMode = environment.deviceMode || detectDeviceMode(environment);
   const presentation = resolvePresentationProfile({settings, detectedMode, viewport: environment.viewport});
+  const platform = detectRuntimePlatform({navigatorRef: environment.navigatorRef, userAgent: environment.userAgent, viewport: environment.viewport});
+  const compatibility = resolvePlatformCompatibility({platform, capabilities: environment.capabilities});
   return Object.freeze({
     accent,
     theme,
@@ -23,6 +26,11 @@ export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
     preferFullscreen: presentation.preferFullscreen,
     effectiveUiScale: presentation.effectiveUiScale,
     layoutColumns: presentation.columns,
+    narrowViewport: presentation.narrowViewport,
+    platform,
+    enginePolicy: compatibility.enginePolicy,
+    supportLevel: compatibility.supportLevel,
+    featureGates: compatibility.gates,
     reduceMotion: settings['appearance.reduceMotion'] === true || settings['accessibility.reduceMotion'] === true,
     highContrast: settings['accessibility.highContrast'] === true,
     largeText: settings['accessibility.largeText'] === true,
@@ -71,6 +79,8 @@ export function applyRuntimeUiSettings(documentRef, settings = {}) {
   root.dataset.spartanDensity = resolved.density;
   root.dataset.spartanDeviceMode = resolved.deviceMode;
   root.dataset.spartanNavigation = resolved.navigation;
+  root.dataset.spartanPlatform = resolved.platform;
+  root.dataset.spartanEnginePolicy = resolved.enginePolicy;
   root.dataset.spartanColorVision = resolved.colorVision;
   root.dataset.spartanOverlay = resolved.showOverlay ? 'visible' : 'hidden';
   root.dataset.spartanOverlayPosition = resolved.overlayPosition;

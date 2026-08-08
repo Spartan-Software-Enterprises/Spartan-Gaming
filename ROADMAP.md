@@ -86,7 +86,7 @@
 
 - [x] Android and handheld-focused shell foundation (touch controller overlay and layout preference; native packaging remains pending).
 - [x] ChromeOS and television presentation modes across shared frontend surfaces (native packaging and certification remain platform work).
-- [ ] iOS/iPadOS compatibility strategy.
+- [x] iOS/iPadOS compatibility strategy (Web/PWA-first profile with an explicitly entitled alternative-engine path kept separate from default support).
 - [x] WebTransport experimental datagram transport contract (server deployment and production fallback policy pending).
 - [ ] HDR, AV1, high-refresh, and multi-monitor support.
 - [x] Community provider compatibility catalog foundation (Provider SDK and hosted database remain pending).

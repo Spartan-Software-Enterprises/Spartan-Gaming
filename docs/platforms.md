@@ -26,6 +26,19 @@ Emulation, Host, Diagnostics, and other frontend entrypoints. Changing the
 presentation mode synchronizes the navigator and tears down polling when a
 controller-first surface is no longer selected.
 
+## iOS/iPadOS strategy
+
+iOS and iPadOS are a conditional target with a Web/PWA-first support profile.
+The shared frontend detects iPhone and both touch-enabled and desktop-mode
+iPad signals, applies safe-area/mobile presentation behavior, and keeps remote
+streaming and browser emulation capability-gated by the browser’s actual APIs.
+The default product path does not claim a native Blink/Chromium shell. A native
+alternative-engine build is a separate platform project that requires the
+appropriate Apple entitlements, security review, packaging, and region-specific
+distribution decisions. The compatibility contract is implemented in
+`src/frontend/platform/compatibility.mjs` and exposes the selected engine policy
+and feature gates to runtime UI metadata.
+
 ## Shared layers
 
 - Gaming dashboard and session model.
