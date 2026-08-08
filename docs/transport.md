@@ -18,6 +18,11 @@ WebRTC remains the media transport when the browser exposes it. Relay policy
 is passed into the WebRTC configuration for the current session only.
 
 Incoming WebRTC streams are attached through `src/frontend/player/media.mjs`.
+
+The capability probe also records privacy-safe HDR availability, display count,
+extended-display state, and observed refresh-rate ceilings. Session preferences
+carry a bounded display selection and refresh-rate policy; the host/provider
+still decides whether those requests can be honored.
 The player reports whether video and audio tracks arrived, starts audio
 enabled by default, and provides a local mute toggle without changing the
 remote stream or exposing device data.

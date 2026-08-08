@@ -5,13 +5,15 @@ const CODECS = Object.freeze({ Automatic: ['av1', 'vp9', 'h264'], AV1: ['av1', '
 const QUALITY = Object.freeze({'Prefer latency': 'low', Balanced: 'balanced', 'Prefer quality': 'high', Custom: 'balanced'});
 
 function numberBeforeUnit(value, fallback) { const number = Number.parseInt(String(value), 10); return Number.isFinite(number) ? number : fallback; }
+function displayPreference(value) { if (value === 'Ask each time') return 'ask'; const match = String(value || '').match(/^Display (\d+)$/); return match ? {kind: 'index', index: Math.max(0, Number(match[1]) - 1)} : 'automatic'; }
 
 export function createSessionPreferences(settings = {}) {
   const resolution = RESOLUTIONS[settings['streaming.resolution']] || RESOLUTIONS['1080p'];
   const maxFramerate = numberBeforeUnit(settings['streaming.framerate'], 60);
   const bitrateKbps = Math.max(2000, Math.min(100000, numberBeforeUnit(settings['streaming.bitrate'], 25) * 1000));
   const qualityPreset = QUALITY[settings['streaming.qualityPreset']] || 'balanced';
-  const preferences = Object.freeze({qualityPreset, bitrateKbps, adaptiveBitrate: settings['streaming.adaptiveBitrate'] !== false, adaptiveResolution: settings['streaming.adaptiveResolution'] !== false, lowLatencyMode: settings['streaming.lowLatencyMode'] !== false, jitterBufferMs: Math.max(0, Math.min(500, numberBeforeUnit(settings['streaming.jitterBuffer'], 60))), hardwareDecode: settings['streaming.hardwareDecode'] !== false, autoFullscreen: settings['gaming.autoFullscreen'] !== false, hideBrowserChrome: settings['gaming.hideBrowserChrome'] !== false, showOverlay: settings['gaming.showOverlay'] !== false});
+  const refreshRate = numberBeforeUnit(settings['media.refreshRate'], 0);
+  const preferences = Object.freeze({qualityPreset, bitrateKbps, adaptiveBitrate: settings['streaming.adaptiveBitrate'] !== false, adaptiveResolution: settings['streaming.adaptiveResolution'] !== false, lowLatencyMode: settings['streaming.lowLatencyMode'] !== false, jitterBufferMs: Math.max(0, Math.min(500, numberBeforeUnit(settings['streaming.jitterBuffer'], 60))), hardwareDecode: settings['streaming.hardwareDecode'] !== false, autoFullscreen: settings['gaming.autoFullscreen'] !== false, hideBrowserChrome: settings['gaming.hideBrowserChrome'] !== false, showOverlay: settings['gaming.showOverlay'] !== false, display: displayPreference(settings['media.display']), maxRefreshRate: refreshRate > 0 ? Math.min(240, refreshRate) : null});
   return Object.freeze({capabilities: Object.freeze({video: Object.freeze({codecs: Object.freeze([...(CODECS[settings['streaming.codec']] || CODECS.Automatic)]), maxWidth: resolution[0], maxHeight: resolution[1], maxFramerate, hdr: settings['media.hdr'] === true}), audio: Object.freeze({codecs: Object.freeze(['opus', 'aac']), channels: 2}), input: Object.freeze({gamepad: settings['controllers.allowGamepad'] !== false, keyboard: true, pointer: true, rumble: settings['controllers.rumble'] !== false})}), preferences});
 }
 

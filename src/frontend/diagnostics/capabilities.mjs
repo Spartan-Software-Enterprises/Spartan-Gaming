@@ -6,6 +6,17 @@ const HARDWARE_DECODE_PROBES = Object.freeze({h264: CODEC_PROBES.h264, vp9: CODE
 function supported(probe, value) { try { return Boolean(probe?.isTypeSupported?.(value)); } catch { return false; } }
 function bool(value) { return value === true; }
 
+function finite(value, fallback = null) { const number = Number(value); return Number.isFinite(number) ? number : fallback; }
+function displayRecord(screen, index) { return Object.freeze({index, width: finite(screen?.width, 0), height: finite(screen?.height, 0), availWidth: finite(screen?.availWidth, 0), availHeight: finite(screen?.availHeight, 0), pixelRatio: finite(screen?.devicePixelRatio, 1), refreshRate: finite(screen?.refreshRate)}); }
+async function probeDisplays(navigatorValue, screenLike, matchMediaLike) {
+  let screens = [];
+  if (typeof navigatorValue?.getScreenDetails === 'function') { try { const details = await navigatorValue.getScreenDetails(); screens = Array.isArray(details?.screens) ? details.screens : []; } catch { screens = []; } }
+  if (!screens.length && screenLike) screens = [screenLike];
+  const displays = screens.map((screen, index) => displayRecord(screen, index)); const refreshRates = displays.map(display => display.refreshRate).filter(value => value !== null);
+  const hdr = typeof matchMediaLike === 'function' ? Boolean(matchMediaLike('(dynamic-range: high)')?.matches) : false;
+  return Object.freeze({count: displays.length, extended: screens.length > 1 || screenLike?.isExtended === true, hdr, maxRefreshRate: refreshRates.length ? Math.max(...refreshRates) : null, displays: Object.freeze(displays)});
+}
+
 async function probeHardwareDecode(mediaCapabilities, codecs) {
   const names = Object.keys(HARDWARE_DECODE_PROBES);
   if (typeof mediaCapabilities?.decodingInfo !== 'function') return Object.fromEntries(names.map(name => [name, {available: false, supported: Boolean(codecs[name]), smooth: false, powerEfficient: false}]));
@@ -18,15 +29,17 @@ async function probeHardwareDecode(mediaCapabilities, codecs) {
   return Object.fromEntries(results);
 }
 
-export async function collectCapabilities({navigatorLike = globalThis.navigator, mediaSourceLike = globalThis.MediaSource, videoDecoderLike = globalThis.VideoDecoder, rtcPeerConnection = globalThis.RTCPeerConnection, now = () => new Date().toISOString()} = {}) {
+export async function collectCapabilities({navigatorLike = globalThis.navigator, mediaSourceLike = globalThis.MediaSource, videoDecoderLike = globalThis.VideoDecoder, rtcPeerConnection = globalThis.RTCPeerConnection, screenLike = globalThis.screen, matchMediaLike = globalThis.matchMedia, now = () => new Date().toISOString()} = {}) {
   const navigatorValue = navigatorLike || {}; const gpu = navigatorValue.gpu; let webgpuAdapter = false;
   if (gpu?.requestAdapter) { try { webgpuAdapter = Boolean(await gpu.requestAdapter()); } catch { webgpuAdapter = false; } }
   const codecs = Object.fromEntries(Object.entries(CODEC_PROBES).map(([name, mime]) => [name, supported(mediaSourceLike, mime) || Boolean(videoDecoderLike?.isConfigSupported && name !== 'opus')]));
   const hardwareDecode = await probeHardwareDecode(navigatorValue.mediaCapabilities, codecs);
+  const display = await probeDisplays(navigatorValue, screenLike, matchMediaLike);
   const report = {
     version: 1, collectedAt: now(), browser: {engine: navigatorValue.userAgentData?.brands?.some(brand => /chrom/i.test(brand.brand)) ? 'chromium' : 'unknown', platform: navigatorValue.userAgentData?.platform || navigatorValue.platform || 'unknown'},
     transports: {webrtc: typeof rtcPeerConnection === 'function', webtransport: typeof navigatorValue.WebTransport === 'function', websocket: typeof navigatorValue.WebSocket === 'function' || typeof WebSocket === 'function'},
-    graphics: {webgpu: Boolean(gpu), webgpuAdapter, webgl: Boolean(navigatorValue.WebGLRenderingContext || globalThis.WebGLRenderingContext)},
+    graphics: {webgpu: Boolean(gpu), webgpuAdapter, webgl: Boolean(navigatorValue.WebGLRenderingContext || globalThis.WebGLRenderingContext), hdr: display.hdr},
+    display,
     input: {gamepad: typeof navigatorValue.getGamepads === 'function', hid: Boolean(navigatorValue.hid), touchPoints: Number(navigatorValue.maxTouchPoints) || 0},
     media: {codecs, hardwareDecode, hardwareDecodeApi: typeof videoDecoderLike === 'function', mediaDevices: Boolean(navigatorValue.mediaDevices)},
     hardware: {logicalProcessors: Number(navigatorValue.hardwareConcurrency) || null, memoryGb: Number(navigatorValue.deviceMemory) || null},
@@ -47,5 +60,5 @@ export function recommendCapabilities(report) {
 }
 
 export function redactDiagnostics(report) {
-  return Object.freeze({version: report.version, collectedAt: report.collectedAt, browser: {engine: report.browser.engine}, transports: report.transports, graphics: report.graphics, input: {gamepad: report.input.gamepad, hid: report.input.hid, touchPoints: report.input.touchPoints > 0}, media: report.media, hardware: {logicalProcessors: report.hardware.logicalProcessors, memoryGb: report.hardware.memoryGb}, recommendations: report.recommendations});
+  return Object.freeze({version: report.version, collectedAt: report.collectedAt, browser: {engine: report.browser.engine}, transports: report.transports, graphics: report.graphics, display: report.display, input: {gamepad: report.input.gamepad, hid: report.input.hid, touchPoints: report.input.touchPoints > 0}, media: report.media, hardware: {logicalProcessors: report.hardware.logicalProcessors, memoryGb: report.hardware.memoryGb}, recommendations: report.recommendations});
 }

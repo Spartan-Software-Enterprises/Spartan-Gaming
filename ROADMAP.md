@@ -33,6 +33,7 @@
 - [x] Bounded reconnection and session recovery policy with player control.
 - [x] Per-codec hardware decode detection through MediaCapabilities with safe fallback.
 - [x] Input, decode, render, and network telemetry foundation from browser/WebRTC health signals.
+- [x] HDR, multi-display, and refresh-rate capability/policy contracts (native output routing and end-to-end HDR validation pending).
 - [x] Screenshots and local recording.
 - [ ] LAN self-hosted reference stream.
 - [x] Provider and emulator capability detection harness.
