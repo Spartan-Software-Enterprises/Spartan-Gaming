@@ -19,13 +19,16 @@ function processController({plan, spawnImpl = spawn, processFactory = createMana
 
 function captureController({platform, environment, spawnImpl, processFactory}) {
   let controller = null;
+  const plan = (options = {}) => {
+    if (options.permissionGranted !== true) throw new Error(`${platform} screen-capture permission is not granted`);
+    const sourceType = platform === 'darwin' ? 'avfoundation' : 'desktop';
+    const source = options.source || (platform === 'darwin' ? '1' : 'desktop');
+    return createCapturePlan({platform, sourceType, source: required(source, 'capture.source'), width: options.width, height: options.height, framerate: options.framerate, audio: false, environment: {...environment, screenRecordingGranted: platform === 'darwin' ? true : environment.screenRecordingGranted}});
+  };
   return {
+    plan,
     async start(options = {}) {
-      if (options.permissionGranted !== true) throw new Error(`${platform} screen-capture permission is not granted`);
-      const sourceType = platform === 'darwin' ? 'avfoundation' : 'desktop';
-      const source = options.source || (platform === 'darwin' ? '1' : 'desktop');
-      const plan = createCapturePlan({platform, sourceType, source: required(source, 'capture.source'), width: options.width, height: options.height, framerate: options.framerate, audio: false, environment: {...environment, screenRecordingGranted: platform === 'darwin' ? true : environment.screenRecordingGranted}});
-      controller = processController({plan: plan.process, spawnImpl, processFactory});
+      controller = processController({plan: plan(options).process, spawnImpl, processFactory});
       try { return await controller.start(); } catch (error) { controller = null; throw error; }
     },
     async stop() { const active = controller; controller = null; return active?.stop() || null; },
@@ -34,13 +37,16 @@ function captureController({platform, environment, spawnImpl, processFactory}) {
 
 function audioController({platform, environment, spawnImpl, processFactory}) {
   let controller = null;
+  const plan = (options = {}) => {
+    if (options.permissionGranted !== true) throw new Error(`${platform} microphone/audio permission is not granted`);
+    const backend = platform === 'darwin' ? 'coreaudio' : 'wasapi';
+    const source = options.source || 'default';
+    return createAudioCapturePlan({platform, backend, source: required(source, 'audio.source'), channels: options.channels, sampleRate: options.sampleRate, environment: {...environment, microphoneGranted: true}});
+  };
   return {
+    plan,
     async start(options = {}) {
-      if (options.permissionGranted !== true) throw new Error(`${platform} microphone/audio permission is not granted`);
-      const backend = platform === 'darwin' ? 'coreaudio' : 'wasapi';
-      const source = options.source || 'default';
-      const plan = createAudioCapturePlan({platform, backend, source: required(source, 'audio.source'), channels: options.channels, sampleRate: options.sampleRate, environment: {...environment, microphoneGranted: true}});
-      controller = processController({plan: plan.process, spawnImpl, processFactory});
+      controller = processController({plan: plan(options).process, spawnImpl, processFactory});
       try { return await controller.start(); } catch (error) { controller = null; throw error; }
     },
     async stop() { const active = controller; controller = null; return active?.stop() || null; },

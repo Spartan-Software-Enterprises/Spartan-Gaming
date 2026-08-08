@@ -57,13 +57,16 @@ function processController({plan, spawnImpl = spawn, processFactory = createMana
 
 function captureController({environment, spawnImpl, processFactory}) {
   let controller = null;
+  const plan = (options = {}) => {
+    if (options.permissionGranted !== true) throw new Error('Linux screen-capture permission is not granted');
+    const sourceType = options.sourceType || (environment.WAYLAND_DISPLAY || environment.XDG_RUNTIME_DIR ? 'pipewire' : 'x11');
+    const source = options.source || (sourceType === 'x11' ? `${required(environment.DISPLAY, 'environment.DISPLAY')}+0,0` : 'default');
+    return createCapturePlan({platform: PLATFORM, sourceType, source, width: options.width, height: options.height, framerate: options.framerate, audio: false, environment});
+  };
   return {
+    plan,
     async start(options = {}) {
-      if (options.permissionGranted !== true) throw new Error('Linux screen-capture permission is not granted');
-      const sourceType = options.sourceType || (environment.WAYLAND_DISPLAY || environment.XDG_RUNTIME_DIR ? 'pipewire' : 'x11');
-      const source = options.source || (sourceType === 'x11' ? `${required(environment.DISPLAY, 'environment.DISPLAY')}+0,0` : 'default');
-      const plan = createCapturePlan({platform: PLATFORM, sourceType, source, width: options.width, height: options.height, framerate: options.framerate, audio: false, environment});
-      controller = processController({plan: plan.process, spawnImpl, processFactory});
+      controller = processController({plan: plan(options).process, spawnImpl, processFactory});
       try { return await controller.start(); } catch (error) { controller = null; throw error; }
     },
     async stop() { const active = controller; controller = null; return active?.stop() || null; },
@@ -72,13 +75,15 @@ function captureController({environment, spawnImpl, processFactory}) {
 
 function audioController({environment, spawnImpl, processFactory}) {
   let controller = null;
+  const plan = (options = {}) => {
+    if (options.permissionGranted !== true) throw new Error('Linux audio-capture permission is not granted');
+    const backend = options.backend || (environment.WAYLAND_DISPLAY || environment.XDG_RUNTIME_DIR ? 'pipewire' : 'pulse');
+    return createAudioCapturePlan({platform: PLATFORM, backend, source: options.source || 'default', channels: options.channels, sampleRate: options.sampleRate, environment});
+  };
   return {
+    plan,
     async start(options = {}) {
-      if (options.permissionGranted !== true) throw new Error('Linux audio-capture permission is not granted');
-      const backend = options.backend || (environment.WAYLAND_DISPLAY || environment.XDG_RUNTIME_DIR ? 'pipewire' : 'pulse');
-      const source = options.source || 'default';
-      const plan = createAudioCapturePlan({platform: PLATFORM, backend, source, channels: options.channels, sampleRate: options.sampleRate, environment});
-      controller = processController({plan: plan.process, spawnImpl, processFactory});
+      controller = processController({plan: plan(options).process, spawnImpl, processFactory});
       try { return await controller.start(); } catch (error) { controller = null; throw error; }
     },
     async stop() { const active = controller; controller = null; return active?.stop() || null; },

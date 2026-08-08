@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {createSessionEnvelope} from '../src/frontend/session/session.mjs';
-import {createNativeWeriftHost} from './native-host.mjs';
+import {createNativeWeriftHost, createNativeWeriftHostFromPlatformBindings} from './native-host.mjs';
 
 function fakeWerift() {
   class Track { constructor(options) { this.options = options; this.packets = []; } writeRtp(packet) { this.packets.push(packet); } stop() { this.stopped = true; } }
@@ -40,4 +40,26 @@ test('native Werift host can construct its pipeline from shell-free capture and 
   const host = createNativeWeriftHost({signaling: signal, module: fakeWerift(), capturePlan, encoderPlan, packetizer: {push: () => []}, sessionId: 'ses-plan-01'});
   assert.equal(host.pipeline.state, 'idle'); assert.equal(host.state, 'idle');
 });
+
+test('native Werift host dispatches negotiated remote input through the guarded adapter', async () => {
+  const signaling = signal(); const videoOutput = {on() {}, off() {}};
+  const pipeline = {videoOutput, async start() {}, async stop() {}};
+  const calls = [];
+  const host = createNativeWeriftHost({signaling, module: fakeWerift(), pipeline, packetizer: {push: () => []}, sessionId: 'ses-native-input', inputAdapter: {platform: 'linux', async execute(operation) { calls.push(operation); }}, inputPermissions: {'remote-input': true}});
+  const offer = createSessionEnvelope({sessionId: 'ses-native-input', type: 'session.offer', payload: {sdp: {type: 'offer', sdp: 'native-offer'}, transports: ['webrtc'], video: {codecs: ['h264']}, audio: {codecs: ['opus']}, input: {gamepad: true, keyboard: true, pointer: true, rumble: true}}});
+  await host.start(); signaling.emit('message', offer); await new Promise(resolve => setTimeout(resolve, 0));
+  signaling.emit('message', createSessionEnvelope({sessionId: 'ses-native-input', type: 'input.event', payload: {type: 'input.event', kind: 'key', action: 'press', control: 'KeyA', pressed: true, source: 'keyboard'}}));
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(calls.length, 1); assert.deepEqual(calls[0], {kind: 'key', action: 'press', control: 'KeyA', pressed: true, value: 0, x: 0, y: 0, deltaX: 0, deltaY: 0, durationMs: 0});
+  host.close();
+});
+
+test('platform bindings compose into a shell-free native Werift host', () => {
+  const signal = {on() { return () => {}; }, async connect() {}, send() {}, close() {}};
+  const bindings = {platform: 'win32', capture: {plan() { return {platform: 'win32', output: {target: 'stdout'}, process: {shell: false, args: []}}; }}, audio: {plan() { throw new Error('audio disabled'); }}, input: {platform: 'win32', async execute() {}}};
+  const host = createNativeWeriftHostFromPlatformBindings({bindings, includeAudio: false, permissions: {'screen-capture': true}, signaling: signal, module: fakeWerift(), packetizer: {push: () => []}, sessionId: 'ses-package-host'});
+  assert.equal(host.pipeline.state, 'idle'); assert.equal(host.inputExecutor.state, 'ready');
+  host.close(); assert.equal(host.inputExecutor.state, 'closed');
+});
+
 test('native Werift host starts and tears down shared-peer audio publishing', async () => { const signaling = signal(); const videoOutput = {listeners: new Set(), on(type, handler) { if (type === 'data') this.listeners.add(handler); }, off(type, handler) { if (type === 'data') this.listeners.delete(handler); }}; const audioOutput = {listeners: new Set(), on(type, handler) { if (type === 'data') this.listeners.add(handler); }, off(type, handler) { if (type === 'data') this.listeners.delete(handler); }, emit(value) { for (const handler of this.listeners) handler(value); }}; const pipeline = {videoOutput, async start() {}, async stop() {}}; const audioPipeline = {audioOutput, async start() {}, async stop() {}}; const host = createNativeWeriftHost({signaling, module: fakeWerift(), pipeline, audioPipeline, audioPacketizer: {push: chunk => [{payload: chunk}]}, audioPermissionGranted: true, packetizer: {push: () => []}, sessionId: 'ses-native-audio'}); const offer = createSessionEnvelope({sessionId: 'ses-native-audio', type: 'session.offer', payload: {sdp: {type: 'offer', sdp: 'native-offer'}, transports: ['webrtc'], video: {codecs: ['h264']}, audio: {codecs: ['opus']}, input: {gamepad: true, keyboard: true, pointer: true, rumble: true}}}); await host.start(); signaling.emit('message', offer); await new Promise(resolve => setTimeout(resolve, 0)); assert.equal(host.state, 'connected'); audioOutput.emit(Buffer.from('voice')); assert.equal(host.audioPublisher.packetsSent, 1); host.close(); await new Promise(resolve => setTimeout(resolve, 0)); assert.equal(host.audioPublisher.publisher.state, 'stopped'); });

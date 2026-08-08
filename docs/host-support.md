@@ -148,6 +148,13 @@ permissioned normalized plans, applies a bounded event rate, and exposes
 explicit close/failure states. OS-specific adapters remain separate packages;
 the core never shells out or interprets arbitrary executable arguments.
 
+`createNativeWeriftHostFromPlatformBindings` is the package-backed assembly
+factory. Given a verified platform binding, explicit capture/microphone grants,
+and injected RTP packetizers, it creates the shell-free video and optional
+audio pipelines, connects them to Werift tracks, and routes negotiated input
+events through the guarded executor. This keeps platform APIs in the native
+package while making the portable host lifecycle testable end to end.
+
 `host/audio.mjs` adds the return-audio boundary for Windows WASAPI, macOS
 CoreAudio, and Linux PipeWire/PulseAudio. It validates microphone/session
 permissions, creates bounded FFmpeg PCM capture plans, and composes an Opus or

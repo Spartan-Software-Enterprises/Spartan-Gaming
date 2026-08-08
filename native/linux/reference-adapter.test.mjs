@@ -7,6 +7,8 @@ function probe(command) { return {status: ['ffmpeg', 'xdotool', 'pactl'].include
 test('Linux reference bindings report capability readiness without hiding missing session tools', async () => {
   const bindings = await createBindings({environment: {DISPLAY: ':1', XDG_RUNTIME_DIR: '/run/user/1000'}, spawnProbe: probe});
   assert.equal(bindings.platform, 'linux');
+  assert.equal(bindings.capture.plan({permissionGranted: true}).platform, 'linux');
+  assert.equal(bindings.audio.plan({permissionGranted: true}).platform, 'linux');
   assert.deepEqual(bindings.capabilities, {capture: true, audio: true, input: true, keyboard: true, pointer: true, gamepad: false, rumble: false, technologies: {capture: 'FFmpeg x11grab/PipeWire', audio: 'FFmpeg Pulse/PipeWire', input: 'X11 XTest via xdotool'}, requires: ['screen-capture-permission', 'audio-session-permission', 'remote-input-permission']});
 });
 

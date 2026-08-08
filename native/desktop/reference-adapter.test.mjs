@@ -12,6 +12,8 @@ for (const platform of ['win32', 'darwin']) {
     assert.equal(bindings.capabilities.audio, true);
     assert.equal(typeof bindings.capture.start, 'function');
     assert.equal(typeof bindings.audio.start, 'function');
+    assert.equal(bindings.capture.plan({permissionGranted: true}).platform, platform);
+    assert.equal(bindings.audio.plan({permissionGranted: true}).platform, platform);
     await assert.rejects(() => bindings.capture.start(), /permission/);
     await assert.rejects(() => bindings.audio.start(), /permission/);
     await bindings.close();
