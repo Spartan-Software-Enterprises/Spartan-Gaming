@@ -100,10 +100,11 @@ npm run lan:demo
 The coordinator starts the frontend server and an ephemeral authenticated
 signaling service, then prints the host-studio URL, player URL, session ID, and
 short-lived role tickets. Enter the host values in one localhost tab, choose a
-display, and enter the client values in a second tab. This exercises browser
-display capture, signaling, SDP/ICE, and WebRTC media locally; it does not
-launch games or inject native input. Tickets are printed for the local
-operator and are intentionally not placed in URLs.
+display, optionally request system audio, and enter the client values in a
+second tab. This exercises browser display/audio capture, signaling, SDP/ICE,
+and WebRTC media locally; it does not launch games or inject native input.
+Tickets are printed for the local operator and are intentionally not placed in
+URLs.
 
 Run the repository checks before committing:
 
