@@ -33,6 +33,12 @@ Spartan Gaming is intended to be universal across practical Chromium-supported e
 
 Every feature should declare its support level: `shared`, `platform-adapted`, `experimental`, or `unavailable`.
 
+`host/platform-adapters.mjs` is the shared capability registry for the initial
+desktop targets. It describes capture, audio, input, windowing, and packaging
+boundaries per OS, reports planned versus ready state, and only invokes an
+implementation when the platform and capability both match a `ready`
+descriptor. It does not claim that a planned native API is already available.
+
 ## Chromium build targets
 
 Linux, macOS, and Windows are the first desktop build targets. Their tracked

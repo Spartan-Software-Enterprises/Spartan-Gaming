@@ -66,6 +66,8 @@ required_files=(
   host/capabilities.test.mjs
   host/adapters.mjs
   host/adapters.test.mjs
+  host/platform-adapters.mjs
+  host/platform-adapters.test.mjs
   host/environment.mjs
   host/environment.test.mjs
   host/media.mjs
@@ -300,6 +302,7 @@ node --check host/signaling.mjs
 node --check host/session.mjs
 node --check host/capabilities.mjs
 node --check host/adapters.mjs
+node --check host/platform-adapters.mjs
 node --check host/environment.mjs
 node --check host/media.mjs
 node --check host/publisher.mjs
