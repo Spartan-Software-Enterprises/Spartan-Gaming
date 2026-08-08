@@ -157,6 +157,10 @@ Paths are metadata and process arguments only; Spartan never downloads ROMs,
 BIOS files, keys, or executes a browser-provided path without the native host
 operator's explicit launch decision.
 
+The same launcher can be supplied to `createNativeWeriftHost`; it is started
+only after the remote offer has passed capability negotiation, before video or
+audio publishers start, and is stopped during session teardown.
+
 `createNativeWeriftHostFromPlatformBindings` is the package-backed assembly
 factory. Given a verified platform binding, explicit capture/microphone grants,
 and injected RTP packetizers, it creates the shell-free video and optional
