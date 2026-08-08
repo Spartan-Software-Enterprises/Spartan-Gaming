@@ -8,7 +8,7 @@ test('Chromium shell plans resolve platform binaries and safe app URLs', () => {
   assert.equal(chromiumBinaryPath({platform: 'mac', out: '/external/out'}), path.join(path.resolve('/external/out'), 'Chromium.app', 'Contents', 'MacOS', 'Chromium'));
   assert.equal(chromiumBinaryPath({platform: 'windows', out: '/external/out'}), path.join(path.resolve('/external/out'), 'chrome.exe'));
   const plan = createChromiumShellPlan({platform: 'linux', binary: '/usr/local/bin/chromium', url: 'http://127.0.0.1:4173/dashboard/', userDataDir: '/external/profile'});
-  assert.deepEqual(plan.args, ['--app=http://127.0.0.1:4173/dashboard/', '--no-first-run', '--no-default-browser-check', '--user-data-dir=/external/profile']);
+  assert.deepEqual(plan.args, ['--app=http://127.0.0.1:4173/dashboard/', '--no-first-run', '--no-default-browser-check', `--user-data-dir=${path.resolve('/external/profile')}`]);
   assert.equal(plan.command.shell, false);
 });
 
