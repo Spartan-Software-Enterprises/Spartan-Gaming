@@ -33,6 +33,15 @@ When WebRTC exposes `getStats()`, the runtime starts `src/frontend/session/telem
 
 Codec hardware efficiency is detected separately in the diagnostics center through MediaCapabilities; runtime telemetry remains measurement-only and does not infer decoder hardware from performance alone.
 
+`src/frontend/display/policy.mjs` turns the saved display and stream preferences
+plus an optional capability report into an immutable effective policy. It caps
+refresh requests to the observed browser ceiling, disables HDR when the browser
+reports no HDR path, filters codec preferences only when explicit support
+evidence exists, and records display-selection warnings. Without a capability
+report it preserves the user’s bounded request so a host/provider can negotiate
+the final result. This is a browser policy contract; native multi-monitor
+routing and end-to-end HDR validation remain platform-adapter work.
+
 The player remains transport-neutral: an adapter can attach a negotiated `MediaStream` to its video target and forward health/input events to the session manager. Signaling authentication, host authorization, and process ownership stay outside the browser transport wrapper. A host/signaling service may supply short-lived ICE credentials to `createWebRtcTransport({ice})`; credentials must remain session-scoped and must never be stored in host profiles, exports, diagnostics, or URLs.
 
 The session player provides the authenticated client entrypoint: its in-memory

@@ -176,6 +176,10 @@ The dashboard starts `src/frontend/input/navigation.mjs` when available. The nav
 Compatibility diagnostics are available at `src/frontend/diagnostics/index.html`. The probe runs locally, checks browser media/graphics/input/transport capabilities, and exports only a redacted report without credentials, cookies, endpoints, or platform identity details.
 
 The diagnostics center also queries `MediaCapabilities.decodingInfo()` per video codec with a hardware preference. It records support, smoothness, and power-efficiency signals without claiming hardware decode when the browser cannot provide evidence.
+It also reports display count, extended-display state, HDR media-query support,
+and observed refresh ceilings. `src/frontend/display/policy.mjs` applies that
+evidence to session preferences when available, while preserving safe bounded
+requests when a browser does not expose the relevant APIs.
 
 The dashboard runs `src/frontend/compatibility/harness.mjs` after loading catalogs. Each entry is classified as browser-ready, setup-required, capability-missing, or native-adapter-required using the local diagnostics report; account, host, and pairing requirements remain explicit configuration rather than being treated as browser support. `src/frontend/adapters/adapters.mjs` consumes that same live report when resolving a launch plan, so cards and launch actions expose the appropriate next step (official service, diagnostics, host setup, or runtime selection) instead of claiming unsupported readiness.
 Dashboard favorites are stored by active workspace through `src/frontend/dashboard/library-state.mjs`; switching the workspace selector reloads only that workspace's favorites and includes the workspace profile ID in session-scoped launch handoffs. The former unscoped favorites key is migrated into the default Gaming workspace once.

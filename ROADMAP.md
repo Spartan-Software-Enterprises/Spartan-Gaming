@@ -109,3 +109,4 @@
 - [x] Reproducible per-platform native package manifest and CMake configure/build/install contract (compiled binary sources remain separately distributed).
 - [x] Unified frontend runtime readiness contract for browser, native adapter, and self-hosted host layers.
 - [x] Capability-driven desktop, ChromeOS, handheld, mobile, and television presentation profiles with safe forced-mode fallback.
+- [x] Capability-aware display policy that bounds HDR, codec, refresh-rate, and multi-display session requests without claiming native routing.

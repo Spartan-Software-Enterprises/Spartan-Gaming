@@ -32,5 +32,7 @@ jobs:
         run: npm run test:werift
       - name: Run device presentation contract
         run: npm run test:platform
+      - name: Run display policy contract
+        run: npm run test:display
       - name: Validate Chromium target contract
         run: npm run chromium:validate -- --platform ${{ matrix.platform }}
