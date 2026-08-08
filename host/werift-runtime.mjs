@@ -97,7 +97,11 @@ export function createWeriftHostRuntime({
       if (message.sessionId !== activeSessionId) return;
       if (message.type === 'session.ice-candidate') { await mediaSession?.addIceCandidate(message.payload.candidate); return; }
       if (message.type === 'input.event') { onInput(message.payload); bus.emit('input', message.payload); return; }
-      if (message.type === 'quality.request') { onQuality(message.payload); bus.emit('quality', message.payload); return; }
+      if (message.type === 'quality.request') {
+        let result = Object.freeze({status: 'unsupported', applied: false});
+        try { result = await mediaSession?.applyQualityRequest?.(message.payload) || result; } catch (error) { result = Object.freeze({status: 'failed', applied: false, reason: error?.message || 'quality request failed'}); }
+        onQuality(message.payload, result); bus.emit('quality', Object.freeze({request: message.payload, result})); return;
+      }
       if (message.type === 'session.reconnect') { send('session.answer', {accepted: true, hostId, hostName, capabilities: negotiationCapabilities(), hostCapabilities: advertisedCapabilities(local, 'active', audioEnabled)}); return; }
       if (message.type === 'session.close') close();
     } catch (error) { state = 'error'; bus.emit('error', error); }

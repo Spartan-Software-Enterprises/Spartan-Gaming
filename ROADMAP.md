@@ -59,6 +59,7 @@
 - [x] Browser Host microphone capture with explicit consent, device selection, and session-only track composition.
 - [x] Browser Host adaptive quality application through bounded WebRTC video sender parameters.
 - [x] Browser Host adaptive resolution application through bounded WebRTC sender scaling.
+- [x] Optional Werift host quality forwarding through bounded sender controls.
 - [x] Guided same-origin LAN host/player handoff UX.
 - [x] Provider and emulator capability detection harness.
 - [x] Unified session lifecycle and error model.

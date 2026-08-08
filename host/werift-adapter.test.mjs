@@ -30,3 +30,11 @@ test('Werift session answers SDP offers and forwards ICE lifecycle events', asyn
   adapter.peer.setRemoteDescription = async value => { remote = value; }; adapter.peer.createAnswer = async () => ({type: 'answer', sdp: 'answer-sdp'}); adapter.peer.setLocalDescription = async value => { local = value; return value; }; adapter.peer.addIceCandidate = async value => { adapter.peer.candidate = value; };
   const session = createWeriftSession({adapter, onIceCandidate: candidate => candidates.push(candidate), onStateChange: state => states.push(state)}); const answer = await session.acceptOffer({type: 'offer', sdp: 'offer-sdp'}); await session.addIceCandidate({candidate: 'candidate'}); assert.deepEqual(remote, {type: 'offer', sdp: 'offer-sdp'}); assert.deepEqual(local, {type: 'answer', sdp: 'answer-sdp'}); assert.deepEqual(answer, {type: 'answer', sdp: 'answer-sdp'}); assert.deepEqual(adapter.peer.candidate, {candidate: 'candidate'}); assert.deepEqual(candidates, []); assert.deepEqual(states, []); await session.close();
 });
+
+test('Werift session applies bounded quality to a sender when supported', async () => {
+  const module = fakeWerift(); const adapter = createWeriftVideoTransport({module}); let parameters;
+  adapter.sender.getParameters = () => ({encodings: [{rid: 'main'}]}); adapter.sender.setParameters = value => { parameters = value; };
+  const peer = adapter.peer; peer.setRemoteDescription = async () => {}; peer.createAnswer = async () => ({type: 'answer', sdp: 'answer'}); peer.setLocalDescription = async value => value;
+  const session = createWeriftSession({adapter}); const result = await session.applyQualityRequest({profile: 'low', bitrateKbps: 2500, maxFramerate: 30});
+  assert.deepEqual(result, {profile: 'low', maxWidth: 1920, maxHeight: 1080, maxFramerate: 30, bitrateKbps: 2500, status: 'applied', applied: true}); assert.equal(parameters.encodings[0].maxBitrate, 2500000); assert.equal(parameters.encodings[0].maxFramerate, 30); await session.close();
+});

@@ -29,9 +29,11 @@ test('Werift host runtime negotiates SDP and routes session messages', async () 
   const session = {
     async acceptOffer(value) { this.offer = value; return {type: 'answer', sdp: 'answer'}; },
     async addIceCandidate(value) { candidates.push(value); },
+    async applyQualityRequest(value) { this.quality = value; return {status: 'applied', applied: true}; },
     async close() { this.closed = true; },
   };
-  const runtime = createWeriftHostRuntime({signaling, sessionId: offer.sessionId, sessionFactory: async options => { options.onIceCandidate({candidate: 'local'}); return session; }, onInput: value => inputs.push(value), onQuality: value => qualities.push(value)});
+  const qualityResults = [];
+  const runtime = createWeriftHostRuntime({signaling, sessionId: offer.sessionId, sessionFactory: async options => { options.onIceCandidate({candidate: 'local'}); return session; }, onInput: value => inputs.push(value), onQuality: (value, result) => { qualities.push(value); qualityResults.push(result); }});
   await runtime.start();
   assert.equal(runtime.state, 'listening');
   signaling.emit('message', offer);
@@ -48,6 +50,7 @@ test('Werift host runtime negotiates SDP and routes session messages', async () 
   assert.deepEqual(candidates, [{candidate: 'remote'}]);
   assert.deepEqual(inputs, [{kind: 'button'}]);
   assert.deepEqual(qualities, [{profile: 'low'}]);
+  assert.deepEqual(session.quality, {profile: 'low'}); assert.deepEqual(qualityResults, [{status: 'applied', applied: true}]);
   runtime.close();
   assert.equal(session.closed, true);
   assert.equal(runtime.state, 'closed');

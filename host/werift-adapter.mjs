@@ -1,5 +1,8 @@
 const DEFAULT_CODEC = 'h264';
 
+function bounded(value, fallback, minimum, maximum) { const number = Number(value); return Number.isFinite(number) && number > 0 ? Math.min(maximum, Math.max(minimum, Math.floor(number))) : fallback; }
+function normalizeQualityRequest(request = {}) { return Object.freeze({profile: typeof request.profile === 'string' && request.profile.trim() ? request.profile.trim() : 'custom', maxWidth: bounded(request.maxWidth, 1920, 320, 7680), maxHeight: bounded(request.maxHeight, 1080, 180, 4320), maxFramerate: bounded(request.maxFramerate, 60, 1, 240), bitrateKbps: bounded(request.bitrateKbps, 10000, 250, 100000)}); }
+
 import {createRtpMediaPublisher} from './publisher.mjs';
 import {createRtpAudioPublisher} from './audio.mjs';
 
@@ -57,6 +60,18 @@ export function createWeriftSession({adapter, onIceCandidate = () => {}, onState
     get peer() { return peer; }, get track() { return adapter.track; }, get transport() { return adapter.transport; },
     async acceptOffer(offer) { if (closed) throw new Error('Werift session is closed'); const description = typeof offer === 'string' ? {type: 'offer', sdp: offer} : offer; if (!description?.sdp) throw new TypeError('an SDP offer is required'); await peer.setRemoteDescription({type: 'offer', sdp: description.sdp}); const answer = await peer.createAnswer(); const local = await peer.setLocalDescription(answer); return {type: 'answer', sdp: local?.sdp || answer?.sdp}; },
     async addIceCandidate(candidate) { if (closed) throw new Error('Werift session is closed'); await peer.addIceCandidate?.(candidate || null); },
+    async applyQualityRequest(request = {}) {
+      const quality = normalizeQualityRequest(request); const sender = adapter.sender;
+      if (!sender || typeof sender.getParameters !== 'function' || typeof sender.setParameters !== 'function') return Object.freeze({...quality, status: 'unsupported', applied: false});
+      try {
+        const parameters = await sender.getParameters();
+        if (!Array.isArray(parameters?.encodings) || !parameters.encodings.length) return Object.freeze({...quality, status: 'unsupported', applied: false});
+        await sender.setParameters({...parameters, encodings: parameters.encodings.map(encoding => ({...encoding, maxBitrate: quality.bitrateKbps * 1000, maxFramerate: quality.maxFramerate}))});
+        return Object.freeze({...quality, status: 'applied', applied: true});
+      } catch (error) {
+        return Object.freeze({...quality, status: 'failed', applied: false, reason: error?.message || 'sender parameters were rejected'});
+      }
+    },
     async close() { if (closed) return; closed = true; unbindIce?.(); unbindState?.(); adapter.close?.(); },
   });
 }
