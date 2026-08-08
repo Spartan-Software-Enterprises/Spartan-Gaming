@@ -1,4 +1,5 @@
 function text(value) { return typeof value === 'string' ? value.trim() : ''; }
+const PREFERRED_OUTPUT_LABELS = Object.freeze({Headphones: Object.freeze(['headphone', 'headset', 'earbud']), Speakers: Object.freeze(['speaker']), 'HDMI/Display': Object.freeze(['hdmi', 'display', 'monitor', 'tv'])});
 
 export function canSelectAudioOutput(video) {
   return Boolean(video && typeof video.setSinkId === 'function');
@@ -16,6 +17,12 @@ export async function listAudioOutputDevices({mediaDevices = globalThis.navigato
   const devices = await mediaDevices.enumerateDevices();
   const seen = new Set();
   return Object.freeze(devices.map((device, index) => normalizeAudioOutputDevice(device, index)).filter(device => device && !seen.has(device.deviceId) && seen.add(device.deviceId)).slice(0, 32));
+}
+
+export function findPreferredAudioOutput(devices = [], preference = 'System default') {
+  const labels = PREFERRED_OUTPUT_LABELS[preference];
+  if (!labels || !Array.isArray(devices)) return null;
+  return devices.find(device => labels.some(label => device.label.toLowerCase().includes(label))) || null;
 }
 
 export async function selectAudioOutput(video, deviceId = '') {

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {canSelectAudioOutput, listAudioOutputDevices, normalizeAudioOutputDevice, selectAudioOutput} from './audio-output.mjs';
+import {canSelectAudioOutput, findPreferredAudioOutput, listAudioOutputDevices, normalizeAudioOutputDevice, selectAudioOutput} from './audio-output.mjs';
 
 test('audio output normalization keeps only bounded, deduplicated output devices', async () => {
   assert.equal(normalizeAudioOutputDevice({kind: 'audioinput', deviceId: 'mic'}), null);
@@ -18,6 +18,8 @@ test('audio output selection is capability-gated and delegates to setSinkId', as
   assert.equal(canSelectAudioOutput(video), true); assert.equal(await selectAudioOutput(video, 'headphones'), 'headphones'); assert.deepEqual(calls, ['headphones']);
   assert.equal(await selectAudioOutput(video, ''), ''); await assert.rejects(() => selectAudioOutput({}, 'default'), /unavailable/); await assert.rejects(() => selectAudioOutput(video, 'x'.repeat(513)), /too long/);
 });
+
+test('audio output preference matches labels without persisting device IDs', () => { const devices = [{deviceId: 'headphones-1', label: 'USB Headphones'}, {deviceId: 'display-1', label: 'HDMI Monitor'}]; assert.equal(findPreferredAudioOutput(devices, 'Headphones').deviceId, 'headphones-1'); assert.equal(findPreferredAudioOutput(devices, 'HDMI/Display').deviceId, 'display-1'); assert.equal(findPreferredAudioOutput(devices, 'Speakers'), null); assert.equal(findPreferredAudioOutput(devices, 'System default'), null); });
 
 test('audio output listing degrades to an empty device list when enumeration is unavailable', async () => {
   assert.equal(canSelectAudioOutput({}), false); assert.deepEqual(await listAudioOutputDevices({mediaDevices: {}}), []);

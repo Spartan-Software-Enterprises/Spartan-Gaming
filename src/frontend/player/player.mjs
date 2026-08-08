@@ -19,7 +19,7 @@ import {QUALITY_PROFILES} from '../session/quality.mjs';
 import {createTouchControlEvent, createTouchControlLayout, normalizeTouchLayout} from '../input/touch-controls.mjs';
 import {preparePlayerSession} from './preflight.mjs';
 import {clearPendingLaunchHandoff, readPendingLaunchHandoff} from '../launch/handoff.mjs';
-import {canSelectAudioOutput, listAudioOutputDevices, selectAudioOutput} from './audio-output.mjs';
+import {canSelectAudioOutput, findPreferredAudioOutput, listAudioOutputDevices, selectAudioOutput} from './audio-output.mjs';
 import {createMediaSessionController} from './media-session.mjs';
 
 const query = new URLSearchParams(location.search);
@@ -66,13 +66,14 @@ function apply(event) {
   if (state.status === 'connected' && state.mediaState === 'not-configured') elements.message.textContent = 'Host paired successfully. Media capture and encoding are not configured on this host.';
 }
 
-async function loadAudioOutputs() {
+async function loadAudioOutputs({applyPreference = false} = {}) {
   if (!elements.audioOutput) return;
   if (!canSelectAudioOutput(elements.video)) { elements.audioOutput.disabled = true; elements.audioOutput.innerHTML = '<option value="">Browser default (selection unavailable)</option>'; return; }
   try {
     const devices = await listAudioOutputDevices();
     elements.audioOutput.disabled = false;
     elements.audioOutput.innerHTML = `<option value="">Browser default</option>${devices.map(device => `<option value="${device.deviceId.replaceAll('&', '&amp;').replaceAll('"', '&quot;')}">${device.label.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</option>`).join('')}`;
+    if (applyPreference) { const preferred = findPreferredAudioOutput(devices, sessionPreferences.preferences.audioOutput); if (preferred) { try { await selectAudioOutput(elements.video, preferred.deviceId); elements.audioOutput.value = preferred.deviceId; } catch { /* Keep the browser default when a device disappears or routing is denied. */ } } }
   } catch { elements.audioOutput.disabled = true; elements.audioOutput.innerHTML = '<option value="">Audio outputs unavailable</option>'; }
 }
 
@@ -81,6 +82,7 @@ async function prepareSession() {
   const preflight = await preparePlayerSession();
   sessionPreferences = preflight.preferences;
   immersive.setDisplayPreference(sessionPreferences.preferences.display);
+  await loadAudioOutputs({applyPreference: true});
   if (elements.pip) elements.pip.disabled = !sessionPreferences.preferences.pictureInPicture || !canUsePictureInPicture(elements.video);
   if (elements.replay) elements.replay.disabled = !sessionPreferences.preferences.instantReplay;
   elements.video.volume = sessionPreferences.preferences.gameVolume;
@@ -189,4 +191,4 @@ window.addEventListener('blur', () => applyFocusPolicy(true)); window.addEventLi
 window.addEventListener('gamepadconnected', () => apply({type: 'gamepad.connection', connected: true})); window.addEventListener('gamepaddisconnected', () => apply({type: 'gamepad.connection', connected: false}));
 setInterval(() => { const gamepads = navigator.getGamepads?.() || []; const connected = inputPolicy.allows('gamepad') && [...gamepads].some(Boolean); if (connected !== state.gamepadConnected) apply({type: 'gamepad.connection', connected}); if (!inputPolicy.allows('gamepad')) return; const pad = [...gamepads].find(Boolean); if (!pad) return; const normalized = mapper.normalize(pad); const previous = previousGamepad.get(normalized.index); normalized.buttons.forEach((button, index) => { if (!previous || button.pressed !== previous.buttons[index]?.pressed || button.value !== previous.buttons[index]?.value) { const event = mapper.mapButton(index, button.pressed, button.value); if (event) emitInput({...event, source: 'gamepad', control: `button-${index}`}); } }); normalized.axes.forEach((value, index) => { if (!previous || Math.abs(value - (previous.axes[index] || 0)) > 0.08) { const event = mapper.mapAxis(index, value); if (event) emitInput({...event, source: 'gamepad', control: `axis-${index}`}); } }); previousGamepad.set(normalized.index, normalized); }, 100);
 const suppliedStream = window.__SPARTAN_MEDIA_STREAM__; if (suppliedStream && typeof MediaStream !== 'undefined' && suppliedStream instanceof MediaStream) { const mediaState = attachMediaStreamTarget({video: elements.video, stream: suppliedStream, audioEnabled}); elements.audio.textContent = mediaState.hasAudio ? 'Active' : 'No track'; elements.video.play().catch(() => {}); }
-loadAudioOutputs(); start(); apply({type: 'session.state', status: 'negotiating'});
+start(); apply({type: 'session.state', status: 'negotiating'});

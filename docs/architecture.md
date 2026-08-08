@@ -113,6 +113,13 @@ Device IDs remain session-local and are not written to settings, profile exports
 URLs, or telemetry. Browsers without output routing support keep the stream on
 the default sink and show a non-actionable fallback state.
 
+The saved audio-output preference is intentionally a category rather than a
+device ID (`System default`, `Headphones`, `Speakers`, or `HDMI/Display`). At
+session startup the player matches that category against the labels returned by
+the current browser device enumeration and applies `setSinkId` only for the
+current media element. Missing or denied devices fall back to the browser
+default without persisting hardware identifiers.
+
 Session recording and instant replay honor the validated `media.recordingCodec`
 preference through an ordered `MediaRecorder` MIME-type list, while preserving
 browser-supported fallbacks. Screenshot, recording, and replay exports honor
