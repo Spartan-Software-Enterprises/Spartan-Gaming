@@ -1,4 +1,5 @@
 const RUNTIME_PREFERENCE = Object.freeze({automatic: 'automatic', 'spartan-runtime': 'browser-wasm', 'libretro-host': 'libretro-core', 'native-adapter': 'native-adapter'});
+import {resolveRuntimeProfile} from './runtime-profiles.mjs';
 const CORE_PRESETS = Object.freeze({
   libretro: {controllerProfile: 'Auto-detect', renderer: 'WebGPU when available', features: ['save-state', 'shaders', 'integer-scaling', 'netplay-candidate'], notes: ['Core-specific license and redistribution terms must be honored.']},
   retroarch: {controllerProfile: 'Auto-detect', renderer: 'Vulkan/Metal/DirectX through native adapter', features: ['save-state', 'shaders', 'rewind', 'netplay'], notes: ['RetroArch is a native reference adapter; Spartan Gaming does not embed its UI.']},
@@ -22,7 +23,7 @@ function runtimeFor(core, preference) {
   return 'native-adapter';
 }
 
-export function createEmulatorIntegration(core, {preference = 'automatic', renderer = 'Automatic', report = {}, adapterRegistry = null, allowUnsignedAdapters = false, platform = report.browser?.platform} = {}) {
+export function createEmulatorIntegration(core, {preference = 'automatic', renderer = 'Automatic', report = {}, adapterRegistry = null, allowUnsignedAdapters = false, platform = report.browser?.platform, runtimeProfiles = []} = {}) {
   if (!core?.id || !core.mode) throw new TypeError('A normalized emulator core is required');
   const preset = CORE_PRESETS[core.id] || {controllerProfile: 'Auto-detect', renderer: 'Automatic', features: ['save-state'], notes: []};
   const runtime = runtimeFor(core, RUNTIME_PREFERENCE[preference] || preference);
@@ -30,7 +31,8 @@ export function createEmulatorIntegration(core, {preference = 'automatic', rende
   const browserReady = runtime === 'browser-wasm' && (report.graphics?.webgpuAdapter === true || report.graphics?.webgl === true || report.graphics === undefined);
   const selectedRenderer = renderer === 'Automatic' ? preset.renderer : renderer;
   const firmwareRequired = ['pcsx2', 'rpcs3', 'xemu'].includes(core.id);
-  return Object.freeze({coreId: core.id, runtime, renderer: selectedRenderer, controllerProfile: preset.controllerProfile, features: Object.freeze([...preset.features]), browserReady, adapter, content: Object.freeze({gameFiles: true, firmwareFiles: firmwareRequired, userSelectedOnly: true, licenseRequired: true}), notes: Object.freeze([...preset.notes, ...(adapter?.status === 'blocked' ? [adapter.reason] : []), ...(runtime === 'browser-wasm' && !browserReady ? ['Browser graphics capability is not confirmed; native adapter fallback is recommended.'] : [])])});
+  const runtimeSelection = resolveRuntimeProfile({coreId: core.id, preference: runtime, profiles: runtimeProfiles, platform: platform || 'browser', browserReady});
+  return Object.freeze({coreId: core.id, runtime, renderer: selectedRenderer, controllerProfile: preset.controllerProfile, features: Object.freeze([...preset.features]), browserReady, adapter, runtimeProfile: runtimeSelection.profile, runtimeReadiness: runtimeSelection, content: Object.freeze({gameFiles: true, firmwareFiles: firmwareRequired, userSelectedOnly: true, licenseRequired: true}), notes: Object.freeze([...preset.notes, ...(adapter?.status === 'blocked' ? [adapter.reason] : []), ...(runtimeSelection.status !== 'ready' ? [runtimeSelection.reason] : []), ...(runtime === 'browser-wasm' && !browserReady ? ['Browser graphics capability is not confirmed; native adapter fallback is recommended.'] : [])])});
 }
 
 export function emulatorTroubleshooting(integration) {
@@ -38,6 +40,7 @@ export function emulatorTroubleshooting(integration) {
   if (integration.content.firmwareFiles) issues.push({severity: 'info', key: 'firmware', message: 'Select legally dumped firmware before preparing this launch.'});
   if (integration.runtime === 'native-adapter' && integration.adapter?.status === 'blocked') issues.push({severity: 'error', key: 'adapter-trust', message: integration.adapter.reason});
   else if (integration.runtime === 'native-adapter') issues.push({severity: 'info', key: 'native-adapter', message: 'A signed native adapter is required for this runtime path.'});
+  if (integration.runtimeReadiness?.status === 'configuration-required') issues.push({severity: 'info', key: 'runtime-profile', message: 'Add an enabled trusted runtime profile for this core and platform.'});
   if (!integration.browserReady && integration.runtime === 'browser-wasm') issues.push({severity: 'warning', key: 'graphics', message: 'WebGPU/WebGL readiness is not confirmed for the browser runtime.'});
   return Object.freeze(issues.map(issue => Object.freeze(issue)));
 }

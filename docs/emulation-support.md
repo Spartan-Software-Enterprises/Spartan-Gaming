@@ -54,6 +54,15 @@ The first user-facing emulation center is available at `src/frontend/emulation/i
 
 `src/frontend/emulation/integration.mjs` resolves each catalog entry into a runtime plan: browser-WASM candidate, Libretro core host, or signed native adapter. It also declares renderer, controller, save-state, shader, rewind, touch, netplay-candidate, and firmware requirements. A launch plan fails closed when a core declares firmware requirements and the user has not selected firmware; the frontend never downloads or distributes ROMs, BIOS, keys, or firmware.
 
+The emulation center also provides a local runtime-profile registry through
+`src/frontend/emulation/runtime-profiles.mjs`. Users can record the version,
+platform, supported core IDs, trust level, and local path for a user-owned
+native emulator, Libretro host, or adapter package. Profiles contain metadata
+only: the browser never executes the path, and unverified profiles are excluded
+from runtime selection. The registry is portable through an explicit export,
+and launch plans include the selected profile and readiness evidence for a
+future signed host handoff.
+
 `src/frontend/adapters/manifest-registry.mjs` provides the trust boundary for
 future installed cores and native adapters. Manifests require version, license,
 platform, capability, and SHA-256 integrity metadata. Signed records resolve as

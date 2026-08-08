@@ -40,9 +40,9 @@ export function createEmulationLibraryStore({storage = globalThis.localStorage, 
   });
 }
 
-export function createEmulationLaunchPlan({core, gameFile, firmwareFiles = [], policy = DEFAULT_EMULATION_POLICY, preference = 'automatic', renderer = 'Automatic', report} = {}) {
+export function createEmulationLaunchPlan({core, gameFile, firmwareFiles = [], policy = DEFAULT_EMULATION_POLICY, preference = 'automatic', renderer = 'Automatic', report, runtimeProfiles = [], platform, adapterRegistry, allowUnsignedAdapters = false} = {}) {
   if (!core?.id || !core.mode) throw new TypeError('a normalized emulator core is required'); if (policy.shipRoms || policy.shipBios || !policy.allowUserSelectedFiles) throw new Error('emulation content policy does not allow this launch'); if (policy.requireLicenseMetadata && !core.license) throw new Error('core license metadata is required');
-  const integration = createEmulatorIntegration(core, {preference, renderer, report});
+  const integration = createEmulatorIntegration(core, {preference, renderer, report, runtimeProfiles, platform, adapterRegistry, allowUnsignedAdapters});
   const game = gameFile?.id ? gameFile : createUserFileRecord(gameFile, {kind: 'game', userSelected: gameFile?.userSelected !== false}); if (!game.userSelected) throw new Error('game files must be explicitly selected by the user'); const firmware = firmwareFiles.map(file => file.id ? file : createUserFileRecord(file, {kind: 'firmware', userSelected: file?.userSelected !== false})); if (firmware.some(file => !file.userSelected)) throw new Error('firmware files must be explicitly selected by the user'); if (integration.content.firmwareFiles && !firmware.length) throw new Error('this runtime requires user-selected firmware files');
   return Object.freeze({status: 'ready', coreId: core.id, runtime: integration.runtime, systems: Object.freeze([...(core.systems || [])]), license: core.license, files: Object.freeze([game, ...firmware]), policy: Object.freeze({shipRoms: false, shipBios: false, allowUserSelectedFiles: true}), integration});
 }
