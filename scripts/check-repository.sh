@@ -151,6 +151,8 @@ required_files=(
   src/frontend/session/recovery.mjs
   src/frontend/session/recovery.test.mjs
   src/frontend/session/runtime.mjs
+  src/frontend/session/reconnect-controller.mjs
+  src/frontend/session/reconnect-controller.test.mjs
   src/frontend/session/runtime.test.mjs
   src/frontend/session/telemetry.mjs
   src/frontend/session/telemetry.test.mjs
@@ -313,6 +315,7 @@ node --check src/frontend/session/session.mjs
 node --check src/frontend/session/quality.mjs
 node --check src/frontend/session/recovery.mjs
 node --check src/frontend/session/runtime.mjs
+node --check src/frontend/session/reconnect-controller.mjs
 node --check src/frontend/session/telemetry.mjs
 node --check src/frontend/input/input.mjs
 node --check src/frontend/adapters/adapters.mjs

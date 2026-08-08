@@ -11,6 +11,8 @@
 
 `src/frontend/session/runtime.mjs` composes these primitives with the session manager. It connects signaling, adds the WebRTC offer/answer and ICE payloads, forwards media tracks, routes input/reconnect envelopes, and exposes session events for the player. It does not own provider credentials or host process lifecycle.
 
+Reconnect lifecycle is coordinated by `src/frontend/session/reconnect-controller.mjs` around the bounded recovery policy. A reconnect attempt emits an envelope immediately, transport failures schedule the next bounded attempt with exponential backoff, successful answers reset recovery, and the player can cancel pending work. Controller state is observable as `attempting`, `waiting`, `succeeded`, `cancelled`, or `exhausted`; no reconnect loop is unbounded or hidden from the UI.
+
 The player loads the persisted transport policy through
 `src/frontend/player/transport-config.mjs`. HTTPS signaling can select the
 experimental WebTransport datagram adapter; WSS signaling uses WebSocket;

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {calculateReconnectDelay, createReconnectPolicy} from './recovery.mjs';
+import './reconnect-controller.test.mjs';
 
 test('reconnect delay grows exponentially and caps at the maximum', () => {
   assert.equal(calculateReconnectDelay(1, {baseDelayMs: 250, maxDelayMs: 1000}), 250);
