@@ -38,6 +38,7 @@ export function createWeriftHostRuntime({
   onInput = () => {},
   onLaunch = () => {},
   onQuality = () => {},
+  onControl = () => {},
   clock = () => new Date().toISOString(),
 } = {}) {
   if (!signaling || typeof signaling.connect !== 'function' || typeof signaling.send !== 'function' || typeof signaling.on !== 'function') throw new TypeError('signaling transport is required');
@@ -97,6 +98,7 @@ export function createWeriftHostRuntime({
       if (message.sessionId !== activeSessionId) return;
       if (message.type === 'session.ice-candidate') { await mediaSession?.addIceCandidate(message.payload.candidate); return; }
       if (message.type === 'input.event') { onInput(message.payload); bus.emit('input', message.payload); return; }
+      if (message.type === 'session.control') { onControl(message.payload); bus.emit('control', message.payload); return; }
       if (message.type === 'quality.request') {
         let result = Object.freeze({status: 'unsupported', applied: false});
         try { result = await mediaSession?.applyQualityRequest?.(message.payload) || result; } catch (error) { result = Object.freeze({status: 'failed', applied: false, reason: error?.message || 'quality request failed'}); }

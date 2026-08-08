@@ -8,7 +8,7 @@ function events() { const listeners = new Map(); return {on(type, handler) { if 
 function required(value, name) { if (typeof value !== 'string' || !value.trim()) throw new TypeError(`${name} must be a non-empty string`); return value.trim(); }
 function hostCapabilities(capabilities, mediaState, audio = false) { return Object.freeze({...normalizeCapabilities(capabilities), media: Object.freeze({state: mediaState, capture: true, encode: true, audio: Boolean(audio), transport: 'webrtc'})}); }
 
-export function createBrowserHostRuntime({signaling, publisher, sessionId, hostId = 'browser-host', hostName = 'Browser Host', capabilities = DEFAULT_HOST_CAPABILITIES, onInput = () => {}, onQuality = () => {}, clock = () => new Date().toISOString()} = {}) {
+export function createBrowserHostRuntime({signaling, publisher, sessionId, hostId = 'browser-host', hostName = 'Browser Host', capabilities = DEFAULT_HOST_CAPABILITIES, onInput = () => {}, onQuality = () => {}, onControl = () => {}, clock = () => new Date().toISOString()} = {}) {
   if (!signaling || typeof signaling.connect !== 'function' || typeof signaling.send !== 'function' || typeof signaling.on !== 'function') throw new TypeError('signaling transport is required');
   if (!publisher || typeof publisher.acceptOffer !== 'function' || typeof publisher.addIceCandidate !== 'function' || typeof publisher.on !== 'function') throw new TypeError('browser publisher is required');
   const id = required(sessionId, 'sessionId'); const bus = events(); const local = normalizeCapabilities(capabilities); let state = 'idle'; let activeSessionId = null; let sequence = 0; const unbind = [];
@@ -31,6 +31,7 @@ export function createBrowserHostRuntime({signaling, publisher, sessionId, hostI
       if (message.type === 'session.ice-candidate') { await publisher.addIceCandidate(message.payload.candidate); return; }
       if (message.type === 'input.event') { onInput(message.payload); bus.emit('input', message.payload); return; }
       if (message.type === 'quality.request') { onQuality(message.payload); bus.emit('quality', message.payload); return; }
+      if (message.type === 'session.control') { onControl(message.payload); bus.emit('control', message.payload); return; }
       if (message.type === 'session.reconnect') { const audioEnabled = Boolean(publisher.stream?.getAudioTracks?.().length); send('session.answer', {accepted: true, hostId, hostName, capabilities: negotiationCapabilities(), hostCapabilities: hostCapabilities(local, 'active', audioEnabled)}); return; }
       if (message.type === 'session.close') close();
     } catch (error) { state = 'error'; bus.emit('error', error); }

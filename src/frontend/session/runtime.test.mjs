@@ -41,6 +41,7 @@ test('session runtime sends a new quality request after degraded telemetry', asy
 });
 
 test('session runtime sends validated manual quality requests', async () => { const signaling = fakeTransport(); const runtime = createSessionRuntime({signaling}); const offer = await runtime.start({backend: {id: 'spartan-host'}}); const request = runtime.requestQuality('high'); assert.equal(request.type, 'quality.request'); assert.equal(request.payload.profile, 'high'); assert.equal(request.sessionId, offer.sessionId); assert.throws(() => runtime.requestQuality('invalid'), /unknown quality profile/); });
+test('session runtime sends validated pause and resume control requests', async () => { const signaling = fakeTransport(); const runtime = createSessionRuntime({signaling}); const offer = await runtime.start({backend: {id: 'spartan-host'}}); const pause = runtime.requestControl('pause'); assert.equal(pause.type, 'session.control'); assert.equal(pause.payload.action, 'pause'); assert.equal(pause.sessionId, offer.sessionId); assert.throws(() => runtime.requestControl('seek'), /invalid/); });
 
 test('session runtime emits a transport error for incompatible host capabilities', async () => {
   const signaling = fakeTransport(); const runtime = createSessionRuntime({signaling}); const errors = []; runtime.on('error', error => errors.push(error));

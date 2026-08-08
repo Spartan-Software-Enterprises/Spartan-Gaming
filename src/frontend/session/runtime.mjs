@@ -53,6 +53,7 @@ export function createSessionRuntime({manager = createSessionManager(), signalin
     },
     send,
     requestQuality(profileId) { const request = manager.setQuality(profileId); return send(createSessionEnvelope({sessionId, type: 'quality.request', sequence: ++sequence, sentAt: clock(), payload: request})); },
+    requestControl(action) { if (!['pause', 'resume'].includes(action)) throw new TypeError('session control action is invalid'); if (!sessionId) throw new Error('Session has not started'); return send(createSessionEnvelope({sessionId, type: 'session.control', sequence: ++sequence, sentAt: clock(), payload: {action}})); },
     receive,
     requestReconnect() { return reconnectController.start().result; },
     cancelReconnect() { return reconnectController.cancel(); },

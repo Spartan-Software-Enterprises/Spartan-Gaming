@@ -1,13 +1,14 @@
 import {parseHostEndpoint} from '../host/host.mjs';
 import {createIceConfiguration} from './ice.mjs';
 
-const VALID_MESSAGE_TYPES = new Set(['session.offer', 'session.answer', 'session.ice-candidate', 'session.reconnect', 'input.event', 'quality.request', 'telemetry.health', 'session.close']);
+const VALID_MESSAGE_TYPES = new Set(['session.offer', 'session.answer', 'session.ice-candidate', 'session.reconnect', 'session.control', 'input.event', 'quality.request', 'telemetry.health', 'session.close']);
 
 function required(value, name) { if (!value) throw new TypeError(`${name} is required`); return value; }
 function events() { const listeners = new Map(); return {on(type, handler) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(handler); return () => listeners.get(type)?.delete(handler); }, emit(type, payload) { for (const handler of listeners.get(type) || []) handler(payload); }}; }
 
 export function validateTransportMessage(message) {
   if (!message || message.protocol !== 'spartan-gaming/1' || typeof message.messageId !== 'string' || typeof message.sessionId !== 'string' || !VALID_MESSAGE_TYPES.has(message.type) || !message.payload || typeof message.payload !== 'object') throw new TypeError('invalid Spartan Gaming transport message');
+  if (message.type === 'session.control' && !['pause', 'resume'].includes(message.payload.action)) throw new TypeError('invalid session control action');
   return message;
 }
 
