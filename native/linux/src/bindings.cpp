@@ -119,7 +119,7 @@ bool ensure_device() {
   device_readable = device_fd >= 0;
   if (device_fd < 0) device_fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
   if (device_fd < 0) return false;
-  if (ioctl(device_fd, UI_SET_EVBIT, EV_KEY) < 0 || ioctl(device_fd, UI_SET_EVBIT, EV_ABS) < 0 || ioctl(device_fd, UI_SET_EVBIT, EV_FF) < 0 || ioctl(device_fd, UI_SET_FFBIT, FF_RUMBLE) < 0) { close(device_fd); device_fd = -1; return false; }
+  if (ioctl(device_fd, UI_SET_EVBIT, EV_KEY) < 0 || ioctl(device_fd, UI_SET_EVBIT, EV_ABS) < 0 || ioctl(device_fd, UI_SET_EVBIT, EV_FF) < 0 || ioctl(device_fd, UI_SET_FFBIT, FF_RUMBLE) < 0 || ioctl(device_fd, UI_SET_FFBIT, FF_GAIN) < 0) { close(device_fd); device_fd = -1; return false; }
   const int buttons[] = {BTN_SOUTH, BTN_EAST, BTN_WEST, BTN_NORTH, BTN_TL, BTN_TR, BTN_TL2, BTN_TR2, BTN_SELECT, BTN_START, BTN_MODE, BTN_THUMBL, BTN_THUMBR, BTN_DPAD_UP, BTN_DPAD_DOWN, BTN_DPAD_LEFT, BTN_DPAD_RIGHT};
   for (const int button : buttons) if (ioctl(device_fd, UI_SET_KEYBIT, button) < 0) { close(device_fd); device_fd = -1; return false; }
   const int axes[] = {ABS_X, ABS_Y, ABS_RX, ABS_RY, ABS_Z, ABS_RZ};

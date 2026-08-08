@@ -41,12 +41,15 @@ test('Linux native package observes host-local force feedback through the uinput
   const source = await (await import('node:fs/promises')).readFile(new URL('./src/bindings.cpp', import.meta.url), 'utf8');
   assert.match(source, /device\.ff_effects_max = 16/);
   assert.match(source, /O_RDWR \| O_NONBLOCK/);
+  assert.match(source, /UI_SET_FFBIT, FF_RUMBLE/);
+  assert.match(source, /UI_SET_FFBIT, FF_GAIN/);
   assert.match(source, /UI_BEGIN_FF_UPLOAD/);
   assert.match(source, /UI_END_FF_UPLOAD/);
   assert.match(source, /UI_BEGIN_FF_ERASE/);
   assert.match(source, /UI_END_FF_ERASE/);
   assert.match(source, /EV_UINPUT/);
   assert.match(source, /readRumbleEvents/);
+  assert.match(source, /ff_gain/);
 });
 
 test('Linux package exposes the uinput rumble reader through the composed input adapter', async () => {
@@ -79,4 +82,30 @@ test('built Linux package exposes the universal binding shape and uinput capabil
   assert.equal(typeof bindings.capabilities.rumble, 'boolean');
   if (bindings.capabilities.rumble) assert.equal(bindings.capabilities.gamepad, true);
   await bindings.close();
+});
+
+test('Linux binding scales active rumble by a live force-feedback gain change', async t => {
+  const {access} = await import('node:fs/promises');
+  try { await access('/dev/uinput', 6); } catch { t.skip('uinput is not readable and writable in this environment'); return; }
+  let module;
+  try { module = await import(pathToFileURL(path.join(installRoot, 'index.mjs')).href); }
+  catch (error) { t.skip(`Linux package is not built in this environment: ${error.message}`); return; }
+  const bindings = await module.createBindings({environment: {DISPLAY: ':1'}, spawnProbe: () => ({status: 1})});
+  if (!bindings.capabilities.rumble) { await bindings.close(); t.skip('uinput force feedback is unavailable'); return; }
+  try {
+    await bindings.input.execute({kind: 'rumble', strongMagnitude: 0.5, weakMagnitude: 0.25, durationMs: 0});
+    let sawStrong = false;
+    let sawWeak = false;
+    for (let attempt = 0; attempt < 50; attempt += 1) {
+      for (const event of bindings.input.readRumbleEvents()) {
+        if (event.strongMagnitude > 0) sawStrong = true;
+        if (event.weakMagnitude > 0) sawWeak = true;
+      }
+      if (sawStrong && sawWeak) break;
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    assert.equal(sawStrong, true, 'the played rumble effect was observed by the reader');
+    assert.equal(sawWeak, true, 'the weak motor magnitude was observed by the reader');
+    assert.ok(bindings.input.readRumbleEvents().every(event => event.strongMagnitude <= 1 && event.weakMagnitude <= 1), 'observed magnitudes are normalized to the shared 0..1 contract');
+  } finally { await bindings.close(); }
 });
