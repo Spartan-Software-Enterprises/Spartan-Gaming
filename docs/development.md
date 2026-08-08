@@ -61,8 +61,10 @@ npm run frontend:serve
 ```
 
 Open `http://127.0.0.1:4173/`. The server redirects `/` to `/dashboard/`,
-serves the frontend pages and public catalogs, and keeps signaling/session
-paths out of its static surface. Use `--port 0` for an ephemeral port or
+serves the frontend pages and public catalogs, applies restrictive browser
+security headers while allowing official HTTPS provider frames and secure
+signaling, and keeps arbitrary signaling/session paths out of its static
+surface. Use `--port 0` for an ephemeral port or
 `--host 0.0.0.0` when testing from another device on a trusted LAN. This is a
 development/static frontend server, not a production TLS or authentication
 endpoint.

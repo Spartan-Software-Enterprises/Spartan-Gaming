@@ -17,6 +17,9 @@ test('frontend server redirects the origin to the dashboard and serves catalogs'
   const page = await fetch(`${origin}/dashboard/index.html`);
   assert.equal(page.status, 200);
   assert.match(await page.text(), /Spartan Gaming/);
+  assert.match(page.headers.get('content-security-policy'), /connect-src 'self' https: wss:/);
+  assert.equal(page.headers.get('cross-origin-opener-policy'), 'same-origin');
+  assert.equal(page.headers.get('x-content-type-options'), 'nosniff');
   const catalog = await fetch(`${origin}/providers/catalog.json`);
   assert.equal(catalog.status, 200);
   assert.equal((await catalog.json()).catalogVersion, 1);

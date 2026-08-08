@@ -63,10 +63,14 @@ async function sendFile(response, file, method = 'GET') {
     if (info.isDirectory()) { file = path.join(file, 'index.html'); info = await stat(file); }
     if (!info.isFile()) return false;
     response.writeHead(200, {
-      'cache-control': 'no-store',
-      connection: 'close',
-      'content-length': info.size,
-      'content-type': MIME_TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream',
+        'cache-control': 'no-store',
+        connection: 'close',
+        'content-length': info.size,
+        'content-type': MIME_TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream',
+      'content-security-policy': "default-src 'self'; base-uri 'self'; object-src 'none'; frame-src https:; connect-src 'self' https: wss:; img-src 'self' data: blob:; media-src 'self' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self'",
+      'cross-origin-opener-policy': 'same-origin',
+      'cross-origin-resource-policy': 'same-origin',
+      'referrer-policy': 'strict-origin-when-cross-origin',
       'x-content-type-options': 'nosniff',
     });
     if (method === 'HEAD') response.end(); else createReadStream(file).pipe(response);
