@@ -62,6 +62,12 @@ enabled, and blocked or mismatched records cannot become launch authority. The
 WebCrypto verifier supports the registry's declared ECDSA P-256 and RSA-PSS
 SHA-256 signature formats.
 
+The registry also creates a release-safe update plan: strict semantic-version
+comparison, platform and kind filtering, and trust checks select only the
+highest compatible verified release. The plan describes a proposed transition
+without downloading, installing, or replacing user files; packaged installers
+and a hosted release service remain separate native/release boundaries.
+
 | Project | Systems | Preferred mode | Role |
 | --- | --- | --- | --- |
 | RetroArch/libretro | Many classic and modern systems | Browser/native | Unified frontend and core ecosystem |

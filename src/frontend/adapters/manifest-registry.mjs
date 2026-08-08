@@ -33,6 +33,34 @@ export function createAdapterManifestRegistry({records = [], platform, trustedSi
   return Object.freeze({list: () => Object.freeze([...byId.values()]), get: id => byId.get(id), resolve(id, options = {}) { const record = byId.get(id); return record ? evaluateAdapterManifest(record, {platform, ...options}) : Object.freeze({id, status: 'unavailable', reason: 'adapter manifest is not installed'}); }, trustedSigners: Object.freeze({...trustedSigners})});
 }
 
+function versionParts(version) {
+  const match = /^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/.exec(version);
+  if (!match) throw new TypeError(`adapter version must use semver: ${version}`);
+  return [Number(match[1]), Number(match[2]), Number(match[3]), match[4] || ''];
+}
+
+function compareVersions(left, right) {
+  const a = versionParts(left); const b = versionParts(right);
+  for (let index = 0; index < 3; index += 1) if (a[index] !== b[index]) return a[index] - b[index];
+  if (!a[3] && b[3]) return 1;
+  if (a[3] && !b[3]) return -1;
+  return a[3].localeCompare(b[3]);
+}
+
+/** Select the highest verified compatible release without mutating installed state. */
+export function createAdapterUpdatePlan({current, candidates = [], platform, kind, allowUnsigned = false} = {}) {
+  const installed = normalizeAdapterManifest(current);
+  const compatible = candidates.map(normalizeAdapterManifest)
+    .filter(candidate => candidate.id === installed.id && (!kind || candidate.kind === kind))
+    .filter(candidate => !platform || candidate.platforms.includes(platform) || candidate.platforms.includes('universal'))
+    .filter(candidate => compareVersions(candidate.version, installed.version) > 0)
+    .sort((left, right) => compareVersions(right.version, left.version));
+  const selected = compatible.find(candidate => ['ready', 'ready-unsigned'].includes(evaluateAdapterManifest(candidate, {platform, kind, allowUnsigned}).status));
+  if (!selected) return Object.freeze({id: installed.id, status: 'up-to-date', version: installed.version, reason: compatible.length ? 'newer candidates are not trusted or compatible' : 'no newer compatible release is available'});
+  const readiness = evaluateAdapterManifest(selected, {platform, kind, allowUnsigned});
+  return Object.freeze({id: installed.id, status: 'update-available', from: installed.version, to: selected.version, adapter: selected, readiness});
+}
+
 function bytes(value) { if (value instanceof Uint8Array) return value; if (typeof value === 'string') return new TextEncoder().encode(value); throw new TypeError('signature data must be a string or Uint8Array'); }
 function signatureBytes(value) { if (value instanceof Uint8Array) return value; if (typeof value !== 'string' || !value) throw new TypeError('signature must be a base64url string or Uint8Array'); const normalized = value.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat((4 - value.length % 4) % 4); const binary = typeof atob === 'function' ? atob(normalized) : Buffer.from(normalized, 'base64').toString('binary'); return Uint8Array.from(binary, character => character.charCodeAt(0)); }
 
