@@ -39,6 +39,7 @@ function createAssetResolver({root = frontendRoot, publicRoot = repositoryRoot} 
     Object.freeze({urlPrefix: '/src/frontend', root}),
     Object.freeze({urlPrefix: '/providers', root: path.join(publicRoot, 'providers')}),
     Object.freeze({urlPrefix: '/emulators', root: path.join(publicRoot, 'emulators')}),
+    Object.freeze({urlPrefix: '/games', root: path.join(publicRoot, 'games')}),
   ]);
   return pathname => {
     const decoded = decodePath(pathname);

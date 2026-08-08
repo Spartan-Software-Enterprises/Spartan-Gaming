@@ -1,0 +1,42 @@
+{
+  "catalogVersion": 1,
+  "updatedAt": "2026-08-08",
+  "games": [
+    {
+      "id": "2048",
+      "name": "2048",
+      "kind": "browser-game",
+      "supportLevel": "C",
+      "integrationModes": ["browser-first"],
+      "url": "https://play2048.co/",
+      "requirements": [],
+      "capabilities": ["keyboard", "touch-controls", "fullscreen"],
+      "genres": ["puzzle"],
+      "license": "Upstream project license"
+    },
+    {
+      "id": "hexgl",
+      "name": "HexGL",
+      "kind": "browser-game",
+      "supportLevel": "C",
+      "integrationModes": ["browser-first"],
+      "url": "https://hexgl.bkcore.com/",
+      "requirements": [],
+      "capabilities": ["keyboard", "gamepad", "fullscreen"],
+      "genres": ["racing", "3d"],
+      "license": "Upstream project license"
+    },
+    {
+      "id": "browserquest",
+      "name": "BrowserQuest",
+      "kind": "browser-game",
+      "supportLevel": "C",
+      "integrationModes": ["browser-first"],
+      "url": "https://browserquest.mozilla.org/",
+      "requirements": [],
+      "capabilities": ["keyboard", "touch-controls", "fullscreen", "multiplayer"],
+      "genres": ["role-playing", "multiplayer"],
+      "license": "Upstream project license"
+    }
+  ]
+}

@@ -32,8 +32,10 @@ if (startupRoute && typeof globalThis.location?.replace === 'function') globalTh
 let activeWorkspace = workspaceStore.active;
 let favoritesStore = createFavoritesStore({storage: profileStorage, workspaceId: activeWorkspace.id});
 const requestedFilter = new URLSearchParams(globalThis.location?.search || '').get('filter');
-const state = { catalog: [], adapters: null, compatibility: null, report: null, providerHealth: new Map(), filter: ['all', 'cloud', 'watch', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(favoritesStore.list()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), recovery: recoveryHandoff, providerProfiles: Object.fromEntries(createProviderProfileStore({storage: profileStorage}).list().map(profile => [profile.providerId, applyGlobalProviderPreferences({...profile, embedParent: globalThis.location?.hostname || ''}, settings)])) };
+const state = { catalog: [], adapters: null, compatibility: null, report: null, providerHealth: new Map(), filter: ['all', 'cloud', 'watch', 'browser', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(favoritesStore.list()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), recovery: recoveryHandoff, providerProfiles: Object.fromEntries(createProviderProfileStore({storage: profileStorage}).list().map(profile => [profile.providerId, applyGlobalProviderPreferences({...profile, embedParent: globalThis.location?.hostname || ''}, settings)])) };
 document.querySelector('.filters')?.insertAdjacentHTML('beforeend', '<button class="filter" data-filter="watch">Watch &amp; stream</button>');
+document.querySelector('.filters')?.insertAdjacentHTML('beforeend', '<button class="filter" data-filter="browser">Browser games</button>');
+document.querySelector('.main-nav')?.insertAdjacentHTML('beforeend', '<button class="nav-item" data-section="browser">▣ <span>Browser games</span></button>');
 const cards = document.querySelector('[data-cards]');
 const toast = document.querySelector('[data-toast]');
 const sessionStatus = document.querySelector('[data-session-status]');
@@ -105,7 +107,7 @@ function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, character 
 function visibleEntries() {
   const query = state.search.toLowerCase().trim();
   return state.catalog.filter(entry => {
-    const matchesType = state.filter === 'all' || (state.filter === 'emulator' ? entry.backendType === 'emulator' : state.filter === 'cloud' ? entry.backendType === 'provider' : state.filter === 'watch' ? WATCH_KINDS.has(entry.kind) : state.filter === 'favorites' ? state.favorites.has(entry.id) : state.recent.has(entry.id));
+    const matchesType = state.filter === 'all' || (state.filter === 'emulator' ? entry.backendType === 'emulator' : state.filter === 'browser' ? entry.backendType === 'game' : state.filter === 'cloud' ? entry.backendType === 'provider' : state.filter === 'watch' ? WATCH_KINDS.has(entry.kind) : state.filter === 'favorites' ? state.favorites.has(entry.id) : state.recent.has(entry.id));
     const haystack = `${entry.name} ${entry.description || ''} ${(entry.systems || []).join(' ')}`.toLowerCase();
     return matchesType && (!query || haystack.includes(query));
   });
@@ -118,16 +120,17 @@ function render() {
     const favorite = state.favorites.has(entry.id);
     const tags = [...(state.recent.has(entry.id) ? ['Recent'] : []), ...(entry.systems || []).slice(0, 2), ...(entry.capabilities || []).slice(0, 1)];
     const summary = entry.description || (entry.requirements?.length ? entry.requirements.join(' · ') : entry.systems?.length ? entry.systems.join(' · ') : 'Ready to connect');
-    const plan = state.adapters?.get(entry.id)?.resolve(); const readiness = {ready: 'Ready', 'configuration-required': 'Setup required', 'browser-capability-missing': 'Capability missing', 'native-adapter-required': 'Native adapter'}[plan?.readiness?.status] || 'Checking…'; const actionLabel = plan?.readiness?.nextAction === 'run-diagnostics' ? 'Run diagnostics' : plan?.readiness?.nextAction === 'choose-runtime' ? 'Choose runtime' : entry.backendType === 'provider' ? 'Open service' : 'Configure';
-    return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(entry.backendType === 'emulator' ? 'Emulation' : entry.kind)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="card-actions">${entry.backendType === 'provider' ? `<button class="details-button" data-details="${escapeHtml(entry.id)}">Details</button>` : ''}<button class="launch" data-launch="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}${entry.backendType === 'provider' ? providerHealthLabel(entry) : ''}</span></div></article>`;
+    const plan = state.adapters?.get(entry.id)?.resolve(); const readiness = {ready: 'Ready', 'configuration-required': 'Setup required', 'browser-capability-missing': 'Capability missing', 'native-adapter-required': 'Native adapter'}[plan?.readiness?.status] || 'Checking…'; const actionLabel = plan?.readiness?.nextAction === 'run-diagnostics' ? 'Run diagnostics' : plan?.readiness?.nextAction === 'choose-runtime' ? 'Choose runtime' : entry.backendType === 'provider' ? 'Open service' : entry.backendType === 'game' ? 'Play in browser' : 'Configure';
+    return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(entry.backendType === 'emulator' ? 'Emulation' : entry.backendType === 'game' ? 'Browser game' : entry.kind)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="card-actions">${entry.backendType === 'provider' ? `<button class="details-button" data-details="${escapeHtml(entry.id)}">Details</button>` : ''}<button class="launch" data-launch="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}${entry.backendType === 'provider' ? providerHealthLabel(entry) : ''}</span></div></article>`;
   }).join('') : '<div class="empty">No connections match this view. Try another filter or search term.</div>';
 }
 async function loadCatalog() {
   try {
-    const [providers, emulators] = await Promise.all([fetch('../../../providers/catalog.json').then(response => response.json()), fetch('../../../emulators/catalog.json').then(response => response.json())]);
+    const [providers, emulators, games] = await Promise.all([fetch('../../../providers/catalog.json').then(response => response.json()), fetch('../../../emulators/catalog.json').then(response => response.json()), fetch('../../../games/catalog.json').then(response => response.json())]);
     validateCatalogManifest(providers, 'provider');
     validateCatalogManifest(emulators, 'emulator');
-    const catalog = createFrontendCatalog({ providers: mergeCommunityProviders({providers: providers.providers, community: communityCatalogStore.list()}), emulators: emulators.projects });
+    validateCatalogManifest(games, 'game');
+    const catalog = createFrontendCatalog({ providers: mergeCommunityProviders({providers: providers.providers, community: communityCatalogStore.list()}), emulators: emulators.projects, games: games.games });
     state.catalog = settings['providers.showCatalog'] === false ? catalog.entries.filter(entry => entry.backendType !== 'provider') : catalog.entries;
     rebuildAdapters();
     updateReadinessStatus();

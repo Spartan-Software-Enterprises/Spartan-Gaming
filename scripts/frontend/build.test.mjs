@@ -15,6 +15,7 @@ test('frontend distribution build packages pages, catalogs, service worker, and 
     assert.equal(result.manifest.entrypoints.adapters, '/adapters/');
     assert.match(await readFile(path.join(result.output, 'dashboard/index.html'), 'utf8'), /Spartan Gaming/);
     assert.match(await readFile(path.join(result.output, 'providers/catalog.json'), 'utf8'), /GeForce NOW/);
+    assert.match(await readFile(path.join(result.output, 'games/catalog.json'), 'utf8'), /HexGL/);
     assert.match(await readFile(path.join(result.output, 'service-worker.mjs'), 'utf8'), /pwa\/service-worker/);
   } finally { await rm(root, {recursive: true, force: true, maxRetries: 8, retryDelay: 100}); }
 });
@@ -33,8 +34,10 @@ test('frontend server can serve the packaged distribution root', async () => {
     const page = await fetch(`http://127.0.0.1:${address.port}/dashboard/`);
     const adapters = await fetch(`http://127.0.0.1:${address.port}/adapters/`);
     const catalog = await fetch(`http://127.0.0.1:${address.port}/providers/catalog.json`);
+    const games = await fetch(`http://127.0.0.1:${address.port}/games/catalog.json`);
     assert.equal(page.status, 200);
     assert.equal(adapters.status, 200);
     assert.equal(catalog.status, 200);
+    assert.equal(games.status, 200);
   } finally { await frontend.close(); await rm(root, {recursive: true, force: true, maxRetries: 8, retryDelay: 100}); }
 });

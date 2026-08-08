@@ -217,3 +217,9 @@ keys or session secrets. Settings are isolated through the active gaming
 profile, with an explicit active-profile marker and migration of the legacy
 unscoped settings key; the player consumes the same normalized settings for
 transport policy.
+
+The dashboard also consumes `games/catalog.json` as a browser-game directory.
+These entries are validated like other public catalog records, require HTTPS,
+and resolve to an external browser launch plan. The frontend stores only the
+entry metadata and launch history; it does not download, proxy, redistribute,
+or inject scripts into third-party game content.

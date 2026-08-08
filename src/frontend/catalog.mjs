@@ -26,6 +26,7 @@ const validKinds = new Set([
   'naomi',
   'atomiswave',
   'original-xbox',
+  'browser-game',
 ]);
 
 function assertString(value, field, id) {
@@ -42,18 +43,23 @@ function validateEntry(entry, source) {
   const id = entry?.id ?? '<unknown>';
   assertString(entry?.id, 'id', id);
   assertString(entry?.name, 'name', id);
-  if (source === 'provider') assertString(entry?.kind, 'kind', id);
-  if (source === 'provider' && !validKinds.has(entry.kind)) {
-    throw new TypeError(`${id}: unsupported provider kind ${entry.kind}`);
+  if (source !== 'emulator') assertString(entry?.kind, 'kind', id);
+  if (source !== 'emulator' && !validKinds.has(entry.kind)) {
+    throw new TypeError(`${id}: unsupported ${source} kind ${entry.kind}`);
   }
-  if (source === 'provider' && !validSupportLevels.has(entry.supportLevel)) {
+  if (source !== 'emulator' && !validSupportLevels.has(entry.supportLevel)) {
     throw new TypeError(`${id}: supportLevel must be A, B, C, or D`);
   }
-  if (source === 'provider') {
+  if (source === 'provider' || source === 'game') {
     assertArray(entry.integrationModes, 'integrationModes', id);
     assertArray(entry.capabilities, 'capabilities', id);
     assertString(entry.url, 'url', id);
+    if (source === 'game' && !/^https:\/\//i.test(entry.url)) throw new TypeError(`${id}: browser-game url must use HTTPS`);
     assertArray(entry.requirements, 'requirements', id);
+    if (source === 'game') {
+      assertArray(entry.genres, 'genres', id);
+      assertString(entry.license, 'license', id);
+    }
   } else {
     assertArray(entry.systems, 'systems', id);
     assertString(entry.mode, 'mode', id);
@@ -74,11 +80,13 @@ function normalize(entry, source) {
     kind: entry.kind ?? 'emulator',
     supportLevel: entry.supportLevel ?? (entry.priority === 'tier-1' ? 'B' : 'C'),
     backendType: source,
-    launchMode: source === 'provider' ? 'web' : entry.mode,
+    launchMode: source === 'provider' || source === 'game' ? 'web' : entry.mode,
     integrationModes: Object.freeze([...integrationModes]),
     capabilities: Object.freeze([...capabilities]),
     ...(source === 'provider'
       ? {requirements: Object.freeze([...entry.requirements])}
+      : source === 'game'
+        ? {requirements: Object.freeze([...entry.requirements]), systems: Object.freeze([...entry.genres])}
       : {systems: Object.freeze([...entry.systems])}),
   });
 }
@@ -87,10 +95,11 @@ function normalize(entry, source) {
  * Build the frontend's single backend catalog from provider and emulator manifests.
  * The returned entries are immutable so UI state cannot mutate the source manifests.
  */
-export function createFrontendCatalog({providers = [], emulators = []} = {}) {
+export function createFrontendCatalog({providers = [], emulators = [], games = []} = {}) {
   const entries = [
     ...providers.map((entry) => normalize(entry, 'provider')),
     ...emulators.map((entry) => normalize(entry, 'emulator')),
+    ...games.map((entry) => normalize(entry, 'game')),
   ];
   const ids = new Set();
   for (const entry of entries) {
@@ -118,7 +127,8 @@ export function validateCatalogManifest(manifest, source) {
   if (!manifest || manifest.catalogVersion !== 1) {
     throw new TypeError(`${source} catalogVersion must be 1`);
   }
-  const entries = source === 'provider' ? manifest.providers : manifest.projects;
-  assertArray(entries, source === 'provider' ? 'providers' : 'projects', source);
+  const key = source === 'provider' ? 'providers' : source === 'emulator' ? 'projects' : 'games';
+  const entries = manifest[key];
+  assertArray(entries, key, source);
   return entries.map((entry) => validateEntry(entry, source));
 }
