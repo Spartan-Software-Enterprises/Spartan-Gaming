@@ -41,6 +41,13 @@ injected WebCrypto private key, and verifies through the existing public-key
 contract. Keys are never loaded from disk, persisted, or embedded in package
 metadata beyond the signer identifier and signature value.
 
+`release/package-signing-service.mjs` is the deployment-neutral custody
+boundary. It authorizes each request, rate-limits signing, obtains a private
+key only from an injected custody provider, signs canonical package manifests,
+and reports only signer/algorithm/request counters in health data. A real
+deployment can connect that provider to KMS/HSM infrastructure without
+changing the package contract.
+
 `host/media.mjs` provides the next boundary for those platform implementations. It generates shell-free FFmpeg capture plans for Linux X11/PipeWire, Windows desktop capture, and macOS AVFoundation, validates basic permission context, and generates codec/bitrate encoder plans for H.264, VP9, and AV1. These plans target a future WebRTC publisher and are deliberately not executed by the reference agent.
 
 `host/publisher.mjs` composes those plans into a transport-neutral publisher
