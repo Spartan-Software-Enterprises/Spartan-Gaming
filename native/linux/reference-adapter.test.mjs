@@ -49,6 +49,18 @@ test('Linux reference input maps only normalized keyboard and pointer operations
   assert.equal(keyName('IntlBackslash'), 'backslash');
   assert.equal(keyName('IntlRo'), 'backslash');
   assert.equal(keyName('IntlYen'), 'yen');
+  assert.equal(keyName('AudioVolumeUp'), 'XF86AudioRaiseVolume');
+  assert.equal(keyName('AudioVolumeMute'), 'XF86AudioMute');
+  assert.equal(keyName('MediaPlayPause'), 'XF86AudioPlay');
+  assert.equal(keyName('MediaTrackNext'), 'XF86AudioNext');
+  assert.equal(keyName('BrowserBack'), 'XF86Back');
+  assert.equal(keyName('BrowserForward'), 'XF86Forward');
+  assert.equal(keyName('BrowserHome'), 'XF86HomePage');
+  assert.equal(keyName('LaunchMail'), 'XF86Mail');
+  assert.equal(keyName('Sleep'), 'XF86Sleep');
+  assert.equal(keyName('WakeUp'), 'XF86WakeUp');
+  assert.equal(keyName('Print'), 'Print');
+  assert.equal(keyName('Help'), 'Help');
   assert.throws(() => keyName('F25'), error => error.code === 'ERR_UNSUPPORTED_INPUT' && /F25/.test(error.message));
   assert.throws(() => inputCommand({kind: 'button', control: 'a'}), error => error.code === 'ERR_UNSUPPORTED_INPUT');
   assert.throws(() => inputCommand({kind: 'pointer', action: 'pointer:down', control: 'button-9'}), error => error.code === 'ERR_UNSUPPORTED_INPUT');

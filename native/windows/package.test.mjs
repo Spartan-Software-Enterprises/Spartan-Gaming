@@ -38,7 +38,7 @@ test('Windows native input contract maps browser punctuation codes', async () =>
 
 test('Windows native input contract maps numpad and system browser codes', async () => {
   const source = await (await import('node:fs/promises')).readFile(new URL('./src/bindings.cpp', import.meta.url), 'utf8');
-  for (const code of ['Numpad0', 'Numpad9', 'NumpadDecimal', 'NumpadAdd', 'NumpadSubtract', 'NumpadMultiply', 'NumpadDivide', 'NumpadEnter', 'NumLock', 'PrintScreen', 'ScrollLock', 'Pause', 'ContextMenu', 'F13', 'F24', 'IntlRo', 'IntlYen', 'IntlBackslash']) assert.match(source, new RegExp(`"${code}"`));
+  for (const code of ['Numpad0', 'Numpad9', 'NumpadDecimal', 'NumpadAdd', 'NumpadSubtract', 'NumpadMultiply', 'NumpadDivide', 'NumpadEnter', 'NumLock', 'PrintScreen', 'ScrollLock', 'Pause', 'ContextMenu', 'F13', 'F24', 'IntlRo', 'IntlYen', 'IntlBackslash', 'AudioVolumeMute', 'AudioVolumeDown', 'AudioVolumeUp', 'MediaTrackNext', 'MediaTrackPrevious', 'MediaStop', 'MediaPlayPause', 'MediaSelect', 'BrowserBack', 'BrowserForward', 'BrowserRefresh', 'BrowserStop', 'BrowserSearch', 'BrowserFavorites', 'BrowserHome', 'LaunchMail', 'LaunchApp1', 'LaunchApp2', 'Sleep', 'Print', 'Select', 'Execute', 'Help']) assert.match(source, new RegExp(`"${code}"`));
 });
 
 test('Windows native input contract marks unsupported operations as soft errors', async () => {

@@ -125,6 +125,29 @@ WORD key_code(const std::string& control) {
   if (control == "NumpadMultiply") return VK_MULTIPLY;
   if (control == "NumpadDivide") return VK_DIVIDE;
   if (control == "NumpadEnter") return VK_RETURN;
+  if (control == "AudioVolumeMute") return VK_VOLUME_MUTE;
+  if (control == "AudioVolumeDown") return VK_VOLUME_DOWN;
+  if (control == "AudioVolumeUp") return VK_VOLUME_UP;
+  if (control == "MediaTrackNext") return VK_MEDIA_NEXT_TRACK;
+  if (control == "MediaTrackPrevious") return VK_MEDIA_PREV_TRACK;
+  if (control == "MediaStop") return VK_MEDIA_STOP;
+  if (control == "MediaPlayPause") return VK_MEDIA_PLAY_PAUSE;
+  if (control == "MediaSelect") return VK_LAUNCH_MEDIA_SELECT;
+  if (control == "BrowserBack") return VK_BROWSER_BACK;
+  if (control == "BrowserForward") return VK_BROWSER_FORWARD;
+  if (control == "BrowserRefresh") return VK_BROWSER_REFRESH;
+  if (control == "BrowserStop") return VK_BROWSER_STOP;
+  if (control == "BrowserSearch") return VK_BROWSER_SEARCH;
+  if (control == "BrowserFavorites") return VK_BROWSER_FAVORITES;
+  if (control == "BrowserHome") return VK_BROWSER_HOME;
+  if (control == "LaunchMail") return VK_LAUNCH_MAIL;
+  if (control == "LaunchApp1") return VK_LAUNCH_APP1;
+  if (control == "LaunchApp2") return VK_LAUNCH_APP2;
+  if (control == "Sleep") return VK_SLEEP;
+  if (control == "Print") return VK_PRINT;
+  if (control == "Select") return VK_SELECT;
+  if (control == "Execute") return VK_EXECUTE;
+  if (control == "Help") return VK_HELP;
   return 0;
 }
 
