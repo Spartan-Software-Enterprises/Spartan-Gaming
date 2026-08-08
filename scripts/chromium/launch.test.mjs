@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
+import path from 'node:path';
 import test from 'node:test';
 import {chromiumBinaryPath, createChromiumShellPlan, launchChromiumShell, parseLaunchArguments} from './launch.mjs';
 
 test('Chromium shell plans resolve platform binaries and safe app URLs', () => {
-  assert.equal(chromiumBinaryPath({platform: 'linux', out: '/external/out'}), '/external/out/chrome');
-  assert.equal(chromiumBinaryPath({platform: 'mac', out: '/external/out'}), '/external/out/Chromium.app/Contents/MacOS/Chromium');
-  assert.equal(chromiumBinaryPath({platform: 'windows', out: '/external/out'}), '/external/out/chrome.exe');
+  assert.equal(chromiumBinaryPath({platform: 'linux', out: '/external/out'}), path.join(path.resolve('/external/out'), 'chrome'));
+  assert.equal(chromiumBinaryPath({platform: 'mac', out: '/external/out'}), path.join(path.resolve('/external/out'), 'Chromium.app', 'Contents', 'MacOS', 'Chromium'));
+  assert.equal(chromiumBinaryPath({platform: 'windows', out: '/external/out'}), path.join(path.resolve('/external/out'), 'chrome.exe'));
   const plan = createChromiumShellPlan({platform: 'linux', binary: '/usr/local/bin/chromium', url: 'http://127.0.0.1:4173/dashboard/', userDataDir: '/external/profile'});
   assert.deepEqual(plan.args, ['--app=http://127.0.0.1:4173/dashboard/', '--no-first-run', '--no-default-browser-check', '--user-data-dir=/external/profile']);
   assert.equal(plan.command.shell, false);
@@ -23,8 +24,8 @@ test('Chromium shell launch arguments remain plan-first and cross-platform', () 
 
 test('Chromium shell can orchestrate a local HTTP frontend without shell execution', async () => {
   let invocation;
-  const running = await launchChromiumShell({plan: createChromiumShellPlan({platform: 'linux', binary: '/bin/echo'}), serve: true, spawnImpl: (program, args, options) => { invocation = {program, args, options}; return {kill() {}}; }});
-  assert.equal(invocation.program, '/bin/echo');
+  const running = await launchChromiumShell({plan: createChromiumShellPlan({platform: 'linux', binary: process.execPath}), serve: true, spawnImpl: (program, args, options) => { invocation = {program, args, options}; return {kill() {}}; }});
+  assert.equal(invocation.program, process.execPath);
   assert.equal(invocation.options.shell, false);
   assert.match(running.plan.url, /^http:\/\/127\.0\.0\.1:\d+\/dashboard\/$/);
   await running.close();
