@@ -32,6 +32,7 @@ async function bytesFrom(value) {
 export function createAdapterInstallTransactionPlan({request, installRoot} = {}) {
   if (request?.version !== 1 || request.installScope !== 'user') throw new TypeError('a version 1 user-scoped adapter request is required');
   if (!request.artifact || request.requiresRestart !== true) throw new TypeError('adapter request must include an artifact and restart requirement');
+  if (!request.verification?.signature?.algorithm || !request.verification.signature.signer || !request.verification.signature.value) throw new TypeError('a signed adapter verification record is required');
   const paths = immutablePaths(installRoot, request.id, request.to);
   const expected = decodeDigest(request.artifact.integrity);
   if (request.verification?.integrity !== request.artifact.integrity) throw new TypeError('request verification integrity must match artifact integrity');
@@ -43,7 +44,7 @@ export function createAdapterInstallTransactionPlan({request, installRoot} = {})
  * Install signed adapter artifacts through an injected downloader/verifier.
  * The installer writes only inside its validated root and never invokes a shell.
  */
-export function createNativeAdapterInstaller({installRoot, fsImpl = defaultFs, download = async url => { const response = await fetch(url); if (!response.ok) throw new Error(`adapter download failed: ${response.status}`); return response; }, verifySignature = async () => true} = {}) {
+export function createNativeAdapterInstaller({installRoot, fsImpl = defaultFs, download = async url => { const response = await fetch(url); if (!response.ok) throw new Error(`adapter download failed: ${response.status}`); return response; }, verifySignature = async () => { throw new Error('adapter signature verifier is required'); }} = {}) {
   if (!fsImpl || typeof fsImpl.mkdir !== 'function' || typeof fsImpl.writeFile !== 'function' || typeof fsImpl.rename !== 'function' || typeof fsImpl.rm !== 'function' || typeof fsImpl.access !== 'function') throw new TypeError('filesystem adapter is incomplete');
   if (typeof download !== 'function' || typeof verifySignature !== 'function') throw new TypeError('download and verifySignature must be functions');
   return Object.freeze({
