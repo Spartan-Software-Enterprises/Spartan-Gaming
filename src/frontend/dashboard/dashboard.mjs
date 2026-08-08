@@ -15,6 +15,7 @@ import { createFavoritesStore } from './library-state.mjs';
 import { createCommunityProviderCatalogStore, mergeCommunityProviders } from '../providers/community-catalog.mjs';
 import { createSettingsStore } from '../settings/profile.mjs';
 import { launchExternalSurface } from '../launch/behavior.mjs';
+import { checkProviderCatalog } from '../providers/catalog-health.mjs';
 
 const launchHistory = createLaunchHistoryStore();
 const workspaceStore = createWorkspaceStore();
@@ -23,7 +24,7 @@ const settings = createSettingsStore().read();
 let activeWorkspace = workspaceStore.active;
 let favoritesStore = createFavoritesStore({workspaceId: activeWorkspace.id});
 const requestedFilter = new URLSearchParams(globalThis.location?.search || '').get('filter');
-const state = { catalog: [], adapters: null, compatibility: null, report: null, filter: ['all', 'cloud', 'watch', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(favoritesStore.list()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, applyGlobalProviderPreferences({...profile, embedParent: globalThis.location?.hostname || ''}, settings)])) };
+const state = { catalog: [], adapters: null, compatibility: null, report: null, providerHealth: new Map(), filter: ['all', 'cloud', 'watch', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(favoritesStore.list()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, applyGlobalProviderPreferences({...profile, embedParent: globalThis.location?.hostname || ''}, settings)])) };
 document.querySelector('.filters')?.insertAdjacentHTML('beforeend', '<button class="filter" data-filter="watch">Watch &amp; stream</button>');
 const cards = document.querySelector('[data-cards]');
 const toast = document.querySelector('[data-toast]');
@@ -41,6 +42,7 @@ function saveFavorites() { favoritesStore.set([...state.favorites]); }
 function showToast(message) { toast.textContent = message; toast.classList.add('is-visible'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 2600); }
 function updateReadinessStatus() { const status = createReadinessStatus({catalogLoaded: state.catalog.length > 0, compatibility: state.compatibility, capabilityReport: state.report, online: globalThis.navigator?.onLine !== false, activeSession: sessionStatusId}); sessionStatus.textContent = status.label; statusPill.dataset.status = status.id; statusPill.title = status.detail; }
 function setSessionStatus(status) { sessionStatusId = status; updateReadinessStatus(); }
+function providerHealthLabel(entry) { const health = state.providerHealth.get(entry.id); if (!health) return ''; if (health.status === 'checking') return ' · Checking'; if (health.status === 'reachable') return ` · Reachable${health.latencyMs ? ` ${health.latencyMs}ms` : ''}`; if (health.status === 'unavailable') return ' · Unavailable'; if (health.status === 'timeout') return ' · Timed out'; return ' · Check inconclusive'; }
 function renderResume() {
   const presentation = resolveResumePresentation(state.lastLaunch); const title = document.querySelector('[data-resume-title]'); const copy = document.querySelector('[data-resume-copy]'); const button = document.querySelector('[data-action="resume"]');
   title.textContent = presentation.title; copy.textContent = presentation.copy; button.textContent = presentation.actionLabel;
@@ -91,7 +93,7 @@ function render() {
     const tags = [...(state.recent.has(entry.id) ? ['Recent'] : []), ...(entry.systems || []).slice(0, 2), ...(entry.capabilities || []).slice(0, 1)];
     const summary = entry.description || (entry.requirements?.length ? entry.requirements.join(' · ') : entry.systems?.length ? entry.systems.join(' · ') : 'Ready to connect');
     const plan = state.adapters?.get(entry.id)?.resolve(); const readiness = {ready: 'Ready', 'configuration-required': 'Setup required', 'browser-capability-missing': 'Capability missing', 'native-adapter-required': 'Native adapter'}[plan?.readiness?.status] || 'Checking…'; const actionLabel = plan?.readiness?.nextAction === 'run-diagnostics' ? 'Run diagnostics' : plan?.readiness?.nextAction === 'choose-runtime' ? 'Choose runtime' : entry.backendType === 'provider' ? 'Open service' : 'Configure';
-    return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(entry.backendType === 'emulator' ? 'Emulation' : entry.kind)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="card-actions"><button class="launch" data-launch="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}</span></div></article>`;
+    return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(entry.backendType === 'emulator' ? 'Emulation' : entry.kind)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="card-actions"><button class="launch" data-launch="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}${entry.backendType === 'provider' ? providerHealthLabel(entry) : ''}</span></div></article>`;
   }).join('') : '<div class="empty">No connections match this view. Try another filter or search term.</div>';
 }
 async function loadCatalog() {
@@ -103,6 +105,7 @@ async function loadCatalog() {
     state.adapters = createCatalogAdapterRegistry(state.catalog, {providerProfiles: state.providerProfiles, report: () => state.report || {}});
     updateReadinessStatus();
     render();
+    if (settings['providers.healthChecks'] === true) { const providers = state.catalog.filter(entry => entry.backendType === 'provider'); providers.forEach(entry => state.providerHealth.set(entry.id, {status: 'checking'})); render(); checkProviderCatalog(providers).then(results => { results.forEach(item => state.providerHealth.set(item.providerId, item.result)); render(); }).catch(() => {}); }
     collectCapabilities().then(report => { state.report = report; state.compatibility = evaluateCatalog(state.catalog, report); updateReadinessStatus(); render(); }).catch(() => { state.report = {}; state.compatibility = evaluateCatalog(state.catalog, state.report); updateReadinessStatus(); render(); });
   } catch (error) { cards.innerHTML = '<div class="empty">The library could not load. Check the catalog files and try again.</div>'; console.error(error); }
 }
