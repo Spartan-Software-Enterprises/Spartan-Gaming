@@ -124,6 +124,8 @@ required_files=(
   src/frontend/dashboard/routes.test.mjs
   src/frontend/dashboard/resume.mjs
   src/frontend/dashboard/resume.test.mjs
+  src/frontend/dashboard/library-state.mjs
+  src/frontend/dashboard/library-state.test.mjs
   src/frontend/dashboard/index.html
   src/frontend/dashboard/dashboard.css
   src/frontend/dashboard/dashboard.mjs

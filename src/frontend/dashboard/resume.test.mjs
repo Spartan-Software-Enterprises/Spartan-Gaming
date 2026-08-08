@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {resolveResumeEntry, resolveResumePresentation} from './resume.mjs';
+import './library-state.test.mjs';
 
 test('resume presentation defaults to the host session and describes recent backends', () => {
   assert.deepEqual(resolveResumePresentation(), {title: 'Desktop stream', copy: 'Pick up where you left off with your Spartan Host session.', actionLabel: '▶ Resume session'});

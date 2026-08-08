@@ -18,6 +18,7 @@
 - [x] Windows, macOS, and Linux frontend distribution artifact workflow.
 - [x] Session player shell with stream target, overlays, quality state, controller hooks, and diagnostics.
 - [x] Gaming profiles and workspaces with persistent isolated launch preferences.
+- [x] Workspace-scoped dashboard favorites and launch handoffs.
 - [x] Fullscreen gaming mode.
 - [x] Controller-first dashboard navigation with focus, confirm, and cancel actions.
 - [x] Controller remapping profiles and live gamepad/HID inspector.

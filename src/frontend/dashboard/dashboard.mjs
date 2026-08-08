@@ -11,11 +11,15 @@ import { createLaunchHistoryStore } from '../launch/history.mjs';
 import { resolveDashboardSection } from './routes.mjs';
 import { resolveResumeEntry, resolveResumePresentation } from './resume.mjs';
 import { createReadinessStatus } from '../readiness/status.mjs';
+import { createWorkspaceStore } from '../workspaces/workspaces.mjs';
+import { createFavoritesStore } from './library-state.mjs';
 
-const FAVORITES_KEY = 'spartan-gaming.favorites.v1';
 const launchHistory = createLaunchHistoryStore();
+const workspaceStore = createWorkspaceStore();
+let activeWorkspace = workspaceStore.active;
+let favoritesStore = createFavoritesStore({workspaceId: activeWorkspace.id});
 const requestedFilter = new URLSearchParams(globalThis.location?.search || '').get('filter');
-const state = { catalog: [], adapters: null, compatibility: null, report: null, filter: ['all', 'cloud', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(loadFavorites()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, profile])) };
+const state = { catalog: [], adapters: null, compatibility: null, report: null, filter: ['all', 'cloud', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(favoritesStore.list()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), providerProfiles: Object.fromEntries(createProviderProfileStore().list().map(profile => [profile.providerId, profile])) };
 const cards = document.querySelector('[data-cards]');
 const toast = document.querySelector('[data-toast]');
 const sessionStatus = document.querySelector('[data-session-status]');
@@ -25,9 +29,10 @@ const sessionManager = createSessionManager({idFactory: () => `ses-${crypto.rand
 let sessionStatusId = 'idle';
 let toastTimer;
 const controllerNavigator = createControllerNavigator({root: document});
+document.querySelector('.topbar')?.insertAdjacentHTML('beforeend', '<label class="workspace-picker" style="display:flex;align-items:center;gap:7px;color:#8d9aa7;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase"><span>Workspace</span><select data-workspace-select aria-label="Active workspace" style="min-width:118px;padding:8px 9px;border:1px solid #2a3540;border-radius:7px;background:#171e26;color:#e7edf3;font-size:11px;letter-spacing:0;text-transform:none"></select></label>');
 
-function loadFavorites() { try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; } }
-function saveFavorites() { localStorage.setItem(FAVORITES_KEY, JSON.stringify([...state.favorites])); }
+function renderWorkspaceControl() { const control = document.querySelector('[data-workspace-select]'); if (!control) return; control.innerHTML = workspaceStore.list().map(workspace => `<option value="${escapeHtml(workspace.id)}" ${workspace.id === activeWorkspace.id ? 'selected' : ''}>${escapeHtml(workspace.name)}</option>`).join(''); control.title = `${activeWorkspace.name} workspace`; }
+function saveFavorites() { favoritesStore.set([...state.favorites]); }
 function showToast(message) { toast.textContent = message; toast.classList.add('is-visible'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 2600); }
 function updateReadinessStatus() { const status = createReadinessStatus({catalogLoaded: state.catalog.length > 0, compatibility: state.compatibility, capabilityReport: state.report, online: globalThis.navigator?.onLine !== false, activeSession: sessionStatusId}); sessionStatus.textContent = status.label; statusPill.dataset.status = status.id; statusPill.title = status.detail; }
 function setSessionStatus(status) { sessionStatusId = status; updateReadinessStatus(); }
@@ -50,7 +55,7 @@ function launchEntry(entry, plan) {
   state.recent.add(entry.id);
   state.lastLaunch = launchHistory.record({backendId: entry.id, backendType: entry.backendType, name: entry.name, mode: plan.mode, action: plan.action, at: new Date().toISOString()});
   renderResume();
-  saveLaunchIntent(sessionStorage, createLaunchIntent({entry, plan, returnTo: './index.html'}));
+  saveLaunchIntent(sessionStorage, createLaunchIntent({entry, plan, profileId: activeWorkspace.id, returnTo: './index.html'}));
   if (plan.readiness?.nextAction === 'run-diagnostics') { window.location.assign('../diagnostics/index.html'); return; }
   if (plan.readiness?.nextAction === 'choose-runtime' || plan.action === 'choose-runtime' || plan.action === 'configure-native-adapter') { window.location.assign('../emulation/index.html'); return; }
   if (plan.action === 'configure-host') { window.location.assign('../host/index.html'); return; }
@@ -73,6 +78,7 @@ function visibleEntries() {
   });
 }
 function render() {
+  renderWorkspaceControl();
   const entries = visibleEntries();
   document.querySelector('[data-result-count]').textContent = `${entries.length} connection${entries.length === 1 ? '' : 's'}`;
   cards.innerHTML = entries.length ? entries.map(entry => {
@@ -96,11 +102,12 @@ async function loadCatalog() {
   } catch (error) { cards.innerHTML = '<div class="empty">The library could not load. Check the catalog files and try again.</div>'; console.error(error); }
 }
 document.querySelector('[data-search]').addEventListener('input', event => { state.search = event.target.value; render(); });
+document.querySelector('[data-workspace-select]')?.addEventListener('change', event => { activeWorkspace = workspaceStore.setActive(event.target.value); favoritesStore = createFavoritesStore({workspaceId: activeWorkspace.id}); state.favorites = new Set(favoritesStore.list()); render(); showToast(`Using ${activeWorkspace.name} workspace`); });
 document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => { state.filter = button.dataset.filter; document.querySelectorAll('[data-filter]').forEach(item => item.classList.toggle('is-active', item === button)); render(); }));
 document.querySelectorAll('[data-filter]').forEach(button => button.classList.toggle('is-active', button.dataset.filter === state.filter));
 document.addEventListener('click', event => {
   const favoriteButton = event.target.closest('[data-favorite]');
-  if (favoriteButton) { const id = favoriteButton.dataset.favorite; state.favorites.has(id) ? state.favorites.delete(id) : state.favorites.add(id); saveFavorites(); render(); showToast(state.favorites.has(id) ? 'Added to favorites' : 'Removed from favorites'); return; }
+  if (favoriteButton) { const id = favoriteButton.dataset.favorite; const next = favoritesStore.toggle(id); state.favorites = new Set(next); render(); showToast(state.favorites.has(id) ? `Added to ${activeWorkspace.name} favorites` : `Removed from ${activeWorkspace.name} favorites`); return; }
   const launchButton = event.target.closest('[data-launch]');
   if (launchButton) { const entry = state.catalog.find(item => item.id === launchButton.dataset.launch); if (!entry) return; const plan = state.adapters?.get(entry.id)?.resolve(); if (!plan || plan.status === 'unsupported') { showToast(`${entry.name}: no supported integration mode is available.`); return; } launchEntry(entry, plan); }
 });
