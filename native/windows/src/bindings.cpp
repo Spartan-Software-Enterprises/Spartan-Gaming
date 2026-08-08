@@ -13,6 +13,11 @@ napi_value fail(napi_env env, const char* message) {
   return nullptr;
 }
 
+napi_value unsupported(napi_env env, const char* message) {
+  napi_throw_error(env, "ERR_UNSUPPORTED_INPUT", message);
+  return nullptr;
+}
+
 bool property(napi_env env, napi_value object, const char* name, napi_value* value) {
   bool has = false;
   if (napi_has_named_property(env, object, name, &has) != napi_ok || !has) return false;
@@ -177,7 +182,7 @@ napi_value execute(napi_env env, napi_callback_info info) {
   input.type = INPUT_KEYBOARD;
   if (kind == "key") {
     const WORD code = key_code(string_property(env, argv[0], "control"));
-    if (!code) return fail(env, "unsupported Windows SendInput key");
+    if (!code) return unsupported(env, "unsupported Windows SendInput key");
     input.ki.wVk = code;
     input.ki.dwFlags = bool_property(env, argv[0], "pressed", false) ? 0 : KEYEVENTF_KEYUP;
   } else if (kind == "pointer") {
@@ -193,9 +198,9 @@ napi_value execute(napi_env env, napi_callback_info info) {
       else return fail(env, "empty Windows mouse wheel event");
       input.mi.dx = 0; input.mi.dy = 0;
     } else input.mi.dwFlags = mouse_button_flags(string_property(env, argv[0], "control"), action);
-    if (!input.mi.dwFlags) return fail(env, "unsupported Windows mouse button event");
+    if (!input.mi.dwFlags) return unsupported(env, "unsupported Windows mouse button event");
   } else {
-    return fail(env, "Windows native input supports keyboard, pointer, and XInput rumble events only");
+    return unsupported(env, "Windows native input supports keyboard, pointer, and XInput rumble events only");
   }
   if (SendInput(1, &input, sizeof(INPUT)) != 1) return fail(env, "Windows SendInput failed; grant remote-input permission");
   napi_value result; napi_get_boolean(env, true, &result); return result;

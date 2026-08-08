@@ -20,11 +20,19 @@ function required(value, name) {
   return value.trim();
 }
 
+function unsupported(message) {
+  const error = new Error(message);
+  error.code = 'ERR_UNSUPPORTED_INPUT';
+  return error;
+}
+
 function keyName(control) {
   const value = required(control, 'input.control');
   if (/^Key[A-Z]$/.test(value)) return value.slice(3).toLowerCase();
   if (/^Digit[0-9]$/.test(value)) return value.slice(5);
-  return {Space: 'space', Enter: 'Return', Escape: 'Escape', ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left', ArrowRight: 'Right', Tab: 'Tab', Backspace: 'BackSpace', Comma: 'comma', Period: 'period', Semicolon: 'semicolon', Quote: 'apostrophe', Backquote: 'grave', Slash: 'slash', Backslash: 'backslash', Minus: 'minus', Equal: 'equal', BracketLeft: 'bracketleft', BracketRight: 'bracketright', ControlLeft: 'Control_L', ControlRight: 'Control_R', ShiftLeft: 'Shift_L', ShiftRight: 'Shift_R', AltLeft: 'Alt_L', AltRight: 'Alt_R', MetaLeft: 'Super_L', MetaRight: 'Super_R', CapsLock: 'Caps_Lock', Home: 'Home', End: 'End', PageUp: 'Page_Up', PageDown: 'Page_Down', Insert: 'Insert', Delete: 'Delete', F1: 'F1', F2: 'F2', F3: 'F3', F4: 'F4', F5: 'F5', F6: 'F6', F7: 'F7', F8: 'F8', F9: 'F9', F10: 'F10', F11: 'F11', F12: 'F12', F13: 'F13', F14: 'F14', F15: 'F15', F16: 'F16', F17: 'F17', F18: 'F18', F19: 'F19', F20: 'F20', F21: 'F21', F22: 'F22', F23: 'F23', F24: 'F24', NumLock: 'Num_Lock', PrintScreen: 'Print', ScrollLock: 'Scroll_Lock', Pause: 'Pause', ContextMenu: 'Menu', Numpad0: 'KP_0', Numpad1: 'KP_1', Numpad2: 'KP_2', Numpad3: 'KP_3', Numpad4: 'KP_4', Numpad5: 'KP_5', Numpad6: 'KP_6', Numpad7: 'KP_7', Numpad8: 'KP_8', Numpad9: 'KP_9', NumpadDecimal: 'KP_Decimal', NumpadAdd: 'KP_Add', NumpadSubtract: 'KP_Subtract', NumpadMultiply: 'KP_Multiply', NumpadDivide: 'KP_Divide', NumpadEnter: 'KP_Enter'}[value] || value;
+  const keysym = {Space: 'space', Enter: 'Return', Escape: 'Escape', ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left', ArrowRight: 'Right', Tab: 'Tab', Backspace: 'BackSpace', Comma: 'comma', Period: 'period', Semicolon: 'semicolon', Quote: 'apostrophe', Backquote: 'grave', Slash: 'slash', Backslash: 'backslash', Minus: 'minus', Equal: 'equal', BracketLeft: 'bracketleft', BracketRight: 'bracketright', ControlLeft: 'Control_L', ControlRight: 'Control_R', ShiftLeft: 'Shift_L', ShiftRight: 'Shift_R', AltLeft: 'Alt_L', AltRight: 'Alt_R', MetaLeft: 'Super_L', MetaRight: 'Super_R', CapsLock: 'Caps_Lock', Home: 'Home', End: 'End', PageUp: 'Page_Up', PageDown: 'Page_Down', Insert: 'Insert', Delete: 'Delete', F1: 'F1', F2: 'F2', F3: 'F3', F4: 'F4', F5: 'F5', F6: 'F6', F7: 'F7', F8: 'F8', F9: 'F9', F10: 'F10', F11: 'F11', F12: 'F12', F13: 'F13', F14: 'F14', F15: 'F15', F16: 'F16', F17: 'F17', F18: 'F18', F19: 'F19', F20: 'F20', F21: 'F21', F22: 'F22', F23: 'F23', F24: 'F24', NumLock: 'Num_Lock', PrintScreen: 'Print', ScrollLock: 'Scroll_Lock', Pause: 'Pause', ContextMenu: 'Menu', Numpad0: 'KP_0', Numpad1: 'KP_1', Numpad2: 'KP_2', Numpad3: 'KP_3', Numpad4: 'KP_4', Numpad5: 'KP_5', Numpad6: 'KP_6', Numpad7: 'KP_7', Numpad8: 'KP_8', Numpad9: 'KP_9', NumpadDecimal: 'KP_Decimal', NumpadAdd: 'KP_Add', NumpadSubtract: 'KP_Subtract', NumpadMultiply: 'KP_Multiply', NumpadDivide: 'KP_Divide', NumpadEnter: 'KP_Enter'}[value];
+  if (!keysym) throw unsupported(`Linux X11 reference does not support key ${value}`);
+  return keysym;
 }
 
 function inputCommand(operation) {
@@ -38,7 +46,7 @@ function inputCommand(operation) {
       return {args: ['click', wheel]};
     }
     if (operation.action === 'pointer:down' || operation.action === 'pointer:up' || operation.action === 'pointer:cancel') {
-      if (!button) throw new Error('Linux reference input adapter does not implement this mouse button');
+      if (!button) throw unsupported(`Linux X11 reference does not support mouse button ${operation.control}`);
       return {args: [operation.action === 'pointer:down' ? 'mousedown' : 'mouseup', button]};
     }
     if (!dx && !dy) return null;
@@ -48,7 +56,7 @@ function inputCommand(operation) {
     const action = operation.pressed === false || operation.action === 'release' ? 'keyup' : 'keydown';
     return {args: [action, keyName(operation.control)]};
   }
-  throw new Error(`Linux reference input adapter does not implement ${operation.kind} events`);
+  throw unsupported(`Linux X11 reference does not support ${operation.kind} input`);
 }
 
 function processController({plan, spawnImpl = spawn, processFactory = createManagedProcess} = {}) {

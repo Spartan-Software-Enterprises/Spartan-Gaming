@@ -16,6 +16,11 @@ napi_value fail(napi_env env, const char* message) {
   return nullptr;
 }
 
+napi_value unsupported(napi_env env, const char* message) {
+  napi_throw_error(env, "ERR_UNSUPPORTED_INPUT", message);
+  return nullptr;
+}
+
 bool property(napi_env env, napi_value object, const char* name, napi_value* value) {
   bool has = false;
   if (napi_has_named_property(env, object, name, &has) != napi_ok || !has) return false;
@@ -114,7 +119,7 @@ napi_value execute(napi_env env, napi_callback_info info) {
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, static_cast<int64_t>((delay + duration + 0.1) * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{ [player stopAtTime:0 error:nil]; (void)engine; });
   } else if (kind == "key") {
     const CGKeyCode code = key_code(string_property(env, argv[0], "control"));
-    if (code == UINT16_MAX) return fail(env, "unsupported macOS CGEvent key");
+    if (code == UINT16_MAX) return unsupported(env, "unsupported macOS CGEvent key");
     CGEventRef event = CGEventCreateKeyboardEvent(nullptr, code, bool_property(env, argv[0], "pressed", false));
     if (!event) return fail(env, "macOS could not create keyboard event; grant Accessibility permission");
     CGEventPost(kCGHIDEventTap, event); CFRelease(event);
@@ -137,7 +142,7 @@ napi_value execute(napi_env env, napi_callback_info info) {
     CGEventType event_type = kCGEventMouseMoved;
     if (action == "pointer:down") event_type = kCGEventLeftMouseDown;
     else if (action == "pointer:up" || action == "pointer:cancel") event_type = kCGEventLeftMouseUp;
-    if ((action == "pointer:down" || action == "pointer:up" || action == "pointer:cancel") && button == UINT8_MAX) return fail(env, "unsupported macOS mouse button event");
+    if ((action == "pointer:down" || action == "pointer:up" || action == "pointer:cancel") && button == UINT8_MAX) return unsupported(env, "unsupported macOS mouse button event");
     if (event_type == kCGEventLeftMouseDown || event_type == kCGEventLeftMouseUp) {
       if (button == kCGMouseButtonCenter) event_type = event_type == kCGEventLeftMouseDown ? kCGEventOtherMouseDown : kCGEventOtherMouseUp;
       else if (button == kCGMouseButtonRight) event_type = event_type == kCGEventLeftMouseDown ? kCGEventRightMouseDown : kCGEventRightMouseUp;
@@ -146,7 +151,7 @@ napi_value execute(napi_env env, napi_callback_info info) {
     if (!event) return fail(env, "macOS could not create pointer event; grant Accessibility permission");
     CGEventPost(kCGHIDEventTap, event); CFRelease(event);
   } else {
-    return fail(env, "macOS native input supports keyboard, pointer, and GameController haptics events only");
+    return unsupported(env, "macOS native input supports keyboard, pointer, and GameController haptics events only");
   }
   napi_value result; napi_get_boolean(env, true, &result); return result;
 }

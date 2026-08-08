@@ -177,8 +177,12 @@ records the latest plan in health output rather than injecting OS input.
 `createNativeInputExecutor` is the next executable boundary. It accepts only a
 platform-matched adapter with an `execute(operation)` method, reuses the
 permissioned normalized plans, applies a bounded event rate, and exposes
-explicit close/failure states. OS-specific adapters remain separate packages;
-the core never shells out or interprets arbitrary executable arguments.
+explicit close/failure states. A rejected event that the adapter marks as
+`ERR_UNSUPPORTED_INPUT` is dropped with a flagged plan so a single unmapped
+key code cannot kill the session; any other adapter error still transitions
+the executor to a permanent failed state. OS-specific adapters remain separate
+packages; the core never shells out or interprets arbitrary executable
+arguments.
 
 `host/game-launcher.mjs` is the matching user-owned emulation launch boundary.
 It turns a trusted native runtime profile and an explicitly selected local game

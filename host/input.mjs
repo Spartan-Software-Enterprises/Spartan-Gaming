@@ -73,7 +73,10 @@ export function createNativeInputExecutor({platform, adapter, permissions = {}, 
       checkRate();
       state = 'active';
       try { await adapter.execute(plan.operation); return plan; }
-      catch (error) { state = 'failed'; throw error; }
+      catch (error) {
+        if (error && error.code === 'ERR_UNSUPPORTED_INPUT') return Object.freeze({...plan, unsupported: true, reason: error.message});
+        state = 'failed'; throw error;
+      }
     },
     close() { if (state === 'closed') return; state = 'closed'; adapter.close?.(); },
   };

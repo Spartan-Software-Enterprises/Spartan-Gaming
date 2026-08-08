@@ -42,3 +42,10 @@ test('macOS native input contract maps numpad and extended function browser code
   const source = await (await import('node:fs/promises')).readFile(new URL('./src/bindings.mm', import.meta.url), 'utf8');
   for (const code of ['Numpad0', 'Numpad9', 'NumpadDecimal', 'NumpadAdd', 'NumpadSubtract', 'NumpadMultiply', 'NumpadDivide', 'NumpadEnter', 'NumLock', 'F13', 'F20']) assert.match(source, new RegExp(`"${code}"`));
 });
+
+test('macOS native input contract marks unsupported operations as soft errors', async () => {
+  const source = await (await import('node:fs/promises')).readFile(new URL('./src/bindings.mm', import.meta.url), 'utf8');
+  assert.match(source, /napi_throw_error\(env, "ERR_UNSUPPORTED_INPUT", message\)/);
+  assert.match(source, /unsupported\(env, "unsupported macOS CGEvent key"\)/);
+  assert.match(source, /unsupported\(env, "unsupported macOS mouse button event"\)/);
+});

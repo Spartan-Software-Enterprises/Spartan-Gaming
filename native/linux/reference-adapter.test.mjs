@@ -46,7 +46,9 @@ test('Linux reference input maps only normalized keyboard and pointer operations
   assert.equal(keyName('PrintScreen'), 'Print');
   assert.equal(keyName('ScrollLock'), 'Scroll_Lock');
   assert.equal(keyName('ContextMenu'), 'Menu');
-  assert.throws(() => inputCommand({kind: 'button', control: 'a'}), /does not implement/);
+  assert.throws(() => keyName('IntlRo'), error => error.code === 'ERR_UNSUPPORTED_INPUT' && /IntlRo/.test(error.message));
+  assert.throws(() => inputCommand({kind: 'button', control: 'a'}), error => error.code === 'ERR_UNSUPPORTED_INPUT');
+  assert.throws(() => inputCommand({kind: 'pointer', action: 'pointer:down', control: 'button-9'}), error => error.code === 'ERR_UNSUPPORTED_INPUT');
 });
 
 test('Linux reference media bindings require explicit permission before spawning FFmpeg', async () => {
