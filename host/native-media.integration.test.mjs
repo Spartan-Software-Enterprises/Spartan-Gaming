@@ -8,7 +8,7 @@ function nodePlan(script, output = 'stdout') { return {process: createProcessLau
 test('native media pipeline forwards capture bytes into an encoder output stream', async () => {
   const capture = nodePlan("process.stdout.write('encoded-input'); setTimeout(() => {}, 1000)");
   const encoder = nodePlan("process.stdin.on('data', chunk => process.stdout.write(chunk.toString().toUpperCase())); process.stdin.on('end', () => process.exit(0))");
-  const pipeline = createNativeMediaPipeline({capturePlan: capture, encoderPlan: encoder}); const chunks = []; await pipeline.start();
+  const pipeline = createNativeMediaPipeline({capturePlan: capture, encoderPlan: encoder}); const chunks = []; assert.equal(pipeline.audioOutput, pipeline.videoOutput); await pipeline.start();
   await new Promise((resolve, reject) => { const timer = setTimeout(() => reject(new Error('encoded stream timed out')), 3000); pipeline.videoOutput.on('data', chunk => { chunks.push(chunk); clearTimeout(timer); resolve(); }); });
   assert.equal(Buffer.concat(chunks).toString(), 'ENCODED-INPUT'); assert.equal(pipeline.state, 'running'); assert.equal(pipeline.encoder.state, 'running'); await pipeline.stop(); assert.equal(pipeline.state, 'stopped');
 });

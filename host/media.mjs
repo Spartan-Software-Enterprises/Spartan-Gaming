@@ -6,6 +6,7 @@ const SOURCE_TYPES = new Set(['desktop', 'x11', 'pipewire', 'avfoundation']);
 const CODECS = Object.freeze({h264: 'libx264', vp9: 'libvpx-vp9', av1: 'libaom-av1'});
 
 const SOFTWARE_ENCODERS = Object.freeze({h264: 'libx264', vp9: 'libvpx-vp9', av1: 'libaom-av1'});
+const ELEMENTARY_FORMATS = Object.freeze({h264: 'h264', vp9: 'ivf', av1: 'obu'});
 const HARDWARE_ENCODERS = Object.freeze({
   linux: Object.freeze({h264: ['h264_vaapi', 'h264_nvenc', 'h264_qsv', 'h264_v4l2m2m'], vp9: ['vp9_vaapi', 'vp9_qsv'], av1: ['av1_vaapi', 'av1_nvenc', 'av1_qsv']}),
   win32: Object.freeze({h264: ['h264_nvenc', 'h264_qsv', 'h264_amf', 'h264_mf'], vp9: ['vp9_qsv', 'vp9_nvenc'], av1: ['av1_nvenc', 'av1_qsv', 'av1_amf']}),
@@ -88,7 +89,7 @@ export function selectHardwareEncoder({codec = 'h264', platform = null, probe = 
   return Object.freeze({encoder, platform, device: devicePath, available: Object.freeze(available)});
 }
 
-export function createEncoderPlan({codec = 'h264', width = 1920, height = 1080, framerate = 60, bitrateKbps = 10000, preferHardware = true, platform = null, probe = null, device = null} = {}) {
+export function createEncoderPlan({codec = 'h264', width = 1920, height = 1080, framerate = 60, bitrateKbps = 10000, preferHardware = true, platform = null, probe = null, device = null, outputFormat = ELEMENTARY_FORMATS[codec]} = {}) {
   if (!CODECS[codec]) throw new TypeError(`unsupported encoder codec: ${codec}`);
   const fps = positiveInteger(framerate, 'framerate', 60, 240); const boundedBitrate = positiveInteger(bitrateKbps, 'bitrateKbps', 10000, 1000000);
   const selected = preferHardware ? selectHardwareEncoder({codec, platform, probe, device}) : null;
@@ -97,7 +98,7 @@ export function createEncoderPlan({codec = 'h264', width = 1920, height = 1080, 
   if (selected?.device) args.push('-vaapi_device', selected.device);
   args.push('-c:v', encoder, '-b:v', `${boundedBitrate}k`, '-maxrate', `${boundedBitrate}k`, '-bufsize', `${boundedBitrate * 2}k`, '-r', String(fps), '-g', String(fps * 2));
   if (selected?.encoder.includes('vaapi')) args.push('-vf', 'format=nv12,hwupload');
-  args.push('-f', 'matroska', 'pipe:1');
+  args.push('-f', outputFormat, 'pipe:1');
   const hardware = Boolean(selected);
-  return Object.freeze({kind: 'encoder', codec, width: positiveInteger(width, 'width', 1920, 7680), height: positiveInteger(height, 'height', 1080, 4320), framerate: fps, bitrateKbps: boundedBitrate, preference: hardware ? 'hardware' : preferHardware ? 'hardware-when-platform-adapter-provides-it' : 'software', hardware, encoder, device: selected?.device || null, availableEncoders: selected?.available || Object.freeze([]), process: createProcessLaunchPlan({executable: 'ffmpeg', args}), requires: Object.freeze(hardware ? ['hardware-encoder-device', 'webrtc-publisher'] : preferHardware ? ['platform-encoder-selection', 'webrtc-publisher'] : ['webrtc-publisher'])});
+  return Object.freeze({kind: 'encoder', codec, outputFormat, width: positiveInteger(width, 'width', 1920, 7680), height: positiveInteger(height, 'height', 1080, 4320), framerate: fps, bitrateKbps: boundedBitrate, preference: hardware ? 'hardware' : preferHardware ? 'hardware-when-platform-adapter-provides-it' : 'software', hardware, encoder, device: selected?.device || null, availableEncoders: selected?.available || Object.freeze([]), process: createProcessLaunchPlan({executable: 'ffmpeg', args}), requires: Object.freeze(hardware ? ['hardware-encoder-device', 'webrtc-publisher'] : preferHardware ? ['platform-encoder-selection', 'webrtc-publisher'] : ['webrtc-publisher'])});
 }

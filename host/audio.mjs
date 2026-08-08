@@ -1,4 +1,5 @@
 import {createProcessLaunchPlan} from './adapters.mjs';
+import {createOggOpusPacketExtractor} from './ogg-opus.mjs';
 
 const PLATFORMS = new Set(['win32', 'darwin', 'linux']);
 const BACKENDS = new Set(['wasapi', 'coreaudio', 'pipewire', 'pulse']);
@@ -102,7 +103,9 @@ export function createAudioEncoderPlan({codec = 'opus', bitrateKbps = 128, chann
   if (!CODECS.has(codec)) throw new TypeError(`unsupported audio codec: ${codec}`);
   const boundedChannels = bounded(channels, 2, 1, 8); const boundedRate = bounded(sampleRate, 48000, 8000, 192000); const boundedBitrate = bounded(bitrateKbps, 128, 16, 512);
   const encoder = codec === 'opus' ? 'libopus' : 'aac';
-  return Object.freeze({kind: 'audio-encoder', codec, channels: boundedChannels, sampleRate: boundedRate, bitrateKbps: boundedBitrate, process: createProcessLaunchPlan({executable: 'ffmpeg', args: ['-hide_banner', '-loglevel', 'warning', '-f', 'f32le', '-ar', String(boundedRate), '-ac', String(boundedChannels), '-i', 'pipe:0', '-c:a', encoder, '-b:a', `${boundedBitrate}k`, '-f', codec === 'opus' ? 'opus' : 'adts', 'pipe:1']}), requires: Object.freeze(['native-audio-capture', 'webrtc-audio-publisher'])});
+  const container = codec === 'opus' ? 'ogg-opus' : 'adts';
+  const outputArgs = codec === 'opus' ? ['-frame_duration', '20', '-f', 'opus', '-page_duration', '20000', 'pipe:1'] : ['-f', 'adts', 'pipe:1'];
+  return Object.freeze({kind: 'audio-encoder', codec, channels: boundedChannels, sampleRate: boundedRate, bitrateKbps: boundedBitrate, process: createProcessLaunchPlan({executable: 'ffmpeg', args: ['-hide_banner', '-loglevel', 'warning', '-f', 'f32le', '-ar', String(boundedRate), '-ac', String(boundedChannels), '-i', 'pipe:0', '-c:a', encoder, '-b:a', `${boundedBitrate}k`, ...outputArgs]}), output: Object.freeze({container, target: 'stdout'}), requires: Object.freeze(['native-audio-capture', 'webrtc-audio-publisher'])});
 }
 
 export function normalizeAudioCapabilities(audio = {}) {
@@ -141,13 +144,15 @@ export function createAudioPublisher({pipeline, sink, codec = 'opus', permission
 }
 
 /** Bind encoded audio chunks to an injected RTP/WebRTC audio implementation. */
-export function createRtpAudioPublisher({pipeline, packetizer, transport, codec = 'opus', permissionGranted = false, maxChunkBytes} = {}) {
+export function createRtpAudioPublisher({pipeline, packetizer, transport, codec = 'opus', container = 'raw', permissionGranted = false, maxChunkBytes} = {}) {
   if (!packetizer || typeof packetizer.push !== 'function') throw new TypeError('audio packetizer must implement push(chunk, metadata)');
   if (!transport || typeof transport.send !== 'function') throw new TypeError('audio transport must implement send(packet)');
+  if (!['raw', 'ogg-opus'].includes(container) || (container === 'ogg-opus' && codec !== 'opus')) throw new TypeError('unsupported audio RTP container');
   let packetsSent = 0; let timestamp = 0;
+  const extractor = container === 'ogg-opus' ? createOggOpusPacketExtractor({maxBufferedBytes: maxChunkBytes}) : null;
   const publisher = createAudioPublisher({pipeline, codec, permissionGranted, maxChunkBytes, sink: {
     open: metadata => transport.open?.(metadata),
-    write: chunk => { const packets = packetizer.push(chunk, {codec, timestamp}); timestamp = (timestamp + 960) >>> 0; if (!packets || typeof packets[Symbol.iterator] !== 'function') throw new TypeError('audio packetizer.push must return an iterable of RTP packets'); for (const packet of packets) { transport.send(packet); packetsSent += 1; } },
+    write: chunk => { for (const frame of extractor ? extractor.push(chunk) : [chunk]) { const packets = packetizer.push(frame, {codec, timestamp}); timestamp = (timestamp + 960) >>> 0; if (!packets || typeof packets[Symbol.iterator] !== 'function') throw new TypeError('audio packetizer.push must return an iterable of RTP packets'); for (const packet of packets) { transport.send(packet); packetsSent += 1; } } },
     close: () => transport.close?.(),
     error: error => transport.error?.(error),
   }});

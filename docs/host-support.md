@@ -215,8 +215,16 @@ through the guarded executor. If packetizers are not supplied, the factory uses
 the dependency-free packetizers in `host/rtp-packetizer.mjs`: H.264 supports
 Annex-B and AVCC with RFC 6184 single-NAL/FU-A framing, VP9 and AV1 use their
 minimal payload descriptors, and Opus preserves one encoded frame per RTP
-packet. A production encoder must still emit the selected codec's elementary
-stream; the packetizer does not transcode media.
+packet. `createEncoderPlan` now emits the matching elementary stream by default
+(`-f h264` Annex-B for H.264, `-f obu` for AV1, and `-f ivf` for VP9), so encoded
+bytes reach the packetizer without a Matroska container. IVF is a VP9 framing
+format rather than an elementary stream; the packetizer extracts its VP9 frames
+before applying RTP payload framing. The `outputFormat` option can restore a container when a downstream
+consumer requires it. `host/remote-session.integration.test.mjs` verifies the
+full loop over a real in-process Werift peer: a client offer is negotiated
+through `createNativeWeriftHost`, ICE/DTLS connect over local host candidates,
+and both synthetic H.264/Opus chunks and a real FFmpeg `testsrc`→libx264
+pipeline are packetized, encrypted, and received as RTP at the client.
 
 `host/launch-request.mjs` validates the corresponding metadata-only native
 emulator handoff at the host boundary. A native host may accept it only when
@@ -236,8 +244,12 @@ AAC publisher plan. Audio remains `unconfigured` in the reference host until
 a native audio capture and WebRTC audio publisher are installed.
 
 It also exposes the bounded raw-f32le-to-Opus/AAC encoder plan used by the
-executable host composition; the actual capture device and RTP implementation
-remain injected platform adapters.
+executable host composition. FFmpeg's Opus muxer emits Ogg Opus, so its declared
+`ogg-opus` output is incrementally demuxed into complete Opus packets before RTP
+framing. Opus frames and Ogg pages are both configured for 20 ms to avoid the
+muxer's one-second default buffering; raw injected audio remains an explicit
+separate container mode. The
+actual capture device and RTP implementation remain injected platform adapters.
 
 The same module now provides `createAudioPublisher` and
 `createRtpAudioPublisher`. These accept an injected encoded audio pipeline,

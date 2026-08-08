@@ -68,11 +68,12 @@ export function createEncodedMediaPublisher({pipeline, sink, codec = 'h264', max
  * `transport.send` owns SRTP/WebRTC delivery. Keeping both injected lets the
  * core stay dependency-free while making the media boundary executable.
  */
-export function createRtpMediaPublisher({pipeline, packetizer, transport, codec = 'h264', maxChunkBytes = DEFAULT_MAX_CHUNK_BYTES} = {}) {
+export function createRtpMediaPublisher({pipeline, packetizer, transport, codec = 'h264', framerate = 60, maxChunkBytes = DEFAULT_MAX_CHUNK_BYTES} = {}) {
   if (!packetizer || typeof packetizer.push !== 'function') throw new TypeError('packetizer must implement push(chunk, metadata)');
   if (!transport || typeof transport.send !== 'function') throw new TypeError('transport must implement send(packet)');
+  if (!Number.isFinite(framerate) || framerate <= 0 || framerate > 240) throw new RangeError('framerate must be between 1 and 240');
   let packetsSent = 0; let timestamp = 0;
-  const timestampStep = codec === 'opus' ? 960 : 1500;
+  const timestampStep = codec === 'opus' ? 960 : Math.round(90000 / framerate);
   const publisher = createEncodedMediaPublisher({pipeline, codec, maxChunkBytes, sink: {
     open: metadata => { transport.open?.(metadata); },
     write: chunk => {

@@ -17,7 +17,7 @@ export function createNativeMediaPipeline({capturePlan, encoderPlan, spawnImpl =
   const emitState = next => { state = next; bus.emit('state', next); };
   const forward = () => { const output = capture.streams.stdout; const input = encoder.streams.stdin; if (!output || !input) throw new Error('capture and encoder streams are unavailable'); output.pipe(input); unbind.push(() => output.unpipe(input)); };
   const pipeline = {
-    get state() { return state; }, get capture() { return capture; }, get encoder() { return encoder; }, get videoOutput() { return encoder.streams.stdout; }, on: bus.on,
+    get state() { return state; }, get capture() { return capture; }, get encoder() { return encoder; }, get videoOutput() { return encoder.streams.stdout; }, get audioOutput() { return encoder.streams.stdout; }, on: bus.on,
     async start() {
       if (state !== 'idle') throw new Error(`media pipeline cannot start from ${state}`); emitState('starting');
       try { await encoder.start(); await capture.start(); forward(); emitState('running'); bus.emit('started', {videoOutput: encoder.streams.stdout}); return this; }

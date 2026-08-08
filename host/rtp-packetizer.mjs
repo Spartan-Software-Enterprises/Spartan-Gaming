@@ -85,9 +85,28 @@ function packetizeH264(value, {maxPayload, make, timestamp}) {
   return output;
 }
 
+/** Extract frame payloads from an On2 IVF container (`ffmpeg -f ivf` output) when present. */
+function ivfFrames(value) {
+  if (value.length < 32 || value.toString('latin1', 0, 4) !== 'DKIF') return null;
+  const frames = [];
+  const rate = value.readUInt32LE(16);
+  const scale = value.readUInt32LE(20);
+  let offset = 32;
+  while (offset + 12 <= value.length) {
+    const size = value.readUInt32LE(offset);
+    const timestamp = value.readBigUInt64LE(offset + 4);
+    offset += 12;
+    if (!size || offset + size > value.length) break;
+    const rtpTimestamp = rate && scale ? Number((timestamp * BigInt(scale) * 90000n / BigInt(rate)) & 0xffffffffn) : Number(timestamp & 0xffffffffn);
+    frames.push(Object.freeze({payload: value.subarray(offset, offset + size), timestamp: rtpTimestamp})); offset += size;
+  }
+  return frames.length ? frames : null;
+}
+
 function packetizeDescriptor(value, {maxPayload, make, descriptor}) {
-  if (value.length <= maxPayload - 1) return [make(Buffer.concat([descriptor(true, true), value]), true)];
-  return fragment(value, maxPayload - descriptor.length, (part, first, last) => make(Buffer.concat([descriptor(first, last), part]), last));
+  const descriptorSize = descriptor(true, true).length;
+  if (value.length <= maxPayload - descriptorSize) return [make(Buffer.concat([descriptor(true, true), value]), true)];
+  return fragment(value, maxPayload - descriptorSize, (part, first, last) => make(Buffer.concat([descriptor(first, last), part]), last));
 }
 
 /**
@@ -102,21 +121,33 @@ function packetizeDescriptor(value, {maxPayload, make, descriptor}) {
 export function createRtpPacketizer({codec = 'h264', ssrc = 1, payloadType = 96, mtu = DEFAULT_MTU, RtpPacket, RtpHeader} = {}) {
   if (!CODECS.has(codec)) throw new TypeError(`unsupported RTP packetizer codec: ${codec}`);
   const maxPayload = boundedInteger(mtu, DEFAULT_MTU, 256, 65535, 'mtu') - 12;
-  const source = {sequence: 0, clockRate: CLOCK_RATES[codec]};
+  const source = {sequence: 0, clockRate: CLOCK_RATES[codec], av1SequenceStarted: false};
   const make = (payload, marker, timestamp) => packetFactory({RtpPacket, RtpHeader, payload, marker, payloadType, sequenceNumber: source.sequence++ & 0xffff, timestamp, ssrc});
   return Object.freeze({
     codec,
     clockRate: source.clockRate,
     get sequenceNumber() { return source.sequence & 0xffff; },
-    push(chunk, {timestamp = 0} = {}) {
+    push(chunk, {timestamp = 0, newCodedVideoSequence = false} = {}) {
       const value = bytes(chunk);
       const time = Number.isFinite(timestamp) ? timestamp : 0;
       if (!value.length) return [];
       if (codec === 'h264') return packetizeH264(value, {maxPayload, timestamp: time, make: (payload, marker) => make(payload, marker, time)});
-      if (codec === 'vp9') return packetizeDescriptor(value, {maxPayload, make: (payload, marker) => make(payload, marker, time), descriptor: (first, last) => Buffer.from([(first ? 0x02 : 0) | (last ? 0x01 : 0)])});
-      if (codec === 'av1') return packetizeDescriptor(value, {maxPayload, make: (payload, marker) => make(payload, marker, time), descriptor: (first, last) => Buffer.from([(first ? 0 : 0x80) | (last ? 0 : 0x40) | 0x18])});
-      if (value.length > maxPayload) throw new Error('Opus frame exceeds RTP packetizer payload limit');
-      return [make(value, true, time)];
+      if (codec === 'opus') {
+        if (value.length > maxPayload) throw new Error('Opus frame exceeds RTP packetizer payload limit');
+        return [make(value, true, time)];
+      }
+      const frames = codec === 'vp9' ? (ivfFrames(value) || [Object.freeze({payload: value, timestamp: time})]) : [Object.freeze({payload: value, timestamp: time})];
+      const output = [];
+      for (const frame of frames) {
+        if (!frame.payload.length) continue;
+        if (codec === 'vp9') output.push(...packetizeDescriptor(frame.payload, {maxPayload, make: (payload, marker) => make(payload, marker, frame.timestamp), descriptor: (first, last) => Buffer.from([(first ? 0x08 : 0) | (last ? 0x04 : 0)])}));
+        else {
+          const sequenceStart = !source.av1SequenceStarted || newCodedVideoSequence === true;
+          output.push(...packetizeDescriptor(frame.payload, {maxPayload, make: (payload, marker) => make(payload, marker, frame.timestamp), descriptor: (first, last) => Buffer.from([(first ? 0 : 0x80) | (last ? 0 : 0x40) | 0x10 | (sequenceStart && first ? 0x08 : 0)])}));
+          source.av1SequenceStarted = true;
+        }
+      }
+      return output;
     },
   });
 }

@@ -34,5 +34,6 @@ test('executable platform host publishes permissioned audio in the same lifecycl
   const plans = createPlatformRuntimePlans({platform: 'linux', environment: {WAYLAND_DISPLAY: 'wayland-0', XDG_RUNTIME_DIR: '/run/user/1000'}, includeAudio: true});
   const nativeAudioPipeline = pipeline(); const packets = [];
   const host = createExecutablePlatformHost({platform: 'linux', plans, pipeline: pipeline(), audioPipeline: nativeAudioPipeline, packetizer: {push: () => []}, transport: {send() {}}, audioPacketizer: {push: (chunk, metadata) => [{chunk, timestamp: metadata.timestamp}]}, audioTransport: {send: packet => packets.push(packet)}, permissions: {microphone: true}});
-  await host.session.start(); nativeAudioPipeline.audioOutput.emit(Buffer.from('audio')); await host.session.stop(); assert.equal(packets.length, 1); assert.equal(host.audioPublisher.publisher.state, 'stopped');
+  const oggPage = Buffer.alloc(28); oggPage.write('OggS'); oggPage[26] = 1; oggPage[27] = 5;
+  await host.session.start(); nativeAudioPipeline.audioOutput.emit(Buffer.concat([oggPage, Buffer.from('audio')])); await host.session.stop(); assert.equal(packets.length, 1); assert.equal(host.audioPublisher.publisher.state, 'stopped');
 });

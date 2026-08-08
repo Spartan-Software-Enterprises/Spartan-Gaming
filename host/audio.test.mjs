@@ -26,7 +26,7 @@ test('audio publisher plans bound codec bitrate and capabilities', () => {
   assert.equal(capabilities.channels, 8);
 });
 
-test('audio encoder plans are shell-free and match captured PCM parameters', () => { const plan = createAudioEncoderPlan({codec: 'opus', channels: 2, sampleRate: 48000}); assert.equal(plan.process.shell, false); assert.deepEqual(plan.process.args.slice(0, 13), ['-hide_banner', '-loglevel', 'warning', '-f', 'f32le', '-ar', '48000', '-ac', '2', '-i', 'pipe:0', '-c:a', 'libopus']); });
+test('audio encoder plans are shell-free and match captured PCM parameters', () => { const plan = createAudioEncoderPlan({codec: 'opus', channels: 2, sampleRate: 48000}); assert.equal(plan.process.shell, false); assert.equal(plan.output.container, 'ogg-opus'); assert.deepEqual(plan.process.args.slice(0, 13), ['-hide_banner', '-loglevel', 'warning', '-f', 'f32le', '-ar', '48000', '-ac', '2', '-i', 'pipe:0', '-c:a', 'libopus']); assert.deepEqual(plan.process.args.slice(-7), ['-frame_duration', '20', '-f', 'opus', '-page_duration', '20000', 'pipe:1']); });
 
 test('audio publisher forwards bounded encoded chunks and tears down cleanly', async () => {
   const output = {listeners: new Set(), on(type, handler) { if (type === 'data') this.listeners.add(handler); }, off(type, handler) { if (type === 'data') this.listeners.delete(handler); }, emit(value) { for (const handler of this.listeners) handler(value); }};
@@ -40,6 +40,15 @@ test('RTP audio publisher delegates packetization and transport delivery', async
   const pipeline = {audioOutput: output, async start() {}, async stop() {}}; const transport = {packets: [], send(packet) { this.packets.push(packet); }}; const packetizer = {push(chunk, metadata) { return [{chunk, timestamp: metadata.timestamp}]; }};
   const result = createRtpAudioPublisher({pipeline, packetizer, transport, permissionGranted: true}); await result.publisher.start(); output.emit(Buffer.from('voice')); output.emit(Buffer.from('voice-2')); await result.publisher.stop();
   assert.equal(result.packetsSent, 2); assert.deepEqual(transport.packets[0].chunk, Buffer.from('voice')); assert.equal(transport.packets[0].timestamp, 0); assert.equal(transport.packets[1].timestamp, 960);
+});
+
+test('RTP audio publisher extracts fragmented Opus packets from FFmpeg Ogg output', async () => {
+  const output = {listeners: new Set(), on(type, handler) { if (type === 'data') this.listeners.add(handler); }, off(type, handler) { if (type === 'data') this.listeners.delete(handler); }, emit(value) { for (const handler of this.listeners) handler(value); }};
+  const page = (packets, continued = false) => { const laces = packets.map(packet => packet.length); const header = Buffer.alloc(27 + laces.length); header.write('OggS'); header[5] = continued ? 1 : 0; header[26] = laces.length; Buffer.from(laces).copy(header, 27); return Buffer.concat([header, ...packets]); };
+  const ogg = page([Buffer.from('OpusHead\x01'), Buffer.from('OpusTags'), Buffer.from([0xf8, 0xff, 0xfe])]); const frames = [];
+  const result = createRtpAudioPublisher({pipeline: {audioOutput: output, async start() {}, async stop() {}}, packetizer: {push(frame, metadata) { frames.push({frame, timestamp: metadata.timestamp}); return [{frame}]; }}, transport: {send() {}}, permissionGranted: true, container: 'ogg-opus'});
+  await result.publisher.start(); output.emit(ogg.subarray(0, 19)); output.emit(ogg.subarray(19)); await result.publisher.stop();
+  assert.deepEqual(frames, [{frame: Buffer.from([0xf8, 0xff, 0xfe]), timestamp: 0}]);
 });
 
 test('audio publisher requires explicit capture permission', () => {
