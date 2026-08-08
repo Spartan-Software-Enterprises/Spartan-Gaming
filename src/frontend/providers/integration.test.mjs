@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createProviderIntegration, providerTroubleshooting} from './integration.mjs';
+import './details.test.mjs';
 
 const xbox = {id: 'xbox-cloud-gaming', name: 'Xbox Cloud Gaming', backendType: 'provider', integrationModes: ['browser-first', 'official-launch'], capabilities: ['gamepad', 'touch-controls'], requirements: ['xbox-account'], url: 'https://www.xbox.com/play'};
 const stream = {id: 'twitch', name: 'Twitch', backendType: 'provider', integrationModes: ['browser-first', 'official-api', 'official-embed'], capabilities: ['video', 'chat'], requirements: [], url: 'https://www.twitch.tv/'};

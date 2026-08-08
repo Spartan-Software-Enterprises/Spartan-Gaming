@@ -60,6 +60,8 @@ The shared resolver in `src/frontend/providers/integration.mjs` now turns catalo
 
 The dashboard applies the provider visibility and launch defaults from Settings → Providers at catalog load. Disabling **Show provider catalog** removes provider entries from the unified library while preserving emulators; enabling **Prefer official native apps** upgrades profiles that still use the default browser launch mode to the provider’s official launch mode when the catalog exposes one. Explicit per-provider launch choices remain authoritative.
 
+Each provider card now has a capability-aware **Details** surface before launch. It summarizes the selected mode, readiness reason, quality and region hints, controller profile, provider surfaces, capabilities, setup requirements, troubleshooting notes, blocking evidence, and the official destination. The details model is metadata-only and intentionally excludes credentials, tokens, cookies, and session endpoints.
+
 The provider manager’s **Check availability** action uses
 `src/frontend/providers/health.mjs` for a credential-free `HEAD` request. It
 strips query strings, omits cookies, requires HTTPS for remote targets, bounds

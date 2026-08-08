@@ -19,6 +19,7 @@ import { checkProviderCatalog } from '../providers/catalog-health.mjs';
 import { clearSessionRecoveryHandoff, readSessionRecoveryHandoff } from '../session/recovery-handoff.mjs';
 import { resolveStartupRoute } from '../startup/route.mjs';
 import { createActiveProfileStorage } from '../profiles/storage.mjs';
+import { createProviderDetailsModel } from '../providers/details.mjs';
 
 const profileStorage = createActiveProfileStorage();
 const launchHistory = createLaunchHistoryStore({storage: profileStorage});
@@ -42,6 +43,7 @@ const WATCH_KINDS = new Set(['live-streaming', 'social-streaming', 'self-hosted-
 const sessionManager = createSessionManager({idFactory: () => `ses-${crypto.randomUUID()}`});
 let sessionStatusId = 'idle';
 let toastTimer;
+let selectedProviderDetails = null;
 document.querySelector('.topbar')?.insertAdjacentHTML('beforeend', '<label class="workspace-picker" style="display:flex;align-items:center;gap:7px;color:#8d9aa7;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase"><span>Workspace</span><select data-workspace-select aria-label="Active workspace" style="min-width:118px;padding:8px 9px;border:1px solid #2a3540;border-radius:7px;background:#171e26;color:#e7edf3;font-size:11px;letter-spacing:0;text-transform:none"></select></label>');
 
 function renderWorkspaceControl() { const control = document.querySelector('[data-workspace-select]'); if (!control) return; control.innerHTML = workspaceStore.list().map(workspace => `<option value="${escapeHtml(workspace.id)}" ${workspace.id === activeWorkspace.id ? 'selected' : ''}>${escapeHtml(workspace.name)}</option>`).join(''); control.title = `${activeWorkspace.name} workspace`; }
@@ -67,6 +69,20 @@ function openProviderSurface(entry, plan) {
   if (typeof providerDialog.showModal === 'function') providerDialog.showModal(); else providerDialog.setAttribute('open', '');
 }
 function closeProviderSurface() { document.querySelector('[data-provider-frame]').src = 'about:blank'; if (typeof providerDialog.close === 'function' && providerDialog.open) providerDialog.close(); else providerDialog.removeAttribute('open'); }
+function openProviderDetails(entry, plan) {
+  const dialog = document.querySelector('[data-provider-details-dialog]');
+  const content = document.querySelector('[data-provider-details]');
+  if (!dialog || !content) return;
+  selectedProviderDetails = {entry, plan};
+  const model = createProviderDetailsModel(entry, plan);
+  document.querySelector('[data-provider-details-title]').textContent = model.name;
+  document.querySelector('[data-provider-details-subtitle]').textContent = `${model.kind} · Support ${model.supportLevel} · ${model.readinessStatus.replaceAll('-', ' ')}`;
+  content.innerHTML = `<div class="details-summary"><p>${escapeHtml(model.readinessReason)}</p><div class="details-facts"><span><strong>Mode</strong>${escapeHtml(model.mode || 'Unavailable')}</span><span><strong>Quality</strong>${escapeHtml(model.quality)}</span><span><strong>Region</strong>${escapeHtml(model.regionLabel)}</span><span><strong>Controller</strong>${escapeHtml(model.controllerProfile)}</span></div></div><div class="details-columns"><section><h3>Supported surfaces</h3><p>${escapeHtml(model.surfaces.join(' · ') || 'Official web experience')}</p><h3>Capabilities</h3><p>${escapeHtml(model.capabilities.join(' · ') || 'Provider-defined')}</p></section><section><h3>Setup requirements</h3><p>${escapeHtml(model.requirements.join(' · ') || 'None listed')}</p><h3>Readiness notes</h3><p>${escapeHtml([...model.troubleshooting, ...model.notes, ...(model.blocking.length ? [`Blocking: ${model.blocking.join(', ')}`] : [])].join(' ') || 'No additional notes.')}</p></section></div><p class="details-privacy">Authentication, subscriptions, provider permissions, and account sessions remain on the official service. Spartan Gaming stores no provider tokens in this flow.</p>`;
+  document.querySelector('[data-provider-details-external]').href = model.url;
+  document.querySelector('[data-provider-details-launch]').textContent = model.action === 'embed-url' ? 'Open official player' : 'Open official service';
+  if (typeof dialog.showModal === 'function') dialog.showModal(); else dialog.setAttribute('open', '');
+}
+function closeProviderDetails() { const dialog = document.querySelector('[data-provider-details-dialog]'); selectedProviderDetails = null; if (typeof dialog?.close === 'function' && dialog.open) dialog.close(); else dialog?.removeAttribute('open'); }
 function launchEntry(entry, plan) {
   if (state.recovery) { clearSessionRecoveryHandoff(sessionStorage); state.recovery = null; }
   state.recent.add(entry.id);
@@ -103,7 +119,7 @@ function render() {
     const tags = [...(state.recent.has(entry.id) ? ['Recent'] : []), ...(entry.systems || []).slice(0, 2), ...(entry.capabilities || []).slice(0, 1)];
     const summary = entry.description || (entry.requirements?.length ? entry.requirements.join(' · ') : entry.systems?.length ? entry.systems.join(' · ') : 'Ready to connect');
     const plan = state.adapters?.get(entry.id)?.resolve(); const readiness = {ready: 'Ready', 'configuration-required': 'Setup required', 'browser-capability-missing': 'Capability missing', 'native-adapter-required': 'Native adapter'}[plan?.readiness?.status] || 'Checking…'; const actionLabel = plan?.readiness?.nextAction === 'run-diagnostics' ? 'Run diagnostics' : plan?.readiness?.nextAction === 'choose-runtime' ? 'Choose runtime' : entry.backendType === 'provider' ? 'Open service' : 'Configure';
-    return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(entry.backendType === 'emulator' ? 'Emulation' : entry.kind)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="card-actions"><button class="launch" data-launch="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}${entry.backendType === 'provider' ? providerHealthLabel(entry) : ''}</span></div></article>`;
+    return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(entry.backendType === 'emulator' ? 'Emulation' : entry.kind)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="card-actions">${entry.backendType === 'provider' ? `<button class="details-button" data-details="${escapeHtml(entry.id)}">Details</button>` : ''}<button class="launch" data-launch="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}${entry.backendType === 'provider' ? providerHealthLabel(entry) : ''}</span></div></article>`;
   }).join('') : '<div class="empty">No connections match this view. Try another filter or search term.</div>';
 }
 async function loadCatalog() {
@@ -127,11 +143,16 @@ document.querySelectorAll('[data-filter]').forEach(button => button.classList.to
 document.addEventListener('click', event => {
   const favoriteButton = event.target.closest('[data-favorite]');
   if (favoriteButton) { const id = favoriteButton.dataset.favorite; const next = favoritesStore.toggle(id); state.favorites = new Set(next); render(); showToast(state.favorites.has(id) ? `Added to ${activeWorkspace.name} favorites` : `Removed from ${activeWorkspace.name} favorites`); return; }
+  const detailsButton = event.target.closest('[data-details]');
+  if (detailsButton) { const entry = state.catalog.find(item => item.id === detailsButton.dataset.details); const plan = entry && state.adapters?.get(entry.id)?.resolve(); if (entry && plan) openProviderDetails(entry, plan); return; }
   const launchButton = event.target.closest('[data-launch]');
   if (launchButton) { const entry = state.catalog.find(item => item.id === launchButton.dataset.launch); if (!entry) return; const plan = state.adapters?.get(entry.id)?.resolve(); if (!plan || plan.status === 'unsupported') { showToast(`${entry.name}: no supported integration mode is available.`); return; } launchEntry(entry, plan); }
 });
 document.querySelector('[data-provider-close]').addEventListener('click', closeProviderSurface);
 providerDialog.addEventListener('close', () => { document.querySelector('[data-provider-frame]').src = 'about:blank'; });
+document.querySelector('[data-provider-details-close]')?.addEventListener('click', closeProviderDetails);
+document.querySelector('[data-provider-details-launch]')?.addEventListener('click', () => { if (selectedProviderDetails) { const selected = selectedProviderDetails; closeProviderDetails(); launchEntry(selected.entry, selected.plan); } });
+document.querySelector('[data-provider-details-dialog]')?.addEventListener('close', () => { selectedProviderDetails = null; });
 document.querySelector('[data-action="resume"]').addEventListener('click', () => {
   if (state.recovery) { window.location.assign('../player/index.html'); return; }
   if (!state.lastLaunch) { const offer = beginSession({id: 'spartan-host', backendType: 'remote-play'}); if (offer) window.location.assign('../player/index.html?backend=spartan-host'); return; }
