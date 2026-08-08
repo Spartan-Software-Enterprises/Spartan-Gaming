@@ -83,7 +83,7 @@
 
 ## Later exploration
 
-- [ ] Android and handheld-focused shell.
+- [x] Android and handheld-focused shell foundation (touch controller overlay and layout preference; native packaging remains pending).
 - [ ] ChromeOS and television mode.
 - [ ] iOS/iPadOS compatibility strategy.
 - [x] WebTransport experimental datagram transport contract (server deployment and production fallback policy pending).

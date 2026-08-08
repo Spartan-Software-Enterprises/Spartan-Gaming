@@ -24,3 +24,4 @@ test('session preferences fall back safely for invalid settings', () => {
   assert.equal(result.preferences.autoFullscreen, true);
 });
 test('session preferences carry bounded display selection and refresh policy', () => { const result = createSessionPreferences({'media.display': 'Display 2', 'media.refreshRate': '240 Hz'}); assert.deepEqual(result.preferences.display, {kind: 'index', index: 1}); assert.equal(result.preferences.maxRefreshRate, 240); const ask = createSessionPreferences({'media.display': 'Ask each time', 'media.refreshRate': 'Automatic'}); assert.equal(ask.preferences.display, 'ask'); assert.equal(ask.preferences.maxRefreshRate, null); });
+test('session preferences carry the touch-control layout choice', () => { assert.equal(createSessionPreferences({'accessibility.touchLayout': 'Minimal'}).preferences.touchLayout, 'Minimal'); });
