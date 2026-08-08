@@ -33,7 +33,9 @@ export function parseNativePackageArguments(argv = []) {
 export function createNativePackagePlan({manifest = loadNativePackageManifest(), platform: selectedPlatform, sourceRoot = repositoryRoot, outRoot, installRoot, configuration = 'Release'} = {}) {
   const target = platform(selectedPlatform);
   const plan = createNativePackageBuildPlan({manifest, platform: target, sourceRoot, outRoot, installRoot, configuration});
-  return Object.freeze({...plan, sourcePresent: fs.existsSync(plan.source), platform: target});
+  const sourceDirectoryPresent = fs.existsSync(plan.source);
+  const buildDefinitionPresent = sourceDirectoryPresent && fs.existsSync(path.join(plan.source, 'CMakeLists.txt'));
+  return Object.freeze({...plan, sourcePresent: buildDefinitionPresent, sourceDirectoryPresent, platform: target});
 }
 
 export function createNativePackageMatrix({manifest = loadNativePackageManifest(), sourceRoot = repositoryRoot, outRoot, installRoot, configuration = 'Release'} = {}) {
@@ -43,7 +45,7 @@ export function createNativePackageMatrix({manifest = loadNativePackageManifest(
 
 function commandAvailable(program) { const result = spawnSync(program, ['--version'], {stdio: 'ignore', shell: process.platform === 'win32'}); return !result.error && result.status === 0; }
 export function executeNativePackagePlan(plan) {
-  if (!plan.sourcePresent) throw new Error(`native package source directory does not exist: ${plan.source}`);
+  if (!plan.sourcePresent) throw new Error(`native package CMake source is not ready: ${plan.source}`);
   for (const command of plan.commands) {
     if (!commandAvailable(command.program)) throw new Error(`required native package tool is unavailable: ${command.program}`);
     const result = spawnSync(command.program, command.args, {cwd: command.cwd, stdio: 'inherit', shell: process.platform === 'win32'});

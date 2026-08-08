@@ -206,3 +206,14 @@ expiry-aware session-scoped handoff record, and opens the player with the host
 ID and pairing code. The player consumes and clears that record before
 starting the session offer; no password, signaling ticket, or persistent host
 credential is stored in the handoff.
+
+## Linux reference adapter
+
+`native/linux/reference-adapter.mjs` is the first concrete platform adapter
+behind the binding boundary. It reports available FFmpeg, X11, PipeWire, and
+Pulse session capabilities; launches validated FFmpeg x11grab/PipeWire or
+audio plans through shell-free process arguments after explicit permission; and
+maps normalized keyboard and pointer operations to X11 `xdotool` argv calls.
+Gamepad/uinput, portal consent UI, hardware encoder selection, and signed
+distribution are intentionally not claimed by this reference adapter. The
+compiled `@spartan-gaming/native-linux` package remains the production path.

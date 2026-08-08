@@ -40,3 +40,5 @@ jobs:
         run: npm run native:plan -- --matrix --json
       - name: Validate signed browser adapter loader contract
         run: npm run test:browser-adapter
+      - name: Validate Linux reference adapter contract
+        run: npm run test:native-linux

@@ -11,6 +11,7 @@
     "test:platform": "node --test src/frontend/platform/device-mode.test.mjs",
     "test:display": "node --test src/frontend/display/policy.test.mjs",
     "test:browser-adapter": "node --test src/frontend/emulation/browser-adapter-loader.test.mjs",
+    "test:native-linux": "node --test native/linux/reference-adapter.test.mjs",
     "native:plan": "node scripts/native/package.mjs",
     "host": "node host/agent.mjs",
     "signaling": "node signaling/agent.mjs",
