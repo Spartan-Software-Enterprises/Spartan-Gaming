@@ -1,4 +1,5 @@
 import {defaultSettings, settingsCategories} from './settings-data.mjs';
+import {ACTIVE_PROFILE_KEY, createProfileStorage, normalizeProfileId, readActiveProfileId} from '../profiles/storage.mjs';
 
 export const SETTINGS_KEY = 'spartan-gaming.settings.v1';
 export const SETTINGS_EXPORT_VERSION = 1;
@@ -20,20 +21,35 @@ export function normalizeSettings(values = {}) {
   return Object.freeze(Object.fromEntries([...definitions.keys()].map(key => [key, normalizeValue(definitions.get(key), values[key] ?? defaultSettings[key])] )));
 }
 
-export function createSettingsStore({storage = globalThis.localStorage, key = SETTINGS_KEY} = {}) {
+export function createSettingsStore({storage = globalThis.localStorage, key = SETTINGS_KEY, profileId, scopeProfile = true} = {}) {
+  const activeProfileId = normalizeProfileId(profileId || readActiveProfileId(storage));
+  const profileStorage = scopeProfile ? createProfileStorage({storage, profileId: activeProfileId}) : storage;
+  const settingStorage = profileStorage || storage;
+  const activeProfileLabel = activeProfileId === 'default' ? 'Default' : activeProfileId[0].toUpperCase() + activeProfileId.slice(1);
   const read = () => {
-    try { return normalizeSettings(JSON.parse(storage?.getItem(key) || '{}')); } catch { return normalizeSettings(); }
+    try {
+      const values = JSON.parse(settingStorage?.getItem(key) || '{}');
+      return Object.freeze({...normalizeSettings(values), 'sync.activeProfile': activeProfileLabel});
+    } catch { return normalizeSettings({'sync.activeProfile': activeProfileLabel}); }
   };
-  const write = values => { const normalized = normalizeSettings(values); storage?.setItem(key, JSON.stringify(normalized)); return normalized; };
+  const write = (values, {allowProfileSwitch = true} = {}) => {
+    const normalized = normalizeSettings(values);
+    const nextProfileId = allowProfileSwitch ? normalizeProfileId(normalized['sync.activeProfile']) : activeProfileId;
+    const nextProfileLabel = nextProfileId === 'default' ? 'Default' : nextProfileId[0].toUpperCase() + nextProfileId.slice(1);
+    const persisted = Object.freeze({...normalized, 'sync.activeProfile': nextProfileLabel});
+    settingStorage?.setItem(key, JSON.stringify(persisted));
+    if (scopeProfile && nextProfileId !== activeProfileId) storage?.setItem(ACTIVE_PROFILE_KEY, nextProfileId);
+    return persisted;
+  };
   return Object.freeze({
     read,
     save(values) { return write({...read(), ...values}); },
-    reset() { return write(defaultSettings); },
+    reset() { return write(defaultSettings, {allowProfileSwitch: false}); },
     export() { return JSON.stringify({version: SETTINGS_EXPORT_VERSION, exportedAt: new Date().toISOString(), settings: read()}, null, 2); },
     import(serialized) {
       const parsed = typeof serialized === 'string' ? JSON.parse(serialized) : serialized;
       if (!parsed || parsed.version !== SETTINGS_EXPORT_VERSION || !parsed.settings || typeof parsed.settings !== 'object') throw new TypeError('settings export is invalid');
-      return write(parsed.settings);
+      return write({...parsed.settings, 'sync.activeProfile': activeProfileLabel}, {allowProfileSwitch: false});
     },
   });
 }

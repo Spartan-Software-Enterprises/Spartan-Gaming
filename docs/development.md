@@ -210,3 +210,10 @@ Dashboard launch handoffs use a target-aware session-storage intent. Emulator,
 provider, and self-hosted surfaces consume only their matching action, clear it
 after one use, and discard malformed or older-than-ten-minute intents. No
 credentials, cookies, game files, or provider session data are included.
+
+Settings are normalized through `src/frontend/settings/profile.mjs`, which
+provides bounded local persistence and portable import/export without unknown
+keys or session secrets. Settings are isolated through the active gaming
+profile, with an explicit active-profile marker and migration of the legacy
+unscoped settings key; the player consumes the same normalized settings for
+transport policy.

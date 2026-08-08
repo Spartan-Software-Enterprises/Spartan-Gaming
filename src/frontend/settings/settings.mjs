@@ -91,6 +91,7 @@ function bindControls() {
       if (!setting) return;
       state[setting.key] = setting.type === 'toggle' ? !state[setting.key] : setting.type === 'range' ? Number(control.value) : control.value;
       saveState();
+      if (setting.key === 'sync.activeProfile') { window.location.reload(); return; }
       renderContent();
     };
     control.addEventListener(control.matches('input[type="range"]') ? 'input' : 'change', update);

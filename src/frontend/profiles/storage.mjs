@@ -1,6 +1,7 @@
 export const PROFILE_IDS = Object.freeze(['default', 'gaming', 'family', 'guest']);
 export const PROFILE_LABELS = Object.freeze({default: 'Default', gaming: 'Gaming', family: 'Family', guest: 'Guest'});
 const SETTINGS_KEY = 'spartan-gaming.settings.v1';
+export const ACTIVE_PROFILE_KEY = 'spartan-gaming.active-profile.v1';
 
 export function normalizeProfileId(value) {
   const id = String(value || '').trim().toLowerCase();
@@ -9,6 +10,8 @@ export function normalizeProfileId(value) {
 
 export function readActiveProfileId(storage = globalThis.localStorage) {
   try {
+    const activeProfile = storage?.getItem(ACTIVE_PROFILE_KEY);
+    if (activeProfile) return normalizeProfileId(activeProfile);
     const settings = JSON.parse(storage?.getItem(SETTINGS_KEY) || '{}');
     return normalizeProfileId(settings['sync.activeProfile']);
   } catch {

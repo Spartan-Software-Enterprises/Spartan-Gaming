@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {createActiveProfileStorage, createProfileStorage, readActiveProfileId} from './storage.mjs';
+import {ACTIVE_PROFILE_KEY, createActiveProfileStorage, createProfileStorage, readActiveProfileId} from './storage.mjs';
 
 function memoryStorage() {
   const values = new Map();
@@ -24,3 +24,5 @@ defaultProfile.setItem('spartan-gaming.workspaces.v1', 'default-data');
 assert.equal(storage.getItem('spartan-gaming.workspaces.v1'), 'default-data');
 storage.setItem('spartan-gaming.settings.v1', '{bad json');
 assert.equal(readActiveProfileId(storage), 'gaming');
+storage.setItem(ACTIVE_PROFILE_KEY, 'Family');
+assert.equal(readActiveProfileId(storage), 'family');
