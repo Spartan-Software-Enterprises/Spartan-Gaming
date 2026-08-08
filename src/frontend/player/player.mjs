@@ -22,6 +22,7 @@ import {clearPendingLaunchHandoff, readPendingLaunchHandoff} from '../launch/han
 import {canSelectAudioOutput, findPreferredAudioOutput, listAudioOutputDevices, selectAudioOutput} from './audio-output.mjs';
 import {createMediaSessionController} from './media-session.mjs';
 import {clearTransientSessionData} from '../privacy/cleanup.mjs';
+import {describeNegotiationAdjustments, formatNegotiationAdjustments} from '../session/negotiation-notices.mjs';
 
 const query = new URLSearchParams(location.search);
 const pendingHostPair = readPendingHostPair(sessionStorage); clearPendingHostPair(sessionStorage);
@@ -64,6 +65,7 @@ function apply(event) {
   const profile = QUALITY_PROFILES.find(item => item.id === state.quality) || QUALITY_PROFILES[2]; elements.status.textContent = labels[state.status]; elements.quality.textContent = profile.id[0].toUpperCase() + profile.id.slice(1); if (elements.qualitySelect) elements.qualitySelect.value = profile.id; elements.qualityDetail.textContent = `${elements.quality.textContent} · ${profile.maxWidth}×${profile.maxHeight} @ ${profile.maxFramerate}`; elements.latency.textContent = formatLatency(state.latencyMs); elements.latencyDetail.textContent = formatLatency(state.latencyMs); elements.loss.textContent = `${state.packetLossPct}%`; if (elements.decodeFps) elements.decodeFps.textContent = Number.isFinite(state.decodeFps) ? `${state.decodeFps} fps` : '—'; if (elements.dropped) elements.dropped.textContent = `${state.framesDropped}`; if (elements.jitter) elements.jitter.textContent = formatLatency(state.jitterMs); if (elements.bitrate) elements.bitrate.textContent = formatRate(state.bitrateKbps); elements.negotiated.textContent = formatNegotiatedCapabilities(state.negotiated); elements.diagnostics.classList.toggle('is-visible', state.diagnosticsVisible); elements.overlay.forEach(overlay => overlay.classList.toggle('is-hidden', !state.overlayVisible));
   if (state.status === 'connected' && sessionPreferences.preferences.autoFullscreen && !autoFullscreenAttempted) { autoFullscreenAttempted = true; immersive.enter().catch(() => {}); }
   if (state.status === 'error') elements.message.textContent = state.error; if (state.status === 'ended') elements.message.textContent = 'This session has ended. Return to the library to choose another backend.';
+  if (event.type === 'session.negotiated') { const notice = formatNegotiationAdjustments(describeNegotiationAdjustments({requested: sessionPreferences.capabilities, negotiated: state.negotiated})); if (notice) elements.message.textContent = notice; }
   if (state.status === 'connected' && state.mediaState === 'not-configured') elements.message.textContent = 'Host paired successfully. Media capture and encoding are not configured on this host.';
 }
 

@@ -1,0 +1,6 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {describeNegotiationAdjustments, formatNegotiationAdjustments} from './negotiation-notices.mjs';
+
+test('negotiation notices identify bounded host downgrades', () => { const items = describeNegotiationAdjustments({requested: {transports: ['webtransport'], video: {codecs: ['av1', 'vp9'], maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: true}, audio: {channels: 2}}, negotiated: {transports: ['webrtc'], video: {codec: 'h264', maxWidth: 1920, maxHeight: 1080, maxFramerate: 60, hdr: false}, audio: {channels: 1}}}); assert.deepEqual(items, ['transport webrtc', 'codec H264', 'resolution 1920×1080', '60 FPS', 'HDR disabled', '1-channel audio']); assert.match(formatNegotiationAdjustments(items), /host limits/); });
+test('negotiation notices stay empty when the requested contract is preserved', () => { assert.deepEqual(describeNegotiationAdjustments({requested: {transports: ['webrtc'], video: {codecs: ['vp9'], maxWidth: 1920, maxHeight: 1080, maxFramerate: 60, hdr: false}, audio: {channels: 2}}, negotiated: {transports: ['webrtc'], video: {codec: 'vp9', maxWidth: 1920, maxHeight: 1080, maxFramerate: 60, hdr: false}, audio: {channels: 2}}}), []); assert.equal(formatNegotiationAdjustments([]), ''); });
