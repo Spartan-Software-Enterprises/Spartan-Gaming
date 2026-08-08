@@ -324,9 +324,24 @@ the standard trigger, stick-click, and d-pad button indexes. It is built with
 verified in Linux CI. The rumble effect carries the same strong/weak magnitude
 distinction as the Windows XInput binding, falling back to the shared `value`
 when only a single magnitude is supplied. Rumble is advertised only when
-`/dev/uinput` is readable and writable; hosts without that device or permission
+`/dev/uinput` is writable; hosts without that device or permission
 fail closed. Portal consent workflow and hardware encoder selection remain
 unimplemented.
+
+The virtual gamepad also reads force-feedback uploads from the kernel and
+forwards them to connected sessions as host-issued rumble input events, so a
+host-local game that rumbles the virtual controller causes the remote client browser
+gamepad to vibrate. The reader opens `/dev/uinput` read-write to observe
+upload and playback events, combines the strong/weak magnitudes of every active
+force-feedback effect (clamped to 1.0) scaled by the current gain, and emits a
+state snapshot after each play, stop, erase, or gain change, emitting zero only
+when no effect is active. The poll loop is tied to the executor lifecycle; a
+missing or read-only `/dev/uinput` disables the reader while leaving write-only
+gamepad injection and rumble intact. The host-to-client rumble contract is
+platform-neutral: Windows and macOS expose write-only haptics to attached
+controllers and cannot observe host-local force feedback, so only the Linux
+binding forwards host-issued rumble events.
+
 
 The reference host calls `detectHostRuntime()` during startup. It loads the
 optional package when installed, exposes only its serializable readiness and

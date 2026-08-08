@@ -206,10 +206,12 @@ napi_value execute(napi_env env, napi_callback_info info) {
   INPUT input{};
   input.type = INPUT_KEYBOARD;
   if (kind == "key") {
-    const WORD code = key_code(string_property(env, argv[0], "control"));
+    const std::string control = string_property(env, argv[0], "control");
+    const WORD code = key_code(control);
     if (!code) return unsupported(env, "unsupported Windows SendInput key");
     input.ki.wVk = code;
     input.ki.dwFlags = bool_property(env, argv[0], "pressed", false) ? 0 : KEYEVENTF_KEYUP;
+    if (control == "NumpadEnter" || control == "NumpadDivide") input.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
   } else if (kind == "pointer") {
     input.type = INPUT_MOUSE;
     const std::string action = string_property(env, argv[0], "action");
@@ -222,8 +224,12 @@ napi_value execute(napi_env env, napi_callback_info info) {
       else if (horizontal != 0) { input.mi.dwFlags = MOUSEEVENTF_HWHEEL; input.mi.mouseData = horizontal > 0 ? WHEEL_DELTA : -WHEEL_DELTA; }
       else return fail(env, "empty Windows mouse wheel event");
       input.mi.dx = 0; input.mi.dy = 0;
-    } else input.mi.dwFlags = mouse_button_flags(string_property(env, argv[0], "control"), action);
-    if (!input.mi.dwFlags) return unsupported(env, "unsupported Windows mouse button event");
+    } else if (action == "pointer:move") {
+      input.mi.dwFlags = MOUSEEVENTF_MOVE;
+    } else {
+      input.mi.dwFlags = mouse_button_flags(string_property(env, argv[0], "control"), action);
+      if (!input.mi.dwFlags) return unsupported(env, "unsupported Windows mouse button event");
+    }
   } else {
     return unsupported(env, "Windows native input supports keyboard, pointer, and XInput rumble events only");
   }

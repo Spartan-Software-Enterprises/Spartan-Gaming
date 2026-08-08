@@ -51,6 +51,8 @@ export function createInputInjectionPlan({platform, event, permissions = {}} = {
 
 export function inputAdapterIsReady(capabilities) { return ['ready', 'active'].includes(normalizeInputAdapterCapabilities(capabilities).state); }
 
+export function virtualGamepadPermissionGranted({inputEnabled = false, inputAdapter = {}} = {}) { return Boolean(inputEnabled) && inputAdapter?.gamepad === true; }
+
 /**
  * Execute only normalized input operations through an explicitly supplied OS
  * adapter. The adapter owns platform APIs; this boundary owns permissions,

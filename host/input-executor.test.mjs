@@ -1,6 +1,18 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createNativeInputExecutor} from './input.mjs';
+import {createNativeInputExecutor, virtualGamepadPermissionGranted} from './input.mjs';
+
+test('keyboard-only adapters never negotiate virtual-gamepad permission', () => {
+  assert.equal(virtualGamepadPermissionGranted({inputEnabled: true, inputAdapter: {gamepad: false, keyboard: true, pointer: true}}), false);
+  assert.equal(virtualGamepadPermissionGranted({inputEnabled: true, inputAdapter: {gamepad: false, keyboard: true, pointer: true, rumble: true}}), false);
+  assert.equal(virtualGamepadPermissionGranted({inputEnabled: true, inputAdapter: {}}), false);
+});
+
+test('virtual-gamepad permission requires both input enablement and a gamepad adapter', () => {
+  assert.equal(virtualGamepadPermissionGranted({inputEnabled: true, inputAdapter: {gamepad: true}}), true);
+  assert.equal(virtualGamepadPermissionGranted({inputEnabled: false, inputAdapter: {gamepad: true}}), false);
+  assert.equal(virtualGamepadPermissionGranted({inputEnabled: true}), false);
+});
 
 test('native input executor dispatches only permissioned normalized operations', async () => {
   const operations = []; const executor = createNativeInputExecutor({platform: 'linux', permissions: {'remote-input': true}, adapter: {platform: 'linux', execute: async operation => operations.push(operation)}});
