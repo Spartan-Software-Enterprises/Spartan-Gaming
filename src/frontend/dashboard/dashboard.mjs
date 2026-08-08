@@ -10,7 +10,7 @@ import { createLaunchHistoryStore } from '../launch/history.mjs';
 import { resolveDashboardSection } from './routes.mjs';
 import { resolveResumeEntry, resolveResumePresentation } from './resume.mjs';
 import { createReadinessStatus } from '../readiness/status.mjs';
-import { createWorkspaceStore } from '../workspaces/workspaces.mjs';
+import { applyWorkspaceProviderDefaults, createWorkspaceStore, resolveWorkspaceLaunchBehavior } from '../workspaces/workspaces.mjs';
 import { createFavoritesStore } from './library-state.mjs';
 import { createCommunityProviderCatalogStore, mergeCommunityProviders } from '../providers/community-catalog.mjs';
 import { createSettingsStore } from '../settings/profile.mjs';
@@ -38,6 +38,8 @@ let toastTimer;
 document.querySelector('.topbar')?.insertAdjacentHTML('beforeend', '<label class="workspace-picker" style="display:flex;align-items:center;gap:7px;color:#8d9aa7;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase"><span>Workspace</span><select data-workspace-select aria-label="Active workspace" style="min-width:118px;padding:8px 9px;border:1px solid #2a3540;border-radius:7px;background:#171e26;color:#e7edf3;font-size:11px;letter-spacing:0;text-transform:none"></select></label>');
 
 function renderWorkspaceControl() { const control = document.querySelector('[data-workspace-select]'); if (!control) return; control.innerHTML = workspaceStore.list().map(workspace => `<option value="${escapeHtml(workspace.id)}" ${workspace.id === activeWorkspace.id ? 'selected' : ''}>${escapeHtml(workspace.name)}</option>`).join(''); control.title = `${activeWorkspace.name} workspace`; }
+function workspaceProviderProfiles() { return Object.fromEntries(state.catalog.filter(entry => entry.backendType === 'provider').map(entry => [entry.id, applyWorkspaceProviderDefaults(activeWorkspace, state.providerProfiles[entry.id] || {})])); }
+function rebuildAdapters() { if (!state.catalog.length) return; state.adapters = createCatalogAdapterRegistry(state.catalog, {providerProfiles: workspaceProviderProfiles(), report: () => state.report || {}}); }
 function saveFavorites() { favoritesStore.set([...state.favorites]); }
 function showToast(message) { toast.textContent = message; toast.classList.add('is-visible'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 2600); }
 function updateReadinessStatus() { const status = createReadinessStatus({catalogLoaded: state.catalog.length > 0, compatibility: state.compatibility, capabilityReport: state.report, online: globalThis.navigator?.onLine !== false, activeSession: sessionStatusId}); sessionStatus.textContent = status.label; statusPill.dataset.status = status.id; statusPill.title = status.detail; }
@@ -67,7 +69,7 @@ function launchEntry(entry, plan) {
   if (plan.readiness?.nextAction === 'choose-runtime' || plan.action === 'choose-runtime' || plan.action === 'configure-native-adapter') { window.location.assign('../emulation/index.html'); return; }
   if (plan.action === 'configure-host') { window.location.assign('../host/index.html'); return; }
   if (plan.action === 'embed-url') { openProviderSurface(entry, plan); showToast(`${entry.name}: official embed opened.`); return; }
-  if (plan.action === 'open-url' || plan.action === 'configure-api') { try { const handoff = launchExternalSurface(plan.url, {behavior: settings['gaming.launchBehavior'], open: window.open.bind(window), assign: window.location.assign.bind(window.location)}); showToast(`${entry.name}: ${handoff.mode === 'current-workspace' ? 'official service opened here' : 'official service opened'}.`); } catch (error) { showToast(error.message); } return; }
+  if (plan.action === 'open-url' || plan.action === 'configure-api') { try { const handoff = launchExternalSurface(plan.url, {behavior: resolveWorkspaceLaunchBehavior(activeWorkspace, settings['gaming.launchBehavior']), open: window.open.bind(window), assign: window.location.assign.bind(window.location)}); showToast(`${entry.name}: ${handoff.mode === 'current-workspace' ? 'official service opened here' : 'official service opened'}.`); } catch (error) { showToast(error.message); } return; }
   const offer = beginSession({...entry, adapterMode: plan.mode}); if (offer) showToast(`${entry.name}: ${plan.action.replaceAll('-', ' ')}.`);
 }
 function beginSession(backend) {
@@ -102,7 +104,7 @@ async function loadCatalog() {
     validateCatalogManifest(providers, 'provider');
     validateCatalogManifest(emulators, 'emulator');
     state.catalog = createFrontendCatalog({ providers: mergeCommunityProviders({providers: providers.providers, community: communityCatalogStore.list()}), emulators: emulators.projects }).entries;
-    state.adapters = createCatalogAdapterRegistry(state.catalog, {providerProfiles: state.providerProfiles, report: () => state.report || {}});
+    rebuildAdapters();
     updateReadinessStatus();
     render();
     if (settings['providers.healthChecks'] === true) { const providers = state.catalog.filter(entry => entry.backendType === 'provider'); providers.forEach(entry => state.providerHealth.set(entry.id, {status: 'checking'})); render(); checkProviderCatalog(providers).then(results => { results.forEach(item => state.providerHealth.set(item.providerId, item.result)); render(); }).catch(() => {}); }
@@ -110,7 +112,7 @@ async function loadCatalog() {
   } catch (error) { cards.innerHTML = '<div class="empty">The library could not load. Check the catalog files and try again.</div>'; console.error(error); }
 }
 document.querySelector('[data-search]').addEventListener('input', event => { state.search = event.target.value; render(); });
-document.querySelector('[data-workspace-select]')?.addEventListener('change', event => { activeWorkspace = workspaceStore.setActive(event.target.value); favoritesStore = createFavoritesStore({workspaceId: activeWorkspace.id}); state.favorites = new Set(favoritesStore.list()); render(); showToast(`Using ${activeWorkspace.name} workspace`); });
+document.querySelector('[data-workspace-select]')?.addEventListener('change', event => { activeWorkspace = workspaceStore.setActive(event.target.value); favoritesStore = createFavoritesStore({workspaceId: activeWorkspace.id}); state.favorites = new Set(favoritesStore.list()); rebuildAdapters(); render(); showToast(`Using ${activeWorkspace.name} workspace`); });
 document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => { state.filter = button.dataset.filter; document.querySelectorAll('[data-filter]').forEach(item => item.classList.toggle('is-active', item === button)); render(); }));
 document.querySelectorAll('[data-filter]').forEach(button => button.classList.toggle('is-active', button.dataset.filter === state.filter));
 document.addEventListener('click', event => {
