@@ -14,7 +14,17 @@ export function normalizeAdapterManifest(record) {
   if (!/^sha256-[A-Za-z0-9_-]+$/.test(integrity)) throw new TypeError('adapter.integrity must be a sha256- encoded digest');
   let signature = null;
   if (trust === 'signed') signature = Object.freeze({algorithm: required(record.signature?.algorithm, 'adapter.signature.algorithm'), signer: required(record.signature?.signer, 'adapter.signature.signer'), value: required(record.signature?.value, 'adapter.signature.value')});
-  return Object.freeze({id, version, kind, status, trust, platforms, capabilities, license, integrity, signature, entrypoint: typeof record.entrypoint === 'string' && record.entrypoint.trim() ? record.entrypoint.trim() : null});
+  let artifact = null;
+  if (record.artifact !== undefined && record.artifact !== null) {
+    if (!record.artifact || typeof record.artifact !== 'object') throw new TypeError('adapter.artifact must be an object');
+    const url = required(record.artifact.url, 'adapter.artifact.url');
+    if (!/^https:\/\//i.test(url)) throw new TypeError('adapter.artifact.url must use https');
+    const sizeBytes = Number(record.artifact.sizeBytes);
+    if (!Number.isSafeInteger(sizeBytes) || sizeBytes < 1 || sizeBytes > 5_000_000_000) throw new TypeError('adapter.artifact.sizeBytes must be between 1 and 5000000000');
+    if (record.artifact.integrity !== integrity) throw new TypeError('adapter.artifact.integrity must match adapter.integrity');
+    artifact = Object.freeze({url, sizeBytes, integrity});
+  }
+  return Object.freeze({id, version, kind, status, trust, platforms, capabilities, license, integrity, signature, artifact, entrypoint: typeof record.entrypoint === 'string' && record.entrypoint.trim() ? record.entrypoint.trim() : null});
 }
 
 export function evaluateAdapterManifest(record, {platform, kind, allowUnsigned = false} = {}) {

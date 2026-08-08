@@ -127,6 +127,7 @@ required_files=(
   src/frontend/adapters/adapters.test.mjs
   src/frontend/adapters/manifest-registry.mjs
   src/frontend/adapters/manifest-registry.test.mjs
+  src/frontend/adapters/install.mjs
   src/frontend/host/host.mjs
   src/frontend/host/host.test.mjs
   src/frontend/host/index.html
@@ -277,6 +278,7 @@ node --check src/frontend/session/telemetry.mjs
 node --check src/frontend/input/input.mjs
 node --check src/frontend/adapters/adapters.mjs
 node --check src/frontend/adapters/manifest-registry.mjs
+node --check src/frontend/adapters/install.mjs
 node --check src/frontend/host/host.mjs
 node --check src/frontend/host/host-page.mjs
 node --check src/frontend/host/browser-publisher.mjs

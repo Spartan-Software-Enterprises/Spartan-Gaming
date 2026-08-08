@@ -68,6 +68,11 @@ highest compatible verified release. The plan describes a proposed transition
 without downloading, installing, or replacing user files; packaged installers
 and a hosted release service remain separate native/release boundaries.
 
+`src/frontend/adapters/install.mjs` is the explicit handoff to that future
+updater. It requires user consent, a signed ready update, HTTPS artifact
+metadata, matching SHA-256 integrity, a supported platform, and no credentials;
+it emits a bounded request and performs no download or filesystem mutation.
+
 | Project | Systems | Preferred mode | Role |
 | --- | --- | --- | --- |
 | RetroArch/libretro | Many classic and modern systems | Browser/native | Unified frontend and core ecosystem |
