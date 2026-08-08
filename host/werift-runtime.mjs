@@ -78,14 +78,21 @@ export function createWeriftHostRuntime({
         if (!negotiation.accepted) { send('session.answer', {accepted: false, hostId, hostName, reason: negotiation.reason}); bus.emit('rejected', negotiation.reason); return; }
         activeSessionId = message.sessionId;
         const candidateHandler = candidate => { if (activeSessionId) send('session.ice-candidate', {candidate}); };
-        onLaunch(launch);
-        mediaSession = await sessionFactory({onIceCandidate: candidateHandler, onStateChange: mediaState => bus.emit('media.state', mediaState), launch});
-        if (!mediaSession || typeof mediaSession.acceptOffer !== 'function' || typeof mediaSession.addIceCandidate !== 'function') throw new TypeError('sessionFactory must return a Werift session');
-        const answer = await mediaSession.acceptOffer(message.payload.sdp);
-        state = 'connected';
-        send('session.answer', {accepted: true, hostId, hostName, capabilities: negotiation.capabilities, hostCapabilities: advertisedCapabilities(local, 'active', audioEnabled), sdp: answer});
-        bus.emit('connected', {sessionId: activeSessionId, capabilities: negotiation.capabilities});
-        return;
+        try {
+          onLaunch(launch);
+          mediaSession = await sessionFactory({onIceCandidate: candidateHandler, onStateChange: mediaState => bus.emit('media.state', mediaState), launch});
+          if (!mediaSession || typeof mediaSession.acceptOffer !== 'function' || typeof mediaSession.addIceCandidate !== 'function') throw new TypeError('sessionFactory must return a Werift session');
+          const answer = await mediaSession.acceptOffer(message.payload.sdp);
+          state = 'connected';
+          send('session.answer', {accepted: true, hostId, hostName, capabilities: negotiation.capabilities, hostCapabilities: advertisedCapabilities(local, 'active', audioEnabled), sdp: answer});
+          bus.emit('connected', {sessionId: activeSessionId, capabilities: negotiation.capabilities});
+          return;
+        } catch (error) {
+          try { await mediaSession?.close?.(); } catch { /* rollback must not mask the original offer failure */ }
+          mediaSession = null;
+          activeSessionId = null;
+          throw error;
+        }
       }
       if (message.sessionId !== activeSessionId) return;
       if (message.type === 'session.ice-candidate') { await mediaSession?.addIceCandidate(message.payload.candidate); return; }

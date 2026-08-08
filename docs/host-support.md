@@ -183,6 +183,11 @@ the runtime ID, opaque host content ID, and game metadata match its own
 operator-configured launch plan; the request cannot carry a path, executable,
 source handle, or bytes.
 
+`host/werift-runtime.mjs` treats offer admission as a transaction: if launch
+validation, session construction, or SDP acceptance fails, the media session
+is closed, the active session identity is cleared, and a later offer can retry
+without reusing a partially initialized publisher or peer.
+
 `host/audio.mjs` adds the return-audio boundary for Windows WASAPI, macOS
 CoreAudio, and Linux PipeWire/PulseAudio. It validates microphone/session
 permissions, creates bounded FFmpeg PCM capture plans, and composes an Opus or
