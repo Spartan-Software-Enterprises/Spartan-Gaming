@@ -56,7 +56,7 @@
 
 ## Milestone 3: self-hosted stack
 
-- [ ] Windows and Linux host agent (native composition boundary, optional runtime package discovery, guarded input execution, and platform package workflow implemented; media/audio packaging remains pending).
+- [ ] Windows and Linux host agent (native composition boundary, optional runtime package discovery, guarded input execution, and Windows/macOS/Linux capture/audio package lifecycles implemented; end-to-end publisher wiring remains pending).
 - [x] Secure device pairing UX and frontend contract (agent/signaling implementation pending).
 - [x] Dependency-free reference host control plane (media and OS adapters pending).
 - [x] Shell-free managed process lifecycle with bounded output and pipeline rollback.
@@ -77,7 +77,7 @@
 - [x] User-facing transport and relay policy controls (runtime provider/host wiring pending).
 - [x] Controller, keyboard, pointer, and rumble forwarding contract (native OS injection pending).
 - [x] Shell-free native input executor boundary with permissions and rate limiting (OS adapter implementations pending).
-- [ ] Native OS input injection, audio return, and end-to-end haptics (explicitly enabled host execution now routes through the guarded executor; Linux uinput plus Windows SendInput and macOS Core Graphics keyboard/pointer packages added; native capture/audio, virtual gamepad, portal consent, and haptics remain pending).
+- [ ] Native OS input injection, audio return, and end-to-end haptics (explicitly enabled host execution now routes through the guarded executor; Windows/macOS guarded FFmpeg capture/audio lifecycles and Linux reference capture/audio are packaged; native portal consent, virtual gamepad expansion, and haptics remain pending).
 - [x] Cross-platform audio capture and publisher readiness contract (native audio publisher pending).
 - [x] Shell-free audio publisher and RTP handoff boundary with permission gating (native capture/codec adapters pending).
 - [x] Browser-to-host control-plane quality and input envelopes (OS adapters pending).

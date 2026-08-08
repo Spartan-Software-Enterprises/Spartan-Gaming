@@ -14,6 +14,8 @@ test('built macOS package exposes the universal input binding shape', async t =>
   assert.equal(bindings.platform, 'darwin');
   assert.equal(bindings.capabilities.keyboard, true);
   assert.equal(bindings.capabilities.pointer, true);
+  assert.equal(typeof bindings.capture.start, 'function');
+  assert.equal(typeof bindings.audio.start, 'function');
   assert.equal(typeof bindings.input.execute, 'function');
   await bindings.close?.();
 });

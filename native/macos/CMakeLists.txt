@@ -25,4 +25,5 @@ target_link_options(spartan_native_macos PRIVATE "-undefined" "dynamic_lookup")
 set_target_properties(spartan_native_macos PROPERTIES PREFIX "" SUFFIX ".node" OUTPUT_NAME "spartan-native-macos")
 
 install(TARGETS spartan_native_macos LIBRARY DESTINATION . RUNTIME DESTINATION . ARCHIVE DESTINATION .)
-install(FILES index.mjs package.json DESTINATION .)
+install(FILES index.mjs package.json ../desktop/reference-adapter.mjs DESTINATION .)
+install(FILES ../../host/adapters.mjs ../../host/audio.mjs ../../host/media.mjs ../../host/process.mjs DESTINATION host)

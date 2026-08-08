@@ -48,4 +48,5 @@ target_link_libraries(spartan_native_windows PRIVATE ${NODE_API_IMPORT_LIBRARY})
 set_target_properties(spartan_native_windows PROPERTIES PREFIX "" SUFFIX ".node" OUTPUT_NAME "spartan-native-windows")
 
 install(TARGETS spartan_native_windows RUNTIME DESTINATION . LIBRARY DESTINATION . ARCHIVE DESTINATION .)
-install(FILES index.mjs package.json DESTINATION .)
+install(FILES index.mjs package.json ../desktop/reference-adapter.mjs DESTINATION .)
+install(FILES ../../host/adapters.mjs ../../host/audio.mjs ../../host/media.mjs ../../host/process.mjs DESTINATION host)
