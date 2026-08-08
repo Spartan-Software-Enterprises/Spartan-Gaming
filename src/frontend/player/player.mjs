@@ -31,7 +31,7 @@ const transportPolicy = readTransportPolicy();
 let sessionPreferences = readSessionPreferences();
 let inputPolicy = createInputPermissionPolicy(sessionPreferences.capabilities);
 let haptics = createHapticsController({enabled: inputPolicy.allows('rumble')});
-const mapper = createInputMapper();
+let mapper = createInputMapper();
 const immersive = createImmersiveController({target: document.querySelector('[data-stage]')});
 let runtime = null;
 const elements = {
@@ -82,6 +82,7 @@ async function prepareSession() {
   if (elements.pip) elements.pip.disabled = !sessionPreferences.preferences.pictureInPicture || !canUsePictureInPicture(elements.video);
   elements.video.volume = sessionPreferences.preferences.gameVolume;
   if (sessionPreferences.preferences.showTelemetry && !state.diagnosticsVisible) apply({type: 'toggle.diagnostics'});
+  mapper = createInputMapper({bindings: sessionPreferences.preferences.controllerBindings, deadzone: sessionPreferences.preferences.controllerDeadzone});
   inputPolicy = preflight.inputPolicy;
   haptics = createHapticsController({enabled: inputPolicy.allows('rumble')});
   sessionPreflightReady = true;
