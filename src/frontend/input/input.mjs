@@ -28,13 +28,24 @@ export function normalizeGamepadState(gamepad, {deadzone = 0.12} = {}) {
 
 export function createInputMapper({bindings = DEFAULT_BINDINGS, deadzone = 0.12} = {}) {
   const activeBindings = Object.freeze({...DEFAULT_BINDINGS, ...bindings});
+  const normalizedAxisDirection = value => value < 0 ? 'negative' : value > 0 ? 'positive' : null;
   return Object.freeze({
     bindings: activeBindings,
     normalize: gamepad => normalizeGamepadState(gamepad, {deadzone}),
     actionFor(control) { return Object.keys(activeBindings).find(action => activeBindings[action] === control); },
     controlsFor(action) { return activeBindings[action] ? [activeBindings[action]] : []; },
     mapButton(index, pressed, value = pressed ? 1 : 0) { const action = this.actionFor(`button-${index}`); return action ? {type: 'input.event', action, pressed: Boolean(pressed), value: clamp(value, 0, 1)} : null; },
-    mapAxis(index, value) { const normalized = applyDeadzone(clamp(value), deadzone); const direction = normalized < 0 ? 'negative' : 'positive'; const action = this.actionFor(`axis-${index}-${direction}`); return action && normalized !== 0 ? {type: 'input.event', action, pressed: true, value: normalized} : null; },
+    mapAxis(index, value) { const normalized = applyDeadzone(clamp(value), deadzone); const direction = normalized < 0 ? 'negative' : 'positive'; const action = this.actionFor(`axis-${index}-${direction}`); return action && normalized !== 0 ? {type: 'input.event', action, kind: 'axis', pressed: true, value: normalized} : null; },
+    mapAxisTransition(index, value, previousValue = 0) {
+      const current = clamp(value); const previous = clamp(previousValue); const currentDirection = normalizedAxisDirection(current); const previousDirection = normalizedAxisDirection(previous); const events = [];
+      if (previousDirection && previousDirection !== currentDirection) {
+        const action = this.actionFor(`axis-${index}-${previousDirection}`); if (action) events.push({type: 'input.event', action, kind: 'axis', pressed: false, value: 0});
+      }
+      if (currentDirection) {
+        const action = this.actionFor(`axis-${index}-${currentDirection}`); if (action) events.push({type: 'input.event', action, kind: 'axis', pressed: true, value: current});
+      }
+      return events;
+    },
   });
 }
 
