@@ -122,6 +122,12 @@ microphone is requested with `getUserMedia` only after that action, composed int
 the in-memory capture stream, and stopped with the display tracks. Device IDs
 are not stored, exported, or placed in signaling messages.
 
+The browser host now applies validated `session.control` pause/resume messages
+to every captured track through the publisher. The player still pauses its
+local media element immediately, while the LAN host gates its display and
+microphone tracks without claiming that external provider sessions expose the
+same control.
+
 Run the repository checks before committing:
 
 ```bash

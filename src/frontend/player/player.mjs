@@ -72,6 +72,7 @@ if (!inputPolicy.allows('gamepad')) elements.gamepad.textContent = 'Disabled by 
 elements.stage.style.touchAction = 'none';
 elements.diagnostics.querySelector('h2')?.insertAdjacentHTML('afterend', '<button class="secondary" data-action="export-session" type="button">Export session report</button>');
 elements.diagnostics.querySelector('dl')?.insertAdjacentHTML('afterbegin', '<div><dt>Display outcome</dt><dd data-display>Pending</dd></div>');
+elements.display = document.querySelector('[data-display]');
 document.querySelector('.overlay-bottom')?.insertAdjacentHTML('afterbegin', '<button class="icon-button" data-action="pause" aria-label="Pause session">Ⅱ</button>');
 elements.pause = document.querySelector('[data-action="pause"]');
 

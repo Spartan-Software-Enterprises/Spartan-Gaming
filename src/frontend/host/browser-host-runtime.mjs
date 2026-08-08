@@ -31,7 +31,7 @@ export function createBrowserHostRuntime({signaling, publisher, sessionId, hostI
       if (message.type === 'session.ice-candidate') { await publisher.addIceCandidate(message.payload.candidate); return; }
       if (message.type === 'input.event') { onInput(message.payload); bus.emit('input', message.payload); return; }
       if (message.type === 'quality.request') { onQuality(message.payload); bus.emit('quality', message.payload); return; }
-      if (message.type === 'session.control') { onControl(message.payload); bus.emit('control', message.payload); return; }
+      if (message.type === 'session.control') { const action = message.payload?.action; if (['pause', 'resume'].includes(action)) publisher.setPaused?.(action === 'pause'); onControl(message.payload); bus.emit('control', message.payload); return; }
       if (message.type === 'session.reconnect') { const audioEnabled = Boolean(publisher.stream?.getAudioTracks?.().length); send('session.answer', {accepted: true, hostId, hostName, capabilities: negotiationCapabilities(), hostCapabilities: hostCapabilities(local, 'active', audioEnabled)}); return; }
       if (message.type === 'session.close') close();
     } catch (error) { state = 'error'; bus.emit('error', error); }

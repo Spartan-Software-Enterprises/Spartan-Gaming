@@ -35,11 +35,11 @@ export function createBrowserWebRtcPublisher({RTCPeerConnectionImpl = globalThis
   const Peer = createPeer || RTCPeerConnectionImpl;
   if (typeof Peer !== 'function') throw new Error('RTCPeerConnection is unavailable in this browser');
   const peer = typeof createPeer === 'function' ? Peer() : new Peer(configuration);
-  const bus = events(); let stream = null; let state = 'new';
+  const bus = events(); let stream = null; let state = 'new'; let paused = false;
   peer.onicecandidate = event => { if (event.candidate) bus.emit('icecandidate', event.candidate); };
   peer.onconnectionstatechange = () => { state = peer.connectionState || state; bus.emit('state', state); };
   return Object.freeze({
-    get state() { return state; }, get stream() { return stream; }, get peerConnection() { return peer; }, on: bus.on,
+    get state() { return state; }, get stream() { return stream; }, get paused() { return paused; }, get peerConnection() { return peer; }, on: bus.on,
     async capture(options = {}) {
       if (!mediaDevices?.getDisplayMedia) throw new Error('Display capture is unavailable in this browser');
       if (stream) throw new Error('Display capture is already active');
@@ -57,7 +57,7 @@ export function createBrowserWebRtcPublisher({RTCPeerConnectionImpl = globalThis
           throw new Error(`Microphone capture failed: ${error.message || 'permission was denied'}`);
         }
       }
-      for (const track of stream.getTracks()) { peer.addTrack(track, stream); track.addEventListener?.('ended', () => bus.emit('capture.ended')); }
+      for (const track of stream.getTracks()) { track.enabled = !paused; peer.addTrack(track, stream); track.addEventListener?.('ended', () => bus.emit('capture.ended')); }
       state = 'capturing'; bus.emit('capture', stream); return stream;
     },
     async acceptOffer(offer) {
@@ -87,7 +87,15 @@ export function createBrowserWebRtcPublisher({RTCPeerConnectionImpl = globalThis
       bus.emit('quality', result);
       return result;
     },
+    setPaused(value) {
+      const next = Boolean(value);
+      if (paused === next) return paused;
+      paused = next;
+      for (const track of stream?.getTracks?.() || []) track.enabled = !paused;
+      bus.emit('pause', paused);
+      return paused;
+    },
     addIceCandidate(candidate) { return peer.addIceCandidate(candidate); },
-    close() { stream?.getTracks?.().forEach(track => track.stop?.()); stream = null; peer.close?.(); state = 'closed'; bus.emit('state', state); },
+    close() { stream?.getTracks?.().forEach(track => track.stop?.()); stream = null; paused = false; peer.close?.(); state = 'closed'; bus.emit('state', state); },
   });
 }

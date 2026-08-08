@@ -48,6 +48,16 @@ test('browser publisher reports unsupported quality controls without throwing', 
   assert.equal(result.status, 'unsupported'); assert.equal(result.appliedSenders, 0);
 });
 
+test('browser publisher gates captured tracks for pause and resume controls', async () => {
+  const tracks = [{kind: 'video', enabled: true, stop() {}}, {kind: 'audio', enabled: true, stop() {}}];
+  const peer = {addTrack() {}, close() {}};
+  const publisher = createBrowserWebRtcPublisher({createPeer: () => peer, mediaDevices: {async getDisplayMedia() { return {getTracks: () => tracks}; }}});
+  await publisher.capture();
+  assert.equal(publisher.paused, false); assert.deepEqual(tracks.map(track => track.enabled), [true, true]);
+  assert.equal(publisher.setPaused(true), true); assert.equal(publisher.paused, true); assert.deepEqual(tracks.map(track => track.enabled), [false, false]);
+  assert.equal(publisher.setPaused(false), false); assert.equal(publisher.paused, false); assert.deepEqual(tracks.map(track => track.enabled), [true, true]);
+});
+
 test('browser publisher fails closed when capture is unavailable', async () => {
   const publisher = createBrowserWebRtcPublisher({createPeer: () => ({})});
   await assert.rejects(() => publisher.capture(), /Display capture is unavailable/);
