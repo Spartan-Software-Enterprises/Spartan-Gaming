@@ -26,6 +26,10 @@ isolated behind a firewall.
 
 The agent accepts one correctly paired `session.offer`, returns a protocol-valid `session.answer`, and rejects replayed or expired pairing codes. It is intentionally dependency-free and runs anywhere Node.js 20 runs. This is a control-plane reference only: it does not launch games, capture or encode media, inject OS input, provide TLS, or operate STUN/TURN. Those capabilities belong in platform-specific host adapters and the production signaling/deployment layer.
 
+Werift and browser-host answers report `hostCapabilities.media.audio` from the
+actual active audio path: it is true only when the host has an audio track or
+an explicitly enabled native audio publisher.
+
 ## Optional Werift runtime
 
 `host/werift-runtime.mjs` provides the host-side session bridge for an optional `werift` installation. A caller supplies a `sessionFactory` that creates the concrete session from `host/werift-adapter.mjs`; the runtime then handles Spartan Gaming SDP offers, ICE candidates, input events, quality requests, reconnect answers, and outbound ICE candidates over any signaling transport implementing `connect()`, `send()`, and `on()`.

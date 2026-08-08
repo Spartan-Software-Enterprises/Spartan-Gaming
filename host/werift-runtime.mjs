@@ -22,8 +22,8 @@ function required(value, name) {
   return value.trim();
 }
 
-function advertisedCapabilities(capabilities, mediaState) {
-  return Object.freeze({...normalizeCapabilities(capabilities), media: Object.freeze({state: mediaState, capture: true, encode: true, audio: false, transport: 'webrtc'})});
+function advertisedCapabilities(capabilities, mediaState, audio = false) {
+  return Object.freeze({...normalizeCapabilities(capabilities), media: Object.freeze({state: mediaState, capture: true, encode: true, audio: Boolean(audio), transport: 'webrtc'})});
 }
 
 export function createWeriftHostRuntime({
@@ -33,6 +33,7 @@ export function createWeriftHostRuntime({
   hostId = 'werift-host',
   hostName = 'Werift Host',
   capabilities = DEFAULT_HOST_CAPABILITIES,
+  audioEnabled = false,
   onInput = () => {},
   onQuality = () => {},
   clock = () => new Date().toISOString(),
@@ -78,7 +79,7 @@ export function createWeriftHostRuntime({
         if (!mediaSession || typeof mediaSession.acceptOffer !== 'function' || typeof mediaSession.addIceCandidate !== 'function') throw new TypeError('sessionFactory must return a Werift session');
         const answer = await mediaSession.acceptOffer(message.payload.sdp);
         state = 'connected';
-        send('session.answer', {accepted: true, hostId, hostName, capabilities: negotiation.capabilities, hostCapabilities: advertisedCapabilities(local, 'active'), sdp: answer});
+        send('session.answer', {accepted: true, hostId, hostName, capabilities: negotiation.capabilities, hostCapabilities: advertisedCapabilities(local, 'active', audioEnabled), sdp: answer});
         bus.emit('connected', {sessionId: activeSessionId, capabilities: negotiation.capabilities});
         return;
       }
@@ -86,7 +87,7 @@ export function createWeriftHostRuntime({
       if (message.type === 'session.ice-candidate') { await mediaSession?.addIceCandidate(message.payload.candidate); return; }
       if (message.type === 'input.event') { onInput(message.payload); bus.emit('input', message.payload); return; }
       if (message.type === 'quality.request') { onQuality(message.payload); bus.emit('quality', message.payload); return; }
-      if (message.type === 'session.reconnect') { send('session.answer', {accepted: true, hostId, hostName, capabilities: negotiationCapabilities(), hostCapabilities: advertisedCapabilities(local, 'active')}); return; }
+      if (message.type === 'session.reconnect') { send('session.answer', {accepted: true, hostId, hostName, capabilities: negotiationCapabilities(), hostCapabilities: advertisedCapabilities(local, 'active', audioEnabled)}); return; }
       if (message.type === 'session.close') close();
     } catch (error) { state = 'error'; bus.emit('error', error); }
   };

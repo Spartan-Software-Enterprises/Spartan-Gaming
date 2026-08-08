@@ -64,3 +64,4 @@ test('Werift host runtime rejects offers without SDP and reports errors', async 
   assert.equal(runtime.state, 'error');
   assert.match(errors[0].message, /SDP offer/);
 });
+test('Werift host runtime advertises active media audio only when enabled', async () => { const signaling = signal(); const session = {async acceptOffer() { return {type: 'answer', sdp: 'answer'}; }, async addIceCandidate() {}, async close() {}}; const runtime = createWeriftHostRuntime({signaling, sessionId: 'ses-audio', audioEnabled: true, sessionFactory: async () => session}); await runtime.start(); signaling.emit('message', createSessionEnvelope({sessionId: 'ses-audio', type: 'session.offer', payload: {sdp: {type: 'offer', sdp: 'offer'}, transports: ['webrtc'], video: {codecs: ['h264']}, audio: {codecs: ['opus']}}})); await new Promise(resolve => setTimeout(resolve, 0)); assert.equal(signaling.sent.at(-1).payload.hostCapabilities.media.audio, true); runtime.close(); });

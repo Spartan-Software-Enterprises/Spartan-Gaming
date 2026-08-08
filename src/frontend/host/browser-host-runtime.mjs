@@ -6,7 +6,7 @@ const DEFAULT_HOST_CAPABILITIES = Object.freeze({transports: ['webrtc'], video: 
 
 function events() { const listeners = new Map(); return {on(type, handler) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(handler); return () => listeners.get(type)?.delete(handler); }, emit(type, value) { for (const handler of listeners.get(type) || []) handler(value); }}; }
 function required(value, name) { if (typeof value !== 'string' || !value.trim()) throw new TypeError(`${name} must be a non-empty string`); return value.trim(); }
-function hostCapabilities(capabilities, mediaState) { return Object.freeze({...normalizeCapabilities(capabilities), media: Object.freeze({state: mediaState, capture: true, encode: true, audio: false, transport: 'webrtc'})}); }
+function hostCapabilities(capabilities, mediaState, audio = false) { return Object.freeze({...normalizeCapabilities(capabilities), media: Object.freeze({state: mediaState, capture: true, encode: true, audio: Boolean(audio), transport: 'webrtc'})}); }
 
 export function createBrowserHostRuntime({signaling, publisher, sessionId, hostId = 'browser-host', hostName = 'Browser Host', capabilities = DEFAULT_HOST_CAPABILITIES, onInput = () => {}, onQuality = () => {}, clock = () => new Date().toISOString()} = {}) {
   if (!signaling || typeof signaling.connect !== 'function' || typeof signaling.send !== 'function' || typeof signaling.on !== 'function') throw new TypeError('signaling transport is required');
@@ -24,14 +24,14 @@ export function createBrowserHostRuntime({signaling, publisher, sessionId, hostI
         const negotiation = negotiateHostOffer({offer: message.payload, hostCapabilities: local});
         if (!negotiation.accepted) { send('session.answer', {accepted: false, hostId, hostName, reason: negotiation.reason}); bus.emit('rejected', negotiation.reason); return; }
         if (!publisher.stream) throw new Error('Capture must be started before accepting a session offer');
-        const answer = await publisher.acceptOffer(message.payload.sdp); activeSessionId = message.sessionId; state = 'connected';
-        send('session.answer', {accepted: true, hostId, hostName, capabilities: negotiation.capabilities, hostCapabilities: hostCapabilities(local, 'active'), sdp: answer}); bus.emit('connected', {sessionId: activeSessionId, capabilities: negotiation.capabilities}); return;
+        const answer = await publisher.acceptOffer(message.payload.sdp); activeSessionId = message.sessionId; state = 'connected'; const audioEnabled = Boolean(publisher.stream?.getAudioTracks?.().length);
+        send('session.answer', {accepted: true, hostId, hostName, capabilities: negotiation.capabilities, hostCapabilities: hostCapabilities(local, 'active', audioEnabled), sdp: answer}); bus.emit('connected', {sessionId: activeSessionId, capabilities: negotiation.capabilities}); return;
       }
       if (message.sessionId !== activeSessionId) return;
       if (message.type === 'session.ice-candidate') { await publisher.addIceCandidate(message.payload.candidate); return; }
       if (message.type === 'input.event') { onInput(message.payload); bus.emit('input', message.payload); return; }
       if (message.type === 'quality.request') { onQuality(message.payload); bus.emit('quality', message.payload); return; }
-      if (message.type === 'session.reconnect') { send('session.answer', {accepted: true, hostId, hostName, capabilities: negotiationCapabilities(), hostCapabilities: hostCapabilities(local, 'active')}); return; }
+      if (message.type === 'session.reconnect') { const audioEnabled = Boolean(publisher.stream?.getAudioTracks?.().length); send('session.answer', {accepted: true, hostId, hostName, capabilities: negotiationCapabilities(), hostCapabilities: hostCapabilities(local, 'active', audioEnabled)}); return; }
       if (message.type === 'session.close') close();
     } catch (error) { state = 'error'; bus.emit('error', error); }
   };

@@ -15,8 +15,10 @@ export function createNativeWeriftHost({signaling, module, pipeline, capturePlan
   required(nativePipeline, 'pipeline');
   let mediaPublisher = null;
   let audioPublisher = null;
+  const audioEnabled = Boolean(audioPipeline && audioPacketizer);
   const runtime = createWeriftHostRuntime({
     ...runtimeOptions,
+    audioEnabled: runtimeOptions.audioEnabled ?? audioEnabled,
     signaling,
     sessionId,
     sessionFactory: async ({onIceCandidate, onStateChange}) => {
