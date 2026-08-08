@@ -80,7 +80,7 @@
 - [x] User-facing transport and relay policy controls (runtime provider/host wiring pending).
 - [x] Controller, keyboard, pointer, and rumble forwarding contract (native OS injection pending).
 - [x] Shell-free native input executor boundary with permissions and rate limiting (OS adapter implementations pending).
-- [ ] Native OS input injection, audio return, and end-to-end haptics (Linux uinput virtual gamepad/force feedback and Windows XInput rumble are implemented when their host capabilities are available; native portal consent, Windows/macOS virtual gamepad injection, macOS haptics, audio device capture, and end-to-end verification remain pending).
+- [ ] Native OS input injection, audio return, and end-to-end haptics (Linux uinput virtual gamepad/force feedback, Windows XInput rumble, and macOS GameController/CoreHaptics output are implemented when their host capabilities are available; native portal consent, Windows/macOS virtual gamepad injection, audio device capture, and end-to-end verification remain pending).
 - [x] Cross-platform audio capture and publisher readiness contract (native audio publisher pending).
 - [x] Shell-free audio publisher and RTP handoff boundary with permission gating (native capture/codec adapters pending).
 - [x] Browser-to-host control-plane quality and input envelopes (OS adapters pending).
