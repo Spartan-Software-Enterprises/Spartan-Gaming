@@ -7,6 +7,8 @@ const CORE_PRESETS = Object.freeze({
   pcsx2: {controllerProfile: 'PlayStation layout', renderer: 'Vulkan/DirectX/OpenGL', features: ['save-state', 'memory-card', 'shaders', 'rumble'], notes: ['A legally dumped PS2 BIOS may be required.']},
   rpcs3: {controllerProfile: 'PlayStation layout', renderer: 'Vulkan/DirectX', features: ['save-state', 'shader-cache', 'rumble'], notes: ['Firmware, keys, and game data must be supplied legally by the user.']},
   ppsspp: {controllerProfile: 'PlayStation layout', renderer: 'Vulkan/Metal/DirectX/WebGPU candidate', features: ['save-state', 'texture-scaling', 'shaders', 'netplay-candidate', 'rumble'], notes: ['Native and browser paths may have different performance and feature coverage.']},
+  cemu: {controllerProfile: 'Nintendo layout', renderer: 'Vulkan/Metal/DirectX', features: ['save-state', 'shader-cache', 'graphic-packs', 'rumble'], notes: ['Wii U system files, keys, and game data remain user-provided and platform-specific.']},
+  vita3k: {controllerProfile: 'PlayStation layout', renderer: 'Vulkan/Metal/OpenGL', features: ['save-state', 'shader-cache', 'touch-screen', 'rumble'], notes: ['Vita firmware and game data must be supplied legally by the user; compatibility remains experimental.']},
   melonds: {controllerProfile: 'Nintendo layout', renderer: 'OpenGL/WebGPU candidate', features: ['save-state', 'integer-scaling', 'touch-screen'], notes: ['Dual-screen and touch input require an explicit layout.']},
   azahar: {controllerProfile: 'Nintendo layout', renderer: 'Vulkan/OpenGL', features: ['save-state', 'shader-cache', 'touch-screen'], notes: ['Native adapter and platform compatibility review required.']},
   mame: {controllerProfile: 'Arcade layout', renderer: 'OpenGL/WebGPU candidate', features: ['save-state', 'shaders', 'integer-scaling', 'netplay-candidate'], notes: ['Arcade set versions and per-machine files must match the selected core.']},
@@ -30,7 +32,7 @@ export function createEmulatorIntegration(core, {preference = 'automatic', rende
   const adapter = adapterRegistry?.resolve?.(core.id, {kind: 'emulator', platform, allowUnsigned: allowUnsignedAdapters}) || null;
   const browserReady = runtime === 'browser-wasm' && (report.graphics?.webgpuAdapter === true || report.graphics?.webgl === true || report.graphics === undefined);
   const selectedRenderer = renderer === 'Automatic' ? preset.renderer : renderer;
-  const firmwareRequired = ['pcsx2', 'rpcs3', 'xemu'].includes(core.id);
+  const firmwareRequired = ['pcsx2', 'rpcs3', 'xemu', 'vita3k'].includes(core.id);
   const runtimeSelection = resolveRuntimeProfile({coreId: core.id, preference: runtime, profiles: runtimeProfiles, platform: platform || 'browser', browserReady});
   return Object.freeze({coreId: core.id, runtime, renderer: selectedRenderer, controllerProfile: preset.controllerProfile, features: Object.freeze([...preset.features]), browserReady, adapter, runtimeProfile: runtimeSelection.profile, runtimeReadiness: runtimeSelection, content: Object.freeze({gameFiles: true, firmwareFiles: firmwareRequired, userSelectedOnly: true, licenseRequired: true}), notes: Object.freeze([...preset.notes, ...(adapter?.status === 'blocked' ? [adapter.reason] : []), ...(runtimeSelection.status !== 'ready' ? [runtimeSelection.reason] : []), ...(runtime === 'browser-wasm' && !browserReady ? ['Browser graphics capability is not confirmed; native adapter fallback is recommended.'] : [])])});
 }

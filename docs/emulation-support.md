@@ -50,9 +50,18 @@ The libretro adapter must support:
 
 ## Emulator catalog
 
+The built-in catalog currently covers Libretro/RetroArch, Dolphin, PCSX2,
+RPCS3, PPSSPP, DuckStation, Cemu, Vita3K, melonDS, Azahar, MAME, Flycast,
+xemu, and ScummVM. Each entry is a launch-planning descriptor rather than a
+promise that Spartan Gaming bundles or executes the upstream project. Runtime
+availability is resolved from the browser capability report, trusted local
+runtime profiles, or signed native adapter metadata.
+
 The first user-facing emulation center is available at `src/frontend/emulation/index.html`. It loads this catalog, shows runtime/license metadata, accepts explicit local game and firmware selections, and creates launch plans without uploading or bundling content.
 
 `src/frontend/emulation/integration.mjs` resolves each catalog entry into a runtime plan: browser-WASM candidate, Libretro core host, or signed native adapter. It also declares renderer, controller, save-state, shader, rewind, touch, netplay-candidate, and firmware requirements. A launch plan fails closed when a core declares firmware requirements and the user has not selected firmware; the frontend never downloads or distributes ROMs, BIOS, keys, or firmware.
+
+The current built-in catalog includes Cemu for Wii U and Vita3K for PlayStation Vita alongside the existing desktop and browser-oriented cores. These entries are metadata-only launch targets: Cemu is listed under its MPL-2.0 project license, while Vita3K is listed under GPL-2.0; neither project’s binaries, firmware, keys, ROMs, or game files are bundled by Spartan Gaming. Vita3K is explicitly presented as experimental and requires user-selected firmware before a launch plan can become ready.
 
 The emulation center also provides a local runtime-profile registry through
 `src/frontend/emulation/runtime-profiles.mjs`. Users can record the version,

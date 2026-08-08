@@ -29,7 +29,7 @@
 - [x] Unified frontend catalog and launcher model.
 - [x] Capability-aware launch plans with explicit readiness, troubleshooting, and next actions.
 - [x] Provider profiles for supported cloud, remote-play, and streaming services.
-- [x] Emulator/core profiles for libretro, Dolphin, PCSX2, RPCS3, PPSSPP, DuckStation, melonDS, Azahar, MAME, Flycast, xemu, and ScummVM.
+- [x] Emulator/core profiles for libretro, Dolphin, PCSX2, RPCS3, PPSSPP, DuckStation, Cemu, Vita3K, melonDS, Azahar, MAME, Flycast, xemu, and ScummVM.
 - [x] Browser-WASM/libretro runtime lifecycle contract with user-selected file gating.
 - [x] Emulation Center browser-adapter registration point with lifecycle controls.
 - [x] Shared keyboard and gamepad input bridge for browser emulation adapters.
