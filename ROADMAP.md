@@ -77,4 +77,5 @@
 - [x] Signed adapter and core manifest registry contract with WebCrypto verification (release service and packaged adapters pending).
 - [x] Release-safe adapter update planning with strict version/platform/trust filtering (installer and release service pending).
 - [x] Consent-gated frontend-to-native adapter install request contract (native updater and package signing pending).
+- [x] Shell-free native adapter installer transaction with digest/signature verification and rollback (archive extraction and package signing pending).
 - [x] Unified frontend runtime readiness contract for browser, native adapter, and self-hosted host layers.

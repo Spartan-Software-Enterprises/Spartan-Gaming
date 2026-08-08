@@ -20,6 +20,8 @@ The repository includes `host/agent.mjs` as a dependency-free Node.js reference 
 
 For a deployed signaling service, the same agent can join as a host participant with `--signal-endpoint`, `--signal-session`, and `--signal-ticket`. The ticket is role-scoped, supplied out of band, held in memory, and never written to the health response. The direct endpoint and outbound signaling mode share the same session answer and input/quality handling path.
 
+`host/adapter-installer.mjs` is the native updater boundary for signed frontend install requests. It validates user-scoped paths, stages artifacts under a private staging directory, verifies the declared SHA-256 digest and an injected signature verifier, publishes a versioned directory and atomically replaced `current.json` pointer, and removes its own staging/publication on failure. It never invokes a shell or extracts/executes an artifact; platform package managers and archive-specific adapters remain outside this transaction.
+
 `host/media.mjs` provides the next boundary for those platform implementations. It generates shell-free FFmpeg capture plans for Linux X11/PipeWire, Windows desktop capture, and macOS AVFoundation, validates basic permission context, and generates codec/bitrate encoder plans for H.264, VP9, and AV1. These plans target a future WebRTC publisher and are deliberately not executed by the reference agent.
 
 `host/publisher.mjs` composes those plans into a transport-neutral publisher
