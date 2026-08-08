@@ -15,17 +15,20 @@ Spartan Host is the native companion boundary for user-owned PCs, local emulator
 
 The browser is responsible for user consent, endpoint validation, capability negotiation, input routing, quality requests, and diagnostics. Browser Host applies bounded bitrate, framerate, and adaptive-resolution requests to WebRTC sender encodings when the browser exposes compatible sender controls, with graceful unsupported reporting. The host is responsible for authentication, process ownership, game/emulator launch, media capture/encode, and enforcement of local permissions.
 
-The optional Werift host runtime forwards quality requests to its media session’s sender-control hook when the installed WebRTC adapter exposes one. The result is reported as applied, unsupported, or failed without terminating the session; platform encoders remain responsible for translating the request into their native pipeline controls.
+The optional Werift host runtime forwards quality requests to its media session’s sender-control hook when the installed WebRTC adapter exposes one. The result is reported as applied, unsupported, or failed without terminating the session; platform encoders remain responsible for translating the request into their native pipeline controls. The host advertises video capabilities through `resolveHostVideoCapabilities()`: software FFmpeg always covers H.264 and VP9, AV1 is advertised only when a confirmed hardware encoder is present, and a display probe can cap resolution and refresh rate to what the output can actually deliver. HDR stays off unless the host explicitly enables and confirms display support.
 
 The host manager at `src/frontend/host/index.html` stores only non-secret host profiles in local browser storage. It can generate a `host.pair` request for a one-time code supplied by a running host agent, show the selected transport, and export/import endpoint preferences. The reference host agent validates the request, enforces expiry/replay protection, and now exposes bounded origin, connection, and message-rate controls; production credentials and deployment remain operator-owned.
 
-The repository includes `host/agent.mjs` as a dependency-free Node.js reference control plane. Run `npm run host -- --pairing-code ABCD23` to expose a local `ws://127.0.0.1:8787/session` endpoint and `/health`. It validates the pairing code once, answers protocol-v1 offers, records quality requests and input-event counts, and handles reconnect messages. In its default mode it intentionally reports `media.state: not-configured`: capture, encode, OS input injection, and TURN are separate host deployment work. For a directly TLS-terminated remote host, provide both `--tls-key /run/secrets/host.key --tls-cert /run/secrets/host.crt` (or `SPARTAN_HOST_TLS_KEY` and `SPARTAN_HOST_TLS_CERT`) to advertise `wss://` and protect `/health`; supplying only one path fails closed.
+The repository includes `host/agent.mjs` as a dependency-free Node.js reference control plane. Run `npm run host -- --pairing-code ABCD23` to expose a local `ws://127.0.0.1:8787/session` endpoint and `/health`. It validates the pairing code once, answers protocol-v1 offers, records quality requests and input-event counts, and handles reconnect messages. SIGINT, SIGTERM, and SIGHUP trigger a graceful shutdown: the agent closes every session (stopping any managed game launch and native bindings), drains connections, and exits cleanly. In its default mode it intentionally reports `media.state: not-configured`: capture, encode, OS input injection, and TURN are separate host deployment work. For a directly TLS-terminated remote host, provide both `--tls-key /run/secrets/host.key --tls-cert /run/secrets/host.crt` (or `SPARTAN_HOST_TLS_KEY` and `SPARTAN_HOST_TLS_CERT`) to advertise `wss://` and protect `/health`; supplying only one path fails closed.
 
 An operator with the optional `werift` package and an installed platform binding
 can run the executable media path with `--enable-native-media`. This mode keeps
 the same one-time pairing and launch-request checks, then bridges the accepted
 session into `createNativeWeriftHostFromPlatformBindings`; use
 `--enable-native-audio` only when microphone capture is explicitly permitted.
+`--audio-source` and `--audio-backend` select the capture device (an FFmpeg
+`-i` source such as a `pactl` source name) and Linux backend (PipeWire/Pulse)
+instead of `default`, and are validated against the binding's plan boundary.
 The native mode requires the platform package's capture binding and fails at
 startup when Werift or the binding is unavailable, rather than silently falling
 back to a non-streaming host. `--enable-input` remains an independent opt-in.
@@ -314,8 +317,26 @@ macOS injects the extended-keyboard F13–F20 range rather than those
 system keys, since its keycodes do not map them. Windows SendInput,
 macOS CGEvent, and the Linux X11 reference keep the same browser `code`
 vocabulary, including macOS's distinct forward-delete mapping.
-Gamepad/uinput, portal consent UI, hardware encoder selection, and signed
-distribution are intentionally not claimed by this reference adapter. The
+Gamepad/uinput, signed
+distribution, and automated portal dialog automation are intentionally not
+claimed by this reference adapter. Portal consent is modeled as an explicit
+`consent` boundary: the adapter reports whether an `xdg-desktop-portal`
+session bus is reachable, exposes `consent.request('capture' | 'audio')` and
+`consent.revoke()`, and refuses to produce a PipeWire/Pulse capture plan until
+the matching consent is granted. It never opens a portal dialog by itself; an
+operator or host UI supplies the real grant. Audio capture devices are
+enumerated without a shell through `host/audio.mjs`'s probe boundary
+(`listAudioCaptureDevices()`): the adapter's `audio.devices()` reads
+`pactl list short sources`, marks loopback `.monitor` sources separately, and
+returns stable device ids that are directly usable as the FFmpeg `-i` source.
+Hardware encoder selection is now
+detected from the local FFmpeg `-encoders` listing: `host/media.mjs` exposes
+`createFfmpegEncoderProbe()`, `listFfmpegEncoders()`, and
+`selectHardwareEncoder()`, and `createEncoderPlan()` selects a confirmed
+VAAPI/NVENC/QSV/VideoToolbox encoder (with the matching `-vaapi_device` and
+`format=nv12,hwupload` args for VAAPI) when a platform probe confirms it,
+falling back to software encoders otherwise. The Linux reference adapter
+reports detected hardware encoders in its serializable capabilities. The
 compiled `@spartan-gaming/native-linux` package now adds a Node-API `uinput`
 virtual gamepad for normalized buttons, axes, and rumble effects. The binding
 accepts the shared frontend `button-N` and `axis-N` controls directly, including
@@ -325,8 +346,7 @@ verified in Linux CI. The rumble effect carries the same strong/weak magnitude
 distinction as the Windows XInput binding, falling back to the shared `value`
 when only a single magnitude is supplied. Rumble is advertised only when
 `/dev/uinput` is writable; hosts without that device or permission
-fail closed. Portal consent workflow and hardware encoder selection remain
-unimplemented.
+fail closed.
 
 The virtual gamepad also reads force-feedback uploads from the kernel and
 forwards them to connected sessions as host-issued rumble input events, so a

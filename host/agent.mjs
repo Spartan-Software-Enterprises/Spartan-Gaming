@@ -6,7 +6,7 @@ import {createServer as createHttpsServer} from 'node:https';
 import {createSessionEnvelope} from '../src/frontend/session/session.mjs';
 import {validateTransportMessage} from '../src/frontend/transport/transport.mjs';
 import {createPairingAuthority, createPairingCode} from './pairing.mjs';
-import {normalizeHostCapabilities} from './capabilities.mjs';
+import {normalizeHostCapabilities, resolveHostVideoCapabilities} from './capabilities.mjs';
 import {detectHostRuntime} from './environment.mjs';
 import {createInputInjectionPlan, createNativeInputExecutor, virtualGamepadPermissionGranted} from './input.mjs';
 import {createRumbleBroadcastController} from './rumble-passthrough.mjs';
@@ -43,12 +43,16 @@ const environment = hostRuntime.environment;
 const inputEnabled = args.get('enable-input') === true || args.get('enable-input') === 'true';
 const nativeMediaEnabled = args.get('enable-native-media') === true || args.get('enable-native-media') === 'true';
 const nativeAudioEnabled = args.get('enable-native-audio') === true || args.get('enable-native-audio') === 'true';
+const nativeAudioSource = args.get('audio-source') ? String(args.get('audio-source')) : null;
+const nativeAudioBackend = args.get('audio-backend') ? String(args.get('audio-backend')) : null;
+const audioOptions = Object.freeze({...(nativeAudioSource ? {source: nativeAudioSource} : {}), ...(nativeAudioBackend ? {backend: nativeAudioBackend} : {})});
 let weriftModule = null;
 if (nativeMediaEnabled) {
   try { weriftModule = await loadWerift(); } catch { throw new Error('native media requires the optional werift package; install it before using --enable-native-media'); }
   if (!hostRuntime.bindings?.capture?.plan) throw new Error('native media requires an installed platform binding with capture.plan()');
 }
-const capabilities = {transports: nativeMediaEnabled ? ['webrtc'] : ['websocket'], video: {codecs: ['h264', 'vp9'], maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false}, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: environment.inputAdapter.gamepad, keyboard: environment.inputAdapter.keyboard, pointer: environment.inputAdapter.pointer, rumble: environment.inputAdapter.rumble}};
+const hostVideo = resolveHostVideoCapabilities({encoders: environment.nativeBinding?.capabilities?.encoders?.hardware, display: hostRuntime.bindings?.display || null, maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false});
+const capabilities = {transports: nativeMediaEnabled ? ['webrtc'] : ['websocket'], video: hostVideo, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: environment.inputAdapter.gamepad, keyboard: environment.inputAdapter.keyboard, pointer: environment.inputAdapter.pointer, rumble: environment.inputAdapter.rumble}};
 const virtualGamepadPermission = virtualGamepadPermissionGranted({inputEnabled, inputAdapter: environment.inputAdapter});
 const inputExecutor = inputEnabled && hostRuntime.bindings?.input && environment.readiness.osInput ? createNativeInputExecutor({platform: environment.platform, adapter: hostRuntime.bindings.input, permissions: {'remote-input': true, 'virtual-gamepad': virtualGamepadPermission}}) : null;
 const rumbleBroadcast = inputExecutor ? createRumbleBroadcastController({adapter: inputExecutor.adapter}) : null;
@@ -93,7 +97,7 @@ async function handleMessage(connection, text, session) {
     if (!pairing.verify(message.payload.pairingCode)) { connection.close(); return; }
     let native;
     try {
-      native = createNativeWeriftConnection({connection, sessionId: message.sessionId, bindings: hostRuntime.bindings, module: weriftModule, platform: environment.platform, permissions: {'screen-capture': true, 'remote-input': inputEnabled, 'virtual-gamepad': virtualGamepadPermission, ...(nativeAudioEnabled ? {microphone: true, 'microphone-capture': true} : {})}, includeAudio: nativeAudioEnabled, runtimeProfile: nativeRuntimeProfile, gamePath: args.get('game-path') ? String(args.get('game-path')) : null, gameArgs: configuredGameArgs, gameCwd: args.get('game-cwd'), gameEnv: undefined, hostContentId: args.get('host-content-id') ? String(args.get('host-content-id')) : null, hostId, hostName, capabilities, onInput: () => { inputEvents += 1; }, onQuality: quality => { lastQuality = quality; }});
+      native = createNativeWeriftConnection({connection, sessionId: message.sessionId, bindings: hostRuntime.bindings, module: weriftModule, platform: environment.platform, permissions: {'screen-capture': true, 'remote-input': inputEnabled, 'virtual-gamepad': virtualGamepadPermission, ...(nativeAudioEnabled ? {microphone: true, 'microphone-capture': true} : {})}, includeAudio: nativeAudioEnabled, audioOptions, runtimeProfile: nativeRuntimeProfile, gamePath: args.get('game-path') ? String(args.get('game-path')) : null, gameArgs: configuredGameArgs, gameCwd: args.get('game-cwd'), gameEnv: undefined, hostContentId: args.get('host-content-id') ? String(args.get('host-content-id')) : null, hostId, hostName, capabilities, onInput: () => { inputEvents += 1; }, onQuality: quality => { lastQuality = quality; }});
       session.native = native; session.sessionId = message.sessionId;
       const connected = new Promise((resolve, reject) => { const offConnected = native.host.on('connected', value => { offConnected?.(); offError?.(); resolve(value); }); const offError = native.host.on('error', error => { offConnected?.(); offError?.(); reject(error); }); });
       await native.start(); native.receive(message); await connected; session.accepted = true; sessions.add(session); if (rumbleBroadcast && session.send) rumbleBroadcast.add(session); return;
@@ -152,4 +156,20 @@ server.listen(port, bind, () => {
   signalingClient = createHostSignalingClient({endpoint: signalEndpoint, sessionId: signalSessionId, ticket: signalTicket, onMessage: message => handleMessage(signalingClient, JSON.stringify(message), signalSession), onError: error => console.error(`host signaling error: ${error.message}`), onClose: () => console.error('host signaling connection closed')});
   signalingClient.connect().catch(error => { console.error(`host signaling connection failed: ${error.message}`); process.exitCode = 1; });
 });
+let shuttingDown = false;
+function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log(`host received ${signal}; stopping sessions and children before exit`);
+  const forceExit = setTimeout(() => { process.exitCode = 1; process.exit(1); }, 5_000);
+  forceExit.unref?.();
+  for (const session of sessions) { if (session.native?.close) session.native.close(); if (session.gameStarted) { void gameLaunch?.launcher.stop().catch(() => {}); session.gameStarted = false; } }
+  sessions.clear();
+  for (const socket of connections) socket.end(closeFrame());
+  connections.clear();
+  server.close(() => { clearTimeout(forceExit); process.exit(0); });
+}
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGHUP', () => shutdown('SIGHUP'));
 server.on('close', () => { rumbleBroadcast?.detach(); inputExecutor?.close(); });

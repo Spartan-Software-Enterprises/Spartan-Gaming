@@ -72,14 +72,14 @@ export function createNativeWeriftHost({signaling, module, pipeline, capturePlan
  * OS APIs; this composition layer owns permission gates, FFmpeg plans,
  * WebRTC publication, and remote-input dispatch.
  */
-export function createNativeWeriftHostFromPlatformBindings({bindings, platform = bindings?.platform, captureOptions = {}, audioOptions = {}, permissions = {}, includeAudio = true, width = 1920, height = 1080, framerate = 60, codec = 'h264', bitrateKbps = 10000, audioCodec = 'opus', audioBitrateKbps = 128, audioPacketizer, runtimeProfile = null, gamePath = null, gameArgs = [], gameCwd, gameEnv, hostContentId = null, ...options} = {}) {
+export function createNativeWeriftHostFromPlatformBindings({bindings, platform = bindings?.platform, captureOptions = {}, audioOptions = {}, permissions = {}, includeAudio = true, width = 1920, height = 1080, framerate = 60, codec = 'h264', bitrateKbps = 10000, audioCodec = 'opus', audioBitrateKbps = 128, audioPacketizer, runtimeProfile = null, gamePath = null, gameArgs = [], gameCwd, gameEnv, hostContentId = null, probeEncoders = null, encoderDevice = null, ...options} = {}) {
   required(bindings, 'bindings');
   if (bindings.platform !== platform) throw new TypeError('platform bindings must match the requested platform');
   if (typeof bindings.capture?.plan !== 'function') throw new TypeError('platform bindings must provide capture.plan(options)');
   if (runtimeProfile && gamePath && !hostContentId) throw new TypeError('hostContentId is required when native game launch is configured');
   const capturePermissionGranted = captureOptions.permissionGranted === true || permissions['screen-capture'] === true || permissions['screen-recording'] === true;
   const capturePlan = bindings.capture.plan({...captureOptions, width, height, framerate, permissionGranted: capturePermissionGranted});
-  const encoderPlan = createEncoderPlan({codec, width, height, framerate, bitrateKbps});
+  const encoderPlan = createEncoderPlan({codec, width, height, framerate, bitrateKbps, platform, probe: probeEncoders, device: encoderDevice});
   const videoPacketizer = options.packetizer || createRtpPacketizer({codec, ssrc: options.ssrc ?? 1, RtpPacket: options.module?.RtpPacket, RtpHeader: options.module?.RtpHeader});
   const gameLauncher = runtimeProfile && gamePath ? createGameLauncher({plan: createGameLaunchPlan({platform, runtimeProfile, gamePath, args: gameArgs, cwd: gameCwd, env: gameEnv}) , spawnImpl: options.spawnImpl, maxOutputBytes: options.maxOutputBytes, stopTimeoutMs: options.stopTimeoutMs}) : null;
   const gameName = gamePath?.split(/[\\/]/).pop();

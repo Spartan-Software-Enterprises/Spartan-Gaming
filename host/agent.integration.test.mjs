@@ -69,3 +69,18 @@ test('reference host exposes health CORS only for configured origins', async () 
     assert.equal(denied.status, 403);
   } finally { child.kill(); await new Promise(resolve => child.once('exit', resolve)); }
 });
+
+test('reference host shuts down gracefully and stops a managed game launch on SIGTERM', async () => {
+  const {child, info} = await startAgent(['--enable-game-launch', '--runtime-id', 'node-runtime', '--runtime-path', process.execPath, '--runtime-version', process.version, '--game-path', 'spartan-test.iso', '--host-content-id', 'node-test', '--game-args-json', '["-e","setInterval(() => {}, 1000)"]']);
+  const exit = new Promise(resolve => child.once('exit', resolve));
+  const client = socketClient(new URL(info.endpoint).port); const manager = createSessionManager({idFactory: () => 'ses-shutdown'});
+  try {
+    await client.ready;
+    const launch = createNativeHostLaunchRequest({plan: {status: 'ready', coreId: 'node-runtime', files: [{kind: 'game', name: 'spartan-test.iso', size: 1, userSelected: true}], integration: {runtime: 'native-emulator', runtimeProfile: {id: 'node-runtime', kind: 'native-emulator', version: process.version, trust: 'signed', enabled: true}}}, hostContentId: 'node-test', consent: true});
+    const offer = manager.start({backend: {id: 'spartan-host', backendType: 'remote-play', hostId: 'host-integration', pairingCode: 'ABCD23'}, launch, capabilities: {transports: ['websocket'], video: {codecs: ['h264'], maxWidth: 1920, maxHeight: 1080, maxFramerate: 60, hdr: false}, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: false, keyboard: true, pointer: true, rumble: false}}});
+    client.send(offer); const answer = JSON.parse(await client.next()); assert.equal(answer.payload.accepted, true);
+    const running = await fetch(info.health).then(response => response.json()); assert.equal(running.gameLaunch.state, 'running');
+    child.kill('SIGTERM');
+    assert.equal(await exit, 0);
+  } finally { client.close(); if (child.exitCode === null) child.kill(); }
+});

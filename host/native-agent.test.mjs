@@ -24,3 +24,10 @@ test('native Werift connection bridges an authenticated session into the executa
   const offer = createSessionEnvelope({sessionId: 'ses-native-bridge', type: 'session.offer', payload: {sdp: {type: 'offer', sdp: 'native-offer'}, transports: ['webrtc'], video: {codecs: ['h264'], maxWidth: 1920, maxHeight: 1080, maxFramerate: 60, hdr: false}, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: false, keyboard: true, pointer: true, rumble: false}}});
   await native.start(); native.receive(offer); await new Promise(resolve => setTimeout(resolve, 0)); assert.equal(native.host.state, 'connected'); assert.equal(sent.at(-1).payload.accepted, true); assert.equal(sent.at(-1).payload.sdp.sdp, 'native-answer'); native.close();
 });
+
+test('native Werift connection forwards the selected audio device source into the audio plan', async () => {
+  const plans = [];
+  const native = createNativeWeriftConnection({connection: {send() {}, close() {}}, sessionId: 'ses-native-audio-device', platform: 'linux', module: fakeWerift(), bindings: {platform: 'linux', capture: {plan() { return {platform: 'linux', channels: 2, sampleRate: 48000, output: {target: 'stdout'}, process: {shell: false, args: []}}; }}, audio: {plan(options) { plans.push(options); return {platform: 'linux', channels: 2, sampleRate: 48000, output: {target: 'stdout', requiresPublisher: true}, process: {shell: false, args: []}}; }}}, includeAudio: true, audioOptions: {source: 'alsa_input.usb-mic', backend: 'pipewire'}, permissions: {microphone: true}});
+  const offer = createSessionEnvelope({sessionId: 'ses-native-audio-device', type: 'session.offer', payload: {sdp: {type: 'offer', sdp: 'offer'}, transports: ['webrtc'], video: {codecs: ['h264']}, audio: {codecs: ['opus']}, input: {gamepad: false, keyboard: true, pointer: true, rumble: false}}});
+  await native.start(); native.receive(offer); await new Promise(resolve => setTimeout(resolve, 0)); assert.equal(plans[0].source, 'alsa_input.usb-mic'); assert.equal(plans[0].backend, 'pipewire'); assert.equal(plans[0].permissionGranted, true); native.close();
+});

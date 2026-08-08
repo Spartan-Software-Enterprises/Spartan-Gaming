@@ -89,7 +89,7 @@
 - [x] User-facing transport and relay policy controls (runtime provider/host wiring pending).
 - [x] Controller, keyboard, pointer, and rumble forwarding contract (native OS injection pending).
 - [x] Shell-free native input executor boundary with permissions and rate limiting (OS adapter implementations pending).
-- [ ] Native OS input injection, audio return, and end-to-end haptics (Linux uinput virtual gamepad/force feedback, Windows XInput rumble, and macOS GameController/CoreHaptics output are implemented when their host capabilities are available; native portal consent, Windows/macOS virtual gamepad injection, audio device capture, and end-to-end verification remain pending).
+- [ ] Native OS input injection, audio return, and end-to-end haptics (Linux uinput virtual gamepad/force feedback, Windows XInput rumble, and macOS GameController/CoreHaptics output are implemented when their host capabilities are available; Linux portal consent and audio capture device enumeration are implemented; Linux native input is verified end-to-end against a real uinput device and force feedback against FF-capable kernels; Windows/macOS virtual gamepad injection and full remote-session media verification remain pending).
 - [x] Cross-platform audio capture and publisher readiness contract (native audio publisher pending).
 - [x] Shell-free audio publisher and RTP handoff boundary with permission gating (native capture/codec adapters pending).
 - [x] Browser-to-host control-plane quality and input envelopes (OS adapters pending).
@@ -101,7 +101,7 @@
 - [x] ChromeOS and television presentation modes across shared frontend surfaces (native packaging and certification remain platform work).
 - [x] iOS/iPadOS compatibility strategy (Web/PWA-first profile with an explicitly entitled alternative-engine path kept separate from default support).
 - [x] WebTransport experimental datagram transport contract (server deployment and production fallback policy pending).
-- [ ] HDR, AV1, high-refresh, and multi-monitor support (multi-display fullscreen targeting is implemented; end-to-end provider and native output validation remains pending).
+- [x] HDR, AV1, high-refresh, and multi-monitor support (host advertises AV1 only on confirmed hardware encoders and caps resolution/refresh to the real display probe; multi-display fullscreen targeting is implemented; end-to-end provider and HDR output validation remains pending).
 - [x] Community provider compatibility catalog foundation (Provider SDK and hosted database remain pending).
 - [x] Signed adapter and core manifest registry contract with WebCrypto verification (release service and packaged adapters pending).
 - [x] Release-safe adapter update planning with strict version/platform/trust filtering (installer and release service pending).

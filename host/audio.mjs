@@ -20,6 +20,63 @@ export function validateAudioPermission({platform, backend, environment = {}} = 
   return Object.freeze({allowed: true, reason: 'Environment permits an audio capture attempt'});
 }
 
+function titleCase(value) { return String(value).replaceAll('-', ' ').replaceAll('_', ' ').replaceAll('.', ' ').replace(/(^|\s)\w/g, match => match.toUpperCase()); }
+function frozenDevices(devices) { return Object.freeze(devices.map(device => Object.freeze(device))); }
+
+/** Parse `pactl list short sources` into stable, plan-usable capture devices. */
+export function parsePactlSources(output = '') {
+  const devices = [];
+  for (const line of String(output).split('\n')) {
+    const fields = line.trim().split('\t');
+    if (fields.length < 4 || !fields[1]) continue;
+    const name = fields[1];
+    devices.push({id: name, label: titleCase(name), kind: name.endsWith('.monitor') ? 'monitor' : 'capture', state: fields[3]});
+  }
+  return frozenDevices(devices);
+}
+
+/** Parse `ffmpeg -f avfoundation -list_devices true` input device entries. */
+export function parseAvfoundationDevices(output = '') {
+  const devices = []; let index = null;
+  for (const line of String(output).split('\n')) {
+    const header = line.match(/\[AVFoundation input device at index (\d+)\]/);
+    if (header) { index = Number(header[1]); continue; }
+    if (index !== null && line.trim()) { devices.push({id: String(index), label: line.trim(), kind: 'microphone'}); index = null; }
+  }
+  return frozenDevices(devices);
+}
+
+/** Parse DirectShow audio device entries from `ffmpeg -list_devices true -f dshow -i dummy`. */
+export function parseDshowAudioDevices(output = '') {
+  const devices = []; let inAudio = false;
+  for (const line of String(output).split('\n')) {
+    if (line.includes('DirectShow video devices')) { inAudio = false; continue; }
+    if (line.includes('DirectShow audio devices')) { inAudio = true; continue; }
+    const match = line.match(/\]\s+"([^"]+)"\s*$/);
+    if (inAudio && match) devices.push({id: `audio=${match[1]}`, label: match[1], kind: 'microphone'});
+  }
+  return frozenDevices(devices);
+}
+
+export function parseAudioCaptureDevices(output = '', format = 'pulse') {
+  if (format === 'avfoundation') return parseAvfoundationDevices(output);
+  if (format === 'dshow') return parseDshowAudioDevices(output);
+  return parsePactlSources(output);
+}
+
+/**
+ * Enumerate audio capture devices through shell-free probe commands. `run`
+ * must return captured stdout or null on failure, mirroring the encoder probe
+ * boundary. Device `id` values are directly usable as FFmpeg `-i` sources.
+ */
+export function listAudioCaptureDevices({platform, backend, run, includeMonitors = false} = {}) {
+  if (!run || !PLATFORMS.has(platform)) return Object.freeze([]);
+  const format = backend === 'coreaudio' ? 'avfoundation' : backend === 'wasapi' ? 'dshow' : 'pulse';
+  const output = backend === 'coreaudio' ? run('ffmpeg', ['-f', 'avfoundation', '-list_devices', 'true', '-i', '']) : backend === 'wasapi' ? run('ffmpeg', ['-list_devices', 'true', '-f', 'dshow', '-i', 'dummy']) : run('pactl', ['list', 'short', 'sources']);
+  const devices = parseAudioCaptureDevices(output || '', format);
+  return includeMonitors ? devices : Object.freeze(devices.filter(device => device.kind !== 'monitor'));
+}
+
 export function createAudioCapturePlan({platform, backend, source, channels = 2, sampleRate = 48000, environment = {}} = {}) {
   required(source, 'source');
   if (!PLATFORMS.has(platform) || !BACKENDS.has(backend)) throw new TypeError('unsupported audio platform or backend');

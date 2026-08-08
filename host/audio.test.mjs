@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createAudioCapturePlan, createAudioEncoderPlan, createAudioPublisher, createAudioPublisherPlan, createRtpAudioPublisher, listAudioBackends, normalizeAudioCapabilities, validateAudioPermission} from './audio.mjs';
+import {createAudioCapturePlan, createAudioEncoderPlan, createAudioPublisher, createAudioPublisherPlan, createRtpAudioPublisher, listAudioBackends, listAudioCaptureDevices, normalizeAudioCapabilities, parseAudioCaptureDevices, validateAudioPermission} from './audio.mjs';
 
 test('audio backend matrix covers Windows, macOS, and Linux', () => {
   assert.deepEqual(listAudioBackends('win32').map(item => item.backend), ['wasapi']);
@@ -44,4 +44,28 @@ test('RTP audio publisher delegates packetization and transport delivery', async
 
 test('audio publisher requires explicit capture permission', () => {
   assert.throws(() => createAudioPublisher({pipeline: {start() {}, stop() {}}, sink: {write() {}}}), /permission/);
+});
+
+test('audio device enumeration parses pactl sources and hides loopback monitors by default', () => {
+  const output = '0\talsa_output.pci-0000_00_1f.3.analog-stereo.monitor\tmodule-alsa-card.c\tRUNNING\n1\talsa_input.pci-0000_00_1f.3.analog-stereo\tmodule-alsa-card.c\tRUNNING\n2\talsa_input.usb-046d_C922_Pro_Stream_Webcam\tmodule-alsa-card.c\tSUSPENDED\n';
+  const devices = listAudioCaptureDevices({platform: 'linux', backend: 'pipewire', run: () => output});
+  assert.deepEqual(devices.map(device => device.id), ['alsa_input.pci-0000_00_1f.3.analog-stereo', 'alsa_input.usb-046d_C922_Pro_Stream_Webcam']);
+  assert.equal(devices[0].kind, 'capture');
+  assert.equal(devices[0].state, 'RUNNING');
+  const withMonitors = listAudioCaptureDevices({platform: 'linux', backend: 'pulse', run: () => output, includeMonitors: true});
+  assert.equal(withMonitors[0].kind, 'monitor');
+  assert.deepEqual(parseAudioCaptureDevices(output, 'pipewire')[0], {id: 'alsa_output.pci-0000_00_1f.3.analog-stereo.monitor', label: 'Alsa Output Pci 0000 00 1f 3 Analog Stereo Monitor', kind: 'monitor', state: 'RUNNING'});
+});
+
+test('audio device enumeration parses AVFoundation and DirectShow listings', () => {
+  const avfoundation = '[AVFoundation input device at index 0]\n    Built-in Microphone\n[AVFoundation input device at index 1]\n    Built-in Input\n';
+  assert.deepEqual(listAudioCaptureDevices({platform: 'darwin', backend: 'coreaudio', run: (command, args) => { assert.equal(command, 'ffmpeg'); assert.deepEqual(args, ['-f', 'avfoundation', '-list_devices', 'true', '-i', '']); return avfoundation; }}), [{id: '0', label: 'Built-in Microphone', kind: 'microphone'}, {id: '1', label: 'Built-in Input', kind: 'microphone'}]);
+  const dshow = '[dshow @ 0x55] DirectShow video devices\n[dshow @ 0x55]  "OBS Virtual Camera"\n[dshow @ 0x55] DirectShow audio devices\n[dshow @ 0x55]  "Microphone (Realtek High Definition Audio)"\n';
+  assert.deepEqual(listAudioCaptureDevices({platform: 'win32', backend: 'wasapi', run: () => dshow}), [{id: 'audio=Microphone (Realtek High Definition Audio)', label: 'Microphone (Realtek High Definition Audio)', kind: 'microphone'}]);
+});
+
+test('audio device enumeration fails closed when no probe is available', () => {
+  assert.deepEqual(listAudioCaptureDevices({platform: 'linux', backend: 'pipewire', run: () => null}), []);
+  assert.deepEqual(listAudioCaptureDevices({platform: 'linux', backend: 'pipewire'}), []);
+  assert.deepEqual(listAudioCaptureDevices({platform: 'unsupported', backend: 'pipewire', run: () => '0\tname\tmodule\tRUNNING'}), []);
 });

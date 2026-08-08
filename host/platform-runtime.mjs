@@ -8,9 +8,9 @@ function captureDefaults(platform, environment, source) { if (source) return sou
 function audioDefaults(platform, environment, source) { if (source) return source; if (platform === 'win32') return {backend: 'wasapi', source: 'default'}; if (platform === 'darwin') return {backend: 'coreaudio', source: 'default'}; return environment.WAYLAND_DISPLAY || environment.XDG_RUNTIME_DIR ? {backend: 'pipewire', source: 'default'} : {backend: 'pulse', source: 'default'}; }
 
 /** Select platform-native capture/audio plans without executing them. */
-export function createPlatformRuntimePlans({platform, environment = {}, source, audioSource, width = 1920, height = 1080, framerate = 60, codec = 'h264', bitrateKbps = 10_000, includeAudio = true} = {}) {
+export function createPlatformRuntimePlans({platform, environment = {}, source, audioSource, width = 1920, height = 1080, framerate = 60, codec = 'h264', bitrateKbps = 10_000, includeAudio = true, probeEncoders = null, encoderDevice = null} = {}) {
   if (!PLATFORMS.has(platform)) throw new TypeError(`unsupported platform: ${platform}`);
-  const selectedCapture = captureDefaults(platform, environment, source); const capturePlan = createCapturePlan({platform, ...selectedCapture, width, height, framerate, audio: includeAudio, environment}); const encoderPlan = createEncoderPlan({codec, width, height, framerate, bitrateKbps});
+  const selectedCapture = captureDefaults(platform, environment, source); const capturePlan = createCapturePlan({platform, ...selectedCapture, width, height, framerate, audio: includeAudio, environment}); const encoderPlan = createEncoderPlan({codec, width, height, framerate, bitrateKbps, platform, probe: probeEncoders, device: encoderDevice});
   const audioPlan = includeAudio ? createAudioCapturePlan({platform, ...audioDefaults(platform, environment, audioSource), environment}) : null;
   const audioEncoder = audioPlan ? createAudioEncoderPlan({channels: audioPlan.channels, sampleRate: audioPlan.sampleRate}) : null;
   const audioPublisherPlan = audioPlan ? createAudioPublisherPlan({capturePlan: audioPlan}) : null;
