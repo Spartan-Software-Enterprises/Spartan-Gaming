@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: 20
       - name: Run dependency-free contract suite
-        run: npm test --ignore-scripts
+        run: npm test --ignore-scripts -- --test-concurrency=${{ matrix.platform == 'windows' && '1' || '8' }}
       - name: Run optional Werift adapter contract in isolation
         run: npm run test:werift
       - name: Run device presentation contract
