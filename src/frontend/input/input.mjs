@@ -36,6 +36,8 @@ export function createInputMapper({bindings = DEFAULT_BINDINGS, deadzone = 0.12}
     controlsFor(action) { return activeBindings[action] ? [activeBindings[action]] : []; },
     mapButton(index, pressed, value = pressed ? 1 : 0) { const action = this.actionFor(`button-${index}`); return action ? {type: 'input.event', action, pressed: Boolean(pressed), value: clamp(value, 0, 1)} : null; },
     mapAxis(index, value) { const normalized = applyDeadzone(clamp(value), deadzone); const direction = normalized < 0 ? 'negative' : 'positive'; const action = this.actionFor(`axis-${index}-${direction}`); return action && normalized !== 0 ? {type: 'input.event', action, kind: 'axis', pressed: true, value: normalized} : null; },
+    mapNativeButton(index, pressed, value = pressed ? 1 : 0) { return Number.isInteger(index) && index >= 0 && index <= 15 ? {type: 'input.event', action: `button-${index}`, kind: 'button', pressed: Boolean(pressed), value: clamp(value, 0, 1)} : null; },
+    mapNativeAxis(index, value, previousValue = 0) { const current = clamp(value); const previous = clamp(previousValue); return Math.abs(current - previous) < 0.0001 ? [] : [{type: 'input.event', action: `axis-${index}`, kind: 'axis', pressed: current !== 0, value: current}]; },
     mapAxisTransition(index, value, previousValue = 0) {
       const current = clamp(value); const previous = clamp(previousValue); const currentDirection = normalizedAxisDirection(current); const previousDirection = normalizedAxisDirection(previous); const events = [];
       if (previousDirection && previousDirection !== currentDirection) {
