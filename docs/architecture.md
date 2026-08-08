@@ -98,7 +98,7 @@ The session runtime in `src/frontend/session/session.mjs` provides the first tra
 
 Universal controller input is normalized in `src/frontend/input/input.mjs`. It applies configurable analog deadzones and maps browser Gamepad API buttons/axes to stable action events, leaving platform-specific HID, keyboard, touch, and native controller adapters free to feed the same action vocabulary.
 
-Adaptive streaming policy is implemented in `src/frontend/session/quality.mjs`. Health telemetry is bounded before use, classified into good/fair/poor network states, and converted into a shared profile request. Degradation steps down quickly; recovery requires consecutive healthy samples to avoid oscillation.
+Adaptive streaming policy is implemented in `src/frontend/session/quality.mjs`. Health telemetry is bounded before use, classified into good/fair/poor network states, and converted into a shared profile request. The policy accepts both the transport-neutral `bandwidthKbps`/`frameDrops` vocabulary and the WebRTC collector's `bitrateKbps`/`framesDropped`/`decodeFps` fields. Degradation steps down quickly; recovery requires consecutive healthy samples to avoid oscillation.
 
 The WebRTC telemetry collector derives only bounded, aggregate health values from
 the peer connection: round-trip time, packet loss, decode rate, dropped frames,

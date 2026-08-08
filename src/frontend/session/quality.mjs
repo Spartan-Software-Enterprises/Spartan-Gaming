@@ -10,10 +10,15 @@ function clamp(value, minimum, maximum) { return Math.max(minimum, Math.min(maxi
 function profileIndex(id) { return Math.max(0, QUALITY_PROFILES.findIndex(profile => profile.id === id)); }
 
 export function normalizeHealthTelemetry(sample = {}) {
+  const bitrate = sample.bandwidthKbps ?? sample.bitrateKbps;
+  const dropped = sample.frameDrops ?? sample.framesDropped;
+  const decodeFps = Number(sample.decodeFps);
+  const inferredDecodeMs = Number.isFinite(decodeFps) && decodeFps > 0 ? Math.max(0, (60 - decodeFps) * 2) : undefined;
   const normalized = {
     rttMs: clamp(Number(sample.rttMs) || 0, 0, 5000), jitterMs: clamp(Number(sample.jitterMs) || 0, 0, 1000),
-    packetLossPct: clamp(Number(sample.packetLossPct) || 0, 0, 100), decodeMs: clamp(Number(sample.decodeMs) || 0, 0, 1000),
-    bandwidthKbps: clamp(Number(sample.bandwidthKbps) || 0, 0, 1000000), frameDrops: Math.max(0, Math.floor(Number(sample.frameDrops) || 0)),
+    packetLossPct: clamp(Number(sample.packetLossPct) || 0, 0, 100), decodeMs: clamp(Number(sample.decodeMs ?? inferredDecodeMs) || 0, 0, 1000),
+    decodeFps: Number.isFinite(decodeFps) ? clamp(decodeFps, 0, 240) : null,
+    bandwidthKbps: clamp(Number(bitrate) || 0, 0, 1000000), frameDrops: Math.max(0, Math.floor(Number(dropped) || 0)),
     timestamp: sample.timestamp || new Date().toISOString(),
   };
   if (typeof normalized.timestamp !== 'string') throw new TypeError('telemetry timestamp must be a string');
@@ -22,8 +27,8 @@ export function normalizeHealthTelemetry(sample = {}) {
 
 export function classifyNetworkHealth(sample) {
   const health = normalizeHealthTelemetry(sample);
-  if (health.packetLossPct >= 5 || health.rttMs >= 220 || health.jitterMs >= 45 || health.decodeMs >= 55) return 'poor';
-  if (health.packetLossPct >= 2 || health.rttMs >= 120 || health.jitterMs >= 25 || health.decodeMs >= 35) return 'fair';
+  if (health.packetLossPct >= 5 || health.rttMs >= 220 || health.jitterMs >= 45 || health.decodeMs >= 55 || (health.bandwidthKbps > 0 && health.bandwidthKbps < 3000) || (health.decodeFps !== null && health.decodeFps > 0 && health.decodeFps < 30)) return 'poor';
+  if (health.packetLossPct >= 2 || health.rttMs >= 120 || health.jitterMs >= 25 || health.decodeMs >= 35 || (health.bandwidthKbps > 0 && health.bandwidthKbps < 6000) || (health.decodeFps !== null && health.decodeFps > 0 && health.decodeFps < 45)) return 'fair';
   return 'good';
 }
 
