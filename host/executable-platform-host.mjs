@@ -17,3 +17,10 @@ export function createExecutablePlatformHost({platform, plans, pipeline = null, 
   const session = createNativeHostSession({platform, mediaPublisher: media.publisher, audioPublisher, inputExecutor: input});
   return Object.freeze({platform, plans, pipeline: nativePipeline, mediaPublisher: media, inputExecutor: input, adapterBoundary, audioPublisher, session});
 }
+
+/** Load a verified installed adapter and compose it into an executable host. */
+export async function createExecutablePlatformHostFromInstalledAdapter({adapterRuntime, adapterRegistry, adapterKind = 'input', ...options} = {}) {
+  if (!adapterRuntime || typeof adapterRuntime.createBoundary !== 'function') throw new TypeError('adapterRuntime must implement createBoundary()');
+  const activated = await adapterRuntime.createBoundary({registry: adapterRegistry, kind: adapterKind});
+  return Object.freeze({...createExecutablePlatformHost({...options, adapterBoundary: activated.boundary}), installedAdapter: Object.freeze({manifest: activated.manifest, adapter: activated.adapter})});
+}

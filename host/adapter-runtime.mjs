@@ -2,6 +2,7 @@ import {promises as defaultFs} from 'node:fs';
 import {isAbsolute, join, relative, resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {normalizeAdapterPackageManifest} from './adapter-package.mjs';
+import {createPlatformAdapterBoundary} from './platform-adapters.mjs';
 
 const PLATFORMS = new Set(['win32', 'darwin', 'linux']);
 const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/;
@@ -29,5 +30,5 @@ export function createInstalledAdapterRuntime({installRoot, id, platform, fsImpl
     const entrypoint = inside(target, resolve(target, ...manifest.entrypoint.split('/')));
     return Object.freeze({pointer: Object.freeze(pointer), manifest, target, entrypoint});
   }
-  return Object.freeze({async inspect() { return inspect(); }, async load() { const record = await inspect(); if (!await verifyManifest({manifest: record.manifest, target: record.target})) throw new Error('installed adapter manifest verification failed'); const module = await loadModule(pathToFileURL(record.entrypoint).href); if (typeof module?.createPlatformAdapter !== 'function') throw new TypeError('adapter entrypoint must export createPlatformAdapter'); const adapter = await module.createPlatformAdapter({platform, manifest: record.manifest}); if (!adapter || adapter.platform !== platform || typeof adapter.execute !== 'function') throw new TypeError('adapter factory returned an invalid platform adapter'); return Object.freeze({manifest: record.manifest, adapter}); }});
+  return Object.freeze({async inspect() { return inspect(); }, async load() { const record = await inspect(); if (!await verifyManifest({manifest: record.manifest, target: record.target})) throw new Error('installed adapter manifest verification failed'); const module = await loadModule(pathToFileURL(record.entrypoint).href); if (typeof module?.createPlatformAdapter !== 'function') throw new TypeError('adapter entrypoint must export createPlatformAdapter'); const adapter = await module.createPlatformAdapter({platform, manifest: record.manifest}); if (!adapter || adapter.platform !== platform || typeof adapter.execute !== 'function') throw new TypeError('adapter factory returned an invalid platform adapter'); return Object.freeze({manifest: record.manifest, adapter}); }, async createBoundary({registry, kind = 'input'} = {}) { const descriptor = registry?.get?.(kind); if (!descriptor || descriptor.state !== 'ready') throw new Error(`platform adapter is not ready for ${kind}`); const loaded = await this.load(); const boundary = createPlatformAdapterBoundary({platform, registry, implementations: {[kind]: loaded.adapter}}); return Object.freeze({boundary, adapter: loaded.adapter, manifest: loaded.manifest}); }});
 }

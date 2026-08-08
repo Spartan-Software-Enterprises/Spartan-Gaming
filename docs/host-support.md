@@ -88,6 +88,13 @@ injected signature verification before loading a factory module. The factory
 must return a platform-matched executable adapter; an unverified or malformed
 package never reaches module loading.
 
+Its `createBoundary()` method additionally requires a `ready` registry
+descriptor and returns a guarded platform boundary. The
+`createExecutablePlatformHostFromInstalledAdapter()` factory uses that method
+before constructing the native session, so a verified package is selected as
+an executable input adapter only when the platform registry explicitly marks
+that capability ready.
+
 `host/input.mjs` is the matching input boundary. It maps normalized browser
 events to shell-free plans for Windows `SendInput`, macOS Core Graphics/HID,
 and Linux `uinput` adapters. Plans declare the required permission (`remote-input`,
