@@ -46,7 +46,17 @@ third_party/           Third-party notices and integration metadata
 
 ## Building
 
-The first milestone will document the supported Chromium checkout and build configuration. See [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/architecture.md](docs/architecture.md).
+Run the frontend locally from a real HTTP origin with:
+
+```bash
+npm run frontend:serve
+```
+
+Then open `http://127.0.0.1:4173/`. The dependency-free server exposes the
+dashboard, all frontend surfaces, and the public provider/emulator catalogs.
+The first milestone will document the supported Chromium checkout and build
+configuration. See [CONTRIBUTING.md](CONTRIBUTING.md) and
+[docs/architecture.md](docs/architecture.md).
 
 ## Project principles
 

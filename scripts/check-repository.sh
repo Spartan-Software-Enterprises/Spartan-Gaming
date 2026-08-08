@@ -29,6 +29,8 @@ required_files=(
   chromium/args/mac.gn
   chromium/args/windows.gn
   native/package-manifest.json
+  scripts/frontend/serve.mjs
+  scripts/frontend/serve.test.mjs
   scripts/chromium/check-environment.mjs
   scripts/chromium/bootstrap.mjs
   scripts/chromium/bootstrap.test.mjs
@@ -325,6 +327,7 @@ node --check host/platform-runtime.mjs
 node --check host/native-adapter-kit.mjs
 node --check host/native-binding-loader.mjs
 node --check host/native-package.mjs
+node --check scripts/frontend/serve.mjs
 node --check host/executable-platform-host.mjs
 node --check host/adapter-runtime.mjs
 node --check release/package-signing-service.mjs

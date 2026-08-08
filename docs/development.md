@@ -52,6 +52,21 @@ Every platform feature must document:
 
 ## Local checks
 
+Run the dependency-free frontend server to use the dashboard and its related
+surfaces from a real HTTP origin (required for fetch, service workers, and
+browser permissions):
+
+```bash
+npm run frontend:serve
+```
+
+Open `http://127.0.0.1:4173/`. The server redirects `/` to `/dashboard/`,
+serves the frontend pages and public catalogs, and keeps signaling/session
+paths out of its static surface. Use `--port 0` for an ephemeral port or
+`--host 0.0.0.0` when testing from another device on a trusted LAN. This is a
+development/static frontend server, not a production TLS or authentication
+endpoint.
+
 Run the repository checks before committing:
 
 ```bash
