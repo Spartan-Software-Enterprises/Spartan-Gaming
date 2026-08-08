@@ -18,3 +18,5 @@ test('input policy defaults to browser-safe local controls', () => {
 });
 
 test('input policy keeps HID disabled until explicitly negotiated', () => { assert.equal(createInputPermissionPolicy().allows('hid'), false); assert.equal(createInputPermissionPolicy({input: {hid: true}}).allows('hid'), true); });
+
+test('input policy reconciles host negotiation so rumble follows the virtual-gamepad contract', () => { const noGamepad = createInputPermissionPolicy({input: {gamepad: false, keyboard: true, pointer: true, rumble: true}}); assert.equal(noGamepad.allows('gamepad'), false); assert.equal(noGamepad.allows('keyboard'), true); const withGamepad = createInputPermissionPolicy({input: {gamepad: true, keyboard: true, pointer: true, rumble: true}}); assert.equal(withGamepad.allows('gamepad'), true); });

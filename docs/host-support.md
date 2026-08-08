@@ -168,8 +168,11 @@ that capability ready.
 events to shell-free plans for Windows `SendInput`, macOS Core Graphics/HID,
 and Linux `uinput` adapters. Plans declare the required permission (`remote-input`,
 `virtual-gamepad`, or `haptic-output`) and remain `plan-only` until a native
-adapter is installed. The reference agent records the latest plan in health
-output rather than injecting OS input.
+adapter is installed. The reference agent grants the `virtual-gamepad`
+permission only when the installed adapter actually advertises gamepad
+capability, so controller events reaching a keyboard/pointer-only platform are
+rejected as ungranted rather than failing the adapter. The reference agent
+records the latest plan in health output rather than injecting OS input.
 
 `createNativeInputExecutor` is the next executable boundary. It accepts only a
 platform-matched adapter with an `execute(operation)` method, reuses the

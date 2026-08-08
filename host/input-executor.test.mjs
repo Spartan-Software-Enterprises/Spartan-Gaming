@@ -13,6 +13,14 @@ test('native input executor fails closed without permission and does not call th
   await assert.rejects(() => executor.dispatch({type: 'input.event', action: 'confirm', kind: 'key', control: 'KeyA', pressed: true, source: 'keyboard'}), /permission not granted/); assert.equal(calls, 0); assert.equal(executor.state, 'ready');
 });
 
+test('native input executor rejects an ungranted gamepad event without poisoning later dispatch', async () => {
+  let calls = 0; const executor = createNativeInputExecutor({platform: 'darwin', permissions: {'remote-input': true}, adapter: {platform: 'darwin', execute: async () => { calls += 1; }}});
+  await assert.rejects(() => executor.dispatch({type: 'input.event', action: 'a', kind: 'button', control: 'a', pressed: true, source: 'gamepad'}), /permission not granted/);
+  assert.equal(calls, 0); assert.equal(executor.state, 'ready');
+  const plan = await executor.dispatch({type: 'input.event', action: 'look', kind: 'pointer', x: 1, y: 0, deltaX: 2, deltaY: -2, source: 'pointer'});
+  assert.equal(plan.permission.granted, true); assert.equal(calls, 1); assert.equal(executor.state, 'active');
+});
+
 test('native input executor bounds dispatch rate and closes the adapter', async () => {
   let now = 0; let closed = 0; let calls = 0; const executor = createNativeInputExecutor({platform: 'darwin', permissions: {'virtual-gamepad': true}, maxEventsPerSecond: 2, clock: () => now, adapter: {platform: 'darwin', execute: async () => { calls += 1; }, close: () => { closed += 1; }}});
   await executor.dispatch({type: 'input.event', action: 'a', kind: 'button', control: 'a', pressed: true, source: 'gamepad'}); await executor.dispatch({type: 'input.event', action: 'b', kind: 'button', control: 'b', pressed: true, source: 'gamepad'}); await assert.rejects(() => executor.dispatch({type: 'input.event', action: 'c', kind: 'button', control: 'c', pressed: true, source: 'gamepad'}), /rate limit/); assert.equal(calls, 2);

@@ -31,3 +31,14 @@ test('input injection plans cover keyboard, pointer, gamepad, and rumble without
 test('unsupported input platforms fail closed', () => {
   assert.throws(() => createInputInjectionPlan({platform: 'android', event: {type: 'input.event', action: 'jump'}}), /unsupported input platform/);
 });
+
+test('gamepad events require the virtual-gamepad permission and are denied without it', () => {
+  const event = {type: 'input.event', kind: 'button', source: 'gamepad', action: 'button-12', control: 'button-12', pressed: true};
+  const granted = createInputInjectionPlan({platform: 'linux', event, permissions: {'virtual-gamepad': true}});
+  assert.equal(granted.permission.name, 'virtual-gamepad');
+  assert.equal(granted.permission.granted, true);
+  const denied = createInputInjectionPlan({platform: 'linux', event, permissions: {'virtual-gamepad': false}});
+  assert.equal(denied.permission.granted, false);
+  const unattached = createInputInjectionPlan({platform: 'linux', event, permissions: {}});
+  assert.equal(unattached.permission.granted, false);
+});

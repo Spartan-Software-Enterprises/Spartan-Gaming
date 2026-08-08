@@ -48,7 +48,7 @@ if (nativeMediaEnabled) {
   if (!hostRuntime.bindings?.capture?.plan) throw new Error('native media requires an installed platform binding with capture.plan()');
 }
 const capabilities = {transports: nativeMediaEnabled ? ['webrtc'] : ['websocket'], video: {codecs: ['h264', 'vp9'], maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false}, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: environment.inputAdapter.gamepad, keyboard: environment.inputAdapter.keyboard, pointer: environment.inputAdapter.pointer, rumble: environment.inputAdapter.rumble}};
-const inputExecutor = inputEnabled && hostRuntime.bindings?.input && environment.readiness.osInput ? createNativeInputExecutor({platform: environment.platform, adapter: hostRuntime.bindings.input, permissions: {'remote-input': true, 'virtual-gamepad': true}}) : null;
+const inputExecutor = inputEnabled && hostRuntime.bindings?.input && environment.readiness.osInput ? createNativeInputExecutor({platform: environment.platform, adapter: hostRuntime.bindings.input, permissions: {'remote-input': true, 'virtual-gamepad': environment.inputAdapter.gamepad === true}}) : null;
 const gameLaunchEnabled = args.get('enable-game-launch') === true || args.get('enable-game-launch') === 'true';
 let configuredGameArgs = args.get('game-args-json') ? JSON.parse(String(args.get('game-args-json'))) : (args.get('game-arg') ? [String(args.get('game-arg'))] : []);
 if (!Array.isArray(configuredGameArgs)) throw new TypeError('game-args-json must contain an array');
