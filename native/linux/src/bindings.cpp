@@ -12,6 +12,7 @@
 namespace {
 
 int device_fd = -1;
+int rumble_effect_id = -1;
 
 napi_value fail(napi_env env, const char* message) {
   napi_throw_error(env, nullptr, message);
@@ -91,7 +92,7 @@ bool ensure_device() {
   if (device_fd >= 0) return true;
   device_fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
   if (device_fd < 0) return false;
-  if (ioctl(device_fd, UI_SET_EVBIT, EV_KEY) < 0 || ioctl(device_fd, UI_SET_EVBIT, EV_ABS) < 0) return false;
+  if (ioctl(device_fd, UI_SET_EVBIT, EV_KEY) < 0 || ioctl(device_fd, UI_SET_EVBIT, EV_ABS) < 0 || ioctl(device_fd, UI_SET_EVBIT, EV_FF) < 0 || ioctl(device_fd, UI_SET_FFBIT, FF_RUMBLE) < 0) { close(device_fd); device_fd = -1; return false; }
   const int buttons[] = {BTN_SOUTH, BTN_EAST, BTN_WEST, BTN_NORTH, BTN_TL, BTN_TR, BTN_SELECT, BTN_START, BTN_MODE, BTN_DPAD_UP, BTN_DPAD_DOWN, BTN_DPAD_LEFT, BTN_DPAD_RIGHT};
   for (const int button : buttons) if (ioctl(device_fd, UI_SET_KEYBIT, button) < 0) return false;
   const int axes[] = {ABS_X, ABS_Y, ABS_RX, ABS_RY, ABS_Z, ABS_RZ};
@@ -112,8 +113,29 @@ napi_value execute(napi_env env, napi_callback_info info) {
   napi_value argv[1]; size_t argc = 1;
   if (napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr) != napi_ok || argc < 1) return fail(env, "input operation is required");
   const std::string kind = string_property(env, argv[0], "kind");
-  if (kind != "button" && kind != "axis") return fail(env, "Linux uinput adapter supports button and axis events only");
+  if (kind != "button" && kind != "axis" && kind != "rumble") return fail(env, "Linux uinput adapter supports button, axis, and rumble events only");
   if (!ensure_device()) return fail(env, "unable to open /dev/uinput; grant the host uinput permission");
+  if (kind == "rumble") {
+    const double strength = number_property(env, argv[0], "value", 0.0);
+    const double bounded = strength < 0.0 ? 0.0 : strength > 1.0 ? 1.0 : strength;
+    const double duration = number_property(env, argv[0], "durationMs", 0.0);
+    const double delay = number_property(env, argv[0], "startDelay", 0.0);
+    ff_effect effect{};
+    effect.type = FF_RUMBLE;
+    effect.id = rumble_effect_id;
+    effect.u.rumble.strong_magnitude = static_cast<__u16>(bounded * 65535.0);
+    effect.u.rumble.weak_magnitude = static_cast<__u16>(bounded * 65535.0);
+    effect.replay.length = static_cast<__u16>(duration < 0.0 ? 0.0 : duration > 5000.0 ? 5000.0 : duration);
+    effect.replay.delay = static_cast<__u16>(delay < 0.0 ? 0.0 : delay > 5000.0 ? 5000.0 : delay);
+    if (ioctl(device_fd, EVIOCSFF, &effect) < 0) return fail(env, "failed to upload Linux force-feedback effect");
+    rumble_effect_id = effect.id;
+    input_event event{};
+    event.type = EV_FF;
+    event.code = static_cast<unsigned short>(effect.id);
+    event.value = 1;
+    if (write(device_fd, &event, sizeof(event)) != static_cast<ssize_t>(sizeof(event))) return fail(env, "failed to play Linux force-feedback effect");
+    napi_value result; napi_get_boolean(env, true, &result); return result;
+  }
   if (kind == "button") {
     const int code = button_code(string_property(env, argv[0], "control"));
     if (code < 0) return fail(env, "unsupported Linux virtual-gamepad button");
@@ -129,7 +151,7 @@ napi_value execute(napi_env env, napi_callback_info info) {
 }
 
 napi_value close(napi_env env, napi_callback_info) {
-  if (device_fd >= 0) { ioctl(device_fd, UI_DEV_DESTROY); ::close(device_fd); device_fd = -1; }
+  if (device_fd >= 0) { if (rumble_effect_id >= 0) ioctl(device_fd, EVIOCRMFF, rumble_effect_id); ioctl(device_fd, UI_DEV_DESTROY); ::close(device_fd); device_fd = -1; rumble_effect_id = -1; }
   napi_value result; napi_get_undefined(env, &result); return result;
 }
 
@@ -137,8 +159,9 @@ napi_value create_bindings(napi_env env, napi_callback_info) {
   napi_value result; napi_create_object(env, &result);
   napi_value platform; napi_create_string_utf8(env, "linux", NAPI_AUTO_LENGTH, &platform); napi_set_named_property(env, result, "platform", platform);
   napi_value capabilities; napi_create_object(env, &capabilities);
-  napi_value true_value; napi_get_boolean(env, access("/dev/uinput", R_OK | W_OK) == 0, &true_value); napi_set_named_property(env, capabilities, "gamepad", true_value);
-  napi_value false_value; napi_get_boolean(env, false, &false_value); napi_set_named_property(env, capabilities, "keyboard", false_value); napi_set_named_property(env, capabilities, "pointer", false_value); napi_set_named_property(env, capabilities, "rumble", false_value); napi_set_named_property(env, result, "capabilities", capabilities);
+  const bool uinput_ready = access("/dev/uinput", R_OK | W_OK) == 0;
+  napi_value true_value; napi_get_boolean(env, uinput_ready, &true_value); napi_set_named_property(env, capabilities, "gamepad", true_value); napi_set_named_property(env, capabilities, "rumble", true_value);
+  napi_value false_value; napi_get_boolean(env, false, &false_value); napi_set_named_property(env, capabilities, "keyboard", false_value); napi_set_named_property(env, capabilities, "pointer", false_value); napi_set_named_property(env, result, "capabilities", capabilities);
   napi_value input; napi_create_object(env, &input); napi_value execute_fn; napi_create_function(env, "execute", NAPI_AUTO_LENGTH, execute, nullptr, &execute_fn); napi_set_named_property(env, input, "execute", execute_fn); napi_value close_fn; napi_create_function(env, "close", NAPI_AUTO_LENGTH, close, nullptr, &close_fn); napi_set_named_property(env, input, "close", close_fn); napi_set_named_property(env, result, "input", input);
   return result;
 }

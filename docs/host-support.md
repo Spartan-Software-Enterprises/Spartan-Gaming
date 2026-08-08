@@ -281,10 +281,11 @@ maps normalized keyboard and pointer operations to X11 `xdotool` argv calls.
 Gamepad/uinput, portal consent UI, hardware encoder selection, and signed
 distribution are intentionally not claimed by this reference adapter. The
 compiled `@spartan-gaming/native-linux` package now adds a Node-API `uinput`
-virtual gamepad for normalized buttons and axes. It is built with
+virtual gamepad for normalized buttons, axes, and rumble effects. It is built with
 `npm run native:build-linux`, installed into the isolated native artifact, and
-verified in Linux CI. The package still intentionally reports no haptics,
-portal consent workflow, or hardware encoder selection.
+verified in Linux CI. Rumble is advertised only when `/dev/uinput` is readable
+and writable; hosts without that device or permission fail closed. Portal
+consent workflow and hardware encoder selection remain unimplemented.
 
 The reference host calls `detectHostRuntime()` during startup. It loads the
 optional package when installed, exposes only its serializable readiness and

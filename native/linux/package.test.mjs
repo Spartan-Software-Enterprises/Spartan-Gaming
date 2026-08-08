@@ -14,5 +14,8 @@ test('built Linux package exposes the universal binding shape and uinput capabil
   assert.equal(typeof bindings.input.execute, 'function');
   assert.equal(typeof bindings.input.close, 'function');
   assert.equal(typeof bindings.capabilities.input, 'boolean');
+  assert.equal(typeof bindings.capabilities.gamepad, 'boolean');
+  assert.equal(typeof bindings.capabilities.rumble, 'boolean');
+  if (bindings.capabilities.rumble) assert.equal(bindings.capabilities.gamepad, true);
   await bindings.close();
 });
