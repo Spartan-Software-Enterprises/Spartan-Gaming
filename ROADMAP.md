@@ -50,6 +50,7 @@
 - [x] Optional WebRTC adapter discovery for native and TypeScript RTP implementations.
 - [x] Concrete optional Werift video-track/RTP transport adapter.
 - [x] Optional Werift host session runtime and encoded RTP publisher composition.
+- [x] Optional Werift shared-peer audio track and native host audio publisher composition.
 - [x] Native pipeline/Werift host composition factory with lifecycle teardown.
 - [x] Host capability serialization for safe WebRTC adapter readiness diagnostics.
 - [x] Platform-aware capture and encoder plan contracts (native execution and WebRTC publisher pending).

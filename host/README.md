@@ -80,6 +80,12 @@ creates a Werift video track, attaches it to a peer connection, and exposes the
 track as an RTP transport for `createRtpMediaPublisher`; installing `werift` is
 still an explicit host deployment choice.
 
+It also supports a shared-peer audio track through
+`createWeriftAudioTransport` and `createWeriftAudioRtpPublisher`. When
+`createNativeWeriftHost` receives an audio pipeline, packetizer, and explicit
+permission, it publishes Opus audio beside video and tears both publishers
+down together.
+
 The same module exports `createWeriftRtpPublisher`, which composes that track
 transport with the native encoded-media publisher. The caller supplies the
 platform pipeline and codec packetizer, so the adapter owns WebRTC/RTP delivery
@@ -91,10 +97,10 @@ authenticated Spartan transport envelopes, including input and quality
 callbacks. The complete LAN stream remains gated on a real browser-to-host
 media test and a production capture/encode wiring pass.
 
-`host/native-host.mjs` composes the native media pipeline, Werift RTP publisher,
-and signaling runtime behind one injectable factory. It can consume either an
-already-created pipeline or validated shell-free capture/encoder plans, starts
-capture/encode only after a validated session offer arrives, and tears the
-publisher down with the session. Production platform adapters still supply the
-actual capture plans, packetizer, optional Werift package, and relay
-configuration.
+`host/native-host.mjs` composes the native media pipeline, optional shared-peer
+audio pipeline, Werift RTP publishers, and signaling runtime behind one
+injectable factory. It can consume either already-created pipelines or
+validated shell-free capture/encoder plans, starts capture/encode only after a
+validated session offer arrives, and tears both publishers down with the
+session. Production platform adapters still supply the actual capture plans,
+packetizers, optional Werift package, and relay configuration.

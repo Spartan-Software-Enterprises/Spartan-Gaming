@@ -1,6 +1,7 @@
 const DEFAULT_CODEC = 'h264';
 
 import {createRtpMediaPublisher} from './publisher.mjs';
+import {createRtpAudioPublisher} from './audio.mjs';
 
 export async function loadWerift({loader = packageName => import(packageName)} = {}) {
   if (typeof loader !== 'function') throw new TypeError('loader must be a function');
@@ -20,6 +21,15 @@ export function createWeriftVideoTransport({module, peerConfig = {}, codec = DEF
   return Object.freeze({peer, track, sender, transport, close: () => transport.close()});
 }
 
+/** Add an audio RTP track to an existing Werift peer, or create an audio-only peer. */
+export function createWeriftAudioTransport({module, peer = null, peerConfig = {}, codec = 'opus', ssrc = 2, streamId = 'spartan-stream', label = 'Spartan Gaming Audio'} = {}) {
+  const PeerConnection = peer ? null : requiredFunction(module, 'RTCPeerConnection'); const MediaStreamTrack = requiredFunction(module, 'MediaStreamTrack'); const activePeer = peer || new PeerConnection(peerConfig); const codecFactory = codec === 'opus' ? module.useOpus : null;
+  if (codecFactory && typeof codecFactory !== 'function') throw new TypeError(`invalid Werift codec factory for ${codec}`);
+  const track = new MediaStreamTrack({kind: 'audio', ssrc, streamId, label, ...(codecFactory ? {codec: codecFactory()} : {})}); const sender = typeof activePeer.addTrack === 'function' ? activePeer.addTrack(track) : null; let closed = false;
+  const transport = Object.freeze({send(packet) { if (closed) throw new Error('Werift audio transport is closed'); track.writeRtp(packet); }, close() { if (closed) return; closed = true; track.stop?.(); if (!peer) activePeer.close?.(); }});
+  return Object.freeze({peer: activePeer, track, sender, transport, close: () => transport.close()});
+}
+
 export function createWeriftRtpPublisher({module, pipeline, packetizer, peerConfig = {}, codec = DEFAULT_CODEC, ssrc = 1, streamId = 'spartan-stream', label = 'Spartan Gaming', maxChunkBytes} = {}) {
   const adapter = createWeriftVideoTransport({module, peerConfig, codec, ssrc, streamId, label});
   try {
@@ -29,6 +39,13 @@ export function createWeriftRtpPublisher({module, pipeline, packetizer, peerConf
     adapter.close();
     throw error;
   }
+}
+
+/** Bind encoded audio chunks to a Werift audio track on the supplied peer. */
+export function createWeriftAudioRtpPublisher({module, pipeline, packetizer, peer = null, peerConfig = {}, codec = 'opus', ssrc = 2, streamId = 'spartan-stream', label = 'Spartan Gaming Audio', permissionGranted = false, maxChunkBytes} = {}) {
+  const adapter = createWeriftAudioTransport({module, peer, peerConfig, codec, ssrc, streamId, label});
+  try { const publisher = createRtpAudioPublisher({pipeline, packetizer, transport: adapter.transport, codec, permissionGranted, maxChunkBytes}); return Object.freeze({adapter, publisher: publisher.publisher, get packetsSent() { return publisher.packetsSent; }}); }
+  catch (error) { adapter.close(); throw error; }
 }
 
 function subscribe(event, handler) { if (typeof event?.subscribe === 'function') return event.subscribe(handler); if (typeof event?.addEventListener === 'function') { event.addEventListener(handler); return () => event.removeEventListener?.(handler); } return () => {}; }
