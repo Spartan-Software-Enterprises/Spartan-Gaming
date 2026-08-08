@@ -8,7 +8,7 @@ export const SETTINGS_ACTIONS = Object.freeze({
   'emulation.manageCores': route('../adapters/index.html'),
   'providers.manageProfiles': route('../providers/index.html'),
   'providers.manageHosts': route('../host/index.html'),
-  'providers.clearSessions': Object.freeze({kind: 'status', message: 'Provider sign-out is completed on each official service; no provider credentials are stored here.'}),
+  'providers.clearSessions': Object.freeze({kind: 'clear-provider-sessions'}),
   'performance.taskManager': route('../diagnostics/index.html?focus=performance'),
   'performance.diagnostics': route('../diagnostics/index.html'),
   'privacy.permissions': route('../diagnostics/index.html?focus=permissions'),

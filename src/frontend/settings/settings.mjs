@@ -3,6 +3,7 @@ import {settingsCategories} from './settings-data.mjs';
 import {createSettingsStore} from './profile.mjs';
 import {resolveSettingsAction} from './actions.mjs';
 import {applyRuntimeUiSettings} from './runtime-ui.mjs';
+import {clearProviderSessionState} from '../providers/session-cleanup.mjs';
 
 const settingsStore = createSettingsStore();
 const state = {...settingsStore.read()};
@@ -105,6 +106,7 @@ function bindControls() {
     if (action.kind === 'export-settings') { downloadSettings(); return; }
     if (action.kind === 'import-settings') { document.querySelector('[data-import-file]').click(); return; }
     if (action.kind === 'export-privacy') { downloadPrivacyData(); return; }
+    if (action.kind === 'clear-provider-sessions') { const result = clearProviderSessionState(); const status = document.querySelector('[data-save-status]'); if (status) status.textContent = result.removed.length ? `Cleared ${result.removed.length} Spartan handoff${result.removed.length === 1 ? '' : 's'}; sign out on official services separately.` : 'No Spartan provider handoffs were present; sign out on official services separately.'; return; }
     const status = document.querySelector('[data-save-status]');
     if (status && action.kind === 'status') { status.textContent = action.message; return; }
   }));

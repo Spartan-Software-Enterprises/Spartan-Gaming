@@ -72,6 +72,8 @@ stream playback.
 
 Provider accounts must remain isolated by profile. Provider tokens must never be stored in the game catalog or URL-history export.
 
+Settings → Providers → **Clear sessions** removes Spartan-owned transient launch, recovery, and pairing handoffs from the current browser session. It never attempts to manipulate cross-origin provider cookies or credentials; the UI directs users to sign out through each provider’s official service when required.
+
 ## Implementation order
 
 1. Optimized web support for GeForce NOW, Xbox Cloud Gaming, Amazon Luna, Boosteroid, Shadow, Twitch, YouTube Live, Discord, and Steam.
