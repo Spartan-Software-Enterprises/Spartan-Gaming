@@ -89,6 +89,11 @@ Launch resolution is capability-aware: the adapter registry combines the catalog
 
 `src/frontend/readiness/runtime.mjs` is the shared readiness contract behind those plans. It preserves catalog capability and configuration evidence, adds verified native-adapter state, and optionally adds a self-hosted host preflight as separate immutable layers. Launch surfaces can therefore explain whether they need browser diagnostics, a trusted adapter, host setup, or an official provider handoff without inferring readiness from a single boolean.
 
+`src/frontend/readiness/status.mjs` is the user-facing summary layer over that
+evidence. The dashboard status indicator distinguishes loading, offline,
+connecting, connected, setup-required, degraded, and error states; it never
+labels a catalog as fully ready until capability probing completes.
+
 The session runtime in `src/frontend/session/session.mjs` provides the first transport-neutral implementation of this model. It negotiates transports, codecs, display limits, audio, and input features; creates protocol v1 offers; and enforces explicit lifecycle transitions (`preparing`, `negotiating`, `connected`, `reconnecting`, `closing`, and `closed`). Reconnect requests use `src/frontend/session/recovery.mjs` for bounded exponential backoff, attempt limits, and success resets, so a signaling adapter can recover an existing session without silently creating a duplicate host process. Provider and emulator integrations can register immutable adapter descriptors without coupling the frontend to a specific relay, native process, or cloud service.
 
 Universal controller input is normalized in `src/frontend/input/input.mjs`. It applies configurable analog deadzones and maps browser Gamepad API buttons/axes to stable action events, leaving platform-specific HID, keyboard, touch, and native controller adapters free to feed the same action vocabulary.

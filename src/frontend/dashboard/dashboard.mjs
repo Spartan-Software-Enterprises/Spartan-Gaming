@@ -10,6 +10,7 @@ import { createLaunchIntent, saveLaunchIntent } from '../launch/intent.mjs';
 import { createLaunchHistoryStore } from '../launch/history.mjs';
 import { resolveDashboardSection } from './routes.mjs';
 import { resolveResumeEntry, resolveResumePresentation } from './resume.mjs';
+import { createReadinessStatus } from '../readiness/status.mjs';
 
 const FAVORITES_KEY = 'spartan-gaming.favorites.v1';
 const launchHistory = createLaunchHistoryStore();
@@ -18,15 +19,18 @@ const state = { catalog: [], adapters: null, compatibility: null, report: null, 
 const cards = document.querySelector('[data-cards]');
 const toast = document.querySelector('[data-toast]');
 const sessionStatus = document.querySelector('[data-session-status]');
+const statusPill = sessionStatus.closest('.status-pill');
 const providerDialog = document.querySelector('[data-provider-dialog]');
 const sessionManager = createSessionManager({idFactory: () => `ses-${crypto.randomUUID()}`});
+let sessionStatusId = 'idle';
 let toastTimer;
 const controllerNavigator = createControllerNavigator({root: document});
 
 function loadFavorites() { try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || '[]'); } catch { return []; } }
 function saveFavorites() { localStorage.setItem(FAVORITES_KEY, JSON.stringify([...state.favorites])); }
 function showToast(message) { toast.textContent = message; toast.classList.add('is-visible'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 2600); }
-function setSessionStatus(message) { sessionStatus.textContent = message; }
+function updateReadinessStatus() { const status = createReadinessStatus({catalogLoaded: state.catalog.length > 0, compatibility: state.compatibility, capabilityReport: state.report, online: globalThis.navigator?.onLine !== false, activeSession: sessionStatusId}); sessionStatus.textContent = status.label; statusPill.dataset.status = status.id; statusPill.title = status.detail; }
+function setSessionStatus(status) { sessionStatusId = status; updateReadinessStatus(); }
 function renderResume() {
   const presentation = resolveResumePresentation(state.lastLaunch); const title = document.querySelector('[data-resume-title]'); const copy = document.querySelector('[data-resume-copy]'); const button = document.querySelector('[data-action="resume"]');
   title.textContent = presentation.title; copy.textContent = presentation.copy; button.textContent = presentation.actionLabel;
@@ -57,7 +61,7 @@ function launchEntry(entry, plan) {
 function beginSession(backend) {
   if (sessionManager.state !== 'idle' && sessionManager.state !== 'closed' && sessionManager.state !== 'error') { showToast('A session is already negotiating. Close it before launching another.'); return null; }
   if (sessionManager.state === 'closed' || sessionManager.state === 'error') sessionManager.reset();
-  const offer = sessionManager.start({backend}); setSessionStatus('Session negotiating'); return offer;
+  const offer = sessionManager.start({backend}); setSessionStatus('connecting'); return offer;
 }
 function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character])); }
 function visibleEntries() {
@@ -86,8 +90,9 @@ async function loadCatalog() {
     validateCatalogManifest(emulators, 'emulator');
     state.catalog = createFrontendCatalog({ providers: providers.providers, emulators: emulators.projects }).entries;
     state.adapters = createCatalogAdapterRegistry(state.catalog, {providerProfiles: state.providerProfiles, report: () => state.report || {}});
+    updateReadinessStatus();
     render();
-    collectCapabilities().then(report => { state.report = report; state.compatibility = evaluateCatalog(state.catalog, report); render(); }).catch(() => {});
+    collectCapabilities().then(report => { state.report = report; state.compatibility = evaluateCatalog(state.catalog, report); updateReadinessStatus(); render(); }).catch(() => { state.report = {}; state.compatibility = evaluateCatalog(state.catalog, state.report); updateReadinessStatus(); render(); });
   } catch (error) { cards.innerHTML = '<div class="empty">The library could not load. Check the catalog files and try again.</div>'; console.error(error); }
 }
 document.querySelector('[data-search]').addEventListener('input', event => { state.search = event.target.value; render(); });
@@ -113,5 +118,8 @@ document.querySelectorAll('[data-section]').forEach(button => button.addEventLis
   state.filter = route.filter; document.querySelectorAll('[data-filter]').forEach(item => item.classList.toggle('is-active', item.dataset.filter === state.filter)); render();
 }));
 renderResume();
+updateReadinessStatus();
 loadCatalog();
 controllerNavigator.start();
+window.addEventListener('online', updateReadinessStatus);
+window.addEventListener('offline', updateReadinessStatus);
