@@ -203,6 +203,12 @@ runtime plans.
   sessions can drive modern games and emulators without a physical controller.
 - The full touch layout also exposes L1/R1, L2/R2, and L3/R3 controls using the
   same shared button names consumed by native adapters.
+- Every touch button emits the shared native `button-N` vocabulary
+  (`confirm`→`button-0`, `cancel`→`button-1`, `menu`→`button-9`,
+  `pause`→`button-8`, shoulders `button-4`–`button-7`, stick clicks
+  `button-10`/`button-11`, and D-pad `button-12`–`button-15`), so touch
+  sessions inject into Linux uinput gamepads and future virtual-gamepad
+  adapters without a separate frontend translation step.
 - Save RAM, save states, screenshots, clips, and rewind.
 - Integer scaling, aspect-ratio correction, shaders, CRT filters, and color controls.
 - Per-game resolution, frame pacing, audio latency, and synchronization settings.
