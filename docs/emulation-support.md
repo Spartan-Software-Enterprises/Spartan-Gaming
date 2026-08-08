@@ -97,6 +97,14 @@ an opaque host content identifier, selected-file names/sizes/digests, and the
 consent timestamp. It never serializes a `File` object, browser path, source
 handle, executable path, or content bytes into the session offer.
 
+The Emulation Center now carries that descriptor through an expiring,
+session-only launch handoff. After the user enters the host content ID and
+approves the launch, Host Profiles displays the request while pairing; the
+player includes it in the authenticated `session.offer`. The native host must
+still match the runtime ID, configured content ID, and configured game file
+name before it can launch anything. Leaving the origin or waiting ten minutes
+invalidates the handoff.
+
 `src/frontend/adapters/install.mjs` is the explicit handoff to that future
 updater. It requires user consent, a signed ready update, HTTPS artifact
 metadata, matching SHA-256 integrity, a supported platform, and no credentials;

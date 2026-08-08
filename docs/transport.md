@@ -18,6 +18,12 @@ selected file metadata, and consent—not browser paths, `File` objects, or
 content bytes. The host validates it against its own operator-configured
 runtime and content before launching anything.
 
+The browser carries this descriptor between Emulation Center, Host Profiles,
+and Player through a ten-minute, session-storage-only handoff. The host
+pairing flow shows the pending game and the player consumes the handoff only
+when creating the authenticated offer; malformed or expired records are
+discarded.
+
 Reconnect lifecycle is coordinated by `src/frontend/session/reconnect-controller.mjs` around the bounded recovery policy. A reconnect attempt emits an envelope immediately, transport failures schedule the next bounded attempt with exponential backoff, successful answers reset recovery, and the player can cancel pending work. Controller state is observable as `attempting`, `waiting`, `succeeded`, `cancelled`, or `exhausted`; no reconnect loop is unbounded or hidden from the UI.
 
 The player loads the persisted transport policy through

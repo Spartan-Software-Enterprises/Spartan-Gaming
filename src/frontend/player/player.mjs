@@ -18,9 +18,11 @@ import {installLanHandoffListener} from '../host/lan-handoff.mjs';
 import {QUALITY_PROFILES} from '../session/quality.mjs';
 import {createTouchControlEvent, createTouchControlLayout, normalizeTouchLayout} from '../input/touch-controls.mjs';
 import {preparePlayerSession} from './preflight.mjs';
+import {clearPendingLaunchHandoff, readPendingLaunchHandoff} from '../launch/handoff.mjs';
 
 const query = new URLSearchParams(location.search);
 const pendingHostPair = readPendingHostPair(sessionStorage); clearPendingHostPair(sessionStorage);
+const pendingLaunch = readPendingLaunchHandoff(sessionStorage);
 let connectionSessionId = query.get('session') || pendingHostPair?.sessionId || '';
 const manager = createSessionManager({idFactory: () => connectionSessionId || `ses-${crypto.randomUUID()}`});
 const transportPolicy = readTransportPolicy();
@@ -96,7 +98,8 @@ async function connect(connectionValues = {}) {
     if (reconnect.state === 'succeeded') elements.message.textContent = 'Session reconnected.';
   });
   runtime.on('input.event', message => { const event = message.payload || {}; if (event.source === 'host' && event.kind === 'rumble' && inputPolicy.allows('rumble')) haptics.play({gamepadIndex: event.gamepadIndex, durationMs: event.durationMs, strongMagnitude: event.strongMagnitude ?? event.value, weakMagnitude: event.weakMagnitude ?? event.value}); });
-  const offer = await runtime.start({backend: {id: backendId, backendType: 'remote-play', hostId: pendingHostPair?.hostId, pairingCode: pendingHostPair?.pairingCode}, capabilities: sessionPreferences.capabilities, preferences: sessionPreferences.preferences});
+  const offer = await runtime.start({backend: {id: backendId, backendType: 'remote-play', hostId: pendingHostPair?.hostId, pairingCode: pendingHostPair?.pairingCode}, capabilities: sessionPreferences.capabilities, preferences: sessionPreferences.preferences, ...(pendingLaunch ? {launch: pendingLaunch.request} : {})});
+  if (pendingLaunch) clearPendingLaunchHandoff(sessionStorage);
   elements.transport.textContent = `${selectedSignaling === 'webtransport' ? 'WebTransport' : 'WebSocket'} signaling${media ? ' · WebRTC media' : ''}`;
   elements.connectionForm.hidden = true; window.dispatchEvent(new CustomEvent('spartan:session-offer', {detail: offer}));
 }
@@ -108,8 +111,8 @@ async function start() {
     installTouchControls();
     if (endpoint && ticket && sessionId) await connect({endpoint, ticket, sessionId});
     else if (endpoint && pendingHostPair) await connect({endpoint, allowUnauthenticated: true});
-    else if (query.get('demo') === '1') { const offer = manager.start({backend: {id: query.get('backend') || 'spartan-host', backendType: 'remote-play'}, capabilities: sessionPreferences.capabilities, preferences: sessionPreferences.preferences}); elements.connectionForm.hidden = true; elements.transport.textContent = offer.payload.quality.profile === 'balanced' ? 'WebRTC · adaptive' : 'WebRTC'; setTimeout(acceptHostAnswer, 500); }
-    else { elements.message.textContent = 'Enter a signaling endpoint, session ID, and short-lived client ticket to connect.'; }
+    else if (query.get('demo') === '1') { const offer = manager.start({backend: {id: query.get('backend') || 'spartan-host', backendType: 'remote-play'}, capabilities: sessionPreferences.capabilities, preferences: sessionPreferences.preferences, ...(pendingLaunch ? {launch: pendingLaunch.request} : {})}); if (pendingLaunch) clearPendingLaunchHandoff(sessionStorage); elements.connectionForm.hidden = true; elements.transport.textContent = offer.payload.quality.profile === 'balanced' ? 'WebRTC · adaptive' : 'WebRTC'; setTimeout(acceptHostAnswer, 500); }
+    else { elements.message.textContent = pendingLaunch ? 'A native launch request is ready. Pair a host to continue.' : 'Enter a signaling endpoint, session ID, and short-lived client ticket to connect.'; }
   } catch (error) { runtime?.close(); runtime = null; apply({type: 'error', message: error.message}); }
 }
 
