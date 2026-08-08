@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createEmulationLaunchPlan, createEmulationLibraryIndex, createEmulationLibraryStore, createUserFileRecord, formatFileSize, resolveEmulationPreferences} from './emulation.mjs';
+import './browser-runtime.test.mjs';
 
 const core = {id: 'dolphin', mode: 'native', systems: ['gamecube', 'wii'], license: 'GPL-2.0-or-later'};
 test('user file records preserve selection metadata without file contents', () => { const record = createUserFileRecord({name: 'game.iso', size: 1024, lastModified: 10}); assert.equal(record.extension, 'iso'); assert.equal(record.userSelected, true); assert.equal(record.content, undefined); });

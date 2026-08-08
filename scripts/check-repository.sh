@@ -245,6 +245,8 @@ required_files=(
   src/frontend/capture/capture.test.mjs
   src/frontend/emulation/emulation.mjs
   src/frontend/emulation/emulation.test.mjs
+  src/frontend/emulation/browser-runtime.mjs
+  src/frontend/emulation/browser-runtime.test.mjs
   src/frontend/emulation/runtime-profiles.mjs
   src/frontend/emulation/runtime-profiles.test.mjs
   src/frontend/emulation/index.html
@@ -403,6 +405,7 @@ node --check src/frontend/transport/ice.mjs
 node --check src/frontend/transport/policy.mjs
 node --check src/frontend/capture/capture.mjs
 node --check src/frontend/emulation/emulation.mjs
+node --check src/frontend/emulation/browser-runtime.mjs
 node --check src/frontend/emulation/runtime-profiles.mjs
 node --check src/frontend/emulation/emulation-page.mjs
 node --check src/frontend/emulation/integration.mjs

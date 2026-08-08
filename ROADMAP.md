@@ -28,6 +28,7 @@
 - [x] Capability-aware launch plans with explicit readiness, troubleshooting, and next actions.
 - [x] Provider profiles for supported cloud, remote-play, and streaming services.
 - [x] Emulator/core profiles for libretro, Dolphin, PCSX2, RPCS3, PPSSPP, DuckStation, melonDS, Azahar, MAME, Flycast, xemu, and ScummVM.
+- [x] Browser-WASM/libretro runtime lifecycle contract with user-selected file gating.
 
 ## Milestone 2: streaming client
 

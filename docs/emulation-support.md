@@ -82,6 +82,15 @@ updater. It requires user consent, a signed ready update, HTTPS artifact
 metadata, matching SHA-256 integrity, a supported platform, and no credentials;
 it emits a bounded request and performs no download or filesystem mutation.
 
+`src/frontend/emulation/browser-runtime.mjs` is the browser-WASM/libretro
+adapter boundary. A separately supplied adapter must implement `load`,
+`start`, and `stop`; optional pause/resume/reset/input/save-state methods are
+exposed through one lifecycle with explicit `idle`, `loading`, `ready`,
+`running`, `paused`, `stopped`, and `error` states. Game, firmware, and save
+files must carry the current-session `userSelected` marker before they reach an
+adapter. The frontend owns lifecycle and teardown but never evaluates a local
+executable path or silently reads remembered file metadata.
+
 | Project | Systems | Preferred mode | Role |
 | --- | --- | --- | --- |
 | RetroArch/libretro | Many classic and modern systems | Browser/native | Unified frontend and core ecosystem |
