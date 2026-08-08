@@ -1,6 +1,6 @@
 const MODE_ORDER = Object.freeze({browser: ['browser-first', 'official-launch', 'official-embed', 'official-api', 'user-owned-host', 'self-hosted'], official: ['official-launch', 'official-embed', 'browser-first', 'official-api', 'user-owned-host', 'self-hosted'], native: ['user-owned-host', 'self-hosted', 'official-launch', 'browser-first', 'official-embed', 'official-api']});
 const REGION_LABELS = Object.freeze({automatic: 'Automatic', 'north-america': 'North America', europe: 'Europe', 'asia-pacific': 'Asia Pacific', 'latin-america': 'Latin America'});
-const EMBED_TARGETS = Object.freeze({twitch: /^[A-Za-z0-9_]{1,25}$/, 'youtube-live': /^[A-Za-z0-9_-]{6,32}$/});
+const EMBED_TARGETS = Object.freeze({twitch: /^[A-Za-z0-9_]{1,25}$/, 'youtube-live': /^[A-Za-z0-9_-]{6,32}$/, kick: /^[A-Za-z0-9_]{1,25}$/});
 const SPECIAL_PROFILES = Object.freeze({
   'xbox-cloud-gaming': {controllerProfile: 'Xbox layout', quality: 'prefer-latency', notes: ['Xbox account, subscription, and supported-region checks remain provider-owned.']},
   'xbox-remote-play': {controllerProfile: 'Xbox layout', quality: 'prefer-latency', notes: ['Remote features and console ownership must be enabled in the official account.']},
@@ -35,6 +35,7 @@ function createOfficialEmbedUrl(entry, profile = {}) {
     return `https://player.twitch.tv/?channel=${encodeURIComponent(target)}&parent=${encodeURIComponent(parent)}`;
   }
   if (entry.id === 'youtube-live') return `https://www.youtube.com/embed/${encodeURIComponent(target)}`;
+  if (entry.id === 'kick') return `https://player.kick.com/${encodeURIComponent(target)}`;
   return null;
 }
 
