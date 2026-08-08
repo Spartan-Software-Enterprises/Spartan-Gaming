@@ -13,10 +13,13 @@ import { createReadinessStatus } from '../readiness/status.mjs';
 import { createWorkspaceStore } from '../workspaces/workspaces.mjs';
 import { createFavoritesStore } from './library-state.mjs';
 import { createCommunityProviderCatalogStore, mergeCommunityProviders } from '../providers/community-catalog.mjs';
+import { createSettingsStore } from '../settings/profile.mjs';
+import { launchExternalSurface } from '../launch/behavior.mjs';
 
 const launchHistory = createLaunchHistoryStore();
 const workspaceStore = createWorkspaceStore();
 const communityCatalogStore = createCommunityProviderCatalogStore();
+const settings = createSettingsStore().read();
 let activeWorkspace = workspaceStore.active;
 let favoritesStore = createFavoritesStore({workspaceId: activeWorkspace.id});
 const requestedFilter = new URLSearchParams(globalThis.location?.search || '').get('filter');
@@ -60,7 +63,7 @@ function launchEntry(entry, plan) {
   if (plan.readiness?.nextAction === 'choose-runtime' || plan.action === 'choose-runtime' || plan.action === 'configure-native-adapter') { window.location.assign('../emulation/index.html'); return; }
   if (plan.action === 'configure-host') { window.location.assign('../host/index.html'); return; }
   if (plan.action === 'embed-url') { openProviderSurface(entry, plan); showToast(`${entry.name}: official embed opened.`); return; }
-  if (plan.action === 'open-url' || plan.action === 'configure-api') { window.open(plan.url, '_blank', 'noopener'); showToast(`${entry.name}: ${plan.action === 'open-url' ? 'official service opened' : 'official API surface opened'}.`); return; }
+  if (plan.action === 'open-url' || plan.action === 'configure-api') { try { const handoff = launchExternalSurface(plan.url, {behavior: settings['gaming.launchBehavior'], open: window.open.bind(window), assign: window.location.assign.bind(window.location)}); showToast(`${entry.name}: ${handoff.mode === 'current-workspace' ? 'official service opened here' : 'official service opened'}.`); } catch (error) { showToast(error.message); } return; }
   const offer = beginSession({...entry, adapterMode: plan.mode}); if (offer) showToast(`${entry.name}: ${plan.action.replaceAll('-', ' ')}.`);
 }
 function beginSession(backend) {
