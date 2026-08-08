@@ -18,7 +18,7 @@ export async function buildFrontendDistribution({outputRoot = defaultOutputRoot,
   const publicDirectory = absolute(publicRoot, repositoryRoot);
   if (output === repositoryRoot) throw new Error('frontend output must not be the repository root');
   if (output === sourceDirectory || isInside(output, sourceDirectory) || isInside(sourceDirectory, output)) throw new Error('frontend output must not contain or overwrite the source directory');
-  await rm(output, {recursive: true, force: true});
+  await rm(output, {recursive: true, force: true, maxRetries: 8, retryDelay: 100});
   await mkdir(output, {recursive: true});
   await cp(sourceDirectory, output, {recursive: true});
   for (const directory of PUBLIC_DIRECTORIES) await cp(path.join(publicDirectory, directory), path.join(output, directory), {recursive: true});

@@ -16,7 +16,7 @@ test('frontend distribution build packages pages, catalogs, service worker, and 
     assert.match(await readFile(path.join(result.output, 'dashboard/index.html'), 'utf8'), /Spartan Gaming/);
     assert.match(await readFile(path.join(result.output, 'providers/catalog.json'), 'utf8'), /GeForce NOW/);
     assert.match(await readFile(path.join(result.output, 'service-worker.mjs'), 'utf8'), /pwa\/service-worker/);
-  } finally { await rm(root, {recursive: true, force: true}); }
+  } finally { await rm(root, {recursive: true, force: true, maxRetries: 8, retryDelay: 100}); }
 });
 
 test('frontend distribution build refuses source and repository roots as output', async () => {
@@ -36,5 +36,5 @@ test('frontend server can serve the packaged distribution root', async () => {
     assert.equal(page.status, 200);
     assert.equal(adapters.status, 200);
     assert.equal(catalog.status, 200);
-  } finally { await frontend.close(); await rm(root, {recursive: true, force: true}); }
+  } finally { await frontend.close(); await rm(root, {recursive: true, force: true, maxRetries: 8, retryDelay: 100}); }
 });
