@@ -51,6 +51,10 @@ required_files=(
   host/adapter-installer.test.mjs
   host/adapter-package.mjs
   host/adapter-package.test.mjs
+  host/archive-readers.mjs
+  host/archive-readers.test.mjs
+  host/package-signing.mjs
+  host/package-signing.test.mjs
   host/publisher.integration.test.mjs
   host/webrtc.mjs
   host/webrtc.test.mjs
@@ -297,6 +301,8 @@ node --check host/process.integration.test.mjs
 node --check host/native-media.mjs
 node --check host/adapter-installer.mjs
 node --check host/adapter-package.mjs
+node --check host/archive-readers.mjs
+node --check host/package-signing.mjs
 node --check host/native-media.integration.test.mjs
 node --check host/publisher.integration.test.mjs
 node --check signaling/agent.integration.test.mjs

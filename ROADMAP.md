@@ -80,4 +80,6 @@
 - [x] Shell-free native adapter installer transaction with digest/signature verification and rollback (archive extraction and package signing pending).
 - [x] Universal desktop platform adapter capability registry and guarded invocation boundary (OS implementations pending).
 - [x] Signed package manifest, safe extraction plan, per-file digest verification, and rollback boundary (archive readers and package signing service pending).
+- [x] Dependency-free ZIP/TAR archive readers wired into package extraction (Zstandard and other codecs remain adapter-provided).
+- [x] Canonical package manifest signing and verification boundary with injected WebCrypto keys (release key custody/service deployment pending).
 - [x] Unified frontend runtime readiness contract for browser, native adapter, and self-hosted host layers.

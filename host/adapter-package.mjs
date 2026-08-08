@@ -2,6 +2,7 @@ import {createHash} from 'node:crypto';
 import {promises as defaultFs} from 'node:fs';
 import {dirname, isAbsolute, relative, resolve, sep} from 'node:path';
 import {posix as posixPath} from 'node:path';
+import {createArchiveReader} from './archive-readers.mjs';
 
 const PLATFORMS = new Set(['win32', 'darwin', 'linux', 'universal']);
 const FORMATS = new Set(['zip', 'tar', 'tar.zst', 'directory']);
@@ -80,4 +81,10 @@ export async function extractAdapterPackage({manifest, destination, extractEntry
     await fsImpl.rm(plan.destination, {recursive: true, force: true}).catch(() => {});
     throw error;
   }
+}
+
+/** Use a built-in ZIP/TAR reader, or fail closed for formats needing an adapter. */
+export async function extractAdapterArchive({manifest, data, destination, fsImpl = defaultFs} = {}) {
+  const reader = createArchiveReader({format: manifest?.format, data});
+  return extractAdapterPackage({manifest, destination, fsImpl, extractEntry: path => reader.read(path)});
 }

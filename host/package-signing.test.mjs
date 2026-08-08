@@ -1,0 +1,9 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {canonicalizePackageManifest, signPackageManifest, verifyPackageManifestSignature} from './package-signing.mjs';
+
+const manifest = {id: 'dolphin-native', version: '1.1.0', platform: 'linux', format: 'tar', files: [{path: 'adapter', sizeBytes: 1, integrity: 'sha256-a'}]};
+
+test('package manifest canonicalization is stable and excludes signature material', () => { const first = canonicalizePackageManifest({...manifest, z: 1, a: {b: 2}}); const second = canonicalizePackageManifest({a: {b: 2}, z: 1, signature: {value: 'secret'}, ...manifest}); assert.equal(first, second); assert.equal(first.includes('secret'), false); });
+test('package signing uses an injected WebCrypto boundary and returns base64url signature metadata', async () => { const calls = []; const subtle = {async sign(...args) { calls.push(args); return new Uint8Array([1, 2, 250]); }}; const signed = await signPackageManifest({manifest, privateKey: 'key', signer: 'release', subtle}); assert.equal(signed.signature.algorithm, 'ECDSA-P256-SHA256'); assert.equal(signed.signature.signer, 'release'); assert.equal(signed.signature.value, 'AQL6'); assert.deepEqual(calls[0][0], {name: 'ECDSA', hash: 'SHA-256'}); });
+test('package signature verification canonicalizes the unsigned manifest', async () => { const calls = []; const subtle = {async importKey(...args) { calls.push(['importKey', ...args]); return 'key'; }, async verify(...args) { calls.push(['verify', ...args]); return true; }}; const result = await verifyPackageManifestSignature({manifest: {...manifest, signature: {algorithm: 'ECDSA-P256-SHA256', signer: 'release', value: 'AQ'}}, publicKeyJwk: {kty: 'EC', crv: 'P-256'}, subtle}); assert.equal(result, true); assert.equal(calls[0][0], 'importKey'); assert.equal(calls[1][0], 'verify'); });

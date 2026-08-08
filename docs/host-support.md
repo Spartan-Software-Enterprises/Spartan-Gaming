@@ -30,6 +30,17 @@ reading is injected, so the host does not shell out to `tar`, `unzip`, or an
 untrusted package command; failed extraction removes only its new staging
 directory.
 
+`host/archive-readers.mjs` supplies dependency-free ZIP (stored/deflated) and
+TAR readers. Encrypted ZIP entries, archive links, traversal paths, duplicate
+names, unsupported compression, and oversized entries fail closed. Formats such
+as `tar.zst` still require an explicitly supplied native codec adapter.
+
+`host/package-signing.mjs` provides the release-side signing boundary. It
+canonicalizes manifests with signature fields removed, signs through an
+injected WebCrypto private key, and verifies through the existing public-key
+contract. Keys are never loaded from disk, persisted, or embedded in package
+metadata beyond the signer identifier and signature value.
+
 `host/media.mjs` provides the next boundary for those platform implementations. It generates shell-free FFmpeg capture plans for Linux X11/PipeWire, Windows desktop capture, and macOS AVFoundation, validates basic permission context, and generates codec/bitrate encoder plans for H.264, VP9, and AV1. These plans target a future WebRTC publisher and are deliberately not executed by the reference agent.
 
 `host/publisher.mjs` composes those plans into a transport-neutral publisher
