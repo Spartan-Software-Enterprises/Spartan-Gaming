@@ -73,11 +73,12 @@ export function createSessionManager({clock = () => new Date().toISOString(), id
     get qualityRequest() { return quality.request(); },
     get negotiated() { return session?.negotiated ? clone(session.negotiated) : null; },
     get recovery() { return {attempt: recovery.attempt, exhausted: recovery.exhausted, maxAttempts: recovery.maxAttempts}; },
-    start({backend, capabilities = DEFAULT_CAPABILITIES, preferences = {}} = {}) {
+    start({backend, capabilities = DEFAULT_CAPABILITIES, preferences = {}, launch} = {}) {
       if (!backend?.id) throw new TypeError('backend.id is required');
       transition('preparing'); quality = createQualityController({initialProfile: preferences.qualityPreset || 'balanced'}); recovery = createReconnectPolicy(); session = {id: idFactory(), backendId: backend.id, backendType: backend.backendType, capabilities: normalizeCapabilities(capabilities), preferences: clone(preferences), negotiated: null, quality: quality.profile}; sequence = 0;
       transition('negotiating');
       const payload = {role: 'client', backendId: backend.id, transports: session.capabilities.transports, video: session.capabilities.video, audio: session.capabilities.audio, input: session.capabilities.input, quality: {...quality.request(), ...(preferences.bitrateKbps ? {bitrateKbps: preferences.bitrateKbps} : {})}, streaming: clone(preferences)};
+      if (launch !== undefined) { if (!launch || typeof launch !== 'object' || Array.isArray(launch)) throw new TypeError('launch must be an object'); payload.launch = clone(launch); }
       if (backend.hostId) payload.hostId = backend.hostId;
       if (backend.pairingCode) payload.pairingCode = backend.pairingCode;
       return createSessionEnvelope({sessionId: session.id, type: 'session.offer', sequence, sentAt: clock(), payload});

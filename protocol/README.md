@@ -25,6 +25,7 @@ The browser and host must be able to close a session explicitly with a reason. A
 The first version covers:
 
 - Session creation and capability negotiation.
+- Optional consented metadata-only emulator launch handoff.
 - Video and audio track preferences.
 - Input event envelopes.
 - Quality-control hints.

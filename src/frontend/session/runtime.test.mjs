@@ -7,8 +7,10 @@ function fakeTransport() { const listeners = new Map(); return {state: 'idle', s
 
 test('session runtime connects signaling, sends an offer, and routes answers', async () => {
   const signaling = fakeTransport(); const runtime = createSessionRuntime({signaling, clock: () => '2026-08-07T12:00:00.000Z'});
-  const offer = await runtime.start({backend: {id: 'spartan-host', backendType: 'remote-play'}});
+  const launch = {version: 1, kind: 'emulator', coreId: 'dolphin', runtime: {id: 'dolphin-linux', kind: 'native-emulator', version: '5.0'}, hostContentId: 'entry-1', content: {game: {name: 'game.iso', size: 1}, firmware: []}, consent: {approved: true, at: '2026-08-08T00:00:00.000Z'}};
+  const offer = await runtime.start({backend: {id: 'spartan-host', backendType: 'remote-play'}, launch});
   assert.equal(runtime.state, 'negotiating'); assert.equal(signaling.sent[0].type, 'session.offer');
+  assert.deepEqual(signaling.sent[0].payload.launch, launch);
   signaling.emit('message', createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true}}));
   assert.equal(runtime.state, 'connected');
 });

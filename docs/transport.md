@@ -11,6 +11,13 @@
 
 `src/frontend/session/runtime.mjs` composes these primitives with the session manager. It connects signaling, adds the WebRTC offer/answer and ICE payloads, forwards media tracks, routes input/reconnect envelopes, and exposes session events for the player. It does not own provider credentials or host process lifecycle.
 
+Native emulator sessions may add a consented `launch` descriptor to the
+`session.offer`. `src/frontend/emulation/host-launch.mjs` keeps that descriptor
+metadata-only: it carries runtime/core identity, an opaque host content ID,
+selected file metadata, and consent—not browser paths, `File` objects, or
+content bytes. The host validates it against its own operator-configured
+runtime and content before launching anything.
+
 Reconnect lifecycle is coordinated by `src/frontend/session/reconnect-controller.mjs` around the bounded recovery policy. A reconnect attempt emits an envelope immediately, transport failures schedule the next bounded attempt with exponential backoff, successful answers reset recovery, and the player can cancel pending work. Controller state is observable as `attempting`, `waiting`, `succeeded`, `cancelled`, or `exhausted`; no reconnect loop is unbounded or hidden from the UI.
 
 The player loads the persisted transport policy through

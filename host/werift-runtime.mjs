@@ -1,6 +1,7 @@
 import {negotiateHostOffer} from './session.mjs';
 import {createSessionEnvelope, normalizeCapabilities} from '../src/frontend/session/session.mjs';
 import {validateTransportMessage} from '../src/frontend/transport/transport.mjs';
+import {normalizeHostLaunchRequest} from './launch-request.mjs';
 
 const DEFAULT_HOST_CAPABILITIES = Object.freeze({
   transports: ['webrtc'],
@@ -35,6 +36,7 @@ export function createWeriftHostRuntime({
   capabilities = DEFAULT_HOST_CAPABILITIES,
   audioEnabled = false,
   onInput = () => {},
+  onLaunch = () => {},
   onQuality = () => {},
   clock = () => new Date().toISOString(),
 } = {}) {
@@ -71,11 +73,13 @@ export function createWeriftHostRuntime({
     try {
       if (message.type === 'session.offer' && !activeSessionId) {
         if (!message.payload?.sdp) throw new Error('Werift host requires an SDP offer');
+        const launch = message.payload.launch === undefined ? null : normalizeHostLaunchRequest(message.payload.launch);
         const negotiation = negotiateHostOffer({offer: message.payload, hostCapabilities: local});
         if (!negotiation.accepted) { send('session.answer', {accepted: false, hostId, hostName, reason: negotiation.reason}); bus.emit('rejected', negotiation.reason); return; }
         activeSessionId = message.sessionId;
         const candidateHandler = candidate => { if (activeSessionId) send('session.ice-candidate', {candidate}); };
-        mediaSession = await sessionFactory({onIceCandidate: candidateHandler, onStateChange: mediaState => bus.emit('media.state', mediaState)});
+        onLaunch(launch);
+        mediaSession = await sessionFactory({onIceCandidate: candidateHandler, onStateChange: mediaState => bus.emit('media.state', mediaState), launch});
         if (!mediaSession || typeof mediaSession.acceptOffer !== 'function' || typeof mediaSession.addIceCandidate !== 'function') throw new TypeError('sessionFactory must return a Werift session');
         const answer = await mediaSession.acceptOffer(message.payload.sdp);
         state = 'connected';

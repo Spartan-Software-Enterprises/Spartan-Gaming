@@ -5,6 +5,7 @@ import {createNativeInputExecutor} from './input.mjs';
 import {createEncoderPlan} from './media.mjs';
 import {createAudioEncoderPlan} from './audio.mjs';
 import {createGameLaunchPlan, createGameLauncher} from './game-launcher.mjs';
+import {matchesHostLaunchRequest} from './launch-request.mjs';
 
 function required(value, name) { if (!value || typeof value !== 'object') throw new TypeError(`${name} is required`); return value; }
 
@@ -13,7 +14,7 @@ function required(value, name) { if (!value || typeof value !== 'object') throw 
  * the protocol runtime. Platform capture plans and codec packetization remain
  * injected so this factory does not make unsafe assumptions about an OS.
  */
-export function createNativeWeriftHost({signaling, module, pipeline, capturePlan, encoderPlan, spawnImpl, maxOutputBytes, stopTimeoutMs, packetizer, sessionId, peerConfig, codec = 'h264', ssrc, streamId, label, maxChunkBytes, audioPipeline = null, audioPacketizer = null, audioCodec = 'opus', audioSsrc = 2, audioStreamId = 'spartan-stream', audioLabel = 'Spartan Gaming Audio', audioPermissionGranted = false, audioMaxChunkBytes, inputAdapter = null, inputPermissions = {}, inputExecutor = null, gameLauncher = null, onInput = () => {}, onInputError = () => {}, ...runtimeOptions} = {}) {
+export function createNativeWeriftHost({signaling, module, pipeline, capturePlan, encoderPlan, spawnImpl, maxOutputBytes, stopTimeoutMs, packetizer, sessionId, peerConfig, codec = 'h264', ssrc, streamId, label, maxChunkBytes, audioPipeline = null, audioPacketizer = null, audioCodec = 'opus', audioSsrc = 2, audioStreamId = 'spartan-stream', audioLabel = 'Spartan Gaming Audio', audioPermissionGranted = false, audioMaxChunkBytes, inputAdapter = null, inputPermissions = {}, inputExecutor = null, gameLauncher = null, launchValidator = null, onInput = () => {}, onInputError = () => {}, ...runtimeOptions} = {}) {
   required(signaling, 'signaling'); required(module, 'module'); required(packetizer, 'packetizer');
   const nativePipeline = pipeline || createNativeMediaPipeline({capturePlan, encoderPlan, spawnImpl, maxOutputBytes, stopTimeoutMs});
   required(nativePipeline, 'pipeline');
@@ -31,7 +32,8 @@ export function createNativeWeriftHost({signaling, module, pipeline, capturePlan
     audioEnabled: runtimeOptions.audioEnabled ?? audioEnabled,
     signaling,
     sessionId,
-    sessionFactory: async ({onIceCandidate, onStateChange}) => {
+    sessionFactory: async ({onIceCandidate, onStateChange, launch}) => {
+        if (gameLauncher && launchValidator && (!launch || !launchValidator(launch))) throw new Error('native launch request does not match the configured host content');
       mediaPublisher = createWeriftRtpPublisher({module, pipeline: nativePipeline, packetizer, peerConfig, codec, ssrc, streamId, label, maxChunkBytes});
       if (audioPipeline || audioPacketizer) {
         if (!audioPipeline || !audioPacketizer) throw new TypeError('audioPipeline and audioPacketizer are required together');
@@ -69,7 +71,7 @@ export function createNativeWeriftHost({signaling, module, pipeline, capturePlan
  * OS APIs; this composition layer owns permission gates, FFmpeg plans,
  * WebRTC publication, and remote-input dispatch.
  */
-export function createNativeWeriftHostFromPlatformBindings({bindings, platform = bindings?.platform, captureOptions = {}, audioOptions = {}, permissions = {}, includeAudio = true, width = 1920, height = 1080, framerate = 60, codec = 'h264', bitrateKbps = 10000, audioCodec = 'opus', audioBitrateKbps = 128, audioPacketizer, runtimeProfile = null, gamePath = null, gameArgs = [], gameCwd, gameEnv, ...options} = {}) {
+export function createNativeWeriftHostFromPlatformBindings({bindings, platform = bindings?.platform, captureOptions = {}, audioOptions = {}, permissions = {}, includeAudio = true, width = 1920, height = 1080, framerate = 60, codec = 'h264', bitrateKbps = 10000, audioCodec = 'opus', audioBitrateKbps = 128, audioPacketizer, runtimeProfile = null, gamePath = null, gameArgs = [], gameCwd, gameEnv, hostContentId = null, ...options} = {}) {
   required(bindings, 'bindings');
   if (bindings.platform !== platform) throw new TypeError('platform bindings must match the requested platform');
   if (typeof bindings.capture?.plan !== 'function') throw new TypeError('platform bindings must provide capture.plan(options)');
@@ -77,6 +79,7 @@ export function createNativeWeriftHostFromPlatformBindings({bindings, platform =
   const capturePlan = bindings.capture.plan({...captureOptions, width, height, framerate, permissionGranted: capturePermissionGranted});
   const encoderPlan = createEncoderPlan({codec, width, height, framerate, bitrateKbps});
   const gameLauncher = runtimeProfile && gamePath ? createGameLauncher({plan: createGameLaunchPlan({platform, runtimeProfile, gamePath, args: gameArgs, cwd: gameCwd, env: gameEnv}) , spawnImpl: options.spawnImpl, maxOutputBytes: options.maxOutputBytes, stopTimeoutMs: options.stopTimeoutMs}) : null;
+  const gameName = gamePath?.split(/[\\/]/).pop();
   let audioPipeline = null;
   let audioPermissionGranted = false;
   if (includeAudio) {
@@ -98,6 +101,7 @@ export function createNativeWeriftHostFromPlatformBindings({bindings, platform =
     audioCodec,
     audioPermissionGranted,
     gameLauncher,
+    launchValidator: gameLauncher && hostContentId ? request => matchesHostLaunchRequest(request, {runtimeId: runtimeProfile.id, hostContentId, gameName}) : null,
     inputAdapter: bindings.input,
     inputPermissions: permissions,
   });

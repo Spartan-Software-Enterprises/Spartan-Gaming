@@ -91,6 +91,12 @@ stops it after stream teardown. This supports Dolphin, PCSX2, RPCS3, PPSSPP,
 DuckStation, melonDS, Azahar, MAME, Flycast, xemu, ScummVM, and compatible
 Libretro hosts without bundling copyrighted games or firmware.
 
+`src/frontend/emulation/host-launch.mjs` creates the browser-side handoff
+descriptor after explicit consent. It includes only the core/runtime identity,
+an opaque host content identifier, selected-file names/sizes/digests, and the
+consent timestamp. It never serializes a `File` object, browser path, source
+handle, executable path, or content bytes into the session offer.
+
 `src/frontend/adapters/install.mjs` is the explicit handoff to that future
 updater. It requires user consent, a signed ready update, HTTPS artifact
 metadata, matching SHA-256 integrity, a supported platform, and no credentials;

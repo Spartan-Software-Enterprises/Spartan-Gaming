@@ -168,6 +168,12 @@ audio pipelines, connects them to Werift tracks, and routes negotiated input
 events through the guarded executor. This keeps platform APIs in the native
 package while making the portable host lifecycle testable end to end.
 
+`host/launch-request.mjs` validates the corresponding metadata-only native
+emulator handoff at the host boundary. A native host may accept it only when
+the runtime ID, opaque host content ID, and game metadata match its own
+operator-configured launch plan; the request cannot carry a path, executable,
+source handle, or bytes.
+
 `host/audio.mjs` adds the return-audio boundary for Windows WASAPI, macOS
 CoreAudio, and Linux PipeWire/PulseAudio. It validates microphone/session
 permissions, creates bounded FFmpeg PCM capture plans, and composes an Opus or
