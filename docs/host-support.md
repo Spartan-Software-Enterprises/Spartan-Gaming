@@ -12,7 +12,7 @@ Spartan Host is the native companion boundary for user-owned PCs, local emulator
 - Pairing codes use a short human-entered alphabet without ambiguous characters and carry an explicit expiry.
 - Returned profiles identify credentials as session-scoped, leaving storage and token exchange to the native host/signaling layer.
 
-The browser is responsible for user consent, endpoint validation, capability negotiation, input routing, quality requests, and diagnostics. The host is responsible for authentication, process ownership, game/emulator launch, media capture/encode, and enforcement of local permissions.
+The browser is responsible for user consent, endpoint validation, capability negotiation, input routing, quality requests, and diagnostics. Browser Host applies quality requests to WebRTC sender encodings when the browser exposes compatible sender controls, with bounded values and graceful unsupported reporting. The host is responsible for authentication, process ownership, game/emulator launch, media capture/encode, and enforcement of local permissions.
 
 The host manager at `src/frontend/host/index.html` stores only non-secret host profiles in local browser storage. It can generate a `host.pair` request for a one-time code supplied by a running host agent, show the selected transport, and export/import endpoint preferences. It does not complete pairing by itself: the future host agent and signaling service must validate the request, exchange session-scoped credentials, and enforce expiry and replay protection.
 

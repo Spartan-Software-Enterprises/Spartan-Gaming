@@ -1,6 +1,8 @@
-const MAX = Object.freeze({width: 7680, height: 4320, framerate: 240});
+const MAX = Object.freeze({width: 7680, height: 4320, framerate: 240, bitrateKbps: 100000});
+const DEFAULT_QUALITY = Object.freeze({profile: 'custom', bitrateKbps: 10000, maxFramerate: 60});
 
 function bounded(value, fallback, maximum) { const number = Number(value); return Number.isFinite(number) && number > 0 ? Math.min(maximum, number) : fallback; }
+function boundedInteger(value, fallback, minimum, maximum) { const number = Number(value); return Number.isFinite(number) && number > 0 ? Math.min(maximum, Math.max(minimum, Math.floor(number))) : fallback; }
 function events() { const listeners = new Map(); return {on(type, handler) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(handler); return () => listeners.get(type)?.delete(handler); }, emit(type, value) { for (const handler of listeners.get(type) || []) handler(value); }}; }
 function required(value, name) { if (!value) throw new TypeError(`${name} is required`); return value; }
 
@@ -14,6 +16,16 @@ export function createMicrophoneConstraints({deviceId = '', echoCancellation = t
 export function createBrowserCaptureConstraints({width = 1920, height = 1080, framerate = 60, audio = false, displaySurface = 'monitor'} = {}) {
   const surface = ['monitor', 'window', 'browser'].includes(displaySurface) ? displaySurface : 'monitor';
   return Object.freeze({video: Object.freeze({width: Object.freeze({ideal: bounded(width, 1920, MAX.width)}), height: Object.freeze({ideal: bounded(height, 1080, MAX.height)}), frameRate: Object.freeze({ideal: bounded(framerate, 60, MAX.framerate)}), displaySurface: surface}), audio: Boolean(audio)});
+}
+
+export function normalizeBrowserQualityRequest({profile = DEFAULT_QUALITY.profile, bitrateKbps = DEFAULT_QUALITY.bitrateKbps, maxFramerate = DEFAULT_QUALITY.maxFramerate} = {}) {
+  return Object.freeze({profile: typeof profile === 'string' && profile.trim() ? profile.trim() : DEFAULT_QUALITY.profile, bitrateKbps: boundedInteger(bitrateKbps, DEFAULT_QUALITY.bitrateKbps, 250, MAX.bitrateKbps), maxFramerate: boundedInteger(maxFramerate, DEFAULT_QUALITY.maxFramerate, 1, MAX.framerate)});
+}
+
+export function createVideoEncodingParameters(request, parameters = {}) {
+  const quality = normalizeBrowserQualityRequest(request);
+  if (!Array.isArray(parameters.encodings) || parameters.encodings.length === 0) return null;
+  return {...parameters, encodings: parameters.encodings.map(encoding => ({...encoding, maxBitrate: quality.bitrateKbps * 1000, maxFramerate: quality.maxFramerate}))};
 }
 
 export function createBrowserWebRtcPublisher({RTCPeerConnectionImpl = globalThis.RTCPeerConnection, mediaDevices = globalThis.navigator?.mediaDevices, configuration = {}, createPeer} = {}) {
@@ -50,6 +62,27 @@ export function createBrowserWebRtcPublisher({RTCPeerConnectionImpl = globalThis
       await peer.setRemoteDescription(offer);
       const answer = await peer.createAnswer(); await peer.setLocalDescription(answer);
       state = 'connected'; bus.emit('state', state); return peer.localDescription || answer;
+    },
+    async applyQualityRequest(request = {}) {
+      const quality = normalizeBrowserQualityRequest(request);
+      const senders = typeof peer.getSenders === 'function' ? peer.getSenders() : [];
+      let appliedSenders = 0;
+      let failedSenders = 0;
+      for (const sender of senders || []) {
+        if (sender?.track?.kind !== 'video' || typeof sender.getParameters !== 'function' || typeof sender.setParameters !== 'function') continue;
+        try {
+          const parameters = createVideoEncodingParameters(quality, await sender.getParameters());
+          if (!parameters) continue;
+          await sender.setParameters(parameters);
+          appliedSenders += 1;
+        } catch {
+          failedSenders += 1;
+        }
+      }
+      const status = appliedSenders > 0 ? 'applied' : failedSenders > 0 ? 'failed' : 'unsupported';
+      const result = Object.freeze({...quality, status, appliedSenders, failedSenders});
+      bus.emit('quality', result);
+      return result;
     },
     addIceCandidate(candidate) { return peer.addIceCandidate(candidate); },
     close() { stream?.getTracks?.().forEach(track => track.stop?.()); stream = null; peer.close?.(); state = 'closed'; bus.emit('state', state); },

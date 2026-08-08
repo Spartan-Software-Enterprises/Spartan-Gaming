@@ -56,6 +56,7 @@
 - [x] Screenshots and local recording.
 - [x] LAN self-hosted reference stream (browser display/system-audio capture over WebRTC; native host packaging remains pending).
 - [x] Browser Host microphone capture with explicit consent, device selection, and session-only track composition.
+- [x] Browser Host adaptive quality application through bounded WebRTC video sender parameters.
 - [x] Guided same-origin LAN host/player handoff UX.
 - [x] Provider and emulator capability detection harness.
 - [x] Unified session lifecycle and error model.
