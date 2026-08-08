@@ -4,6 +4,13 @@ function bounded(value, fallback, maximum) { const number = Number(value); retur
 function events() { const listeners = new Map(); return {on(type, handler) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(handler); return () => listeners.get(type)?.delete(handler); }, emit(type, value) { for (const handler of listeners.get(type) || []) handler(value); }}; }
 function required(value, name) { if (!value) throw new TypeError(`${name} is required`); return value; }
 
+export function createMicrophoneConstraints({deviceId = '', echoCancellation = true, noiseSuppression = true, autoGainControl = true} = {}) {
+  const audio = {echoCancellation: Boolean(echoCancellation), noiseSuppression: Boolean(noiseSuppression), autoGainControl: Boolean(autoGainControl)};
+  const normalizedDeviceId = typeof deviceId === 'string' ? deviceId.trim() : '';
+  if (normalizedDeviceId) audio.deviceId = {exact: normalizedDeviceId};
+  return Object.freeze(audio);
+}
+
 export function createBrowserCaptureConstraints({width = 1920, height = 1080, framerate = 60, audio = false, displaySurface = 'monitor'} = {}) {
   const surface = ['monitor', 'window', 'browser'].includes(displaySurface) ? displaySurface : 'monitor';
   return Object.freeze({video: Object.freeze({width: Object.freeze({ideal: bounded(width, 1920, MAX.width)}), height: Object.freeze({ideal: bounded(height, 1080, MAX.height)}), frameRate: Object.freeze({ideal: bounded(framerate, 60, MAX.framerate)}), displaySurface: surface}), audio: Boolean(audio)});
@@ -23,6 +30,18 @@ export function createBrowserWebRtcPublisher({RTCPeerConnectionImpl = globalThis
       if (stream) throw new Error('Display capture is already active');
       stream = await mediaDevices.getDisplayMedia(createBrowserCaptureConstraints(options));
       if (!stream?.getTracks) throw new Error('Display capture returned no media stream');
+      if (options.microphone === true) {
+        if (typeof mediaDevices.getUserMedia !== 'function') { stream.getTracks().forEach(track => track.stop?.()); stream = null; throw new Error('Microphone capture is unavailable in this browser'); }
+        try {
+          const microphone = await mediaDevices.getUserMedia({audio: createMicrophoneConstraints({deviceId: options.microphoneDeviceId})});
+          const microphoneTracks = microphone?.getAudioTracks?.() || [];
+          if (!microphoneTracks.length || typeof stream.addTrack !== 'function') throw new Error('Microphone capture returned no usable audio track');
+          microphoneTracks.forEach(track => stream.addTrack(track));
+        } catch (error) {
+          stream.getTracks().forEach(track => track.stop?.()); stream = null;
+          throw new Error(`Microphone capture failed: ${error.message || 'permission was denied'}`);
+        }
+      }
       for (const track of stream.getTracks()) { peer.addTrack(track, stream); track.addEventListener?.('ended', () => bus.emit('capture.ended')); }
       state = 'capturing'; bus.emit('capture', stream); return stream;
     },

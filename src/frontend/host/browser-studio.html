@@ -22,6 +22,8 @@
             <label class="wide">Short-lived host ticket<input data-ticket type="password" placeholder="Paste a role-scoped ticket" autocomplete="off"></label>
             <div class="capture-options wide">
               <label class="check"><input data-audio type="checkbox"> Include system audio</label>
+              <label class="check"><input data-microphone type="checkbox"> Include microphone</label>
+              <label data-microphone-picker hidden>Microphone<select data-microphone-device disabled><option value="">System default microphone</option></select></label>
               <label>Capture surface<select data-surface><option value="monitor">Entire display</option><option value="window">Application window</option><option value="browser">Browser tab</option></select></label>
               <label>Target framerate<select data-framerate><option value="30">30 FPS</option><option value="60" selected>60 FPS</option><option value="120">120 FPS</option><option value="144">144 FPS</option></select></label>
             </div>

@@ -1,11 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createBrowserCaptureConstraints, createBrowserWebRtcPublisher} from './browser-publisher.mjs';
+import {createBrowserCaptureConstraints, createBrowserWebRtcPublisher, createMicrophoneConstraints} from './browser-publisher.mjs';
 
 test('browser capture constraints are bounded, explicit, and consent-safe', () => {
   assert.deepEqual(createBrowserCaptureConstraints({width: 99999, height: 0, framerate: 500, audio: true, displaySurface: 'window'}), {video: {width: {ideal: 7680}, height: {ideal: 1080}, frameRate: {ideal: 240}, displaySurface: 'window'}, audio: true});
   assert.equal(createBrowserCaptureConstraints({displaySurface: 'unsupported'}).video.displaySurface, 'monitor');
 });
+
+test('microphone constraints are explicit and device-scoped', () => { assert.deepEqual(createMicrophoneConstraints({deviceId: ' mic-1 '}), {echoCancellation: true, noiseSuppression: true, autoGainControl: true, deviceId: {exact: 'mic-1'}}); });
 
 test('browser publisher captures user-approved display media, answers offers, forwards ICE, and stops tracks', async () => {
   const listeners = {}; const stopped = []; const track = {addEventListener(type, handler) { listeners[type] = handler; }, stop() { stopped.push(true); }};
@@ -15,6 +17,12 @@ test('browser publisher captures user-approved display media, answers offers, fo
   const captured = await publisher.capture({audio: true}); assert.equal(captured, stream); assert.equal(publisher.state, 'capturing'); assert.equal(calls[0][0], 'capture'); assert.equal(calls[1][0], 'addTrack');
   peer.onicecandidate({candidate: {candidate: 'candidate'}}); assert.deepEqual(ice, [{candidate: 'candidate'}]);
   const answer = await publisher.acceptOffer({type: 'offer', sdp: 'offer'}); assert.deepEqual(answer, {type: 'answer', sdp: 'answer'}); assert.equal(publisher.state, 'connected'); await publisher.addIceCandidate({candidate: 'remote'}); publisher.close(); assert.deepEqual(stopped, [true]); assert.equal(publisher.state, 'closed');
+});
+
+test('browser publisher requests microphone only when explicitly enabled and composes its track', async () => {
+  const displayTrack = {stop() {}}; const microphoneTrack = {stop() {}}; const stream = {getTracks: () => [displayTrack, microphoneTrack], addTrack(track) { this.added = track; }, getAudioTracks: () => [microphoneTrack]}; const calls = []; const peer = {addTrack: (...args) => calls.push(args), close() {}};
+  const publisher = createBrowserWebRtcPublisher({createPeer: () => peer, mediaDevices: {async getDisplayMedia() { return stream; }, async getUserMedia(constraints) { calls.push(['microphone', constraints]); return {getAudioTracks: () => [microphoneTrack]}; }}});
+  await publisher.capture({microphone: true, microphoneDeviceId: 'mic-1'}); assert.equal(calls[0][0], 'microphone'); assert.deepEqual(calls[0][1].audio.deviceId, {exact: 'mic-1'}); assert.equal(calls.filter(call => call[0] === 'microphone').length, 1);
 });
 
 test('browser publisher fails closed when capture is unavailable', async () => {

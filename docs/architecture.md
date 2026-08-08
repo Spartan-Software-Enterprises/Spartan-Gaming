@@ -113,6 +113,12 @@ Device IDs remain session-local and are not written to settings, profile exports
 URLs, or telemetry. Browsers without output routing support keep the stream on
 the default sink and show a non-actionable fallback state.
 
+The Browser Host Studio applies the same permission boundary to microphone
+capture: `getUserMedia` is called only after the user enables the microphone
+option, and the selected input is combined with the user-approved display stream
+in memory. If permission, device access, or track composition fails, all capture
+tracks are stopped and the host does not start.
+
 User-owned host connections use the secure boundary in `src/frontend/host/host.mjs`; see [host support](host-support.md) for endpoint, pairing, and transport rules.
 
 Browser signaling and media transport primitives live in `src/frontend/transport/transport.mjs`; see [transport](transport.md) for the WebSocket and WebRTC boundary.

@@ -116,6 +116,12 @@ and WebRTC media locally; it does not launch games or inject native input.
 Tickets are printed for the local operator and are intentionally not placed in
 URLs.
 
+Browser Host Studio can also request a microphone explicitly. Enable **Include
+microphone**, choose a detected input device, and then choose the display. The
+microphone is requested with `getUserMedia` only after that action, composed into
+the in-memory capture stream, and stopped with the display tracks. Device IDs
+are not stored, exported, or placed in signaling messages.
+
 Run the repository checks before committing:
 
 ```bash
