@@ -4,7 +4,8 @@ import {createSettingsStore} from '../settings/profile.mjs';
 export function readTransportPolicy(storage = globalThis.localStorage) {
   const settings = createSettingsStore({storage}).read();
   const preferenceMap = {'Automatic': 'auto', 'WebRTC': 'webrtc', 'WebTransport experimental': 'webtransport', 'WebSocket fallback': 'websocket'};
-  const policy = normalizeTransportPolicy({preference: preferenceMap[settings['streaming.transportPreference']] || 'auto', icePolicy: settings['streaming.icePolicy'] === 'Relay only' ? 'relay' : 'all', allowWebTransport: settings['streaming.allowWebTransport'] !== false, allowWebSocketFallback: settings['streaming.allowWebSocketFallback'] !== false});
+  const privacyRelay = settings['privacy.preventWebRtcIpLeak'] === true;
+  const policy = normalizeTransportPolicy({preference: preferenceMap[settings['streaming.transportPreference']] || 'auto', icePolicy: privacyRelay || settings['streaming.icePolicy'] === 'Relay only' ? 'relay' : 'all', allowWebTransport: settings['streaming.allowWebTransport'] !== false, allowWebSocketFallback: settings['streaming.allowWebSocketFallback'] !== false});
   return policy;
 }
 

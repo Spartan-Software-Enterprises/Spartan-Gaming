@@ -10,6 +10,13 @@ test('player transport settings normalize saved labels without storing credentia
   assert.equal(policy.credentials, 'session-scoped');
 });
 
+test('privacy WebRTC IP protection overrides the all-candidates stream setting', () => {
+  const storage = {getItem: () => JSON.stringify({'streaming.icePolicy': 'All candidates', 'privacy.preventWebRtcIpLeak': true})};
+  assert.equal(readTransportPolicy(storage).icePolicy, 'relay');
+  const relaxed = {getItem: () => JSON.stringify({'streaming.icePolicy': 'All candidates', 'privacy.preventWebRtcIpLeak': false})};
+  assert.equal(readTransportPolicy(relaxed).icePolicy, 'all');
+});
+
 test('player resolves WebTransport for HTTPS signaling and WebSocket for WSS', () => {
   assert.equal(resolveSignalingTransport({endpoint: 'https://relay.example.test/signal', webTransportAvailable: true}), 'webtransport');
   assert.equal(resolveSignalingTransport({endpoint: 'wss://relay.example.test/signal', webTransportAvailable: true, webSocketAvailable: true}), 'websocket');

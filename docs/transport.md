@@ -30,7 +30,10 @@ The player loads the persisted transport policy through
 `src/frontend/player/transport-config.mjs`. HTTPS signaling can select the
 experimental WebTransport datagram adapter; WSS signaling uses WebSocket;
 WebRTC remains the media transport when the browser exposes it. Relay policy
-is passed into the WebRTC configuration for the current session only.
+is passed into the WebRTC configuration for the current session only. The
+Privacy & security setting **Limit WebRTC IP exposure** is a stronger relay-only
+override than the streaming ICE preference, so a user cannot accidentally
+re-enable direct candidates while that privacy control is enabled.
 
 Incoming WebRTC streams are attached through `src/frontend/player/media.mjs`.
 The player also exposes capability-gated Picture-in-Picture for supported
