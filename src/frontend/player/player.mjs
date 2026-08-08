@@ -80,6 +80,8 @@ async function prepareSession() {
   sessionPreferences = preflight.preferences;
   immersive.setDisplayPreference(sessionPreferences.preferences.display);
   if (elements.pip) elements.pip.disabled = !sessionPreferences.preferences.pictureInPicture || !canUsePictureInPicture(elements.video);
+  elements.video.volume = sessionPreferences.preferences.gameVolume;
+  if (sessionPreferences.preferences.showTelemetry && !state.diagnosticsVisible) apply({type: 'toggle.diagnostics'});
   inputPolicy = preflight.inputPolicy;
   haptics = createHapticsController({enabled: inputPolicy.allows('rumble')});
   sessionPreflightReady = true;

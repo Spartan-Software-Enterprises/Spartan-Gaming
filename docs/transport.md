@@ -51,6 +51,10 @@ still decides whether those requests can be honored.
 The player reports whether video and audio tracks arrived, starts audio
 enabled by default, and provides a local mute toggle without changing the
 remote stream or exposing device data.
+Session preferences also apply the saved game-volume ceiling to the active
+video element and open live diagnostics by default when **Show stream
+telemetry** is enabled; the in-session diagnostics toggle can still hide or
+show that panel afterward.
 
 When WebRTC exposes `getStats()`, the runtime starts `src/frontend/session/telemetry.mjs`. The collector reduces inbound video and candidate-pair statistics to RTT, packet loss, decode rate, jitter, dropped frames, and byte counters, then emits bounded `telemetry.health` messages. Raw stats reports and browser/device identity are never forwarded.
 
