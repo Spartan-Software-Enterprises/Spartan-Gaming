@@ -149,6 +149,11 @@ devices. Input polling is a bounded preference delivered to trusted adapters;
 the browser frontend does not claim to change hardware polling rates it cannot
 control.
 
+When `privacy.clearOnExit` is enabled, the player removes Spartan-owned
+transient session handoffs on explicit session end and `pagehide`. This does
+not clear persistent profiles/settings, browser-wide cookies/cache, or
+cross-origin provider state; those remain under browser and provider controls.
+
 Browser signaling and media transport primitives live in `src/frontend/transport/transport.mjs`; see [transport](transport.md) for the WebSocket and WebRTC boundary.
 
 ## Cross-platform strategy
