@@ -85,6 +85,12 @@ mounts, PWA worker/assets, public provider and emulator catalogs, favicon, and
 `spartan-frontend-manifest.json`. The build refuses to write into the source or
 repository root and does not include host secrets, credentials, or game files.
 
+GitHub Actions packages and verifies that artifact independently on Linux,
+macOS, and Windows, then retains one OS-labeled artifact for fourteen days.
+This validates the shared frontend distribution boundary across desktop hosts;
+it does not substitute for building the external Chromium checkout, which
+still requires the platform toolchains described in the Chromium section.
+
 For a local browser-to-browser stream smoke test, run:
 
 ```bash

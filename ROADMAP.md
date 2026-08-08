@@ -15,6 +15,7 @@
 - [x] Installable PWA shell with offline-safe frontend and public catalog caching.
 - [x] Cross-platform dependency-free frontend development server with safe static routing and browser security headers.
 - [x] Reproducible static frontend distribution build with canonical entrypoint and catalog manifest.
+- [x] Windows, macOS, and Linux frontend distribution artifact workflow.
 - [x] Session player shell with stream target, overlays, quality state, controller hooks, and diagnostics.
 - [x] Gaming profiles and workspaces with persistent isolated launch preferences.
 - [x] Fullscreen gaming mode.
