@@ -1,4 +1,5 @@
 import {detectDeviceMode, resolvePresentationProfile} from '../platform/device-mode.mjs';
+import {syncRuntimeControllerNavigation} from '../input/navigation.mjs';
 
 const ACCENTS = Object.freeze({Cyan: '#50e1d1', Violet: '#9a84ff', Lime: '#b8ef65', Amber: '#f5c563', Red: '#ff8f9c'});
 const THEMES = Object.freeze({'Spartan Dark': 'dark', 'Spartan Light': 'light', System: 'system', 'OLED Black': 'oled'});
@@ -85,5 +86,6 @@ export function applyRuntimeUiSettings(documentRef, settings = {}) {
   if (!documentRef.getElementById(STYLE_ID)) {
     const style = documentRef.createElement('style'); style.id = STYLE_ID; style.textContent = RUNTIME_STYLES; documentRef.head?.append(style);
   }
+  syncRuntimeControllerNavigation(documentRef);
   return resolved;
 }

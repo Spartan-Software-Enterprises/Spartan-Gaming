@@ -2,7 +2,6 @@ import '../pwa/register.mjs';
 import { createFrontendCatalog, validateCatalogManifest } from '../catalog.mjs';
 import { createSessionManager } from '../session/session.mjs';
 import { createCatalogAdapterRegistry } from '../adapters/adapters.mjs';
-import { createControllerNavigator } from '../input/navigation.mjs';
 import { evaluateCatalog } from '../compatibility/harness.mjs';
 import { collectCapabilities } from '../diagnostics/capabilities.mjs';
 import { createProviderProfileStore } from '../providers/profiles.mjs';
@@ -30,7 +29,6 @@ const providerDialog = document.querySelector('[data-provider-dialog]');
 const sessionManager = createSessionManager({idFactory: () => `ses-${crypto.randomUUID()}`});
 let sessionStatusId = 'idle';
 let toastTimer;
-const controllerNavigator = createControllerNavigator({root: document});
 document.querySelector('.topbar')?.insertAdjacentHTML('beforeend', '<label class="workspace-picker" style="display:flex;align-items:center;gap:7px;color:#8d9aa7;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase"><span>Workspace</span><select data-workspace-select aria-label="Active workspace" style="min-width:118px;padding:8px 9px;border:1px solid #2a3540;border-radius:7px;background:#171e26;color:#e7edf3;font-size:11px;letter-spacing:0;text-transform:none"></select></label>');
 
 function renderWorkspaceControl() { const control = document.querySelector('[data-workspace-select]'); if (!control) return; control.innerHTML = workspaceStore.list().map(workspace => `<option value="${escapeHtml(workspace.id)}" ${workspace.id === activeWorkspace.id ? 'selected' : ''}>${escapeHtml(workspace.name)}</option>`).join(''); control.title = `${activeWorkspace.name} workspace`; }
@@ -129,6 +127,5 @@ document.querySelectorAll('[data-section]').forEach(button => button.addEventLis
 renderResume();
 updateReadinessStatus();
 loadCatalog();
-controllerNavigator.start();
 window.addEventListener('online', updateReadinessStatus);
 window.addEventListener('offline', updateReadinessStatus);

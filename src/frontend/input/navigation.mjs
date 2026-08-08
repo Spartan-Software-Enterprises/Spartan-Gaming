@@ -1,6 +1,7 @@
 import {normalizeGamepadState} from './input.mjs';
 
 const FOCUSABLE_SELECTOR = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+const runtimeNavigators = new WeakMap();
 
 export function focusFirstControl(elements = []) {
   const first = [...elements].find(element => typeof element?.focus === 'function');
@@ -29,4 +30,20 @@ export function createControllerNavigator({root = globalThis.document, navigator
   let timer = null; let previous = null; let selectedGamepad = null;
   const poll = () => { const gamepads = [...(navigatorLike?.getGamepads?.() || [])].filter(Boolean); const gamepad = gamepads.find(item => item.index === selectedGamepad) || gamepads[0]; if (!gamepad) { previous = null; return; } selectedGamepad = gamepad.index; const action = readNavigationAction(gamepad, previous); previous = normalizeGamepadState(gamepad, {deadzone: 0.35}); if (!action) return; const elements = [...(root?.querySelectorAll?.(FOCUSABLE_SELECTOR) || [])]; if (!elements.length) return; const activeIndex = Math.max(0, elements.indexOf(root.activeElement)); if (['up', 'down', 'left', 'right'].includes(action)) { const next = chooseFocusIndex(elements, activeIndex, action); elements[next]?.focus?.(); } else if (action === 'confirm') elements[activeIndex]?.click?.(); else if (action === 'cancel') root.defaultView?.history?.back?.(); };
   return Object.freeze({get running() { return timer !== null; }, start() { if (timer === null) { if (focusOnStart) focusFirstControl(root?.querySelectorAll?.(FOCUSABLE_SELECTOR) || []); timer = scheduler(poll, intervalMs); } return this; }, stop() { if (timer !== null) clearScheduler(timer); timer = null; previous = null; return this; }, poll});
+}
+
+export function syncRuntimeControllerNavigation(root = globalThis.document, options = {}) {
+  if (!root) return null;
+  const wantsControllerNavigation = root.documentElement?.dataset?.spartanNavigation === 'remote-controller';
+  const existing = runtimeNavigators.get(root);
+  if (!wantsControllerNavigation) {
+    existing?.stop();
+    runtimeNavigators.delete(root);
+    return null;
+  }
+  if (existing) return existing;
+  const navigator = createControllerNavigator({root, focusOnStart: true, ...options});
+  navigator.start();
+  runtimeNavigators.set(root, navigator);
+  return navigator;
 }

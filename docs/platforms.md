@@ -20,7 +20,11 @@ safe-area spacing, and library density. It does not claim native packaging,
 TV certification, or iOS engine/entitlement support.
 In television mode, the shared controller navigator also focuses the first
 available control when the surface starts, so a remote/gamepad can operate the
-shell without a pointer.
+shell without a pointer. The navigator is installed by the shared PWA/runtime
+bootstrap, so the same behavior applies to Dashboard, Settings, Providers,
+Emulation, Host, Diagnostics, and other frontend entrypoints. Changing the
+presentation mode synchronizes the navigator and tears down polling when a
+controller-first surface is no longer selected.
 
 ## Shared layers
 
