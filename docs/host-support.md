@@ -57,6 +57,12 @@ resolution, framerate, audio, and transport capabilities into host health and
 session answers. The reference agent therefore exposes truthful readiness
 without pretending that FFmpeg output is already playable media.
 
+`host/native-session.mjs` composes the executable media, audio, and input
+lifecycles. Media starts first, audio startup failure rolls media back, input is
+accepted only while the session is active, and shutdown closes input before
+audio and media in reverse order. OS APIs remain injected, so the same
+orchestrator can be used by Windows, macOS, and Linux adapters.
+
 `host/input.mjs` is the matching input boundary. It maps normalized browser
 events to shell-free plans for Windows `SendInput`, macOS Core Graphics/HID,
 and Linux `uinput` adapters. Plans declare the required permission (`remote-input`,

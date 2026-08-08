@@ -83,4 +83,5 @@
 - [x] Dependency-free ZIP/TAR archive readers wired into package extraction (Zstandard and other codecs remain adapter-provided).
 - [x] Canonical package manifest signing and verification boundary with injected WebCrypto keys (release key custody/service deployment pending).
 - [x] Authenticated, rate-limited release signing service boundary with external key custody (KMS/HSM deployment remains environment-specific).
+- [x] Transactional native media/audio/input session orchestrator with rollback and reverse-order teardown (OS implementations remain adapter-specific).
 - [x] Unified frontend runtime readiness contract for browser, native adapter, and self-hosted host layers.

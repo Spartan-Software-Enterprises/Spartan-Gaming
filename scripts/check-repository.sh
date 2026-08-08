@@ -55,6 +55,8 @@ required_files=(
   host/archive-readers.test.mjs
   host/package-signing.mjs
   host/package-signing.test.mjs
+  host/native-session.mjs
+  host/native-session.test.mjs
   release/package-signing-service.mjs
   release/package-signing-service.test.mjs
   host/publisher.integration.test.mjs
@@ -305,6 +307,7 @@ node --check host/adapter-installer.mjs
 node --check host/adapter-package.mjs
 node --check host/archive-readers.mjs
 node --check host/package-signing.mjs
+node --check host/native-session.mjs
 node --check release/package-signing-service.mjs
 node --check host/native-media.integration.test.mjs
 node --check host/publisher.integration.test.mjs
