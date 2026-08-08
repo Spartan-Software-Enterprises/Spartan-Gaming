@@ -201,6 +201,8 @@ runtime plans.
 - Full touch overlays include two virtual analog sticks that emit bounded
   `axis-0` through `axis-3` events with explicit neutral releases, so mobile
   sessions can drive modern games and emulators without a physical controller.
+- The full touch layout also exposes L1/R1, L2/R2, and L3/R3 controls using the
+  same shared button names consumed by native adapters.
 - Save RAM, save states, screenshots, clips, and rewind.
 - Integer scaling, aspect-ratio correction, shaders, CRT filters, and color controls.
 - Per-game resolution, frame pacing, audio latency, and synchronization settings.

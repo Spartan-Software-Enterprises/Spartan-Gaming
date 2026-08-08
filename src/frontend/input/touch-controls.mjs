@@ -4,6 +4,10 @@ const LAYOUTS = Object.freeze({
     Object.freeze({id: 'confirm', label: 'A', action: 'confirm', group: 'face'}),
   ]),
   full: Object.freeze([
+    Object.freeze({id: 'lb', label: 'L1', action: 'lb', group: 'shoulder', side: 'left'}),
+    Object.freeze({id: 'lt', label: 'L2', action: 'lt', group: 'shoulder', side: 'left'}),
+    Object.freeze({id: 'rb', label: 'R1', action: 'rb', group: 'shoulder', side: 'right'}),
+    Object.freeze({id: 'rt', label: 'R2', action: 'rt', group: 'shoulder', side: 'right'}),
     Object.freeze({id: 'moveUp', label: '▲', action: 'moveUp', group: 'dpad'}),
     Object.freeze({id: 'moveLeft', label: '◀', action: 'moveLeft', group: 'dpad'}),
     Object.freeze({id: 'moveRight', label: '▶', action: 'moveRight', group: 'dpad'}),
@@ -12,6 +16,8 @@ const LAYOUTS = Object.freeze({
     Object.freeze({id: 'confirm', label: 'A', action: 'confirm', group: 'face'}),
     Object.freeze({id: 'menu', label: '☰', action: 'menu', group: 'utility'}),
     Object.freeze({id: 'pause', label: 'Ⅱ', action: 'pause', group: 'utility'}),
+    Object.freeze({id: 'l3', label: 'L3', action: 'l3', group: 'stick-click', side: 'left'}),
+    Object.freeze({id: 'r3', label: 'R3', action: 'r3', group: 'stick-click', side: 'right'}),
   ]),
 });
 
