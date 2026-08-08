@@ -198,6 +198,9 @@ runtime plans.
 - Per-system and per-game launch profiles.
 - Controller auto-configuration.
 - Touch overlays for handheld and mobile targets.
+- Full touch overlays include two virtual analog sticks that emit bounded
+  `axis-0` through `axis-3` events with explicit neutral releases, so mobile
+  sessions can drive modern games and emulators without a physical controller.
 - Save RAM, save states, screenshots, clips, and rewind.
 - Integer scaling, aspect-ratio correction, shaders, CRT filters, and color controls.
 - Per-game resolution, frame pacing, audio latency, and synchronization settings.
