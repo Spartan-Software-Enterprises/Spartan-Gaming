@@ -102,11 +102,20 @@ napi_value execute(napi_env env, napi_callback_info info) {
     if (!event) return fail(env, "macOS could not create keyboard event; grant Accessibility permission");
     CGEventPost(kCGHIDEventTap, event); CFRelease(event);
   } else if (kind == "pointer") {
+    const std::string action = string_property(env, argv[0], "action");
+    if (action == "pointer:wheel") {
+      const int32_t vertical = static_cast<int32_t>(std::max(-4096.0, std::min(4096.0, number_property(env, argv[0], "deltaY", 0))));
+      const int32_t horizontal = static_cast<int32_t>(std::max(-4096.0, std::min(4096.0, number_property(env, argv[0], "deltaX", 0))));
+      if (!vertical && !horizontal) return fail(env, "empty macOS mouse wheel event");
+      CGEventRef event = CGEventCreateScrollWheelEvent(nullptr, kCGScrollEventUnitPixel, 2, vertical, horizontal);
+      if (!event) return fail(env, "macOS could not create scroll event; grant Accessibility permission");
+      CGEventPost(kCGHIDEventTap, event); CFRelease(event);
+      napi_value result; napi_get_boolean(env, true, &result); return result;
+    }
     CGEventRef current = CGEventCreate(nullptr);
     if (!current) return fail(env, "macOS could not read pointer position; grant Accessibility permission");
     const CGPoint location = CGEventGetLocation(current); CFRelease(current);
     const CGPoint next = CGPointMake(location.x + number_property(env, argv[0], "deltaX", 0), location.y + number_property(env, argv[0], "deltaY", 0));
-    const std::string action = string_property(env, argv[0], "action");
     const CGMouseButton button = mouse_button(string_property(env, argv[0], "control"));
     CGEventType event_type = kCGEventMouseMoved;
     if (action == "pointer:down") event_type = kCGEventLeftMouseDown;

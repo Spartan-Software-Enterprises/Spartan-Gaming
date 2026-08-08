@@ -11,3 +11,9 @@ export function createPointerInputEvent({event, rect} = {}) {
   const pressed = event.type === 'pointerdown' || (event.type === 'pointermove' && Number(event.buttons) > 0);
   return Object.freeze({type: 'input.event', action: `pointer:${event.type.replace('pointer', '')}`, kind: touch ? 'touch' : 'pointer', source: touch ? 'touch' : 'pointer', control: touch ? 'touch-contact' : `button-${Math.max(0, Number(event.button) || 0)}`, pressed, value: pressed ? 1 : 0, x: coordinates.x, y: coordinates.y, deltaX: Math.max(-4096, Math.min(4096, Number(event.movementX) || 0)), deltaY: Math.max(-4096, Math.min(4096, Number(event.movementY) || 0))});
 }
+
+export function createWheelInputEvent({event, rect} = {}) {
+  if (!event || event.type !== 'wheel') throw new TypeError('A wheel event is required');
+  const coordinates = normalizePointerCoordinates({clientX: event.clientX, clientY: event.clientY, rect});
+  return Object.freeze({type: 'input.event', action: 'pointer:wheel', kind: 'pointer', source: 'pointer', control: 'wheel', pressed: false, value: 0, x: coordinates.x, y: coordinates.y, deltaX: Math.max(-4096, Math.min(4096, Number(event.deltaX) || 0)), deltaY: Math.max(-4096, Math.min(4096, Number(event.deltaY) || 0))});
+}

@@ -129,8 +129,9 @@ WASAPI, and SendInput bindings; macOS packages advertise ScreenCaptureKit,
 CoreAudio, and CGEvent/HID bindings; Linux packages advertise PipeWire/portal,
 PipeWire/PulseAudio, and uinput bindings. The checked-in Windows and macOS
 packages implement keyboard and pointer input through SendInput and Core
-Graphics, including left/middle/right button down/up transitions emitted by
-the shared frontend pointer vocabulary, and compose guarded FFmpeg
+Graphics, including left/middle/right button down/up and bounded wheel
+transitions emitted by the shared frontend pointer vocabulary, and compose
+guarded FFmpeg
 capture/audio lifecycles. Windows
 additionally exposes rumble through XInput for attached Xbox-compatible
 controllers, but does not claim virtual gamepad injection. Linux exposes a
@@ -288,7 +289,7 @@ behind the binding boundary. It reports available FFmpeg, X11, PipeWire, and
 Pulse session capabilities; launches validated FFmpeg x11grab/PipeWire or
 audio plans through shell-free process arguments after explicit permission; and
 maps normalized keyboard and pointer operations to X11 `xdotool` argv calls,
-including normalized left/middle/right button down/up transitions.
+including normalized left/middle/right button down/up and wheel transitions.
 Gamepad/uinput, portal consent UI, hardware encoder selection, and signed
 distribution are intentionally not claimed by this reference adapter. The
 compiled `@spartan-gaming/native-linux` package now adds a Node-API `uinput`

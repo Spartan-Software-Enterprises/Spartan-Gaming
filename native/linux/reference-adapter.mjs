@@ -32,6 +32,11 @@ function inputCommand(operation) {
     const dx = Math.round(Number(operation.deltaX) || 0);
     const dy = Math.round(Number(operation.deltaY) || 0);
     const button = {'button-0': '1', 'button-1': '2', 'button-2': '3'}[operation.control];
+    if (operation.action === 'pointer:wheel') {
+      const wheel = dy < 0 ? '4' : dy > 0 ? '5' : dx < 0 ? '6' : dx > 0 ? '7' : null;
+      if (!wheel) return null;
+      return {args: ['click', wheel]};
+    }
     if (operation.action === 'pointer:down' || operation.action === 'pointer:up' || operation.action === 'pointer:cancel') {
       if (!button) throw new Error('Linux reference input adapter does not implement this mouse button');
       return {args: [operation.action === 'pointer:down' ? 'mousedown' : 'mouseup', button]};

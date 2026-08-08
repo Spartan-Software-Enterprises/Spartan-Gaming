@@ -135,9 +135,17 @@ napi_value execute(napi_env env, napi_callback_info info) {
     input.ki.dwFlags = bool_property(env, argv[0], "pressed", false) ? 0 : KEYEVENTF_KEYUP;
   } else if (kind == "pointer") {
     input.type = INPUT_MOUSE;
+    const std::string action = string_property(env, argv[0], "action");
     input.mi.dx = number_property(env, argv[0], "deltaX", 0);
     input.mi.dy = number_property(env, argv[0], "deltaY", 0);
-    input.mi.dwFlags = mouse_button_flags(string_property(env, argv[0], "control"), string_property(env, argv[0], "action"));
+    if (action == "pointer:wheel") {
+      const LONG horizontal = number_property(env, argv[0], "deltaX", 0);
+      const LONG vertical = number_property(env, argv[0], "deltaY", 0);
+      if (vertical != 0) { input.mi.dwFlags = MOUSEEVENTF_WHEEL; input.mi.mouseData = vertical > 0 ? WHEEL_DELTA : -WHEEL_DELTA; }
+      else if (horizontal != 0) { input.mi.dwFlags = MOUSEEVENTF_HWHEEL; input.mi.mouseData = horizontal > 0 ? WHEEL_DELTA : -WHEEL_DELTA; }
+      else return fail(env, "empty Windows mouse wheel event");
+      input.mi.dx = 0; input.mi.dy = 0;
+    } else input.mi.dwFlags = mouse_button_flags(string_property(env, argv[0], "control"), action);
     if (!input.mi.dwFlags) return fail(env, "unsupported Windows mouse button event");
   } else {
     return fail(env, "Windows native input supports keyboard, pointer, and XInput rumble events only");
