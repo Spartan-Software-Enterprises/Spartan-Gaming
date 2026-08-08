@@ -75,6 +75,8 @@ report it preserves the user’s bounded request so a host/provider can negotiat
 the final result. This is a browser policy contract; native multi-monitor
 routing and end-to-end HDR validation remain platform-adapter work.
 
+After the host answer, the session player renders a bounded **Display outcome** diagnostic. It combines the negotiated HDR and refresh-rate values with the browser-local fullscreen target, so a result such as `Display 2 · HDR enabled · 120 Hz` is observable without confusing local display selection with host negotiation. `pending`, `capped`, `downgraded`, and unavailable-target states remain distinguishable in the runtime contract.
+
 The player remains transport-neutral: an adapter can attach a negotiated `MediaStream` to its video target and forward health/input events to the session manager. Signaling authentication, host authorization, and process ownership stay outside the browser transport wrapper. A host/signaling service may supply short-lived ICE credentials to `createWebRtcTransport({ice})`; credentials must remain session-scoped and must never be stored in host profiles, exports, diagnostics, or URLs.
 
 The player’s **Export session report** action creates a bounded JSON bundle containing the backend kind, negotiated media contract, adjustment notices, and redacted aggregate telemetry samples. It excludes session IDs, endpoints, tickets, credentials, device IDs, and raw WebRTC reports. Samples are collected only while **Store local session telemetry** is enabled; disabling that setting clears the in-memory buffer.

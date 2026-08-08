@@ -27,6 +27,7 @@ import {createSessionDiagnosticsBundle, createSessionTelemetryLog, serializeSess
 import {clearSessionRecoveryHandoff, readSessionRecoveryHandoff, saveSessionRecoveryHandoff} from '../session/recovery-handoff.mjs';
 import {createActiveProfileStorage} from '../profiles/storage.mjs';
 import {resolveSessionPauseAction} from './session-controls.mjs';
+import {formatDisplayNegotiation, resolveDisplayNegotiation} from '../display/negotiation.mjs';
 
 const query = new URLSearchParams(location.search);
 const pendingHostPair = readPendingHostPair(sessionStorage); clearPendingHostPair(sessionStorage);
@@ -45,7 +46,7 @@ const immersive = createImmersiveController({target: document.querySelector('[da
 let runtime = null;
 const elements = {
   status: document.querySelector('[data-status]'), message: document.querySelector('[data-stage-message]'), quality: document.querySelector('[data-quality]'), qualitySelect: document.querySelector('[data-quality-select]'), qualityDetail: document.querySelector('[data-quality-detail]'), pip: document.querySelector('[data-action="pip"]'),
-  latency: document.querySelector('[data-latency]'), latencyDetail: document.querySelector('[data-latency-detail]'), loss: document.querySelector('[data-loss]'), decodeFps: document.querySelector('[data-decode-fps]'), dropped: document.querySelector('[data-dropped]'), jitter: document.querySelector('[data-jitter]'), bitrate: document.querySelector('[data-bitrate]'), gamepad: document.querySelector('[data-gamepad]'), audio: document.querySelector('[data-audio]'), audioOutput: document.querySelector('[data-audio-output]'), replay: document.querySelector('[data-action="replay"]'), negotiated: document.querySelector('[data-negotiated]'), diagnostics: document.querySelector('[data-diagnostics]'), overlay: document.querySelectorAll('[data-overlay]'), stage: document.querySelector('[data-stage]'), video: document.querySelector('[data-video]'), demo: document.querySelector('[data-demo-answer]'), connectionForm: document.querySelector('[data-connection-form]'), connectionEndpoint: document.querySelector('[data-connection-endpoint]'), connectionSession: document.querySelector('[data-connection-session]'), connectionTicket: document.querySelector('[data-connection-ticket]'), sessionName: document.querySelector('[data-session-name]'), transport: document.querySelector('[data-transport]'),
+  latency: document.querySelector('[data-latency]'), latencyDetail: document.querySelector('[data-latency-detail]'), loss: document.querySelector('[data-loss]'), decodeFps: document.querySelector('[data-decode-fps]'), dropped: document.querySelector('[data-dropped]'), jitter: document.querySelector('[data-jitter]'), bitrate: document.querySelector('[data-bitrate]'), gamepad: document.querySelector('[data-gamepad]'), audio: document.querySelector('[data-audio]'), audioOutput: document.querySelector('[data-audio-output]'), replay: document.querySelector('[data-action="replay"]'), negotiated: document.querySelector('[data-negotiated]'), display: document.querySelector('[data-display]'), diagnostics: document.querySelector('[data-diagnostics]'), overlay: document.querySelectorAll('[data-overlay]'), stage: document.querySelector('[data-stage]'), video: document.querySelector('[data-video]'), demo: document.querySelector('[data-demo-answer]'), connectionForm: document.querySelector('[data-connection-form]'), connectionEndpoint: document.querySelector('[data-connection-endpoint]'), connectionSession: document.querySelector('[data-connection-session]'), connectionTicket: document.querySelector('[data-connection-ticket]'), sessionName: document.querySelector('[data-session-name]'), transport: document.querySelector('[data-transport]'),
 };
 const mediaSession = createMediaSessionController({video: elements.video});
 let state = createPlayerState({status: 'negotiating'});
@@ -59,6 +60,7 @@ let sessionPaused = false;
 let mediaObservation = null;
 let sessionPreflightReady = false;
 let negotiationAdjustments = [];
+let displayNegotiation = resolveDisplayNegotiation();
 const telemetryLog = createSessionTelemetryLog({enabled: false});
 const previousGamepad = new Map();
 
@@ -69,16 +71,17 @@ installLanHandoffListener({handoffId: query.get('handoff'), target: 'client', on
 if (!inputPolicy.allows('gamepad')) elements.gamepad.textContent = 'Disabled by settings';
 elements.stage.style.touchAction = 'none';
 elements.diagnostics.querySelector('h2')?.insertAdjacentHTML('afterend', '<button class="secondary" data-action="export-session" type="button">Export session report</button>');
+elements.diagnostics.querySelector('dl')?.insertAdjacentHTML('afterbegin', '<div><dt>Display outcome</dt><dd data-display>Pending</dd></div>');
 document.querySelector('.overlay-bottom')?.insertAdjacentHTML('afterbegin', '<button class="icon-button" data-action="pause" aria-label="Pause session">Ⅱ</button>');
 elements.pause = document.querySelector('[data-action="pause"]');
 
 function apply(event) {
   state = reducePlayerState(state, event);
   const labels = {idle: 'Ready', preparing: 'Preparing session', negotiating: 'Negotiating session', connected: 'Connected', reconnecting: 'Reconnecting', ended: 'Session ended', error: 'Connection error'};
-  const profile = QUALITY_PROFILES.find(item => item.id === state.quality) || QUALITY_PROFILES[2]; elements.status.textContent = labels[state.status]; elements.quality.textContent = profile.id[0].toUpperCase() + profile.id.slice(1); if (elements.qualitySelect) elements.qualitySelect.value = profile.id; elements.qualityDetail.textContent = `${elements.quality.textContent} · ${profile.maxWidth}×${profile.maxHeight} @ ${profile.maxFramerate}`; elements.latency.textContent = formatLatency(state.latencyMs); elements.latencyDetail.textContent = formatLatency(state.latencyMs); elements.loss.textContent = `${state.packetLossPct}%`; if (elements.decodeFps) elements.decodeFps.textContent = Number.isFinite(state.decodeFps) ? `${state.decodeFps} fps` : '—'; if (elements.dropped) elements.dropped.textContent = `${state.framesDropped}`; if (elements.jitter) elements.jitter.textContent = formatLatency(state.jitterMs); if (elements.bitrate) elements.bitrate.textContent = formatRate(state.bitrateKbps); elements.negotiated.textContent = formatNegotiatedCapabilities(state.negotiated); elements.diagnostics.classList.toggle('is-visible', state.diagnosticsVisible); elements.overlay.forEach(overlay => overlay.classList.toggle('is-hidden', !state.overlayVisible));
+  const profile = QUALITY_PROFILES.find(item => item.id === state.quality) || QUALITY_PROFILES[2]; elements.status.textContent = labels[state.status]; elements.quality.textContent = profile.id[0].toUpperCase() + profile.id.slice(1); if (elements.qualitySelect) elements.qualitySelect.value = profile.id; elements.qualityDetail.textContent = `${elements.quality.textContent} · ${profile.maxWidth}×${profile.maxHeight} @ ${profile.maxFramerate}`; elements.latency.textContent = formatLatency(state.latencyMs); elements.latencyDetail.textContent = formatLatency(state.latencyMs); elements.loss.textContent = `${state.packetLossPct}%`; if (elements.decodeFps) elements.decodeFps.textContent = Number.isFinite(state.decodeFps) ? `${state.decodeFps} fps` : '—'; if (elements.dropped) elements.dropped.textContent = `${state.framesDropped}`; if (elements.jitter) elements.jitter.textContent = formatLatency(state.jitterMs); if (elements.bitrate) elements.bitrate.textContent = formatRate(state.bitrateKbps); elements.negotiated.textContent = formatNegotiatedCapabilities(state.negotiated); if (elements.display) elements.display.textContent = formatDisplayNegotiation(displayNegotiation); elements.diagnostics.classList.toggle('is-visible', state.diagnosticsVisible); elements.overlay.forEach(overlay => overlay.classList.toggle('is-hidden', !state.overlayVisible));
   if (state.status === 'connected' && sessionPreferences.preferences.autoFullscreen && !autoFullscreenAttempted) { autoFullscreenAttempted = true; immersive.enter().catch(() => {}); }
   if (state.status === 'error') elements.message.textContent = state.error; if (state.status === 'ended') elements.message.textContent = 'This session has ended. Return to the library to choose another backend.';
-  if (event.type === 'session.negotiated') { negotiationAdjustments = describeNegotiationAdjustments({requested: sessionPreferences.capabilities, negotiated: state.negotiated}); const notice = formatNegotiationAdjustments(negotiationAdjustments); if (notice) elements.message.textContent = notice; }
+  if (event.type === 'session.negotiated') { negotiationAdjustments = describeNegotiationAdjustments({requested: sessionPreferences.capabilities, negotiated: state.negotiated}); displayNegotiation = resolveDisplayNegotiation({preferences: sessionPreferences.preferences, requestedCapabilities: sessionPreferences.capabilities, negotiatedCapabilities: state.negotiated, displayCapabilities: sessionPreferences.preferences.displayPolicy}); const notice = formatNegotiationAdjustments(negotiationAdjustments); if (notice) elements.message.textContent = notice; }
   if (event.type === 'telemetry.health') telemetryLog.add(event);
   if (state.status === 'connected' && state.mediaState === 'not-configured') elements.message.textContent = 'Host paired successfully. Media capture and encoding are not configured on this host.';
 }
@@ -98,6 +101,7 @@ async function prepareSession() {
   if (sessionPreflightReady) return;
   const preflight = await preparePlayerSession({workspaceStorage: profileStorage});
   sessionPreferences = preflight.preferences;
+  displayNegotiation = resolveDisplayNegotiation({preferences: sessionPreferences.preferences, requestedCapabilities: sessionPreferences.capabilities, displayCapabilities: sessionPreferences.preferences.displayPolicy});
   telemetryLog.setEnabled(sessionPreferences.preferences.sessionTelemetry);
   immersive.setDisplayPreference(sessionPreferences.preferences.display);
   await loadAudioOutputs({applyPreference: true});
