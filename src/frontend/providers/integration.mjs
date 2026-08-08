@@ -31,7 +31,7 @@ function createOfficialEmbedUrl(entry, profile = {}) {
   if (!pattern || !pattern.test(target)) return null;
   if (entry.id === 'twitch') {
     const parent = typeof profile.embedParent === 'string' ? profile.embedParent.trim().toLowerCase() : '';
-    if (!/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(parent)) return null;
+    if (!(parent === 'localhost' || /^(?:\d{1,3}\.){3}\d{1,3}$/.test(parent) || /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(parent))) return null;
     return `https://player.twitch.tv/?channel=${encodeURIComponent(target)}&parent=${encodeURIComponent(parent)}`;
   }
   if (entry.id === 'youtube-live') return `https://www.youtube.com/embed/${encodeURIComponent(target)}`;
@@ -43,7 +43,7 @@ export function createProviderIntegration(entry, {profile = {}, report = {}} = {
   const preset = SPECIAL_PROFILES[entry.id] || {};
   const regionHint = Object.hasOwn(REGION_LABELS, profile.region) ? profile.region : 'automatic';
   const embedUrl = createOfficialEmbedUrl(entry, profile);
-  const preferred = MODE_ORDER[profile.launchMode] || MODE_ORDER.browser;
+  const preferred = embedUrl && (!profile.launchMode || profile.launchMode === 'browser') ? ['official-embed', ...MODE_ORDER.browser] : (MODE_ORDER[profile.launchMode] || MODE_ORDER.browser);
   const mode = preferred.find(candidate => entry.integrationModes?.includes(candidate) && (candidate !== 'official-embed' || embedUrl)) || entry.integrationModes?.find(candidate => candidate !== 'official-embed') || (embedUrl ? 'official-embed' : undefined);
   const missingCapabilities = (entry.capabilities || []).filter(capability => capability === 'gamepad' && report.input?.gamepad === false);
   const requirements = Object.freeze([...(entry.requirements || [])]);
