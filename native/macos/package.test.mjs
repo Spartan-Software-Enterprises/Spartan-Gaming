@@ -20,3 +20,10 @@ test('built macOS package exposes the universal input binding shape', async t =>
   assert.equal(typeof bindings.input.execute, 'function');
   await bindings.close?.();
 });
+
+test('macOS native input contract preserves frontend pointer button transitions', async () => {
+  const source = await (await import('node:fs/promises')).readFile(new URL('./src/bindings.mm', import.meta.url), 'utf8');
+  assert.match(source, /kCGEventLeftMouseDown/);
+  assert.match(source, /kCGEventRightMouseUp/);
+  assert.match(source, /pointer:cancel/);
+});

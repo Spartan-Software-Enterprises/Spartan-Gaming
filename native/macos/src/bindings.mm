@@ -59,6 +59,13 @@ CGKeyCode key_code(const std::string& control) {
   return UINT16_MAX;
 }
 
+CGMouseButton mouse_button(const std::string& control) {
+  if (control == "button-0") return kCGMouseButtonLeft;
+  if (control == "button-1") return kCGMouseButtonCenter;
+  if (control == "button-2") return kCGMouseButtonRight;
+  return static_cast<CGMouseButton>(UINT8_MAX);
+}
+
 napi_value execute(napi_env env, napi_callback_info info) {
   napi_value argv[1]; size_t argc = 1;
   if (napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr) != napi_ok || argc < 1) return fail(env, "input operation is required");
@@ -99,7 +106,17 @@ napi_value execute(napi_env env, napi_callback_info info) {
     if (!current) return fail(env, "macOS could not read pointer position; grant Accessibility permission");
     const CGPoint location = CGEventGetLocation(current); CFRelease(current);
     const CGPoint next = CGPointMake(location.x + number_property(env, argv[0], "deltaX", 0), location.y + number_property(env, argv[0], "deltaY", 0));
-    CGEventRef event = CGEventCreateMouseEvent(nullptr, kCGEventMouseMoved, next, kCGMouseButtonLeft);
+    const std::string action = string_property(env, argv[0], "action");
+    const CGMouseButton button = mouse_button(string_property(env, argv[0], "control"));
+    CGEventType event_type = kCGEventMouseMoved;
+    if (action == "pointer:down") event_type = kCGEventLeftMouseDown;
+    else if (action == "pointer:up" || action == "pointer:cancel") event_type = kCGEventLeftMouseUp;
+    if ((action == "pointer:down" || action == "pointer:up" || action == "pointer:cancel") && button == UINT8_MAX) return fail(env, "unsupported macOS mouse button event");
+    if (event_type == kCGEventLeftMouseDown || event_type == kCGEventLeftMouseUp) {
+      if (button == kCGMouseButtonCenter) event_type = event_type == kCGEventLeftMouseDown ? kCGEventOtherMouseDown : kCGEventOtherMouseUp;
+      else if (button == kCGMouseButtonRight) event_type = event_type == kCGEventLeftMouseDown ? kCGEventRightMouseDown : kCGEventRightMouseUp;
+    }
+    CGEventRef event = CGEventCreateMouseEvent(nullptr, event_type, next, button == UINT8_MAX ? kCGMouseButtonLeft : button);
     if (!event) return fail(env, "macOS could not create pointer event; grant Accessibility permission");
     CGEventPost(kCGHIDEventTap, event); CFRelease(event);
   } else {

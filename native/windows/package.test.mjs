@@ -20,3 +20,10 @@ test('built Windows package exposes the universal input binding shape', async t 
   assert.equal(typeof bindings.input.execute, 'function');
   await bindings.close?.();
 });
+
+test('Windows native input contract preserves frontend pointer button transitions', async () => {
+  const source = await (await import('node:fs/promises')).readFile(new URL('./src/bindings.cpp', import.meta.url), 'utf8');
+  assert.match(source, /MOUSEEVENTF_LEFTDOWN/);
+  assert.match(source, /MOUSEEVENTF_RIGHTUP/);
+  assert.match(source, /pointer:cancel/);
+});

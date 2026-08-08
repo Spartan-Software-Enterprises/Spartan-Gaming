@@ -74,6 +74,18 @@ WORD key_code(const std::string& control) {
   return 0;
 }
 
+DWORD mouse_button_flags(const std::string& control, const std::string& action) {
+  DWORD down = 0;
+  DWORD up = 0;
+  if (control == "button-0") { down = MOUSEEVENTF_LEFTDOWN; up = MOUSEEVENTF_LEFTUP; }
+  else if (control == "button-1") { down = MOUSEEVENTF_MIDDLEDOWN; up = MOUSEEVENTF_MIDDLEUP; }
+  else if (control == "button-2") { down = MOUSEEVENTF_RIGHTDOWN; up = MOUSEEVENTF_RIGHTUP; }
+  else return 0;
+  if (action == "pointer:down") return down;
+  if (action == "pointer:up" || action == "pointer:cancel") return up;
+  return action == "pointer:move" ? MOUSEEVENTF_MOVE : 0;
+}
+
 napi_value execute(napi_env env, napi_callback_info info) {
   napi_value argv[1]; size_t argc = 1;
   if (napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr) != napi_ok || argc < 1) return fail(env, "input operation is required");
@@ -125,7 +137,8 @@ napi_value execute(napi_env env, napi_callback_info info) {
     input.type = INPUT_MOUSE;
     input.mi.dx = number_property(env, argv[0], "deltaX", 0);
     input.mi.dy = number_property(env, argv[0], "deltaY", 0);
-    input.mi.dwFlags = MOUSEEVENTF_MOVE;
+    input.mi.dwFlags = mouse_button_flags(string_property(env, argv[0], "control"), string_property(env, argv[0], "action"));
+    if (!input.mi.dwFlags) return fail(env, "unsupported Windows mouse button event");
   } else {
     return fail(env, "Windows native input supports keyboard, pointer, and XInput rumble events only");
   }

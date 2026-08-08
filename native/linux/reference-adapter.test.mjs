@@ -16,6 +16,8 @@ test('Linux reference input maps only normalized keyboard and pointer operations
   assert.deepEqual(inputCommand({kind: 'key', control: 'KeyA', pressed: true}), {args: ['keydown', 'a']});
   assert.deepEqual(inputCommand({kind: 'key', control: 'ArrowLeft', pressed: false}), {args: ['keyup', 'left']});
   assert.deepEqual(inputCommand({kind: 'pointer', deltaX: 12.4, deltaY: -9.6}), {args: ['mousemove_relative', '--', '12', '-10']});
+  assert.deepEqual(inputCommand({kind: 'pointer', action: 'pointer:down', control: 'button-0'}), {args: ['mousedown', '1']});
+  assert.deepEqual(inputCommand({kind: 'pointer', action: 'pointer:up', control: 'button-2'}), {args: ['mouseup', '3']});
   assert.throws(() => inputCommand({kind: 'button', control: 'a'}), /does not implement/);
 });
 

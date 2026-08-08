@@ -31,6 +31,11 @@ function inputCommand(operation) {
   if (operation.kind === 'pointer') {
     const dx = Math.round(Number(operation.deltaX) || 0);
     const dy = Math.round(Number(operation.deltaY) || 0);
+    const button = {'button-0': '1', 'button-1': '2', 'button-2': '3'}[operation.control];
+    if (operation.action === 'pointer:down' || operation.action === 'pointer:up' || operation.action === 'pointer:cancel') {
+      if (!button) throw new Error('Linux reference input adapter does not implement this mouse button');
+      return {args: [operation.action === 'pointer:down' ? 'mousedown' : 'mouseup', button]};
+    }
     if (!dx && !dy) return null;
     return {args: ['mousemove_relative', '--', String(dx), String(dy)]};
   }
