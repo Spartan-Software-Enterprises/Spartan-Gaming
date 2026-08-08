@@ -15,6 +15,12 @@ to serve `wss://` and `https://` endpoints. Keep the private key outside the
 repository; a managed reverse proxy is preferred for certificate rotation.
 - `ws://127.0.0.1:8787/session` for protocol-v1 session offers.
 
+Remote deployments should set `--allowed-origins` (or
+`SPARTAN_HOST_ALLOWED_ORIGINS`) to a comma-separated exact-origin allowlist.
+The agent also bounds concurrent sockets and per-connection message rate with
+`--max-connections`/`SPARTAN_HOST_MAX_CONNECTIONS` and
+`--max-messages-per-second`/`SPARTAN_HOST_MAX_MESSAGES_PER_SECOND`.
+
 The host can also join a separate signaling service as a host participant:
 
 ```bash
@@ -28,7 +34,7 @@ specified session. It is held in memory by the process and is never included
 in health output. The direct LAN endpoint remains available unless the host is
 isolated behind a firewall.
 
-The agent accepts one correctly paired `session.offer`, returns a protocol-valid `session.answer`, and rejects replayed or expired pairing codes. It is intentionally dependency-free and runs anywhere Node.js 20 runs. This is a control-plane reference only: it does not launch games, capture or encode media, inject OS input, provide TLS, or operate STUN/TURN. Those capabilities belong in platform-specific host adapters and the production signaling/deployment layer.
+The agent accepts one correctly paired `session.offer`, returns a protocol-valid `session.answer`, and rejects replayed or expired pairing codes. It is intentionally dependency-free and runs anywhere Node.js 20 runs. This is a control-plane reference only: it does not launch games, capture or encode media, inject OS input, or operate STUN/TURN. Those capabilities belong in platform-specific host adapters and the production signaling/deployment layer.
 
 At startup the agent also performs optional native-package discovery. Installed
 platform bindings contribute only truthful, serializable readiness and input

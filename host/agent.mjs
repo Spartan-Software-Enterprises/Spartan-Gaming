@@ -30,6 +30,11 @@ const tlsKey = String(args.get('tls-key') || process.env.SPARTAN_HOST_TLS_KEY ||
 const tlsCert = String(args.get('tls-cert') || process.env.SPARTAN_HOST_TLS_CERT || '').trim();
 if (Boolean(tlsKey) !== Boolean(tlsCert)) throw new TypeError('tls-key and tls-cert must be provided together');
 const secure = Boolean(tlsKey);
+const allowedOrigins = String(args.get('allowed-origins') || process.env.SPARTAN_HOST_ALLOWED_ORIGINS || '').split(',').map(value => value.trim()).filter(Boolean);
+const maxConnections = Number(args.get('max-connections') || process.env.SPARTAN_HOST_MAX_CONNECTIONS || 8);
+const maxMessagesPerSecond = Number(args.get('max-messages-per-second') || process.env.SPARTAN_HOST_MAX_MESSAGES_PER_SECOND || 120);
+if (!Number.isInteger(maxConnections) || maxConnections < 1 || maxConnections > 256) throw new TypeError('max-connections must be an integer between 1 and 256');
+if (!Number.isInteger(maxMessagesPerSecond) || maxMessagesPerSecond < 1 || maxMessagesPerSecond > 10000) throw new TypeError('max-messages-per-second must be an integer between 1 and 10000');
 const pairingCode = args.get('pairing-code') || createPairingCode();
 const pairing = createPairingAuthority({code: pairingCode});
 const hostRuntime = await detectHostRuntime({bindingOptions: {environment: process.env}});
@@ -50,9 +55,11 @@ if (!Array.isArray(configuredGameArgs)) throw new TypeError('game-args-json must
 const gameLaunch = gameLaunchEnabled ? createReferenceGameLaunch({platform: environment.platform, runtimeId: args.get('runtime-id'), runtimeKind: args.get('runtime-kind') || 'native-emulator', runtimeVersion: args.get('runtime-version') || 'unversioned', runtimePath: args.get('runtime-path'), gamePath: args.get('game-path'), hostContentId: args.get('host-content-id'), args: configuredGameArgs, cwd: args.get('game-cwd'), spawnImpl: undefined, maxOutputBytes: 64 * 1024, stopTimeoutMs: 2_000}) : null;
 const nativeRuntimeProfile = gameLaunch ? {id: String(args.get('runtime-id')), kind: String(args.get('runtime-kind') || 'native-emulator'), version: String(args.get('runtime-version') || 'unversioned'), trust: 'signed', enabled: true, executablePath: String(args.get('runtime-path'))} : null;
 const hostCapabilities = normalizeHostCapabilities({media: {state: nativeMediaEnabled ? 'ready' : 'not-configured', capture: nativeMediaEnabled, encode: nativeMediaEnabled, audio: nativeMediaEnabled && nativeAudioEnabled, transports: nativeMediaEnabled ? ['webrtc'] : ['webrtc']}, process: {mode: gameLaunch ? 'managed' : 'none', launch: Boolean(gameLaunch), emulator: Boolean(gameLaunch)}, publisher: nativeMediaEnabled ? {state: 'ready', transports: ['webrtc'], video: capabilities.video, audio: capabilities.audio} : environment.publisher, audioPublisher: nativeMediaEnabled && nativeAudioEnabled ? {state: 'ready', codecs: ['opus'], channels: 2} : environment.audioPublisher, inputAdapter: environment.inputAdapter, webrtc: nativeMediaEnabled ? {adapters: [{id: 'werift', state: 'available'}]} : environment.webrtc, input: capabilities.input});
-const sessions = new Set(); let inputEvents = 0; let lastQuality = null; let lastInputPlan = null; let lastInputExecution = {state: inputExecutor ? 'ready' : 'disabled', reason: inputEnabled && !inputExecutor ? 'native input adapter is unavailable or not ready' : null};
+const sessions = new Set(); const connections = new Set(); let rejectedConnections = 0; let inputEvents = 0; let lastQuality = null; let lastInputPlan = null; let lastInputExecution = {state: inputExecutor ? 'ready' : 'disabled', reason: inputEnabled && !inputExecutor ? 'native input adapter is unavailable or not ready' : null};
 
 function json(response, status, body) { response.writeHead(status, {'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store'}); response.end(JSON.stringify(body)); }
+function originAllowed(origin) { return !allowedOrigins.length || (typeof origin === 'string' && allowedOrigins.includes(origin)); }
+function createMessageRateLimiter(limit, windowMs = 1000) { let startedAt = Date.now(); let count = 0; return () => { const now = Date.now(); if (now - startedAt >= windowMs) { startedAt = now; count = 0; } count += 1; return count <= limit; }; }
 function frame(text) { const body = Buffer.from(text); const size = body.length; if (size < 126) return Buffer.concat([Buffer.from([0x81, size]), body]); if (size < 65536) { const header = Buffer.alloc(4); header[0] = 0x81; header[1] = 126; header.writeUInt16BE(size, 2); return Buffer.concat([header, body]); } throw new Error('WebSocket message is too large'); }
 function closeFrame() { return Buffer.from([0x88, 0x00]); }
 function acceptKey(key) { return createHash('sha1').update(`${key}258EAFA5-E914-47DA-95CA-C5AB0DC85B11`).digest('base64'); }
@@ -112,23 +119,26 @@ async function handleMessage(connection, text, session) {
 }
 
 const requestHandler = (request, response) => {
-  if (request.url === '/health') return json(response, 200, {service: 'spartan-host-reference', version: 1, secure, hostId, hostName, pairingExpiresAt: pairing.expiresAt, pairingUsed: pairing.used, activeSessions: sessions.size, inputEvents, lastInputPlan, lastInputExecution, lastQuality, gameLaunch: gameLaunch ? {enabled: true, ...gameLaunch.descriptor, state: gameLaunch.launcher.state, pid: gameLaunch.launcher.pid} : {enabled: false}, capabilities, hostCapabilities, environment});
+  if (request.url === '/health') return json(response, 200, {service: 'spartan-host-reference', version: 1, secure, hostId, hostName, pairingExpiresAt: pairing.expiresAt, pairingUsed: pairing.used, activeSessions: sessions.size, connections: connections.size, rejectedConnections, limits: {maxConnections, maxMessagesPerSecond}, allowedOrigins, inputEvents, lastInputPlan, lastInputExecution, lastQuality, gameLaunch: gameLaunch ? {enabled: true, ...gameLaunch.descriptor, state: gameLaunch.launcher.state, pid: gameLaunch.launcher.pid} : {enabled: false}, capabilities, hostCapabilities, environment});
   json(response, 404, {error: 'not found'});
 };
 const server = secure ? createHttpsServer({key: readFileSync(tlsKey), cert: readFileSync(tlsCert)}, requestHandler) : createHttpServer(requestHandler);
 server.on('upgrade', (request, socket) => {
   const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
-  if (url.pathname !== '/session' || request.headers.upgrade?.toLowerCase() !== 'websocket' || !request.headers['sec-websocket-key']) { socket.end('HTTP/1.1 404 Not Found\r\n\r\n'); return; }
+  if (!originAllowed(request.headers.origin)) { rejectedConnections += 1; socket.end('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n'); return; }
+  if (connections.size >= maxConnections) { rejectedConnections += 1; socket.end('HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n'); return; }
+  if (url.pathname !== '/session' || request.headers.upgrade?.toLowerCase() !== 'websocket' || !request.headers['sec-websocket-key']) { rejectedConnections += 1; socket.end('HTTP/1.1 404 Not Found\r\n\r\n'); return; }
+  connections.add(socket); let detached = false; const takeMessage = createMessageRateLimiter(maxMessagesPerSecond);
+  const cleanup = () => { if (detached) return; detached = true; connections.delete(socket); sessions.delete(session); session.native?.close(); if (session.gameStarted) { void gameLaunch?.launcher.stop(); session.gameStarted = false; } };
   socket.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${acceptKey(request.headers['sec-websocket-key'])}\r\n\r\n`);
   const connection = {send: value => socket.write(frame(JSON.stringify(value))), close: () => socket.end(closeFrame())};
   const session = {accepted: false, sessionId: null, negotiated: null}; let buffer = Buffer.alloc(0);
-  socket.on('data', chunk => { buffer = parseFrames(Buffer.concat([buffer, chunk]), text => handleMessage(connection, text, session), socket); });
-  socket.on('close', () => { sessions.delete(session); session.native?.close(); if (session.gameStarted) { void gameLaunch?.launcher.stop(); session.gameStarted = false; } });
-  socket.on('error', () => {});
+  socket.on('data', chunk => { if (!takeMessage()) { socket.end(closeFrame()); return; } buffer = parseFrames(Buffer.concat([buffer, chunk]), text => handleMessage(connection, text, session), socket); });
+  socket.on('close', cleanup); socket.on('error', cleanup);
 });
 server.listen(port, bind, () => {
   const actualPort = server.address().port;
-    console.log(JSON.stringify({service: nativeMediaEnabled ? 'spartan-host-native' : 'spartan-host-reference', endpoint: `${secure ? 'wss' : 'ws'}://${bind}:${actualPort}/session`, health: `${secure ? 'https' : 'http'}://${bind}:${actualPort}/health`, secure, hostId, hostName, pairingCode: args.get('quiet') ? undefined : pairingCode, pairingExpiresAt: pairing.expiresAt, signalingEndpoint: signalEndpoint || undefined, warning: nativeMediaEnabled ? 'Native media mode is enabled; capture, encoding, WebRTC, and optional audio run through installed platform bindings.' : (gameLaunch ? 'Reference control plane with optional configured game launch; media capture/encoding remain separate.' : 'Reference control plane only; media capture/encoding and process launch are not configured.')}));
+    console.log(JSON.stringify({service: nativeMediaEnabled ? 'spartan-host-native' : 'spartan-host-reference', endpoint: `${secure ? 'wss' : 'ws'}://${bind}:${actualPort}/session`, health: `${secure ? 'https' : 'http'}://${bind}:${actualPort}/health`, secure, hostId, hostName, pairingCode: args.get('quiet') ? undefined : pairingCode, pairingExpiresAt: pairing.expiresAt, allowedOrigins, limits: {maxConnections, maxMessagesPerSecond}, signalingEndpoint: signalEndpoint || undefined, warning: nativeMediaEnabled ? 'Native media mode is enabled; capture, encoding, WebRTC, and optional audio run through installed platform bindings.' : (gameLaunch ? 'Reference control plane with optional configured game launch; media capture/encoding remain separate.' : 'Reference control plane only; media capture/encoding and process launch are not configured.')}));
   if (!signalEndpoint && !signalSessionId && !signalTicket) return;
   if (!signalEndpoint || !signalSessionId || !signalTicket) { console.error('Outbound signaling requires --signal-endpoint, --signal-session, and --signal-ticket.'); process.exitCode = 1; return; }
   let signalingClient;
