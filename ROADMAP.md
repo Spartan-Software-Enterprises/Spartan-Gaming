@@ -79,4 +79,5 @@
 - [x] Consent-gated frontend-to-native adapter install request contract (native updater and package signing pending).
 - [x] Shell-free native adapter installer transaction with digest/signature verification and rollback (archive extraction and package signing pending).
 - [x] Universal desktop platform adapter capability registry and guarded invocation boundary (OS implementations pending).
+- [x] Signed package manifest, safe extraction plan, per-file digest verification, and rollback boundary (archive readers and package signing service pending).
 - [x] Unified frontend runtime readiness contract for browser, native adapter, and self-hosted host layers.

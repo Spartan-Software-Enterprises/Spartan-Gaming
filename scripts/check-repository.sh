@@ -49,6 +49,8 @@ required_files=(
   host/native-media.integration.test.mjs
   host/adapter-installer.mjs
   host/adapter-installer.test.mjs
+  host/adapter-package.mjs
+  host/adapter-package.test.mjs
   host/publisher.integration.test.mjs
   host/webrtc.mjs
   host/webrtc.test.mjs
@@ -294,6 +296,7 @@ node --check host/process.mjs
 node --check host/process.integration.test.mjs
 node --check host/native-media.mjs
 node --check host/adapter-installer.mjs
+node --check host/adapter-package.mjs
 node --check host/native-media.integration.test.mjs
 node --check host/publisher.integration.test.mjs
 node --check signaling/agent.integration.test.mjs

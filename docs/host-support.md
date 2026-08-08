@@ -22,6 +22,14 @@ For a deployed signaling service, the same agent can join as a host participant 
 
 `host/adapter-installer.mjs` is the native updater boundary for signed frontend install requests. It validates user-scoped paths, stages artifacts under a private staging directory, verifies the declared SHA-256 digest and an injected signature verifier, publishes a versioned directory and atomically replaced `current.json` pointer, and removes its own staging/publication on failure. It never invokes a shell or extracts/executes an artifact; platform package managers and archive-specific adapters remain outside this transaction.
 
+`host/adapter-package.mjs` adds the package-content boundary. Package manifests
+must be signed, platform-scoped, normalized, and composed only of regular files
+and directories. Extraction rejects traversal, absolute paths, duplicate names,
+symlink-like entries, oversized packages, and digest/size mismatches. Archive
+reading is injected, so the host does not shell out to `tar`, `unzip`, or an
+untrusted package command; failed extraction removes only its new staging
+directory.
+
 `host/media.mjs` provides the next boundary for those platform implementations. It generates shell-free FFmpeg capture plans for Linux X11/PipeWire, Windows desktop capture, and macOS AVFoundation, validates basic permission context, and generates codec/bitrate encoder plans for H.264, VP9, and AV1. These plans target a future WebRTC publisher and are deliberately not executed by the reference agent.
 
 `host/publisher.mjs` composes those plans into a transport-neutral publisher
