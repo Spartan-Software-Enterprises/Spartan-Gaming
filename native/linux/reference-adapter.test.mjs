@@ -46,6 +46,7 @@ test('Linux reference input maps only normalized keyboard and pointer operations
   assert.equal(keyName('PrintScreen'), 'Print');
   assert.equal(keyName('ScrollLock'), 'Scroll_Lock');
   assert.equal(keyName('ContextMenu'), 'Menu');
+  assert.equal(keyName('IntlBackslash'), 'backslash');
   assert.throws(() => keyName('IntlRo'), error => error.code === 'ERR_UNSUPPORTED_INPUT' && /IntlRo/.test(error.message));
   assert.throws(() => inputCommand({kind: 'button', control: 'a'}), error => error.code === 'ERR_UNSUPPORTED_INPUT');
   assert.throws(() => inputCommand({kind: 'pointer', action: 'pointer:down', control: 'button-9'}), error => error.code === 'ERR_UNSUPPORTED_INPUT');

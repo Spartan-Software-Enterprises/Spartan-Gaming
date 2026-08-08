@@ -40,7 +40,8 @@ test('macOS native input contract maps browser punctuation codes', async () => {
 
 test('macOS native input contract maps numpad and extended function browser codes', async () => {
   const source = await (await import('node:fs/promises')).readFile(new URL('./src/bindings.mm', import.meta.url), 'utf8');
-  for (const code of ['Numpad0', 'Numpad9', 'NumpadDecimal', 'NumpadAdd', 'NumpadSubtract', 'NumpadMultiply', 'NumpadDivide', 'NumpadEnter', 'NumLock', 'F13', 'F20']) assert.match(source, new RegExp(`"${code}"`));
+  for (const code of ['Numpad0', 'Numpad9', 'NumpadDecimal', 'NumpadAdd', 'NumpadSubtract', 'NumpadMultiply', 'NumpadDivide', 'NumpadEnter', 'NumLock', 'F13', 'F20', 'IntlBackslash']) assert.match(source, new RegExp(`"${code}"`));
+  assert.match(source, /kVK_ISO_Section/);
 });
 
 test('macOS native input contract marks unsupported operations as soft errors', async () => {
