@@ -63,6 +63,12 @@ accepted only while the session is active, and shutdown closes input before
 audio and media in reverse order. OS APIs remain injected, so the same
 orchestrator can be used by Windows, macOS, and Linux adapters.
 
+`host/platform-runtime.mjs` selects the platform-specific FFmpeg capture and
+audio plans: Desktop capture/WASAPI on Windows, AVFoundation/CoreAudio on
+macOS, and PipeWire or X11/Pulse fallback paths on Linux. It validates the
+selected plan platform before binding it to the native session; actual OS
+capture, encoding, audio, and input implementations remain injected adapters.
+
 `host/input.mjs` is the matching input boundary. It maps normalized browser
 events to shell-free plans for Windows `SendInput`, macOS Core Graphics/HID,
 and Linux `uinput` adapters. Plans declare the required permission (`remote-input`,

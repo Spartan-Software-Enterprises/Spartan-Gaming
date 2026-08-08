@@ -84,4 +84,5 @@
 - [x] Canonical package manifest signing and verification boundary with injected WebCrypto keys (release key custody/service deployment pending).
 - [x] Authenticated, rate-limited release signing service boundary with external key custody (KMS/HSM deployment remains environment-specific).
 - [x] Transactional native media/audio/input session orchestrator with rollback and reverse-order teardown (OS implementations remain adapter-specific).
+- [x] Platform runtime plan composition for Windows, macOS, and Linux capture/audio paths (concrete OS API adapters remain pending).
 - [x] Unified frontend runtime readiness contract for browser, native adapter, and self-hosted host layers.
