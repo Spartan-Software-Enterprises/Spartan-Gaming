@@ -19,9 +19,13 @@ test('input injection plans cover keyboard, pointer, gamepad, and rumble without
   assert.equal(pointer.operation.x, 1);
   assert.equal(pointer.operation.y, 0);
   assert.equal(pointer.operation.deltaX, 4096);
-  const rumble = createInputInjectionPlan({platform: 'darwin', event: {type: 'input.event', kind: 'rumble', source: 'host', action: 'rumble', durationMs: 9000}});
+  const rumble = createInputInjectionPlan({platform: 'darwin', event: {type: 'input.event', kind: 'rumble', source: 'host', action: 'rumble', gamepadIndex: 4, durationMs: 9000, startDelay: -1, strongMagnitude: 2, weakMagnitude: -1}});
   assert.equal(rumble.permission.name, 'haptic-output');
   assert.equal(rumble.operation.durationMs, 5000);
+  assert.equal(rumble.operation.gamepadIndex, 4);
+  assert.equal(rumble.operation.startDelay, 0);
+  assert.equal(rumble.operation.strongMagnitude, 1);
+  assert.equal(rumble.operation.weakMagnitude, 0);
 });
 
 test('unsupported input platforms fail closed', () => {

@@ -44,7 +44,7 @@ add_custom_command(OUTPUT ${NODE_API_IMPORT_LIBRARY}
 )
 add_custom_target(spartan_node_api_import_library DEPENDS ${NODE_API_IMPORT_LIBRARY})
 add_dependencies(spartan_native_windows spartan_node_api_import_library)
-target_link_libraries(spartan_native_windows PRIVATE ${NODE_API_IMPORT_LIBRARY})
+target_link_libraries(spartan_native_windows PRIVATE ${NODE_API_IMPORT_LIBRARY} xinput)
 set_target_properties(spartan_native_windows PROPERTIES PREFIX "" SUFFIX ".node" OUTPUT_NAME "spartan-native-windows")
 
 install(TARGETS spartan_native_windows RUNTIME DESTINATION . LIBRARY DESTINATION . ARCHIVE DESTINATION .)

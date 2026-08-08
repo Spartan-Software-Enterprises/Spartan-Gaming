@@ -5,7 +5,7 @@ import {createNativeInputExecutor} from './input.mjs';
 test('native input executor dispatches only permissioned normalized operations', async () => {
   const operations = []; const executor = createNativeInputExecutor({platform: 'linux', permissions: {'remote-input': true}, adapter: {platform: 'linux', execute: async operation => operations.push(operation)}});
   const plan = await executor.dispatch({type: 'input.event', action: 'look', kind: 'pointer', x: 1.4, y: -0.2, deltaX: 9000, source: 'pointer'});
-  assert.equal(plan.permission.granted, true); assert.deepEqual(operations, [{kind: 'pointer', action: 'look', pressed: false, value: 0, control: 'look', x: 1, y: 0, deltaX: 4096, deltaY: 0, durationMs: 0}]); assert.equal(executor.state, 'active');
+  assert.equal(plan.permission.granted, true); assert.deepEqual(operations, [{kind: 'pointer', action: 'look', pressed: false, value: 0, control: 'look', x: 1, y: 0, deltaX: 4096, deltaY: 0, gamepadIndex: 0, durationMs: 0, startDelay: 0, strongMagnitude: 0, weakMagnitude: 0}]); assert.equal(executor.state, 'active');
 });
 
 test('native input executor fails closed without permission and does not call the adapter', async () => {

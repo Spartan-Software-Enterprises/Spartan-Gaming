@@ -11,7 +11,11 @@ test('input envelopes preserve signed analog values', () => { const envelope = c
 test('remote input normalizes keyboard, pointer, touch, and rumble bounds', () => {
   const pointer = normalizeRemoteInputEvent({type: 'input.event', action: 'look', source: 'pointer', kind: 'pointer', x: 2, y: -1, deltaX: 9000, deltaY: -9000});
   assert.deepEqual(pointer, {action: 'look', pressed: false, value: 0, source: 'pointer', control: 'look', kind: 'pointer', x: 1, y: 0, deltaX: 4096, deltaY: -4096});
-  const rumble = normalizeRemoteInputEvent({type: 'input.event', action: 'rumble', source: 'host', kind: 'rumble', durationMs: 9000});
+  const rumble = normalizeRemoteInputEvent({type: 'input.event', action: 'rumble', source: 'host', kind: 'rumble', gamepadIndex: 99, durationMs: 9000, startDelay: -1, strongMagnitude: 2, weakMagnitude: -1});
   assert.equal(rumble.durationMs, 5000);
+  assert.equal(rumble.gamepadIndex, 15);
+  assert.equal(rumble.startDelay, 0);
+  assert.equal(rumble.strongMagnitude, 1);
+  assert.equal(rumble.weakMagnitude, 0);
   assert.equal(normalizeRemoteInputEvent({type: 'input.event', action: 'jump', source: 'keyboard'}).kind, 'key');
 });

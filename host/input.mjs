@@ -43,7 +43,7 @@ export function createInputInjectionPlan({platform, event, permissions = {}} = {
     platform,
     adapter: adapter.id,
     technologies: adapter.technologies,
-    operation: Object.freeze({kind, action: normalized.action, pressed: normalized.pressed, value: normalized.value, control: normalized.control, x: bounded(normalized.x, 0, 0, 1), y: bounded(normalized.y, 0, 0, 1), deltaX: bounded(normalized.deltaX, 0, -4096, 4096), deltaY: bounded(normalized.deltaY, 0, -4096, 4096), durationMs: bounded(normalized.durationMs, 0, 0, 5000)}),
+    operation: Object.freeze({kind, action: normalized.action, pressed: normalized.pressed, value: normalized.value, control: normalized.control, x: bounded(normalized.x, 0, 0, 1), y: bounded(normalized.y, 0, 0, 1), deltaX: bounded(normalized.deltaX, 0, -4096, 4096), deltaY: bounded(normalized.deltaY, 0, -4096, 4096), gamepadIndex: bounded(normalized.gamepadIndex, 0, 0, 15), durationMs: bounded(normalized.durationMs, 0, 0, 5000), startDelay: bounded(normalized.startDelay, 0, 0, 5000), strongMagnitude: bounded(normalized.strongMagnitude, 0, 0, 1), weakMagnitude: bounded(normalized.weakMagnitude, 0, 0, 1)}),
     permission: Object.freeze({name: requiredPermission, granted: allowed}),
     requires: Object.freeze(['native-input-adapter', requiredPermission]),
   });

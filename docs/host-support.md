@@ -126,8 +126,12 @@ WASAPI, and SendInput bindings; macOS packages advertise ScreenCaptureKit,
 CoreAudio, and CGEvent/HID bindings; Linux packages advertise PipeWire/portal,
 PipeWire/PulseAudio, and uinput bindings. The checked-in Windows and macOS
 packages implement keyboard and pointer input through SendInput and Core
-Graphics, and compose guarded FFmpeg capture/audio lifecycles; virtual gamepad
-and haptics stay unavailable until their corresponding APIs are implemented.
+Graphics, and compose guarded FFmpeg capture/audio lifecycles. Windows
+additionally exposes rumble through XInput for attached Xbox-compatible
+controllers, but does not claim virtual gamepad injection. Linux exposes a
+uinput virtual gamepad and force feedback when `/dev/uinput` is available.
+macOS virtual gamepad and haptic output remain unavailable until a
+device-specific HID implementation is added.
 The kit delegates only declared operations (`start`/`stop` for capture and
 audio, `execute` for input) and fails closed when a package does not provide
 its required methods.
@@ -307,6 +311,9 @@ Graphics for the same operations. Each package also composes the shared,
 shell-free FFmpeg capture/audio lifecycle: Windows uses gdigrab/WASAPI plans
 and macOS uses AVFoundation/CoreAudio plans. Capture and microphone starts
 require explicit permission flags and never spawn until permission is granted.
-Both packages expose no virtual gamepad or haptics capability and fail closed
-when the binary is missing or the OS permission is denied. Their build and
-installed-package contracts run on the Windows and macOS CI runners.
+The Windows package exposes XInput rumble for controller indexes 0 through 3,
+while both packages still expose no virtual gamepad injection. macOS haptics
+remain unavailable until a device-specific HID implementation is added. Both
+packages fail closed when the binary is missing or the OS permission is denied;
+their build and installed-package contracts run on the Windows and macOS CI
+runners.

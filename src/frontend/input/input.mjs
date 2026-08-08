@@ -66,7 +66,13 @@ export function normalizeRemoteInputEvent(event) {
     normalized.deltaX = clamp(Number(event.deltaX) || 0, -4096, 4096);
     normalized.deltaY = clamp(Number(event.deltaY) || 0, -4096, 4096);
   }
-  if (kind === 'rumble') normalized.durationMs = boundedInteger(event.durationMs, 0, 5000, 0);
+  if (kind === 'rumble') {
+    normalized.gamepadIndex = boundedInteger(event.gamepadIndex, 0, 15, 0);
+    normalized.durationMs = boundedInteger(event.durationMs, 0, 5000, 0);
+    normalized.startDelay = boundedInteger(event.startDelay, 0, 5000, 0);
+    normalized.strongMagnitude = clamp(Number(event.strongMagnitude ?? event.value) || 0, 0, 1);
+    normalized.weakMagnitude = clamp(Number(event.weakMagnitude ?? event.value) || 0, 0, 1);
+  }
   return Object.freeze(normalized);
 }
 import {createSessionEnvelope} from '../session/session.mjs';
