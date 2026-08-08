@@ -50,7 +50,7 @@ test('native Werift host dispatches negotiated remote input through the guarded 
   await host.start(); signaling.emit('message', offer); await new Promise(resolve => setTimeout(resolve, 0));
   signaling.emit('message', createSessionEnvelope({sessionId: 'ses-native-input', type: 'input.event', payload: {type: 'input.event', kind: 'key', action: 'press', control: 'KeyA', pressed: true, source: 'keyboard'}}));
   await new Promise(resolve => setTimeout(resolve, 0));
-  assert.equal(calls.length, 1); assert.deepEqual(calls[0], {kind: 'key', action: 'press', control: 'KeyA', pressed: true, value: 0, x: 0, y: 0, deltaX: 0, deltaY: 0, durationMs: 0});
+  assert.equal(calls.length, 1); assert.deepEqual(calls[0], {kind: 'key', action: 'press', control: 'KeyA', pressed: true, value: 0, x: 0, y: 0, deltaX: 0, deltaY: 0, gamepadIndex: 0, durationMs: 0, startDelay: 0, strongMagnitude: 0, weakMagnitude: 0});
   host.close();
 });
 
