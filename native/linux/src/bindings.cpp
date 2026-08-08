@@ -7,6 +7,7 @@
 
 #include <cerrno>
 #include <cstring>
+#include <cstdlib>
 #include <string>
 
 namespace {
@@ -53,6 +54,13 @@ double number_property(napi_env env, napi_value object, const char* name, double
 }
 
 int button_code(const std::string& control) {
+  if (control.rfind("button-", 0) == 0) {
+    char* end = nullptr;
+    const long index = std::strtol(control.c_str() + 7, &end, 10);
+    if (end == control.c_str() + 7 || *end != '\0') return -1;
+    const int indexed[] = {BTN_SOUTH, BTN_EAST, BTN_WEST, BTN_NORTH, BTN_TL, BTN_TR, BTN_SELECT, BTN_START, BTN_MODE, BTN_MODE, BTN_DPAD_UP, BTN_DPAD_DOWN, BTN_DPAD_LEFT, BTN_DPAD_RIGHT};
+    return index >= 0 && index < static_cast<long>(sizeof(indexed) / sizeof(indexed[0])) ? indexed[index] : -1;
+  }
   if (control == "a" || control == "south") return BTN_SOUTH;
   if (control == "b" || control == "east") return BTN_EAST;
   if (control == "x" || control == "west") return BTN_WEST;
@@ -70,6 +78,12 @@ int button_code(const std::string& control) {
 }
 
 int axis_code(const std::string& control) {
+  if (control == "axis-0") return ABS_X;
+  if (control == "axis-1") return ABS_Y;
+  if (control == "axis-2") return ABS_RX;
+  if (control == "axis-3") return ABS_RY;
+  if (control == "axis-4") return ABS_Z;
+  if (control == "axis-5") return ABS_RZ;
   if (control == "left-x" || control == "lx") return ABS_X;
   if (control == "left-y" || control == "ly") return ABS_Y;
   if (control == "right-x" || control == "rx") return ABS_RX;

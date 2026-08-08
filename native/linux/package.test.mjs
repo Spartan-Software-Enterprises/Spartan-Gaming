@@ -15,6 +15,16 @@ test('Linux native input composes uinput gamepad events with reference keyboard 
   assert.deepEqual(calls, [['reference', 'key'], ['reference', 'pointer'], ['native', 'button'], ['native', 'axis'], ['native', 'rumble'], ['native', 'close'], ['reference', 'close']]);
 });
 
+test('Linux native package accepts the shared frontend button and axis control vocabulary', async () => {
+  const calls = [];
+  const reference = {input: {execute: async operation => calls.push(['reference', operation.kind])}, capabilities: {input: true, keyboard: true, pointer: true, rumble: false, technologies: {}}};
+  const native = {input: {execute: async operation => calls.push(['native', operation.control])}, capabilities: {gamepad: true, rumble: true}};
+  const input = composeLinuxInput({reference, native});
+  await input.execute({kind: 'button', control: 'button-0'});
+  await input.execute({kind: 'axis', control: 'axis-0', value: -1});
+  assert.deepEqual(calls, [['native', 'button-0'], ['native', 'axis-0']]);
+});
+
 test('built Linux package exposes the universal binding shape and uinput capability', async t => {
   let module;
   try { module = await import(pathToFileURL(path.join(installRoot, 'index.mjs')).href); }
