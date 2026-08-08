@@ -69,6 +69,20 @@ surface. Use `--port 0` for an ephemeral port or
 development/static frontend server, not a production TLS or authentication
 endpoint.
 
+For a local browser-to-browser stream smoke test, run:
+
+```bash
+npm run lan:demo
+```
+
+The coordinator starts the frontend server and an ephemeral authenticated
+signaling service, then prints the host-studio URL, player URL, session ID, and
+short-lived role tickets. Enter the host values in one localhost tab, choose a
+display, and enter the client values in a second tab. This exercises browser
+display capture, signaling, SDP/ICE, and WebRTC media locally; it does not
+launch games or inject native input. Tickets are printed for the local
+operator and are intentionally not placed in URLs.
+
 Run the repository checks before committing:
 
 ```bash

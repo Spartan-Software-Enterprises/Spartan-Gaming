@@ -182,6 +182,13 @@ The player joins the broker before sending its SDP offer; the ticket is never
 persisted. The legacy one-time pairing flow remains available for the local
 reference host, which does not use broker tickets.
 
+For a repeatable localhost smoke test of this browser-host path, run
+`npm run lan:demo`. It starts the frontend and signaling services on ephemeral
+ports, issues one short-lived ticket for each role, and prints the values to
+enter in Browser Host Studio and the session player. The demo proves the
+browser capture/WebRTC path only; native game launch, OS input injection, and
+production TLS/STUN/TURN remain separate host deployments.
+
 ## Compatibility targets
 
 The adapter boundary can support Spartan Host first, then user-owned Steam Remote Play, Sunshine/Moonlight-compatible endpoints, Parsec, Xbox Remote Play, and PlayStation Remote Play where official protocols and platform rules permit. Compatibility is not permission to bypass authentication, DRM, anti-cheat, or undocumented service controls.
