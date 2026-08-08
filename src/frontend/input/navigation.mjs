@@ -2,6 +2,12 @@ import {normalizeGamepadState} from './input.mjs';
 
 const FOCUSABLE_SELECTOR = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
+export function focusFirstControl(elements = []) {
+  const first = [...elements].find(element => typeof element?.focus === 'function');
+  first?.focus();
+  return first || null;
+}
+
 export function chooseFocusIndex(elements, currentIndex, direction) {
   if (!elements.length) return -1;
   const current = elements[Math.max(0, Math.min(currentIndex, elements.length - 1))];
@@ -19,8 +25,8 @@ export function readNavigationAction(gamepad, previous = null, {deadzone = 0.35}
   return axis || null;
 }
 
-export function createControllerNavigator({root = globalThis.document, navigatorLike = globalThis.navigator, intervalMs = 100, scheduler = setInterval, clearScheduler = clearInterval} = {}) {
+export function createControllerNavigator({root = globalThis.document, navigatorLike = globalThis.navigator, intervalMs = 100, scheduler = setInterval, clearScheduler = clearInterval, focusOnStart = root?.documentElement?.dataset?.spartanNavigation === 'remote-controller'} = {}) {
   let timer = null; let previous = null; let selectedGamepad = null;
   const poll = () => { const gamepads = [...(navigatorLike?.getGamepads?.() || [])].filter(Boolean); const gamepad = gamepads.find(item => item.index === selectedGamepad) || gamepads[0]; if (!gamepad) { previous = null; return; } selectedGamepad = gamepad.index; const action = readNavigationAction(gamepad, previous); previous = normalizeGamepadState(gamepad, {deadzone: 0.35}); if (!action) return; const elements = [...(root?.querySelectorAll?.(FOCUSABLE_SELECTOR) || [])]; if (!elements.length) return; const activeIndex = Math.max(0, elements.indexOf(root.activeElement)); if (['up', 'down', 'left', 'right'].includes(action)) { const next = chooseFocusIndex(elements, activeIndex, action); elements[next]?.focus?.(); } else if (action === 'confirm') elements[activeIndex]?.click?.(); else if (action === 'cancel') root.defaultView?.history?.back?.(); };
-  return Object.freeze({get running() { return timer !== null; }, start() { if (timer === null) timer = scheduler(poll, intervalMs); return this; }, stop() { if (timer !== null) clearScheduler(timer); timer = null; previous = null; return this; }, poll});
+  return Object.freeze({get running() { return timer !== null; }, start() { if (timer === null) { if (focusOnStart) focusFirstControl(root?.querySelectorAll?.(FOCUSABLE_SELECTOR) || []); timer = scheduler(poll, intervalMs); } return this; }, stop() { if (timer !== null) clearScheduler(timer); timer = null; previous = null; return this; }, poll});
 }

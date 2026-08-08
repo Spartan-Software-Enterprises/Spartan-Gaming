@@ -18,6 +18,9 @@ conservative and can be overridden in Settings; the profile changes focus
 targets, navigation hints, touch-control preference, fullscreen preference,
 safe-area spacing, and library density. It does not claim native packaging,
 TV certification, or iOS engine/entitlement support.
+In television mode, the shared controller navigator also focuses the first
+available control when the surface starts, so a remote/gamepad can operate the
+shell without a pointer.
 
 ## Shared layers
 
