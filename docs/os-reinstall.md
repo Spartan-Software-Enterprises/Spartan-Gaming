@@ -8,6 +8,7 @@ emulator artifacts are stored with Git LFS.
 ```bash
 git clone https://github.com/Spartan-Software-Enterprises/Spartan-Gaming.git
 cd Spartan-Gaming
+git switch --track origin/agent/desktop-installer-cross-platform
 git lfs install
 git lfs pull
 npm install
