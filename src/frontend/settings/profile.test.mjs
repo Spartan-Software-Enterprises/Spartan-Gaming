@@ -6,10 +6,11 @@ import {createSettingsStore, normalizeSettings} from './profile.mjs';
 function storage() { const values = new Map(); return {setItem: (key, value) => values.set(key, value), getItem: key => values.get(key), removeItem: key => values.delete(key)}; }
 
 test('settings profile normalization preserves defaults and bounds values', () => {
-  const settings = normalizeSettings({'streaming.bitrate': 1000, 'streaming.qualityPreset': 'not-valid', 'gaming.autoFullscreen': 0});
+  const settings = normalizeSettings({'streaming.bitrate': 1000, 'streaming.qualityPreset': 'not-valid', 'gaming.autoFullscreen': 0, 'accessibility.colorVision': 'invalid'});
   assert.equal(settings['streaming.bitrate'], 100);
   assert.equal(settings['streaming.qualityPreset'], 'Balanced');
   assert.equal(settings['gaming.autoFullscreen'], false);
+  assert.equal(settings['accessibility.colorVision'], 'None');
 });
 
 test('settings store saves, resets, exports, and imports portable profiles', () => {
@@ -21,6 +22,15 @@ test('settings store saves, resets, exports, and imports portable profiles', () 
   assert.equal(store.read()['streaming.bitrate'], 25);
   store.import(exported);
   assert.equal(store.read()['streaming.bitrate'], 40);
+});
+
+test('settings exports omit API keys while retaining non-secret connection preferences', () => {
+  const store = createSettingsStore({storage: storage()});
+  store.save({'accounts.providerApiKey': 'api-secret', 'accounts.hostApiKey': 'host-secret', 'accounts.hostEndpoint': 'https://host.example'});
+  const exported = JSON.parse(store.export());
+  assert.equal(exported.settings['accounts.hostEndpoint'], 'https://host.example');
+  assert.equal('accounts.providerApiKey' in exported.settings, false);
+  assert.equal('accounts.hostApiKey' in exported.settings, false);
 });
 
 test('settings store rejects malformed exports and ignores unknown keys', () => {

@@ -11,4 +11,27 @@ test('WebTransport signaling sends datagrams, routes envelopes, and supports aut
 test('WebTransport signaling rejects non-HTTPS endpoints', () => { assert.throws(() => createWebTransportSignalTransport({endpoint: 'wss://relay.example.test/signal', WebTransportImpl: class {}}), /https/); });
 test('WebRTC transport creates offers, accepts answers, and forwards ICE', async () => { let instance; class FakePeer { constructor() { instance = this; this.localDescription = null; } createOffer() { return Promise.resolve({type: 'offer', sdp: 'offer'}); } setLocalDescription(value) { this.localDescription = value; return Promise.resolve(); } setRemoteDescription(value) { this.answer = value; return Promise.resolve(); } addIceCandidate(value) { this.candidate = value; return Promise.resolve(); } close() { this.closed = true; } createDataChannel() { return {label: 'spartan-control'}; } } const transport = createWebRtcTransport({RTCPeerConnectionImpl: FakePeer}); const candidates = []; transport.on('icecandidate', candidate => candidates.push(candidate)); const offer = await transport.createOffer(); assert.equal(offer.type, 'offer'); await transport.acceptAnswer({type: 'answer', sdp: 'answer'}); assert.equal(transport.state, 'connected'); instance.onicecandidate({candidate: {candidate: 'candidate'}}); assert.equal(candidates.length, 1); await transport.addIceCandidate(candidates[0]); transport.close(); assert.equal(transport.state, 'closed'); });
 test('WebRTC transport applies validated ephemeral ICE configuration', () => { let configuration; class FakePeer { constructor(value) { configuration = value; } close() {} } createWebRtcTransport({RTCPeerConnectionImpl: FakePeer, ice: {servers: [{urls: 'stun:stun.example.test'}], policy: 'relay'}}); assert.equal(configuration.iceTransportPolicy, 'relay'); assert.equal(configuration.iceServers[0].urls[0], 'stun:stun.example.test'); });
+test('WebRTC transport exposes host-created data channels', () => { let instance; class FakePeer { constructor() { instance = this; } close() {} } const transport = createWebRtcTransport({RTCPeerConnectionImpl: FakePeer}); const channels = []; transport.on('datachannel', channel => channels.push(channel)); instance.ondatachannel({channel: {label: 'host-control'}}); assert.deepEqual(channels, [{label: 'host-control'}]); });
 test('transport message validation fails closed for unknown types', () => { assert.throws(() => validateTransportMessage({...message, type: 'private.command'}), /invalid/); });
+test('transport message validation rejects malformed envelope fields', () => {
+  for (const invalid of [
+    {...message, messageId: 'short'},
+    {...message, messageId: 12345678},
+    {...message, sessionId: 'invalid space'},
+    {...message, sessionId: 12345678},
+    {...message, sentAt: 'not-a-timestamp'},
+    {...message, sentAt: '2024-02-30T00:00:00Z'},
+    {...message, sentAt: '2024-01-01T24:00:00Z'},
+    {...message, sequence: -1},
+    {...message, sequence: 1.5},
+    {...message, sequence: Number.MAX_SAFE_INTEGER + 1},
+    {...message, payload: []},
+    {...message, unexpected: true},
+  ]) assert.throws(() => validateTransportMessage(invalid), /invalid/);
+  assert.doesNotThrow(() => validateTransportMessage({...message, sequence: 0}));
+});
+
+test('transport message validation restricts session controls to pause and resume', () => {
+  assert.doesNotThrow(() => validateTransportMessage({...message, type: 'session.control', payload: {action: 'pause'}}));
+  assert.throws(() => validateTransportMessage({...message, type: 'session.control', payload: {action: 'quit'}}), /session control/);
+});

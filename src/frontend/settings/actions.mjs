@@ -9,6 +9,7 @@ export const SETTINGS_ACTIONS = Object.freeze({
   'providers.manageProfiles': route('../providers/index.html'),
   'providers.manageHosts': route('../host/index.html'),
   'providers.clearSessions': Object.freeze({kind: 'clear-provider-sessions'}),
+  'accounts.clearCredentials': Object.freeze({kind: 'clear-credentials'}),
   'performance.taskManager': route('../diagnostics/index.html?focus=performance'),
   'performance.diagnostics': route('../diagnostics/index.html'),
   'privacy.permissions': route('../diagnostics/index.html?focus=permissions'),

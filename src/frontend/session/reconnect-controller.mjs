@@ -22,7 +22,7 @@ export function createReconnectController({attempt, policy = createReconnectPoli
     const plan = scheduledPlan || policy.next();
     if (plan.exhausted) return emit(snapshot('exhausted', {attempt: plan.attempt, maxAttempts: policy.maxAttempts, error: 'Reconnect attempts exhausted'}));
     emit(snapshot('attempting', {attempt: plan.attempt, maxAttempts: policy.maxAttempts, delayMs: plan.delayMs}));
-    try { const result = attempt({attempt: plan.attempt, delayMs: plan.delayMs}); return emit(snapshot('waiting', {attempt: plan.attempt, maxAttempts: policy.maxAttempts, delayMs: plan.delayMs, result})); }
+    try { const result = attempt({attempt: plan.attempt, delayMs: plan.delayMs}); if (result && typeof result.then === 'function') result.catch(fail); return emit(snapshot('waiting', {attempt: plan.attempt, maxAttempts: policy.maxAttempts, delayMs: plan.delayMs, result})); }
     catch (error) { return fail(error); }
   };
   return Object.freeze({

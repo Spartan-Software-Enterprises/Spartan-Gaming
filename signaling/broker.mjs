@@ -36,6 +36,7 @@ function verifyTicket(ticket, {secret, sessionId, role, now}) {
 export function createSignalingBroker({secret, clock = () => Date.now(), sessionTtlMs = 10 * 60 * 1000, maxSessions = 1000} = {}) {
   const signingSecret = requiredString(secret, 'secret');
   const sessions = new Map();
+  let droppedDeliveries = 0;
   const ticket = ({sessionId, role, subject = role, ttlMs = sessionTtlMs} = {}) => {
     requiredString(sessionId, 'sessionId');
     if (!SESSION_ID.test(sessionId)) throw new TypeError('sessionId has invalid characters');
@@ -76,7 +77,7 @@ export function createSignalingBroker({secret, clock = () => Date.now(), session
         const encoded = JSON.stringify(validated);
         if (Buffer.byteLength(encoded) > MAX_MESSAGE_BYTES) throw new Error('signaling message is too large');
         session.lastActivityAt = clock();
-        for (const [recipientRole, recipient] of session.participants) if (recipientRole !== role) recipient.send(validated);
+        for (const [recipientRole, recipient] of session.participants) if (recipientRole !== role) { try { recipient.send(validated); } catch { session.participants.delete(recipientRole); droppedDeliveries += 1; } }
         if (validated.type === 'session.close') detach();
         return validated;
       },
@@ -95,6 +96,6 @@ export function createSignalingBroker({secret, clock = () => Date.now(), session
     issueTicket: ticket,
     attach,
     sweep,
-    stats() { sweep(); return Object.freeze({sessions: sessions.size, participants: [...sessions.values()].reduce((count, session) => count + session.participants.size, 0)}); },
+    stats() { sweep(); return Object.freeze({sessions: sessions.size, participants: [...sessions.values()].reduce((count, session) => count + session.participants.size, 0), droppedDeliveries}); },
   });
 }

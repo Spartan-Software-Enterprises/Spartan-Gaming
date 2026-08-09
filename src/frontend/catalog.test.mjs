@@ -29,8 +29,15 @@ test('provider and emulator manifests compose into one frontend catalog', async 
 });
 
 test('catalog validates browser-game manifests separately from providers and emulators', () => {
-  assert.throws(() => validateCatalogManifest({catalogVersion: 1, games: [{id: 'unsafe', name: 'Unsafe', kind: 'not-a-game', supportLevel: 'C', integrationModes: ['browser-first'], url: 'https://example.test', requirements: [], capabilities: []}]}, 'game'), /unsupported game kind/);
-  assert.throws(() => validateCatalogManifest({catalogVersion: 1, games: [{id: 'http-game', name: 'HTTP game', kind: 'browser-game', supportLevel: 'C', integrationModes: ['browser-first'], url: 'http://example.test', requirements: [], capabilities: [], genres: ['arcade'], license: 'Upstream'}]}, 'game'), /must use HTTPS/);
+  assert.throws(() => validateCatalogManifest({catalogVersion: 1, updatedAt: '2026-08-08', games: [{id: 'unsafe', name: 'Unsafe', kind: 'not-a-game', supportLevel: 'C', integrationModes: ['browser-first'], url: 'https://example.test', requirements: [], capabilities: []}]}, 'game'), /unsupported game kind/);
+  assert.throws(() => validateCatalogManifest({catalogVersion: 1, updatedAt: '2026-08-08', games: [{id: 'http-game', name: 'HTTP game', kind: 'browser-game', supportLevel: 'C', integrationModes: ['browser-first'], url: 'http://example.test', requirements: [], capabilities: [], genres: ['arcade'], license: 'Upstream'}]}, 'game'), /must use HTTPS/);
+});
+
+test('catalog manifests require valid update dates, HTTPS URLs, and source-local IDs', () => {
+  const provider = {id: 'provider-one', name: 'Provider', kind: 'cloud-gaming', supportLevel: 'A', integrationModes: [], capabilities: [], url: 'https://example.test', requirements: []};
+  assert.throws(() => validateCatalogManifest({catalogVersion: 1, updatedAt: '2026-02-30', providers: [provider]}, 'provider'), /valid date/);
+  assert.throws(() => validateCatalogManifest({catalogVersion: 1, updatedAt: '2026-08-08', providers: [{...provider, url: 'https://user:pass@example.test'}]}, 'provider'), /without credentials/);
+  assert.throws(() => validateCatalogManifest({catalogVersion: 1, updatedAt: '2026-08-08', providers: [provider, provider]}, 'provider'), /duplicate provider catalog id/);
 });
 
 test('catalog rejects duplicate backend ids', () => {

@@ -5,6 +5,7 @@ import {syncRuntimeControllerNavigation} from '../input/navigation.mjs';
 const ACCENTS = Object.freeze({Cyan: '#50e1d1', Violet: '#9a84ff', Lime: '#b8ef65', Amber: '#f5c563', Red: '#ff8f9c'});
 const THEMES = Object.freeze({'Spartan Dark': 'dark', 'Spartan Light': 'light', System: 'system', 'OLED Black': 'oled'});
 const DENSITIES = Object.freeze({Comfortable: 'comfortable', Compact: 'compact', 'Controller-first': 'controller'});
+const COLOR_VISION_MODES = new Set(['None', 'Protanopia', 'Deuteranopia', 'Tritanopia']);
 
 export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
   const accent = ACCENTS[settings['appearance.accent']] || ACCENTS.Cyan;
@@ -35,7 +36,7 @@ export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
     highContrast: settings['accessibility.highContrast'] === true,
     largeText: settings['accessibility.largeText'] === true,
     focusRing: settings['accessibility.focusRing'] !== false,
-    colorVision: typeof settings['accessibility.colorVision'] === 'string' ? settings['accessibility.colorVision'] : 'None',
+    colorVision: COLOR_VISION_MODES.has(settings['accessibility.colorVision']) ? settings['accessibility.colorVision'] : 'None',
     showOverlay: settings['gaming.showOverlay'] !== false,
     overlayPosition: settings['gaming.overlayPosition'] || 'Top right',
     overlayOpacity: Number.isFinite(opacity) ? Math.max(20, Math.min(100, opacity)) : 92,
@@ -54,6 +55,12 @@ html[data-spartan-theme="oled"] body{background:#000!important}
 html[data-spartan-theme="oled"] .panel,html[data-spartan-theme="oled"] .card,html[data-spartan-theme="oled"] .hero,html[data-spartan-theme="oled"] .rail,html[data-spartan-theme="oled"] .sidebar,html[data-spartan-theme="oled"] .stage{background:#050505!important}
 html[data-spartan-high-contrast] body{filter:contrast(1.16)}
 html[data-spartan-focus-ring] :focus-visible{outline:3px solid var(--spartan-accent,#50e1d1)!important;outline-offset:3px!important}
+html[data-spartan-color-vision="Protanopia"]{--spartan-status-ready:#4ea5ff;--spartan-status-attention:#ffd166;--spartan-status-error:#d9a4ff;--red:var(--spartan-status-error);--yellow:var(--spartan-status-attention)}
+html[data-spartan-color-vision="Deuteranopia"]{--spartan-status-ready:#5aa9e6;--spartan-status-attention:#f2c14e;--spartan-status-error:#ff8c69;--red:var(--spartan-status-error);--yellow:var(--spartan-status-attention)}
+html[data-spartan-color-vision="Tritanopia"]{--spartan-status-ready:#5bd6a2;--spartan-status-attention:#ff9f43;--spartan-status-error:#e667af;--red:var(--spartan-status-error);--yellow:var(--spartan-status-attention)}
+html[data-spartan-color-vision]:not([data-spartan-color-vision="None"]) .status-pill i{background:var(--spartan-status-ready)!important;box-shadow:0 0 10px var(--spartan-status-ready)!important}
+html[data-spartan-color-vision]:not([data-spartan-color-vision="None"]) .status-pill[data-status="loading"] i,html[data-spartan-color-vision]:not([data-spartan-color-vision="None"]) .status-pill[data-status="connecting"] i,html[data-spartan-color-vision]:not([data-spartan-color-vision="None"]) .status-pill[data-status="attention"] i{background:var(--spartan-status-attention)!important;box-shadow:0 0 10px var(--spartan-status-attention)!important}
+html[data-spartan-color-vision]:not([data-spartan-color-vision="None"]) .status-pill[data-status="degraded"] i,html[data-spartan-color-vision]:not([data-spartan-color-vision="None"]) .status-pill[data-status="error"] i,html[data-spartan-color-vision]:not([data-spartan-color-vision="None"]) .capture-active{border-color:var(--spartan-status-error)!important;color:var(--spartan-status-error)!important;box-shadow:0 0 10px var(--spartan-status-error)!important}
 html[data-spartan-overlay="hidden"] .overlay-top,html[data-spartan-overlay="hidden"] .overlay-bottom{display:none!important}
 html[data-spartan-overlay] .overlay-top,html[data-spartan-overlay] .overlay-bottom{opacity:var(--spartan-overlay-opacity,.92)}
 html[data-spartan-overlay-position="Top left"] .overlay-top{right:auto}

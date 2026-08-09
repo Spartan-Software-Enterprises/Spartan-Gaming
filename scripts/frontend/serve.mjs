@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import {createReadStream} from 'node:fs';
-import {stat} from 'node:fs/promises';
+import {createReadStream, existsSync} from 'node:fs';
+import {readFile, stat} from 'node:fs/promises';
 import {createServer} from 'node:http';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -13,7 +13,9 @@ const MIME_TYPES = Object.freeze({
   '.ico': 'image/x-icon',
   '.js': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
   '.svg': 'image/svg+xml',
+  '.wasm': 'application/wasm',
   '.webmanifest': 'application/manifest+json; charset=utf-8',
 });
 
@@ -34,7 +36,7 @@ function decodePath(pathname) {
   }
 }
 
-function createAssetResolver({root = frontendRoot, publicRoot = repositoryRoot} = {}) {
+export function createAssetResolver({root = frontendRoot, publicRoot = repositoryRoot, runtimeRoot = null} = {}) {
   const mounts = Object.freeze([
     Object.freeze({urlPrefix: '/src/frontend', root}),
     Object.freeze({urlPrefix: '/providers', root: path.join(publicRoot, 'providers')}),
@@ -52,21 +54,32 @@ function createAssetResolver({root = frontendRoot, publicRoot = repositoryRoot} 
       }
     }
     const firstSegment = decoded.split('/')[1];
-    if (firstSegment && ['adapters', 'dashboard', 'diagnostics', 'emulation', 'host', 'input', 'player', 'providers', 'settings', 'startup', 'workspaces'].includes(firstSegment)) return {file: safePath(root, decoded)};
+    if (runtimeRoot && decoded.startsWith('/host/')) {
+      const frontendHostFile = safePath(root, decoded);
+      if (!frontendHostFile || !existsSync(frontendHostFile)) return {file: safePath(runtimeRoot, decoded.slice('/host'.length))};
+    }
+    const frontendDirectories = ['adapters', 'capture', 'compatibility', 'dashboard', 'diagnostics', 'display', 'emulation', 'host', 'input', 'launch', 'platform', 'player', 'privacy', 'profiles', 'providers', 'readiness', 'session', 'settings', 'startup', 'transport', 'workspaces'];
+    if (firstSegment && frontendDirectories.includes(firstSegment)) return {file: safePath(root, decoded)};
+    // Shared frontend modules such as /catalog.mjs are imported from pages by
+    // root-relative URL. Keep this restricted to direct module files under
+    // the confined frontend root.
+    if (decoded.split('/').length === 2 && decoded.endsWith('.mjs')) return {file: safePath(root, decoded)};
     if (decoded === '/favicon.ico') return {file: path.join(publicRoot, 'favicon.ico')};
     return {status: 404};
   };
 }
 
-async function sendFile(response, file, method = 'GET') {
+export async function sendFile(response, file, method = 'GET', contextScript = null) {
   try {
     let info = await stat(file);
     if (info.isDirectory()) { file = path.join(file, 'index.html'); info = await stat(file); }
     if (!info.isFile()) return false;
+    const isHtml = path.extname(file).toLowerCase() === '.html';
+    const body = contextScript && isHtml ? await injectContextScript(file, contextScript) : null;
     response.writeHead(200, {
         'cache-control': 'no-store',
         connection: 'close',
-        'content-length': info.size,
+        'content-length': body ? body.length : info.size,
         'content-type': MIME_TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream',
       'content-security-policy': "default-src 'self'; base-uri 'self'; object-src 'none'; frame-src https:; connect-src 'self' https: wss:; img-src 'self' data: blob:; media-src 'self' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' blob:",
       'cross-origin-opener-policy': 'same-origin',
@@ -74,7 +87,7 @@ async function sendFile(response, file, method = 'GET') {
       'referrer-policy': 'strict-origin-when-cross-origin',
       'x-content-type-options': 'nosniff',
     });
-    if (method === 'HEAD') response.end(); else createReadStream(file).pipe(response);
+    if (method === 'HEAD') response.end(); else if (body) response.end(body); else createReadStream(file).pipe(response);
     return true;
   } catch (error) {
     if (error?.code === 'ENOENT') return false;
@@ -82,8 +95,16 @@ async function sendFile(response, file, method = 'GET') {
   }
 }
 
-export function createFrontendServer({host = '127.0.0.1', port = 4173, root = frontendRoot, publicRoot = repositoryRoot, logger = console} = {}) {
+async function injectContextScript(file, contextScript) {
+  let html = await readFile(file, 'utf8');
+  const scriptTag = `<script src="/${contextScript.path}"></script>`;
+  if (!html.includes(scriptTag)) html = html.replace('</head>', `${scriptTag}</head>`);
+  return Buffer.from(html);
+}
+
+export function createFrontendServer({host = '127.0.0.1', port = 4173, root = frontendRoot, publicRoot = repositoryRoot, logger = console, contextScript = null} = {}) {
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new TypeError('port must be an integer between 0 and 65535');
+  if (contextScript && (!contextScript.path || typeof contextScript.render !== 'function')) throw new TypeError('contextScript must provide a path and a render() function');
   const resolveAsset = createAssetResolver({root: path.resolve(root), publicRoot: path.resolve(publicRoot)});
   const server = createServer(async (request, response) => {
     if (request.method !== 'GET' && request.method !== 'HEAD') {
@@ -94,9 +115,14 @@ export function createFrontendServer({host = '127.0.0.1', port = 4173, root = fr
     if (url.pathname === '/dashboard' || url.pathname === '/dashboard/index.html') {
       if (url.pathname === '/dashboard') { response.writeHead(301, {'location': '/dashboard/'}); response.end(); return; }
     }
+    if (contextScript && url.pathname === `/${contextScript.path}`) {
+      const body = Buffer.from(contextScript.render());
+      response.writeHead(200, {'cache-control': 'no-store', connection: 'close', 'content-length': body.length, 'content-type': 'text/javascript; charset=utf-8', 'content-security-policy': "script-src 'self'", 'x-content-type-options': 'nosniff'});
+      response.end(body); return;
+    }
     const resolved = resolveAsset(url.pathname);
     if (resolved.status) { response.writeHead(resolved.status); response.end(resolved.status === 404 ? 'Not Found' : 'Bad Request'); return; }
-    if (!resolved.file || !(await sendFile(response, resolved.file, request.method))) { response.writeHead(404); response.end('Not Found'); return; }
+    if (!resolved.file || !(await sendFile(response, resolved.file, request.method, contextScript))) { response.writeHead(404); response.end('Not Found'); return; }
   });
   server.on('clientError', (error, socket) => { logger.warn?.(`frontend client error: ${error.message}`); socket.end('HTTP/1.1 400 Bad Request\r\n\r\n'); });
   return {server, listen() { return new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, host, () => resolve(server.address())); }); }, close() { return new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }};

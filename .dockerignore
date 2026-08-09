@@ -1,0 +1,14 @@
+.git
+.env*
+*.pem
+*.key
+node_modules
+out
+backup-packages
+chromium
+docs
+emulators
+games
+native
+providers
+release

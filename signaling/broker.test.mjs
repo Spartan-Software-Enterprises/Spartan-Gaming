@@ -13,9 +13,9 @@ test('signaling broker authenticates scoped tickets and routes messages between 
   const host = broker.attach({sessionId: 'ses-signal-01', role: 'host', ticket: broker.issueTicket({sessionId: 'ses-signal-01', role: 'host'}), send: message => received.push(['host', message.type])});
   client.send(offer());
   assert.deepEqual(received, [['host', 'session.offer']]);
-  assert.deepEqual(broker.stats(), {sessions: 1, participants: 2});
+  assert.deepEqual(broker.stats(), {sessions: 1, participants: 2, droppedDeliveries: 0});
   host.detach(); client.detach();
-  assert.deepEqual(broker.stats(), {sessions: 0, participants: 0});
+  assert.deepEqual(broker.stats(), {sessions: 0, participants: 0, droppedDeliveries: 0});
   now += 1;
 });
 
@@ -39,4 +39,12 @@ test('signaling broker rejects forged ticket signatures and invalid roles', () =
   const broker = createSignalingBroker({secret: 'test-only-secret'});
   assert.throws(() => broker.attach({sessionId: 'ses-signal-03', role: 'host', ticket: 'forged.signature', send() {}}), /invalid signaling ticket/);
   assert.throws(() => broker.issueTicket({sessionId: 'ses-signal-03', role: 'relay'}), /role must be client or host/);
+});
+
+test('signaling broker isolates failed recipient deliveries', () => {
+  const broker = createSignalingBroker({secret: 'test-only-secret'});
+  const client = broker.attach({sessionId: 'ses-signal-04', role: 'client', ticket: broker.issueTicket({sessionId: 'ses-signal-04', role: 'client'}), send() {}});
+  broker.attach({sessionId: 'ses-signal-04', role: 'host', ticket: broker.issueTicket({sessionId: 'ses-signal-04', role: 'host'}), send() { throw new Error('socket write failed'); }});
+  assert.doesNotThrow(() => client.send(createSessionEnvelope({sessionId: 'ses-signal-04', type: 'session.offer', payload: {}})));
+  assert.deepEqual(broker.stats(), {sessions: 1, participants: 1, droppedDeliveries: 1});
 });

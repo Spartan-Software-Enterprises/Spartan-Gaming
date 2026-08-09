@@ -2,6 +2,9 @@ import {createQualityController} from './quality.mjs';
 import {createReconnectPolicy} from './recovery.mjs';
 
 const PROTOCOL = 'spartan-gaming/1';
+const MAX_SEEN_MESSAGE_IDS = 256;
+const STATE_CHANGING_MESSAGES = new Set(['session.answer', 'session.reconnect', 'session.close', 'session.control']);
+let envelopeCounter = 0;
 const DEFAULT_CAPABILITIES = Object.freeze({
   transports: ['webrtc', 'websocket'],
   video: {codecs: ['av1', 'vp9', 'h264'], maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false},
@@ -57,15 +60,16 @@ export function negotiateCapabilities(local, remote) {
   };
 }
 
-export function createSessionEnvelope({sessionId, type, payload, sequence = 0, messageId = `msg-${Date.now()}-${sequence}`, sentAt = new Date().toISOString()}) {
+export function createSessionEnvelope({sessionId, type, payload, sequence = 0, messageId = `msg-${Date.now()}-${sequence}-${++envelopeCounter}`, sentAt = new Date().toISOString()}) {
   requiredString(sessionId, 'sessionId'); requiredString(type, 'type');
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) throw new TypeError('payload must be an object');
   return Object.freeze({protocol: PROTOCOL, messageId, sessionId, type, sentAt, sequence, payload: clone(payload)});
 }
 
 export function createSessionManager({clock = () => new Date().toISOString(), idFactory = () => `ses-${Date.now()}`} = {}) {
-  let state = 'idle'; let session = null; let sequence = 0; let quality = createQualityController(); let recovery = createReconnectPolicy();
+  let state = 'idle'; let session = null; let sequence = 0; let quality = createQualityController(); let recovery = createReconnectPolicy(); let latestRemoteSequence = -1; const seenMessageIds = new Set(); const seenMessageOrder = [];
   const transition = next => { if (!transitions[state].includes(next)) throw new Error(`Invalid session transition: ${state} -> ${next}`); state = next; return state; };
+  const rememberMessage = messageId => { if (seenMessageIds.has(messageId)) return false; seenMessageIds.add(messageId); seenMessageOrder.push(messageId); if (seenMessageOrder.length > MAX_SEEN_MESSAGE_IDS) seenMessageIds.delete(seenMessageOrder.shift()); return true; };
   return {
     get state() { return state; },
     get session() { return session ? clone(session) : null; },
@@ -75,7 +79,7 @@ export function createSessionManager({clock = () => new Date().toISOString(), id
     get recovery() { return {attempt: recovery.attempt, exhausted: recovery.exhausted, maxAttempts: recovery.maxAttempts}; },
     start({backend, capabilities = DEFAULT_CAPABILITIES, preferences = {}, launch} = {}) {
       if (!backend?.id) throw new TypeError('backend.id is required');
-      transition('preparing'); quality = createQualityController({initialProfile: preferences.qualityPreset || 'balanced', profiles: preferences.qualityProfiles, adaptiveBitrate: preferences.adaptiveBitrate !== false, adaptiveResolution: preferences.adaptiveResolution !== false}); recovery = createReconnectPolicy(); session = {id: idFactory(), backendId: backend.id, backendType: backend.backendType, capabilities: normalizeCapabilities(capabilities), preferences: clone(preferences), negotiated: null, quality: quality.profile}; sequence = 0;
+      transition('preparing'); quality = createQualityController({initialProfile: preferences.qualityPreset || 'balanced', profiles: preferences.qualityProfiles, adaptiveBitrate: preferences.adaptiveBitrate !== false, adaptiveResolution: preferences.adaptiveResolution !== false}); recovery = createReconnectPolicy(); session = {id: idFactory(), backendId: backend.id, backendType: backend.backendType, capabilities: normalizeCapabilities(capabilities), preferences: clone(preferences), negotiated: null, quality: quality.profile}; sequence = 0; latestRemoteSequence = -1; seenMessageIds.clear(); seenMessageOrder.length = 0;
       transition('negotiating');
       const payload = {role: 'client', backendId: backend.id, transports: session.capabilities.transports, video: session.capabilities.video, audio: session.capabilities.audio, input: session.capabilities.input, quality: {...quality.request(), ...(preferences.bitrateKbps ? {bitrateKbps: preferences.bitrateKbps} : {})}, streaming: clone(preferences)};
       if (launch !== undefined) { if (!launch || typeof launch !== 'object' || Array.isArray(launch)) throw new TypeError('launch must be an object'); payload.launch = clone(launch); }
@@ -86,6 +90,11 @@ export function createSessionManager({clock = () => new Date().toISOString(), id
     setQuality(profileId) { if (!session || !['preparing', 'negotiating', 'connected', 'reconnecting'].includes(state)) throw new Error('Quality can only be changed during an active session'); quality.setProfile(profileId); session.quality = quality.profile; return quality.request(); },
     receive(message) {
       if (!session || message?.sessionId !== session.id) throw new Error('Message belongs to another session');
+      if (!rememberMessage(message.messageId)) return state;
+      if (STATE_CHANGING_MESSAGES.has(message.type) && Number.isInteger(message.sequence)) {
+        if (message.sequence <= latestRemoteSequence) return state;
+        latestRemoteSequence = message.sequence;
+      }
       sequence = Math.max(sequence, Number.isInteger(message.sequence) ? message.sequence : sequence);
       if (message.type === 'telemetry.health') { const decision = quality.ingest(message.payload); session.quality = decision.profile; return state; }
       if (message.type === 'session.answer') {
@@ -104,8 +113,9 @@ export function createSessionManager({clock = () => new Date().toISOString(), id
       sequence += 1;
       return createSessionEnvelope({sessionId: session.id, type: 'session.reconnect', sequence, payload: {attempt: plan.attempt, delayMs: plan.delayMs}});
     },
+    fail() { if (['preparing', 'negotiating', 'connected', 'reconnecting'].includes(state)) transition('error'); return state; },
     close() { if (state === 'preparing' || state === 'negotiating' || state === 'connected' || state === 'reconnecting') { transition('closing'); transition('closed'); } return state; },
-    reset() { if (state !== 'closed' && state !== 'error') throw new Error('Only closed or error sessions can reset'); session = null; state = 'idle'; sequence = 0; recovery.reset(); },
+    reset() { if (state !== 'closed' && state !== 'error') throw new Error('Only closed or error sessions can reset'); session = null; state = 'idle'; sequence = 0; latestRemoteSequence = -1; seenMessageIds.clear(); seenMessageOrder.length = 0; recovery.reset(); },
   };
 }
 

@@ -24,7 +24,30 @@ export function normalizeAdapterManifest(record) {
     if (record.artifact.integrity !== integrity) throw new TypeError('adapter.artifact.integrity must match adapter.integrity');
     artifact = Object.freeze({url, sizeBytes, integrity});
   }
-  return Object.freeze({id, version, kind, status, trust, platforms, capabilities, license, integrity, signature, artifact, entrypoint: typeof record.entrypoint === 'string' && record.entrypoint.trim() ? record.entrypoint.trim() : null});
+  let packageDescriptor = null;
+  if (record.package !== undefined && record.package !== null) {
+    if (kind !== 'emulator') throw new TypeError('only emulator adapters may declare a signed package');
+    if (!record.package || typeof record.package !== 'object') throw new TypeError('adapter.package must be an object');
+    const packageId = required(record.package.id, 'adapter.package.id'); const packageVersion = required(record.package.version, 'adapter.package.version');
+    if (packageId !== id || packageVersion !== version) throw new TypeError('adapter.package must match adapter identity');
+    const packagePlatform = required(record.package.platform, 'adapter.package.platform');
+    if (packagePlatform !== 'universal' && !platforms.includes(packagePlatform)) throw new TypeError('adapter.package.platform must be listed in adapter.platforms');
+    const format = required(record.package.format, 'adapter.package.format');
+    const entrypoint = required(record.package.entrypoint, 'adapter.package.entrypoint');
+    if (!Array.isArray(record.package.files) || !record.package.files.length || record.package.files.length > 100_000) throw new TypeError('adapter.package.files must contain 1-100000 entries');
+    const files = record.package.files.map((file, index) => {
+      if (!file || typeof file !== 'object') throw new TypeError(`adapter.package.files[${index}] must be an object`);
+      const path = required(file.path, `adapter.package.files[${index}].path`);
+      if (file.integrity && !/^sha256-[A-Za-z0-9_-]+$/.test(file.integrity)) throw new TypeError(`adapter.package.files[${index}].integrity must use sha256-`);
+      const sizeBytes = Number(file.sizeBytes ?? 0);
+      if (!Number.isSafeInteger(sizeBytes) || sizeBytes < 0 || sizeBytes > 5_000_000_000) throw new TypeError(`adapter.package.files[${index}].sizeBytes must be an integer`);
+      return Object.freeze({path, type: file.type === 'directory' ? 'directory' : 'file', sizeBytes, integrity: file.integrity || null});
+    });
+    if (!files.some(file => file.path === entrypoint && file.type === 'file')) throw new TypeError('adapter.package.entrypoint must reference a declared file');
+    const packageSignature = record.package.signature ? Object.freeze({algorithm: required(record.package.signature.algorithm, 'adapter.package.signature.algorithm'), signer: required(record.package.signature.signer, 'adapter.package.signature.signer'), value: required(record.package.signature.value, 'adapter.package.signature.value')}) : null;
+    packageDescriptor = Object.freeze({id: packageId, version: packageVersion, kind, platform: packagePlatform, format, entrypoint, files: Object.freeze(files), signature: packageSignature});
+  }
+  return Object.freeze({id, version, kind, status, trust, platforms, capabilities, license, integrity, signature, artifact, package: packageDescriptor, entrypoint: typeof record.entrypoint === 'string' && record.entrypoint.trim() ? record.entrypoint.trim() : null});
 }
 
 export function evaluateAdapterManifest(record, {platform, kind, allowUnsigned = false} = {}) {

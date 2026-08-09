@@ -48,5 +48,6 @@ test('desktop native package sources expose platform API implementations and pac
 
 test('native package CLI rejects malformed options and unsupported platforms', () => {
   assert.throws(() => createNativePackagePlan({platform: 'android', sourceRoot: '/external/spartan'}), /unsupported/);
+  assert.throws(() => createNativePackagePlan({platform: 'linux', sourceRoot: '/external/spartan', configuration: 'Release; malicious'}), /unsupported native package configuration/);
   assert.throws(() => parseNativePackageArguments(['--unknown']), /unknown native package option/);
 });

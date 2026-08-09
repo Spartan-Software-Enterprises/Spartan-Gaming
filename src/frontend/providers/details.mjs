@@ -1,3 +1,5 @@
+import { calculateBandwidthUsage, createCloudGameDeepLink, listCloudStreamPresets } from './cloud-features.mjs';
+
 function list(value) { return Object.freeze(Array.isArray(value) ? [...value] : []); }
 
 export function createProviderDetailsModel(entry, plan) {
@@ -5,6 +7,7 @@ export function createProviderDetailsModel(entry, plan) {
   if (!plan || plan.backendId !== entry.id) throw new TypeError('A matching provider launch plan is required');
   const integration = plan.integration || {};
   const readiness = plan.readiness || {};
+  const bitrateKbps = integration.quality === 'prefer-latency' ? 15000 : integration.quality === 'prefer-quality' ? 25000 : 12000;
   return Object.freeze({
     providerId: entry.id,
     name: entry.name,
@@ -27,5 +30,8 @@ export function createProviderDetailsModel(entry, plan) {
     missingCapabilities: list(readiness.missingCapabilities),
     blocking: list(readiness.blocking),
     troubleshooting: list((readiness.issues || []).map(issue => issue.message).filter(Boolean)),
+    streamPresets: listCloudStreamPresets(),
+    bandwidthEstimate: calculateBandwidthUsage({bitrateKbps, durationMinutes: 60}),
+    deepLinkSupported: Boolean(createCloudGameDeepLink(entry.id, 'test-game')),
   });
 }

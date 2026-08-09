@@ -4,6 +4,8 @@ import test from 'node:test';
 
 const dockerfile = fs.readFileSync('docker/signaling.Dockerfile', 'utf8');
 const compose = fs.readFileSync('docker-compose.yml', 'utf8');
+const dockerignore = fs.readFileSync('.dockerignore', 'utf8');
+const dockerignoreEntries = new Set(dockerignore.split(/\r?\n/u).map(entry => entry.trim()).filter(Boolean));
 
 test('signaling image is minimal, non-root, and health checked', () => {
   assert.match(dockerfile, /^FROM node:22-bookworm-slim/m);
@@ -23,4 +25,8 @@ test('Compose keeps the reference signaling service local and requires a secret'
   assert.match(compose, /read_only: true/);
   assert.match(compose, /cap_drop:\s*\n\s*- ALL/);
   assert.match(compose, /no-new-privileges:true/);
+});
+
+test('Docker build context excludes secrets and local build artifacts', () => {
+  for (const entry of ['.git', '.env*', '*.pem', '*.key', 'node_modules', 'out']) assert.ok(dockerignoreEntries.has(entry), `missing Docker ignore entry: ${entry}`);
 });

@@ -2,6 +2,7 @@ const toggle = (key, label, description, defaultValue = false) => ({key, label, 
 const select = (key, label, description, options, defaultValue) => ({key, label, description, type: 'select', options, default: defaultValue ?? options[0]});
 const range = (key, label, description, min, max, step, defaultValue, unit = '') => ({key, label, description, type: 'range', min, max, step, default: defaultValue, unit});
 const text = (key, label, description, defaultValue = '') => ({key, label, description, type: 'text', default: defaultValue});
+const secret = (key, label, description, defaultValue = '') => ({key, label, description, type: 'secret', default: defaultValue});
 const action = (key, label, description, actionLabel) => ({key, label, description, type: 'action', actionLabel});
 
 export const settingsCategories = [
@@ -82,6 +83,7 @@ export const settingsCategories = [
   {
     id: 'emulation', label: 'Emulation', icon: '⌘', description: 'Cores, adapters, saves, shaders, and legal file access.', settings: [
       select('emulation.frontend', 'Emulation frontend', 'Choose the runtime used for compatible cores and standalone adapters.', ['Automatic', 'Spartan runtime', 'Libretro host', 'Native adapter'], 'Automatic'),
+      select('emulation.windowsCompatibility', 'Windows emulator compatibility', 'Linux fallback for Windows-only emulator builds. Wine is deterministic; PlayOnLinux manages named Wine prefixes.', ['Automatic', 'Wine', 'PlayOnLinux', 'Disabled'], 'Automatic'),
       toggle('emulation.scanLibraries', 'Scan selected game folders', 'Index user-selected folders for supported games and metadata.', true),
       toggle('emulation.autoSaveStates', 'Auto-save on exit', 'Create a safety save state when a session closes normally.', true),
       toggle('emulation.cloudSaves', 'Sync save data', 'Sync save RAM and save states through the selected sync provider.'),
@@ -108,6 +110,19 @@ export const settingsCategories = [
       action('providers.manageProfiles', 'Manage provider profiles', 'Configure launch URLs, account profiles, region hints, and quality overrides.', 'Open provider manager'),
       action('providers.manageHosts', 'Manage self-hosted machines', 'Register user-owned PCs and prepare secure, expiring pairing requests.', 'Open host manager'),
       action('providers.clearSessions', 'Clear provider sessions', 'Remove Spartan-owned launch, recovery, and pairing handoffs from this browser session; official provider sign-out remains provider-owned.', 'Clear sessions'),
+    ],
+  },
+  {
+    id: 'accounts', label: 'Accounts & API', icon: '▤', description: 'Connection preferences and optional credentials used by approved integrations.', settings: [
+      text('accounts.defaultLogin', 'Default login label', 'A local label for the account you use most often. Spartan Gaming never asks for a provider password here.', ''),
+      select('accounts.loginMode', 'Login handoff', 'Choose how provider sign-in is handled when a service opens.', ['Official service in Spartan Gaming', 'System browser handoff', 'Ask every time'], 'Official service in Spartan Gaming'),
+      text('accounts.syncEndpoint', 'Self-hosted sync endpoint', 'Optional HTTPS endpoint for your own Spartan sync service.', ''),
+      secret('accounts.syncApiKey', 'Self-hosted sync API key', 'Optional API key for the self-hosted sync endpoint. Stored only in this local profile; clear it when you finish setup.', ''),
+      text('accounts.hostEndpoint', 'Default host endpoint', 'Optional user-owned Spartan Host endpoint used for remote play.', ''),
+      secret('accounts.hostApiKey', 'Host API key', 'Optional API key for your user-owned host. It is never exported with settings.', ''),
+      text('accounts.providerClientId', 'Provider client ID', 'Optional OAuth client ID for a provider integration that explicitly documents custom clients.', ''),
+      secret('accounts.providerApiKey', 'Provider API key', 'Optional API key for provider APIs such as catalog or creator tools. Only enter keys supplied by the official provider.', ''),
+      action('accounts.clearCredentials', 'Clear saved credentials', 'Remove all optional API keys and login labels from this local profile.', 'Clear credentials'),
     ],
   },
   {

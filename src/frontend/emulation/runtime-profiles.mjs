@@ -4,6 +4,7 @@ export const RUNTIME_PROFILE_VERSION = 1;
 const KINDS = new Set(['browser-wasm', 'libretro-core', 'native-adapter', 'native-emulator']);
 const PLATFORMS = new Set(['any', 'browser', 'win32', 'darwin', 'linux']);
 const TRUST_LEVELS = new Set(['signed', 'user-approved', 'unverified']);
+const EXECUTIONS = new Set(['native', 'wine', 'playonlinux']);
 const ID_PATTERN = /^[a-z0-9][a-z0-9._-]{1,63}$/;
 const NATIVE_KINDS = new Set(['native-adapter', 'native-emulator']);
 const PREFERENCE_KIND = Object.freeze({
@@ -42,6 +43,8 @@ export function normalizeRuntimeProfile(record = {}) {
   if (!PLATFORMS.has(platform)) throw new TypeError(`unsupported runtime platform: ${platform}`);
   if (!TRUST_LEVELS.has(trust)) throw new TypeError(`unsupported runtime trust level: ${trust}`);
   const executablePath = optionalPath(record.executablePath);
+  const execution = EXECUTIONS.has(record.execution) ? record.execution : 'native';
+  const playOnLinuxProfile = typeof record.playOnLinuxProfile === 'string' && record.playOnLinuxProfile.trim() ? record.playOnLinuxProfile.trim().slice(0, 160) : undefined;
   if (NATIVE_KINDS.has(kind) && !executablePath) throw new TypeError('native runtime profiles require an executablePath or adapter package path');
   if (kind === 'browser-wasm' && platform !== 'browser' && platform !== 'any') throw new TypeError('browser-wasm profiles must target browser or any');
   return Object.freeze({
@@ -55,6 +58,8 @@ export function normalizeRuntimeProfile(record = {}) {
     trust,
     enabled: record.enabled !== false,
     ...(executablePath ? {executablePath} : {}),
+    ...(execution !== 'native' ? {execution} : {}),
+    ...(playOnLinuxProfile ? {playOnLinuxProfile} : {}),
     notes: typeof record.notes === 'string' ? record.notes.trim().slice(0, 500) : '',
   });
 }
@@ -105,4 +110,3 @@ export function resolveRuntimeProfile({coreId, preference = 'automatic', profile
 
 export const runtimeProfileKinds = Object.freeze([...KINDS]);
 export const runtimeProfileTrustLevels = Object.freeze([...TRUST_LEVELS]);
-

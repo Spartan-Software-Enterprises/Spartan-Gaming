@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 
 const PLATFORMS = new Set(['win32', 'darwin', 'linux']);
 const FORMATS = new Set(['node-addon']);
+const CONFIGURATIONS = new Set(['Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel']);
 const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/;
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const manifestPath = path.join(repositoryRoot, 'native/package-manifest.json');
@@ -22,7 +23,7 @@ export function normalizeNativePackageManifest(record) {
 }
 
 export function createNativePackageBuildPlan({manifest = loadNativePackageManifest(), platform, sourceRoot = repositoryRoot, outRoot, installRoot, configuration = 'Release'} = {}) {
-  const normalized = normalizeNativePackageManifest(manifest); const selected = normalized.packages.find(entry => entry.platform === platform); if (!selected) throw new TypeError(`no native package is defined for ${platform}`); const source = path.resolve(sourceRoot, selected.sourceDirectory); const out = path.resolve(outRoot || path.join(sourceRoot, 'out', selected.id)); const install = path.resolve(installRoot || path.join(out, 'install')); if (out === source || install === source) throw new Error('native package output must not overwrite source');
+  const normalized = normalizeNativePackageManifest(manifest); const selected = normalized.packages.find(entry => entry.platform === platform); if (!selected) throw new TypeError(`no native package is defined for ${platform}`); if (!CONFIGURATIONS.has(configuration)) throw new TypeError(`unsupported native package configuration: ${configuration}`); const source = path.resolve(sourceRoot, selected.sourceDirectory); const out = path.resolve(outRoot || path.join(sourceRoot, 'out', selected.id)); const install = path.resolve(installRoot || path.join(out, 'install')); if (out === source || install === source) throw new Error('native package output must not overwrite source');
   return Object.freeze({package: selected, source, out, install, configuration, commands: Object.freeze([
     Object.freeze({program: 'cmake', args: Object.freeze(['-S', source, '-B', out, `-DCMAKE_BUILD_TYPE=${configuration}`]), cwd: source}),
     Object.freeze({program: 'cmake', args: Object.freeze(['--build', out, '--config', configuration]), cwd: source}),

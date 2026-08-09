@@ -61,6 +61,31 @@ The first milestone will document the supported Chromium checkout and build
 configuration. See [CONTRIBUTING.md](CONTRIBUTING.md) and
 [docs/architecture.md](docs/architecture.md).
 
+Build a self-contained desktop bundle on the target operating system with:
+
+```bash
+npm run frontend:build
+npm run app:package -- --platform linux --installer deb --execute   # Linux
+npm run app:package -- --platform macos --installer dmg-spec --execute # macOS
+npm run app:package -- --platform windows --installer exe-spec --execute # Windows
+```
+
+Packaging is target-aware and refuses to create a runnable release with a
+foreign-OS binary. Build each release on its native runner, or pass explicit
+target binaries with `--node-binary` and `--chromium-binary`. Platform-specific
+emulator payloads belong in `vendor/emulators/linux`, `vendor/emulators/darwin`,
+or `vendor/emulators/win32`; the packager only uses the shared emulator folder
+for the current host OS. The release bundle includes Node, Chromium, supported
+emulator binaries, and checksums. Windows-only runtime profiles can launch
+through Wine or a named PlayOnLinux prefix on Linux. ROMs, BIOS files, keys,
+and user credentials are never shipped in the installer.
+
+Every bundle also contains `install/dependencies.json` and OS-specific
+dependency helpers. The Linux `.deb` declares Chromium runtime libraries,
+Wine, and PlayOnLinux as package dependencies and refreshes/installs them in
+its post-install step. Set `SPARTAN_SKIP_DEPENDENCY_UPDATE=1` for offline or
+centrally managed installations.
+
 ## Project principles
 
 - Open source and auditable by default.

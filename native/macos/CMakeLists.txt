@@ -29,4 +29,4 @@ set_target_properties(spartan_native_macos PROPERTIES PREFIX "" SUFFIX ".node" O
 
 install(TARGETS spartan_native_macos LIBRARY DESTINATION . RUNTIME DESTINATION . ARCHIVE DESTINATION .)
 install(FILES index.mjs package.json ../desktop/reference-adapter.mjs DESTINATION .)
-install(FILES ../../host/adapters.mjs ../../host/audio.mjs ../../host/media.mjs ../../host/process.mjs DESTINATION host)
+install(FILES ../../host/adapters.mjs ../../host/audio.mjs ../../host/media.mjs ../../host/ogg-opus.mjs ../../host/process.mjs DESTINATION host)

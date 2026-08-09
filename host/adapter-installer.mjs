@@ -1,6 +1,7 @@
 import {createHash, randomUUID} from 'node:crypto';
 import {promises as defaultFs} from 'node:fs';
 import {resolve, join, relative, isAbsolute} from 'node:path';
+import {extractAdapterArchive, normalizeAdapterPackageManifest} from './adapter-package.mjs';
 
 const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/;
 const MAX_ARTIFACT_BYTES = 5_000_000_000;
@@ -37,16 +38,23 @@ export function createAdapterInstallTransactionPlan({request, installRoot} = {})
   const expected = decodeDigest(request.artifact.integrity);
   if (request.verification?.integrity !== request.artifact.integrity) throw new TypeError('request verification integrity must match artifact integrity');
   if (request.artifact.sizeBytes < 1 || request.artifact.sizeBytes > MAX_ARTIFACT_BYTES) throw new RangeError('artifact size is outside the supported bound');
-  return Object.freeze({version: 1, id: request.id, from: request.from, to: request.to, expectedDigest: expected, artifact: Object.freeze({...request.artifact}), paths});
+  let packageManifest = null;
+  if (request.package !== undefined) {
+    packageManifest = normalizeAdapterPackageManifest(request.package);
+    if (packageManifest.id !== request.id || packageManifest.version !== request.to) throw new TypeError('package identity must match the requested release');
+    if (packageManifest.platform !== 'universal' && packageManifest.platform !== request.platform) throw new TypeError('package platform must match the requested platform');
+    if (packageManifest.format === 'directory') throw new TypeError('downloaded package artifacts must use an archive format');
+  }
+  return Object.freeze({version: 1, id: request.id, from: request.from, to: request.to, expectedDigest: expected, artifact: Object.freeze({...request.artifact}), packageManifest, paths});
 }
 
 /**
  * Install signed adapter artifacts through an injected downloader/verifier.
  * The installer writes only inside its validated root and never invokes a shell.
  */
-export function createNativeAdapterInstaller({installRoot, fsImpl = defaultFs, download = async url => { const response = await fetch(url); if (!response.ok) throw new Error(`adapter download failed: ${response.status}`); return response; }, verifySignature = async () => { throw new Error('adapter signature verifier is required'); }} = {}) {
+export function createNativeAdapterInstaller({installRoot, fsImpl = defaultFs, download = async url => { const response = await fetch(url); if (!response.ok) throw new Error(`adapter download failed: ${response.status}`); return response; }, verifySignature = async () => { throw new Error('adapter signature verifier is required'); }, verifyPackageManifest = async () => { throw new Error('package manifest verifier is required'); }} = {}) {
   if (!fsImpl || typeof fsImpl.mkdir !== 'function' || typeof fsImpl.writeFile !== 'function' || typeof fsImpl.rename !== 'function' || typeof fsImpl.rm !== 'function' || typeof fsImpl.access !== 'function') throw new TypeError('filesystem adapter is incomplete');
-  if (typeof download !== 'function' || typeof verifySignature !== 'function') throw new TypeError('download and verifySignature must be functions');
+  if (typeof download !== 'function' || typeof verifySignature !== 'function' || typeof verifyPackageManifest !== 'function') throw new TypeError('download and signature verifiers must be functions');
   return Object.freeze({
     async install(request) {
       const plan = createAdapterInstallTransactionPlan({request, installRoot});
@@ -57,14 +65,24 @@ export function createNativeAdapterInstaller({installRoot, fsImpl = defaultFs, d
         if (content.byteLength !== plan.artifact.sizeBytes) throw new Error('downloaded adapter size does not match the signed descriptor');
         if (digest(content) !== plan.expectedDigest) throw new Error('downloaded adapter digest does not match the signed descriptor');
         if (!await verifySignature({data: content, signature: request.verification.signature, request})) throw new Error('adapter signature verification failed');
-        await fsImpl.writeFile(join(plan.paths.staging, 'adapter.artifact'), content, {flag: 'wx'});
-        await fsImpl.writeFile(join(plan.paths.staging, 'manifest.json'), JSON.stringify({id: plan.id, version: plan.to, integrity: plan.artifact.integrity}), {encoding: 'utf8', flag: 'wx'});
         await fsImpl.mkdir(resolve(plan.paths.root, plan.id), {recursive: true});
         await fsImpl.access(plan.paths.target).then(() => { throw new Error('adapter version is already installed'); }).catch(error => { if (error?.code !== 'ENOENT') throw error; });
-        await fsImpl.rename(plan.paths.staging, plan.paths.target);
+        let publishPath = plan.paths.staging;
+        let pointerIntegrity = plan.artifact.integrity;
+        if (plan.packageManifest) {
+          if (!await verifyPackageManifest({manifest: plan.packageManifest, request})) throw new Error('package manifest signature verification failed');
+          publishPath = join(plan.paths.staging, 'payload');
+          await extractAdapterArchive({manifest: plan.packageManifest, data: content, destination: publishPath, fsImpl});
+          await fsImpl.writeFile(join(publishPath, 'manifest.json'), JSON.stringify(plan.packageManifest), {encoding: 'utf8', flag: 'wx'});
+          pointerIntegrity = plan.packageManifest.files.find(file => file.path === plan.packageManifest.entrypoint)?.integrity || plan.artifact.integrity;
+        } else {
+          await fsImpl.writeFile(join(plan.paths.staging, 'adapter.artifact'), content, {flag: 'wx'});
+          await fsImpl.writeFile(join(plan.paths.staging, 'manifest.json'), JSON.stringify({id: plan.id, version: plan.to, integrity: plan.artifact.integrity}), {encoding: 'utf8', flag: 'wx'});
+        }
+        await fsImpl.rename(publishPath, plan.paths.target);
         published = true;
         pointerTemp = `${plan.paths.pointer}.${randomUUID()}.tmp`;
-        await fsImpl.writeFile(pointerTemp, JSON.stringify({id: plan.id, version: plan.to, integrity: plan.artifact.integrity}), {encoding: 'utf8', flag: 'wx'});
+        await fsImpl.writeFile(pointerTemp, JSON.stringify({id: plan.id, version: plan.to, integrity: pointerIntegrity}), {encoding: 'utf8', flag: 'wx'});
         await fsImpl.rename(pointerTemp, plan.paths.pointer);
         return Object.freeze({status: 'installed', id: plan.id, version: plan.to, path: plan.paths.target});
       } catch (error) {

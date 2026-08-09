@@ -30,7 +30,7 @@ test('session manager follows offer, answer, and close lifecycle', () => {
   assert.equal(manager.state, 'reconnecting'); assert.equal(reconnect.type, 'session.reconnect'); assert.equal(reconnect.payload.attempt, 1); assert.equal(manager.recovery.attempt, 1);
   manager.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true}, sequence: reconnect.sequence + 1}));
   assert.equal(manager.state, 'connected'); assert.equal(manager.recovery.attempt, 0);
-  assert.equal(manager.close(), 'closed'); assert.throws(() => manager.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: true}})), /transition/);
+  assert.equal(manager.close(), 'closed'); assert.throws(() => manager.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', messageId: 'msg-after-close-01', sequence: reconnect.sequence + 2, payload: {accepted: true}})), /transition/);
 });
 
 test('session manager can abort an in-flight negotiation for retry', () => {
@@ -66,6 +66,16 @@ test('session manager refuses an explicitly rejected host answer', () => {
   const offer = manager.start({backend: {id: 'host'}});
   assert.throws(() => manager.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', payload: {accepted: false, reason: 'host-busy'}})), /rejected by host/);
   assert.equal(manager.state, 'negotiating');
+});
+
+test('session manager ignores duplicate and stale state-changing messages', () => {
+  const manager = createSessionManager({idFactory: () => 'ses-replay'});
+  const offer = manager.start({backend: {id: 'host'}});
+  const answer = createSessionEnvelope({sessionId: offer.sessionId, type: 'session.answer', sequence: 2, messageId: 'msg-answer-0001', payload: {accepted: true}});
+  assert.equal(manager.receive(answer), 'connected');
+  assert.equal(manager.receive(answer), 'connected');
+  assert.equal(manager.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.close', sequence: 1, messageId: 'msg-close-00001', payload: {}})), 'connected');
+  assert.equal(manager.receive(createSessionEnvelope({sessionId: offer.sessionId, type: 'session.close', sequence: 3, messageId: 'msg-close-00002', payload: {}})), 'closed');
 });
 
 test('host identity and pairing metadata travel only in the session offer', () => {

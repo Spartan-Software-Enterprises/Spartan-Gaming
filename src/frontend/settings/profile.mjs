@@ -13,7 +13,7 @@ function normalizeValue(setting, value) {
     return Number.isFinite(number) ? Math.min(setting.max, Math.max(setting.min, number)) : setting.default;
   }
   if (setting.type === 'select') return setting.options.includes(value) ? value : setting.default;
-  if (setting.type === 'text') return typeof value === 'string' ? value.slice(0, 2048) : setting.default;
+  if (setting.type === 'text' || setting.type === 'secret') return typeof value === 'string' ? value.slice(0, 2048) : setting.default;
   return setting.default;
 }
 
@@ -45,7 +45,10 @@ export function createSettingsStore({storage = globalThis.localStorage, key = SE
     read,
     save(values) { return write({...read(), ...values}); },
     reset() { return write(defaultSettings, {allowProfileSwitch: false}); },
-    export() { return JSON.stringify({version: SETTINGS_EXPORT_VERSION, exportedAt: new Date().toISOString(), settings: read()}, null, 2); },
+    export() {
+      const safe = Object.fromEntries(Object.entries(read()).filter(([key]) => definitions.get(key)?.type !== 'secret'));
+      return JSON.stringify({version: SETTINGS_EXPORT_VERSION, exportedAt: new Date().toISOString(), settings: safe}, null, 2);
+    },
     import(serialized) {
       const parsed = typeof serialized === 'string' ? JSON.parse(serialized) : serialized;
       if (!parsed || parsed.version !== SETTINGS_EXPORT_VERSION || !parsed.settings || typeof parsed.settings !== 'object') throw new TypeError('settings export is invalid');

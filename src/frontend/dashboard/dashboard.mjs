@@ -20,6 +20,7 @@ import { clearSessionRecoveryHandoff, readSessionRecoveryHandoff } from '../sess
 import { resolveStartupRoute } from '../startup/route.mjs';
 import { createActiveProfileStorage } from '../profiles/storage.mjs';
 import { createProviderDetailsModel } from '../providers/details.mjs';
+import { createCloudGameDeepLink } from '../providers/cloud-features.mjs';
 
 const profileStorage = createActiveProfileStorage();
 const launchHistory = createLaunchHistoryStore({storage: profileStorage});
@@ -37,6 +38,7 @@ document.querySelector('.filters')?.insertAdjacentHTML('beforeend', '<button cla
 document.querySelector('.filters')?.insertAdjacentHTML('beforeend', '<button class="filter" data-filter="browser">Browser games</button>');
 document.querySelector('.main-nav')?.insertAdjacentHTML('beforeend', '<button class="nav-item" data-section="browser">▣ <span>Browser games</span></button>');
 const cards = document.querySelector('[data-cards]');
+const resultCount = document.querySelector('[data-result-count]');
 const toast = document.querySelector('[data-toast]');
 const sessionStatus = document.querySelector('[data-session-status]');
 const statusPill = sessionStatus.closest('.status-pill');
@@ -46,6 +48,8 @@ const sessionManager = createSessionManager({idFactory: () => `ses-${crypto.rand
 let sessionStatusId = 'idle';
 let toastTimer;
 let selectedProviderDetails = null;
+let providerReturnFocus = null;
+resultCount?.setAttribute('aria-live', 'polite');
 document.querySelector('.topbar')?.insertAdjacentHTML('beforeend', '<label class="workspace-picker" style="display:flex;align-items:center;gap:7px;color:#8d9aa7;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase"><span>Workspace</span><select data-workspace-select aria-label="Active workspace" style="min-width:118px;padding:8px 9px;border:1px solid #2a3540;border-radius:7px;background:#171e26;color:#e7edf3;font-size:11px;letter-spacing:0;text-transform:none"></select></label>');
 
 function renderWorkspaceControl() { const control = document.querySelector('[data-workspace-select]'); if (!control) return; control.innerHTML = workspaceStore.list().map(workspace => `<option value="${escapeHtml(workspace.id)}" ${workspace.id === activeWorkspace.id ? 'selected' : ''}>${escapeHtml(workspace.name)}</option>`).join(''); control.title = `${activeWorkspace.name} workspace`; }
@@ -61,6 +65,7 @@ function renderResume() {
   title.textContent = presentation.title; copy.textContent = presentation.copy; button.textContent = presentation.actionLabel;
 }
 function openProviderSurface(entry, plan) {
+  providerReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   const integration = plan.integration || {};
   document.querySelector('[data-provider-title]').textContent = entry.name;
   document.querySelector('[data-provider-detail]').textContent = `${integration.surfaces?.length ? integration.surfaces.join(' · ') : entry.kind} · ${integration.quality || 'balanced'} quality · ${integration.regionLabel || 'Automatic'} region`;
@@ -71,6 +76,7 @@ function openProviderSurface(entry, plan) {
   if (typeof providerDialog.showModal === 'function') providerDialog.showModal(); else providerDialog.setAttribute('open', '');
 }
 function closeProviderSurface() { document.querySelector('[data-provider-frame]').src = 'about:blank'; if (typeof providerDialog.close === 'function' && providerDialog.open) providerDialog.close(); else providerDialog.removeAttribute('open'); }
+
 function openProviderDetails(entry, plan) {
   const dialog = document.querySelector('[data-provider-details-dialog]');
   const content = document.querySelector('[data-provider-details]');
@@ -79,9 +85,18 @@ function openProviderDetails(entry, plan) {
   const model = createProviderDetailsModel(entry, plan);
   document.querySelector('[data-provider-details-title]').textContent = model.name;
   document.querySelector('[data-provider-details-subtitle]').textContent = `${model.kind} · Support ${model.supportLevel} · ${model.readinessStatus.replaceAll('-', ' ')}`;
-  content.innerHTML = `<div class="details-summary"><p>${escapeHtml(model.readinessReason)}</p><div class="details-facts"><span><strong>Mode</strong>${escapeHtml(model.mode || 'Unavailable')}</span><span><strong>Quality</strong>${escapeHtml(model.quality)}</span><span><strong>Region</strong>${escapeHtml(model.regionLabel)}</span><span><strong>Controller</strong>${escapeHtml(model.controllerProfile)}</span></div></div><div class="details-columns"><section><h3>Supported surfaces</h3><p>${escapeHtml(model.surfaces.join(' · ') || 'Official web experience')}</p><h3>Capabilities</h3><p>${escapeHtml(model.capabilities.join(' · ') || 'Provider-defined')}</p></section><section><h3>Setup requirements</h3><p>${escapeHtml(model.requirements.join(' · ') || 'None listed')}</p><h3>Readiness notes</h3><p>${escapeHtml([...model.troubleshooting, ...model.notes, ...(model.blocking.length ? [`Blocking: ${model.blocking.join(', ')}`] : [])].join(' ') || 'No additional notes.')}</p></section></div><p class="details-privacy">Authentication, subscriptions, provider permissions, and account sessions remain on the official service. Spartan Gaming stores no provider tokens in this flow.</p>`;
-  document.querySelector('[data-provider-details-external]').href = model.url;
-  document.querySelector('[data-provider-details-launch]').textContent = model.action === 'embed-url' ? 'Open official player' : 'Open official service';
+  const deepLinkHtml = model.deepLinkSupported ? `<div class="details-deeplink" style="margin-top:14px;padding:12px;border:1px solid #2a3540;border-radius:8px;background:#171e26"><label style="display:block;font-size:11px;font-weight:700;margin-bottom:6px;color:#a0aec0">Direct Game Launch (Deep Link)</label><div style="display:flex;gap:8px"><input type="text" data-deeplink-game placeholder="Enter Game Title or ID (e.g. Halo Infinite)" style="flex:1;padding:6px 10px;border:1px solid #2a3540;border-radius:6px;background:#0d1117;color:#fff;font-size:12px"><button type="button" data-deeplink-launch style="padding:6px 14px;border:0;border-radius:6px;background:#50e1d1;color:#0d1117;font-weight:700;cursor:pointer">Launch Game</button></div></div>` : '';
+  content.innerHTML = `<div class="details-summary"><p>${escapeHtml(model.readinessReason)}</p><div class="details-facts"><span><strong>Mode</strong>${escapeHtml(model.mode || 'Unavailable')}</span><span><strong>Quality</strong>${escapeHtml(model.quality)}</span><span><strong>Data Usage</strong>~${escapeHtml(model.bandwidthEstimate.totalGb)} GB/hr</span><span><strong>Region</strong>${escapeHtml(model.regionLabel)}</span><span><strong>Controller</strong>${escapeHtml(model.controllerProfile)}</span></div>${deepLinkHtml}</div><div class="details-columns"><section><h3>Supported surfaces</h3><p>${escapeHtml(model.surfaces.join(' · ') || 'Official web experience')}</p><h3>Capabilities</h3><p>${escapeHtml(model.capabilities.join(' · ') || 'Provider-defined')}</p></section><section><h3>Setup requirements</h3><p>${escapeHtml(model.requirements.join(' · ') || 'None listed')}</p><h3>Readiness notes</h3><p>${escapeHtml([...model.troubleshooting, ...model.notes, ...(model.blocking.length ? [`Blocking: ${model.blocking.join(', ')}`] : [])].join(' ') || 'No additional notes.')}</p></section></div><p class="details-privacy">Authentication, subscriptions, provider permissions, and account sessions remain on the official service. Spartan Gaming stores no provider tokens in this flow.</p>`;
+  content.querySelector('[data-deeplink-launch]')?.addEventListener('click', () => {
+    const input = content.querySelector('[data-deeplink-game]');
+    const gameId = input?.value?.trim();
+    if (!gameId) return;
+    const url = createCloudGameDeepLink(model.providerId, gameId);
+    if (url) {
+      closeProviderDetails();
+      launchEntry(entry, {...plan, action: 'open-url', url});
+    }
+  });
   if (typeof dialog.showModal === 'function') dialog.showModal(); else dialog.setAttribute('open', '');
 }
 function closeProviderDetails() { const dialog = document.querySelector('[data-provider-details-dialog]'); selectedProviderDetails = null; if (typeof dialog?.close === 'function' && dialog.open) dialog.close(); else dialog?.removeAttribute('open'); }
@@ -95,7 +110,14 @@ function launchEntry(entry, plan) {
   if (plan.readiness?.nextAction === 'choose-runtime' || plan.action === 'choose-runtime' || plan.action === 'configure-native-adapter') { window.location.assign('../emulation/index.html'); return; }
   if (plan.action === 'configure-host') { window.location.assign('../host/index.html'); return; }
   if (plan.action === 'embed-url') { openProviderSurface(entry, plan); showToast(`${entry.name}: official embed opened.`); return; }
-  if (plan.action === 'open-url' || plan.action === 'configure-api') { try { const handoff = launchExternalSurface(plan.url, {behavior: resolveWorkspaceLaunchBehavior(activeWorkspace, settings['gaming.launchBehavior']), open: window.open.bind(window), assign: window.location.assign.bind(window.location)}); showToast(`${entry.name}: ${handoff.mode === 'current-workspace' ? 'official service opened here' : 'official service opened'}.`); } catch (error) { showToast(error.message); } return; }
+  if (plan.action === 'open-native-client') {
+    const launch = plan.nativeLaunch;
+    if (launch?.discovery?.found === true) { showToast(`${entry.name}: launch via the official ${launch.client.name} client.`); launchExternalSurface(launch.client.officialUrl, {behavior: resolveWorkspaceLaunchBehavior(activeWorkspace, settings['gaming.launchBehavior']), open: window.open.bind(window), assign: window.location.assign.bind(window.location)}); return; }
+    if (launch?.status === 'ready' && launch.client?.officialUrl) { showToast(`${entry.name}: official native client not detected. Opening the download page in Spartan Gaming.`); openProviderSurface(entry, {...plan, action: 'embed-url', url: launch.client.officialUrl}); return; }
+    showToast(`${entry.name}: native client launch needs the official app installed and signed in.`);
+    return;
+  }
+  if (plan.action === 'open-url' || plan.action === 'configure-api') { openProviderSurface(entry, {...plan, action: 'embed-url'}); showToast(`${entry.name}: official service opened inside Spartan Gaming.`); return; }
   const offer = beginSession({...entry, adapterMode: plan.mode}); if (offer) showToast(`${entry.name}: ${plan.action.replaceAll('-', ' ')}.`);
 }
 function beginSession(backend) {
@@ -112,16 +134,18 @@ function visibleEntries() {
     return matchesType && (!query || haystack.includes(query));
   });
 }
+function updateFilterControls() { document.querySelectorAll('[data-filter]').forEach(button => { const active = button.dataset.filter === state.filter; button.classList.toggle('is-active', active); button.setAttribute('aria-pressed', String(active)); }); }
 function render() {
   renderWorkspaceControl();
+  updateFilterControls();
   const entries = visibleEntries();
-  document.querySelector('[data-result-count]').textContent = `${entries.length} connection${entries.length === 1 ? '' : 's'}`;
+  resultCount.textContent = `${entries.length} connection${entries.length === 1 ? '' : 's'}`;
   cards.innerHTML = entries.length ? entries.map(entry => {
     const favorite = state.favorites.has(entry.id);
     const tags = [...(state.recent.has(entry.id) ? ['Recent'] : []), ...(entry.systems || []).slice(0, 2), ...(entry.capabilities || []).slice(0, 1)];
     const summary = entry.description || (entry.requirements?.length ? entry.requirements.join(' · ') : entry.systems?.length ? entry.systems.join(' · ') : 'Ready to connect');
-    const plan = state.adapters?.get(entry.id)?.resolve(); const readiness = {ready: 'Ready', 'configuration-required': 'Setup required', 'browser-capability-missing': 'Capability missing', 'native-adapter-required': 'Native adapter'}[plan?.readiness?.status] || 'Checking…'; const actionLabel = plan?.readiness?.nextAction === 'run-diagnostics' ? 'Run diagnostics' : plan?.readiness?.nextAction === 'choose-runtime' ? 'Choose runtime' : entry.backendType === 'provider' ? 'Open service' : entry.backendType === 'game' ? 'Play in browser' : 'Configure';
-    return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(entry.backendType === 'emulator' ? 'Emulation' : entry.backendType === 'game' ? 'Browser game' : entry.kind)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="card-actions">${entry.backendType === 'provider' ? `<button class="details-button" data-details="${escapeHtml(entry.id)}">Details</button>` : ''}<button class="launch" data-launch="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}${entry.backendType === 'provider' ? providerHealthLabel(entry) : ''}</span></div></article>`;
+    const plan = state.adapters?.get(entry.id)?.resolve(); const readiness = {ready: 'Ready', 'configuration-required': 'Setup required', 'browser-capability-missing': 'Capability missing', 'native-adapter-required': 'Native adapter'}[plan?.readiness?.status] || 'Checking…'; const actionLabel = plan?.readiness?.nextAction === 'run-diagnostics' ? 'Run diagnostics' : plan?.readiness?.nextAction === 'choose-runtime' ? 'Choose runtime' : entry.backendType === 'provider' ? 'Open service' : entry.backendType === 'game' ? 'Play in browser' : 'Configure'; const nativeLaunch = plan?.nativeLaunch; const nativeTag = nativeLaunch ? (nativeLaunch.discovery?.found === true ? `Native client ready` : nativeLaunch.status === 'ready' ? `Native client needed` : null) : null;
+    return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(entry.backendType === 'emulator' ? 'Emulation' : entry.backendType === 'game' ? 'Browser game' : entry.kind)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites" aria-pressed="${favorite}">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}${nativeTag ? `<span class="chip native">${escapeHtml(nativeTag)}</span>` : ''}</div><div class="card-actions">${entry.backendType === 'provider' ? `<button class="details-button" data-details="${escapeHtml(entry.id)}">Details</button>` : ''}<button class="launch" data-launch="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}${entry.backendType === 'provider' ? providerHealthLabel(entry) : ''}</span></div></article>`;
   }).join('') : '<div class="empty">No connections match this view. Try another filter or search term.</div>';
 }
 async function loadCatalog() {
@@ -141,8 +165,8 @@ async function loadCatalog() {
 }
 document.querySelector('[data-search]').addEventListener('input', event => { state.search = event.target.value; render(); });
 document.querySelector('[data-workspace-select]')?.addEventListener('change', event => { activeWorkspace = workspaceStore.setActive(event.target.value); favoritesStore = createFavoritesStore({storage: profileStorage, workspaceId: activeWorkspace.id}); state.favorites = new Set(favoritesStore.list()); rebuildAdapters(); render(); showToast(`Using ${activeWorkspace.name} workspace`); });
-document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => { state.filter = button.dataset.filter; document.querySelectorAll('[data-filter]').forEach(item => item.classList.toggle('is-active', item === button)); render(); }));
-document.querySelectorAll('[data-filter]').forEach(button => button.classList.toggle('is-active', button.dataset.filter === state.filter));
+document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => { state.filter = button.dataset.filter; render(); }));
+updateFilterControls();
 document.addEventListener('click', event => {
   const favoriteButton = event.target.closest('[data-favorite]');
   if (favoriteButton) { const id = favoriteButton.dataset.favorite; const next = favoritesStore.toggle(id); state.favorites = new Set(next); render(); showToast(state.favorites.has(id) ? `Added to ${activeWorkspace.name} favorites` : `Removed from ${activeWorkspace.name} favorites`); return; }
@@ -152,7 +176,7 @@ document.addEventListener('click', event => {
   if (launchButton) { const entry = state.catalog.find(item => item.id === launchButton.dataset.launch); if (!entry) return; const plan = state.adapters?.get(entry.id)?.resolve(); if (!plan || plan.status === 'unsupported') { showToast(`${entry.name}: no supported integration mode is available.`); return; } launchEntry(entry, plan); }
 });
 document.querySelector('[data-provider-close]').addEventListener('click', closeProviderSurface);
-providerDialog.addEventListener('close', () => { document.querySelector('[data-provider-frame]').src = 'about:blank'; });
+providerDialog.addEventListener('close', () => { document.querySelector('[data-provider-frame]').src = 'about:blank'; providerReturnFocus?.focus(); providerReturnFocus = null; });
 document.querySelector('[data-provider-details-close]')?.addEventListener('click', closeProviderDetails);
 document.querySelector('[data-provider-details-launch]')?.addEventListener('click', () => { if (selectedProviderDetails) { const selected = selectedProviderDetails; closeProviderDetails(); launchEntry(selected.entry, selected.plan); } });
 document.querySelector('[data-provider-details-dialog]')?.addEventListener('close', () => { selectedProviderDetails = null; });
@@ -166,7 +190,7 @@ document.querySelector('[data-action="resume"]').addEventListener('click', () =>
 document.querySelectorAll('[data-section]').forEach(button => button.addEventListener('click', () => {
   const route = resolveDashboardSection(button.dataset.section); if (!route) return;
   if (route.kind === 'navigate') { window.location.assign(route.href); return; }
-  state.filter = route.filter; document.querySelectorAll('[data-filter]').forEach(item => item.classList.toggle('is-active', item.dataset.filter === state.filter)); render();
+  state.filter = route.filter; render();
 }));
 renderResume();
 updateReadinessStatus();

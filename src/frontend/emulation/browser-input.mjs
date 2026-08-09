@@ -9,7 +9,8 @@ export function createBrowserEmulatorInputBridge({runtime, target = globalThis, 
   if (!target || typeof target.addEventListener !== 'function' || typeof target.removeEventListener !== 'function') throw new TypeError('input target must support event listeners');
   if (!Number.isInteger(pollIntervalMs) || pollIntervalMs < 16 || pollIntervalMs > 1000) throw new RangeError('pollIntervalMs must be between 16 and 1000');
   const pressed = new Set(); const previous = new Map(); let timer = null; let active = false;
-  const keydown = event => { const action = keyboardBindings[event.code]; if (!action || pressed.has(event.code)) return; pressed.add(event.code); event.preventDefault?.(); emit(runtime, {action, pressed: true, value: 1, source: 'keyboard', kind: 'key', control: `key-${event.code}`}); };
+  const keyboardFocused = () => ['running', 'paused'].includes(runtime.state) && (!canvas || target.document?.activeElement === canvas);
+  const keydown = event => { const action = keyboardBindings[event.code]; if (!action || pressed.has(event.code) || !keyboardFocused()) return; pressed.add(event.code); event.preventDefault?.(); emit(runtime, {action, pressed: true, value: 1, source: 'keyboard', kind: 'key', control: `key-${event.code}`}); };
   const keyup = event => { const action = keyboardBindings[event.code]; if (!action) return; pressed.delete(event.code); event.preventDefault?.(); emit(runtime, {action, pressed: false, value: 0, source: 'keyboard', kind: 'key', control: `key-${event.code}`}); };
   const focus = () => canvas?.focus?.();
   function pollGamepads() {

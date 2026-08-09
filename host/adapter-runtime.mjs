@@ -16,7 +16,7 @@ export function createInstalledAdapterRuntime({installRoot, id, platform, expect
   const root = resolve(required(installRoot, 'installRoot')); const adapterId = segment(id, 'id');
   if (!PLATFORMS.has(platform)) throw new TypeError(`unsupported adapter runtime platform: ${platform}`);
   if (!['capture', 'audio', 'input'].includes(expectedKind)) throw new TypeError(`unsupported adapter runtime kind: ${expectedKind}`);
-  if (!fsImpl || typeof fsImpl.readFile !== 'function') throw new TypeError('filesystem adapter must implement readFile');
+  if (!fsImpl || typeof fsImpl.readFile !== 'function' || typeof fsImpl.access !== 'function') throw new TypeError('filesystem adapter must implement readFile and access');
   if (typeof loadModule !== 'function' || typeof verifyManifest !== 'function') throw new TypeError('loadModule and verifyManifest are required');
   const currentPath = inside(root, join(root, adapterId, 'current.json'));
   async function inspect() {
@@ -33,4 +33,29 @@ export function createInstalledAdapterRuntime({installRoot, id, platform, expect
     return Object.freeze({pointer: Object.freeze(pointer), manifest, target, entrypoint});
   }
   return Object.freeze({async inspect() { return inspect(); }, async load() { const record = await inspect(); if (!await verifyManifest({manifest: record.manifest, target: record.target})) throw new Error('installed adapter manifest verification failed'); const module = await loadModule(pathToFileURL(record.entrypoint).href); if (typeof module?.createPlatformAdapter !== 'function') throw new TypeError('adapter entrypoint must export createPlatformAdapter'); const adapter = await module.createPlatformAdapter({platform, kind: record.manifest.kind, manifest: record.manifest}); if (!adapter || adapter.platform !== platform || adapter.kind !== expectedKind) throw new TypeError('adapter factory returned an invalid platform adapter'); const requiredOperation = expectedKind === 'input' ? 'execute' : 'start'; if (typeof adapter[requiredOperation] !== 'function') throw new TypeError(`adapter factory must implement ${requiredOperation}()`); return Object.freeze({manifest: record.manifest, adapter}); }, async createBoundary({registry, kind = expectedKind} = {}) { if (kind !== expectedKind) throw new Error('requested adapter kind does not match the installed package'); const descriptor = registry?.get?.(kind); if (!descriptor || descriptor.state !== 'ready') throw new Error(`platform adapter is not ready for ${kind}`); const loaded = await this.load(); const boundary = createPlatformAdapterBoundary({platform, registry, implementations: {[kind]: loaded.adapter}}); return Object.freeze({boundary, adapter: loaded.adapter, manifest: loaded.manifest}); }});
+}
+
+/** Resolve a signed installed emulator to a local executable for the host. */
+export function createInstalledEmulatorRuntime({installRoot, id, platform, fsImpl = defaultFs, verifyManifest} = {}) {
+  const root = resolve(required(installRoot, 'installRoot')); const emulatorId = segment(id, 'id');
+  if (!PLATFORMS.has(platform)) throw new TypeError(`unsupported emulator runtime platform: ${platform}`);
+  if (!fsImpl || typeof fsImpl.readFile !== 'function') throw new TypeError('filesystem adapter must implement readFile');
+  if (typeof verifyManifest !== 'function') throw new TypeError('verifyManifest is required');
+  const currentPath = inside(root, join(root, emulatorId, 'current.json'));
+  return Object.freeze({
+    async inspect() {
+      const pointer = await readJson(fsImpl, currentPath, 'emulator pointer');
+      if (pointer.id !== emulatorId) throw new Error('installed emulator pointer id mismatch');
+      const version = segment(pointer.version, 'installed emulator version'); const target = inside(root, join(root, emulatorId, version));
+      const manifest = normalizeAdapterPackageManifest(await readJson(fsImpl, join(target, 'manifest.json'), 'emulator package manifest'));
+      if (manifest.id !== emulatorId || manifest.version !== version) throw new Error('installed emulator manifest identity mismatch');
+      if (manifest.kind !== 'emulator') throw new Error('installed package is not an emulator');
+      if (manifest.platform !== 'universal' && manifest.platform !== platform) throw new Error('installed emulator platform mismatch');
+      if (!manifest.entrypoint) throw new Error('installed emulator has no entrypoint');
+      if (!await verifyManifest({manifest, target})) throw new Error('installed emulator manifest verification failed');
+      const entrypoint = inside(target, resolve(target, ...manifest.entrypoint.split('/')));
+      await fsImpl.access(entrypoint);
+      return Object.freeze({id: emulatorId, version, manifest, target, entrypoint});
+    },
+  });
 }

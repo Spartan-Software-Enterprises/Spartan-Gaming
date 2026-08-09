@@ -1,5 +1,6 @@
 import {createProcessLaunchPlan} from './adapters.mjs';
 import {createManagedProcess} from './process.mjs';
+import {createWineLaunch} from './wine.mjs';
 
 const PLATFORMS = new Set(['win32', 'darwin', 'linux']);
 const RUNTIME_KINDS = new Set(['native-adapter', 'native-emulator', 'libretro-core']);
@@ -20,16 +21,23 @@ function stringList(value, name) {
   return Object.freeze(value.map(item => item));
 }
 
+function windowsExecutable(value) { return /\.(?:exe|com|bat)$/i.test(value); }
+
 /** Create a shell-free, user-owned emulator/game launch plan. */
-export function createGameLaunchPlan({platform, runtimeProfile, executablePath = runtimeProfile?.executablePath, gamePath, args = [], cwd, env = {}} = {}) {
+export function createGameLaunchPlan({platform, runtimeProfile, executablePath = runtimeProfile?.executablePath, gamePath, args = [], cwd, env = {}, wineBinary = 'wine', playOnLinuxBinary = 'playonlinux'} = {}) {
   if (!PLATFORMS.has(platform)) throw new TypeError(`unsupported game launch platform: ${platform}`);
   if (!runtimeProfile || !RUNTIME_KINDS.has(runtimeProfile.kind)) throw new TypeError('runtimeProfile must be a trusted native emulator profile');
   if (runtimeProfile.enabled === false || runtimeProfile.trust === 'unverified') throw new Error('runtime profile is not enabled and trusted');
   const executable = localPath(executablePath, 'runtimeProfile.executablePath');
   const content = localPath(gamePath, 'gamePath');
   const launchArgs = stringList(args, 'game launch args');
-  const process = createProcessLaunchPlan({executable, args: [...launchArgs, content], cwd: cwd === undefined ? undefined : localPath(cwd, 'game launch cwd'), env});
-  return Object.freeze({kind: 'game-launch', platform, runtime: Object.freeze({id: requiredText(runtimeProfile.id, 'runtimeProfile.id', 64), kind: runtimeProfile.kind, version: requiredText(runtimeProfile.version || 'unversioned', 'runtimeProfile.version', 80)}), gamePath: content, process, requires: Object.freeze(['user-selected-game-file', 'trusted-runtime-profile', 'native-process-permission'])});
+  const compatibility = platform === 'linux' && (runtimeProfile.execution === 'wine' || runtimeProfile.execution === 'playonlinux' || runtimeProfile.platform === 'win32' || windowsExecutable(executable)) ? (runtimeProfile.execution === 'playonlinux' ? 'playonlinux' : 'wine') : null;
+  const useWine = Boolean(compatibility);
+  const compatibilityLaunch = useWine ? createWineLaunch({backend: compatibility, executable, args: [...launchArgs, content], wineBinary: localPath(wineBinary, 'wineBinary'), playOnLinuxBinary: localPath(playOnLinuxBinary, 'playOnLinuxBinary'), playOnLinuxProfile: runtimeProfile.playOnLinuxProfile}) : null;
+  const launcher = compatibilityLaunch?.executable || executable;
+  const processArgs = compatibilityLaunch?.args || [...launchArgs, content];
+  const process = createProcessLaunchPlan({executable: launcher, args: processArgs, cwd: cwd === undefined ? undefined : localPath(cwd, 'game launch cwd'), env});
+  return Object.freeze({kind: 'game-launch', platform, compatibility: useWine ? 'wine' : 'native', runtime: Object.freeze({id: requiredText(runtimeProfile.id, 'runtimeProfile.id', 64), kind: runtimeProfile.kind, version: requiredText(runtimeProfile.version || 'unversioned', 'runtimeProfile.version', 80)}), gamePath: content, process, requires: Object.freeze(['user-selected-game-file', 'trusted-runtime-profile', 'native-process-permission', ...(useWine ? ['wine-runtime'] : [])])});
 }
 
 /** Own one launched game process; nothing starts until start() is explicit. */

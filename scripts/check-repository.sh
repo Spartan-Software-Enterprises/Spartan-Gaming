@@ -59,6 +59,12 @@ required_files=(
   scripts/chromium/config.test.mjs
   scripts/chromium/build.mjs
   scripts/chromium/build.test.mjs
+  scripts/emulators/update.mjs
+  scripts/emulators/update.test.mjs
+  scripts/emulators/build-seed.mjs
+  scripts/emulators/build-seed.test.mjs
+  scripts/app/package.mjs
+  scripts/app/package.test.mjs
   protocol/README.md
   protocol/v1/session.schema.json
   protocol/v1/examples/session-offer.json
@@ -82,6 +88,18 @@ required_files=(
   host/archive-readers.test.mjs
   host/package-signing.mjs
   host/package-signing.test.mjs
+  host/release-feed.mjs
+  host/release-feed.test.mjs
+  host/adapter-home.mjs
+  host/adapter-home.test.mjs
+  host/app-host.mjs
+  host/app-host.test.mjs
+  host/adapter-seed.mjs
+  host/adapter-seed.test.mjs
+  host/desktop-shell.mjs
+  host/desktop-shell.test.mjs
+  host/native-client-discovery.mjs
+  host/native-client-discovery.test.mjs
   host/native-session.mjs
   host/native-session.test.mjs
   host/platform-runtime.mjs
@@ -156,6 +174,8 @@ required_files=(
   src/frontend/dashboard/dashboard.mjs
   src/frontend/launch/intent.mjs
   src/frontend/launch/intent.test.mjs
+  src/frontend/launch/handoff.mjs
+  src/frontend/launch/handoff.test.mjs
   src/frontend/launch/history.mjs
   src/frontend/launch/history.test.mjs
   src/frontend/settings/profile.mjs
@@ -264,6 +284,9 @@ required_files=(
   src/frontend/providers/integration.test.mjs
   src/frontend/providers/health.mjs
   src/frontend/providers/health.test.mjs
+  src/frontend/providers/native-client.mjs
+  src/frontend/providers/native-client.test.mjs
+  src/frontend/providers/cloud-features.mjs
   src/frontend/providers/index.html
   src/frontend/providers/profiles.css
   src/frontend/providers/profiles-page.mjs
@@ -385,12 +408,21 @@ node --check host/adapter-installer.mjs
 node --check host/adapter-package.mjs
 node --check host/archive-readers.mjs
 node --check host/package-signing.mjs
+node --check host/release-feed.mjs
+node --check host/adapter-home.mjs
+node --check host/app-host.mjs
+node --check host/adapter-seed.mjs
+node --check host/desktop-shell.mjs
+node --check host/native-client-discovery.mjs
 node --check host/native-session.mjs
 node --check host/platform-runtime.mjs
 node --check host/native-adapter-kit.mjs
 node --check host/native-binding-loader.mjs
 node --check host/native-package.mjs
 node --check scripts/frontend/serve.mjs
+node --check scripts/emulators/update.mjs
+node --check scripts/emulators/build-seed.mjs
+node --check scripts/app/package.mjs
 node --check scripts/frontend/build.mjs
 node --check scripts/lan-demo.mjs
 node --check host/executable-platform-host.mjs
@@ -428,6 +460,7 @@ node --check src/frontend/pwa/service-worker.mjs
 node --check src/frontend/pwa/register.mjs
 node --check src/frontend/player/player-state.mjs
 node --check src/frontend/launch/intent.mjs
+node --check src/frontend/launch/handoff.mjs
 node --check src/frontend/launch/history.mjs
 node --check src/frontend/settings/profile.mjs
 node --check src/frontend/settings/runtime-ui.mjs
@@ -446,6 +479,8 @@ node --check src/frontend/providers/profiles.mjs
 node --check src/frontend/providers/profiles-page.mjs
 node --check src/frontend/providers/integration.mjs
 node --check src/frontend/providers/health.mjs
+node --check src/frontend/providers/native-client.mjs
+node --check src/frontend/providers/cloud-features.mjs
 node --check src/frontend/readiness/status.mjs
 node --check src/frontend/diagnostics/capabilities.mjs
 node --check src/frontend/diagnostics/diagnostics.mjs
@@ -467,6 +502,9 @@ node --check native/desktop/reference-adapter.mjs
 node --check host/game-launcher.mjs
 node --check host/launch-request.mjs
 node --test src/frontend/adapters/manifest-registry.test.mjs
+node --test src/frontend/adapters/manager.test.mjs
+node --test host/release-feed.test.mjs host/native-client-discovery.test.mjs scripts/emulators/update.test.mjs src/frontend/launch/handoff.test.mjs src/frontend/providers/native-client.test.mjs
+node --test host/adapter-home.test.mjs host/app-host.test.mjs host/adapter-seed.test.mjs host/desktop-shell.test.mjs scripts/emulators/build-seed.test.mjs scripts/app/package.test.mjs
 node --test src/frontend/player/volume.test.mjs
 node --test scripts/chromium/config.test.mjs scripts/chromium/build.test.mjs scripts/chromium/bootstrap.test.mjs scripts/frontend/build.test.mjs scripts/lan-demo.test.mjs signaling/agent.test.mjs signaling/broker.test.mjs host/signaling.test.mjs host/session.test.mjs host/audio.test.mjs host/input.test.mjs host/rumble-passthrough.test.mjs host/publisher.test.mjs host/pairing.test.mjs host/capabilities.test.mjs host/adapters.test.mjs host/environment.test.mjs host/media.test.mjs src/frontend/catalog.test.mjs src/frontend/dashboard/routes.test.mjs src/frontend/launch/intent.test.mjs src/frontend/launch/history.test.mjs src/frontend/settings/profile.test.mjs src/frontend/settings/actions.test.mjs src/frontend/session/preferences.test.mjs src/frontend/input/policy.test.mjs src/frontend/input/haptics.test.mjs src/frontend/input/pointer.test.mjs src/frontend/host/readiness.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/session/recovery.test.mjs src/frontend/session/runtime.test.mjs src/frontend/session/telemetry.test.mjs src/frontend/input/input.test.mjs src/frontend/input/profiles.test.mjs src/frontend/input/inspector.test.mjs src/frontend/input/navigation.test.mjs src/frontend/compatibility/harness.test.mjs src/frontend/providers/integration.test.mjs src/frontend/providers/health.test.mjs src/frontend/providers/profiles.test.mjs src/frontend/adapters/adapters.test.mjs src/frontend/host/host.test.mjs src/frontend/player/player-state.test.mjs src/frontend/player/immersive.test.mjs src/frontend/player/media.test.mjs src/frontend/player/media-session.test.mjs src/frontend/player/transport-config.test.mjs src/frontend/player/connection.test.mjs src/frontend/workspaces/workspaces.test.mjs src/frontend/diagnostics/capabilities.test.mjs src/frontend/diagnostics/focus.test.mjs src/frontend/transport/ice.test.mjs src/frontend/transport/policy.test.mjs src/frontend/transport/transport.test.mjs src/frontend/capture/capture.test.mjs src/frontend/emulation/integration.test.mjs src/frontend/emulation/emulation.test.mjs src/frontend/emulation/runtime-profiles.test.mjs src/frontend/readiness/status.test.mjs src/frontend/pwa/cache.test.mjs src/frontend/host/browser-studio.test.mjs
 

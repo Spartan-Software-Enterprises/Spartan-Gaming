@@ -40,3 +40,18 @@ test('frontend server exposes the service worker aliases and rejects traversal',
   const method = await fetch(`${origin}/dashboard/index.html`, {method: 'POST'});
   assert.equal(method.status, 405);
 }));
+
+test('frontend server injects an app context script into served pages', async () => {
+  const frontend = createFrontendServer({port: 0, logger: {warn() {}}, contextScript: {path: 'spartan-context.js', render: () => 'window.__SPARTAN_RELEASE_FEED__ = {schemaVersion: 1};'}});
+  const address = await frontend.listen();
+  try {
+    const origin = `http://127.0.0.1:${address.port}`;
+    const page = await fetch(`${origin}/dashboard/`);
+    assert.equal(page.status, 200);
+    assert.match(await page.text(), /<script src="\/spartan-context\.js"><\/script>/);
+    const context = await fetch(`${origin}/spartan-context.js`);
+    assert.equal(context.status, 200);
+    assert.equal(context.headers.get('content-type'), 'text/javascript; charset=utf-8');
+    assert.match(await context.text(), /__SPARTAN_RELEASE_FEED__/);
+  } finally { await frontend.close(); }
+});

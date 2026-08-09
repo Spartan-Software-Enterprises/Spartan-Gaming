@@ -1,4 +1,4 @@
-const MODE_ORDER = Object.freeze({browser: ['browser-first', 'official-launch', 'official-embed', 'official-api', 'user-owned-host', 'self-hosted'], official: ['official-launch', 'official-embed', 'browser-first', 'official-api', 'user-owned-host', 'self-hosted'], native: ['user-owned-host', 'self-hosted', 'official-launch', 'browser-first', 'official-embed', 'official-api']});
+const MODE_ORDER = Object.freeze({browser: ['browser-first', 'official-launch', 'official-embed', 'official-api', 'user-owned-host', 'self-hosted'], official: ['official-launch', 'official-embed', 'browser-first', 'official-api', 'user-owned-host', 'self-hosted'], native: ['native-client', 'user-owned-host', 'self-hosted', 'official-launch', 'browser-first', 'official-embed', 'official-api']});
 const REGION_LABELS = Object.freeze({automatic: 'Automatic', 'north-america': 'North America', europe: 'Europe', 'asia-pacific': 'Asia Pacific', 'latin-america': 'Latin America'});
 const EMBED_TARGETS = Object.freeze({twitch: /^[A-Za-z0-9_]{1,25}$/, 'youtube-live': /^[A-Za-z0-9_-]{6,32}$/, kick: /^[A-Za-z0-9_]{1,25}$/});
 const SPECIAL_PROFILES = Object.freeze({
@@ -44,15 +44,17 @@ export function createProviderIntegration(entry, {profile = {}, report = {}} = {
   const preset = SPECIAL_PROFILES[entry.id] || {};
   const regionHint = Object.hasOwn(REGION_LABELS, profile.region) ? profile.region : 'automatic';
   const embedUrl = createOfficialEmbedUrl(entry, profile);
+  const nativeClient = typeof profile.platform === 'string' && (entry.nativeClients || []).some(client => client.platforms.includes(profile.platform) || client.platforms.includes('universal')) ? Object.freeze({providerId: entry.id, platform: profile.platform}) : null;
   const preferred = embedUrl && (!profile.launchMode || profile.launchMode === 'browser') ? ['official-embed', ...MODE_ORDER.browser] : (MODE_ORDER[profile.launchMode] || MODE_ORDER.browser);
   const mode = preferred.find(candidate => entry.integrationModes?.includes(candidate) && (candidate !== 'official-embed' || embedUrl)) || entry.integrationModes?.find(candidate => candidate !== 'official-embed') || (embedUrl ? 'official-embed' : undefined);
   const missingCapabilities = (entry.capabilities || []).filter(capability => capability === 'gamepad' && report.input?.gamepad === false);
   const requirements = Object.freeze([...(entry.requirements || [])]);
   const notes = [...(preset.notes || [])];
+  if (nativeClient) notes.push(`Launching through the official native ${entry.nativeClients.find(client => client.platforms.includes(profile.platform) || client.platforms.includes('universal')).name} client; the client must be installed and signed in.`);
   if (regionHint !== 'automatic') notes.push(`Region hint: ${REGION_LABELS[regionHint]}. The provider decides actual availability.`);
   if (profile.autoFullscreen === true) notes.push('Fullscreen is requested after the provider surface is ready when the browser permits it.');
   if (missingCapabilities.length) notes.push('Connect a supported controller before starting this service.');
-  return Object.freeze({providerId: entry.id, mode, embedUrl, controllerProfile: preset.controllerProfile || (entry.capabilities?.includes('gamepad') ? 'Auto-detect' : null), quality: profile.quality && profile.quality !== 'balanced' ? profile.quality : (preset.quality || 'balanced'), regionHint, regionLabel: REGION_LABELS[regionHint], autoFullscreen: profile.autoFullscreen !== false, surfaces: surfaceList(entry), requirements, missingCapabilities: Object.freeze(missingCapabilities), health: Object.freeze({strategy: 'reachability-only', url: entry.url, authenticated: false}), notes: Object.freeze(notes)});
+  return Object.freeze({providerId: entry.id, mode, embedUrl, nativeClient, controllerProfile: preset.controllerProfile || (entry.capabilities?.includes('gamepad') ? 'Auto-detect' : null), quality: profile.quality && profile.quality !== 'balanced' ? profile.quality : (preset.quality || 'balanced'), regionHint, regionLabel: REGION_LABELS[regionHint], autoFullscreen: profile.autoFullscreen !== false, surfaces: surfaceList(entry), requirements, missingCapabilities: Object.freeze(missingCapabilities), health: Object.freeze({strategy: 'reachability-only', url: entry.url, authenticated: false}), notes: Object.freeze(notes)});
 }
 
 export function providerTroubleshooting(integration) {

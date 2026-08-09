@@ -59,7 +59,7 @@ function renderControl(setting) {
   if (setting.type === 'range') {
     return `<div class="range-control"><input type="range" min="${setting.min}" max="${setting.max}" step="${setting.step}" value="${value}" data-key="${setting.key}"><output>${value}${setting.unit}</output></div>`;
   }
-  if (setting.type === 'text') return `<input class="text-input" type="text" value="${value ?? ''}" placeholder="Not configured" data-key="${setting.key}">`;
+  if (setting.type === 'text' || setting.type === 'secret') return `<input class="text-input" type="${setting.type === 'secret' ? 'password' : 'text'}" value="${value ?? ''}" placeholder="Not configured" autocomplete="${setting.type === 'secret' ? 'new-password' : 'off'}" data-key="${setting.key}">`;
   return `<button class="action-button" data-action="${setting.key}">${setting.actionLabel}</button>`;
 }
 
@@ -108,6 +108,7 @@ function bindControls() {
     if (action.kind === 'import-settings') { document.querySelector('[data-import-file]').click(); return; }
     if (action.kind === 'export-privacy') { downloadPrivacyData(); return; }
     if (action.kind === 'clear-provider-sessions') { const result = clearProviderSessionState(); const status = document.querySelector('[data-save-status]'); if (status) status.textContent = result.removed.length ? `Cleared ${result.removed.length} Spartan handoff${result.removed.length === 1 ? '' : 's'}; sign out on official services separately.` : 'No Spartan provider handoffs were present; sign out on official services separately.'; return; }
+    if (action.kind === 'clear-credentials') { for (const key of ['accounts.defaultLogin', 'accounts.syncApiKey', 'accounts.hostApiKey', 'accounts.providerClientId', 'accounts.providerApiKey']) state[key] = ''; saveState(); renderContent(); return; }
     const status = document.querySelector('[data-save-status]');
     if (status && action.kind === 'status') { status.textContent = action.message; return; }
   }));

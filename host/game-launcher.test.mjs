@@ -15,3 +15,18 @@ test('game launcher owns a bounded process lifecycle without starting during pla
   const plan = createGameLaunchPlan({platform: 'linux', runtimeProfile: {...profile, executablePath: process.execPath}, gamePath: '/games/a.iso', args: ['-e', "setInterval(() => {}, 1000)"]});
   const launcher = createGameLauncher({plan}); assert.equal(launcher.state, 'idle'); await launcher.start(); assert.equal(launcher.state, 'running'); await launcher.stop(); assert.equal(launcher.state, 'stopped');
 });
+
+test('Linux Windows runtimes launch through Wine without a shell', () => {
+  const plan = createGameLaunchPlan({platform: 'linux', runtimeProfile: {...profile, platform: 'win32', executablePath: '/opt/emulators/pcsx2.exe'}, gamePath: '/games/game.iso'});
+  assert.equal(plan.compatibility, 'wine');
+  assert.equal(plan.process.executable, 'wine');
+  assert.deepEqual(plan.process.args, ['/opt/emulators/pcsx2.exe', '/games/game.iso']);
+  assert.equal(plan.process.shell, false);
+});
+
+test('PlayOnLinux runtime profiles use the named managed program', () => {
+  const plan = createGameLaunchPlan({platform: 'linux', runtimeProfile: {...profile, execution: 'playonlinux', playOnLinuxProfile: 'Spartan PCSX2', executablePath: '/opt/emulators/pcsx2.exe'}, gamePath: '/games/game.iso'});
+  assert.equal(plan.compatibility, 'wine');
+  assert.equal(plan.process.executable, 'playonlinux');
+  assert.deepEqual(plan.process.args, ['--run', 'Spartan PCSX2', '/opt/emulators/pcsx2.exe', '/games/game.iso']);
+});

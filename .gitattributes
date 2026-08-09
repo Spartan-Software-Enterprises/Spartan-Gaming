@@ -1,0 +1,10 @@
+vendor/chromium/chrome filter=lfs diff=lfs merge=lfs -text
+vendor/chromium/*.pak filter=lfs diff=lfs merge=lfs -text
+vendor/chromium/*.so* filter=lfs diff=lfs merge=lfs -text
+vendor/chromium/*.dat filter=lfs diff=lfs merge=lfs -text
+vendor/emulators/*.zip filter=lfs diff=lfs merge=lfs -text
+vendor/emulators/*.tar.xz filter=lfs diff=lfs merge=lfs -text
+vendor/chromium/chromedriver filter=lfs diff=lfs merge=lfs -text
+vendor/chromium/*.bin filter=lfs diff=lfs merge=lfs -text
+vendor/emulators/*.AppImage filter=lfs diff=lfs merge=lfs -text
+vendor/emulators/*.tar.gz filter=lfs diff=lfs merge=lfs -text

@@ -19,3 +19,7 @@ test('reconnect controller success clears pending work and can restart', () => {
   const clock = fakeTimers(); let calls = 0; const controller = createReconnectController({setTimeoutFn: clock.setTimeoutFn, clearTimeoutFn: clock.clearTimeoutFn, attempt: () => { calls += 1; }});
   controller.start(); controller.fail(new Error('offline')); controller.succeed('connected'); clock.runNext(); assert.equal(calls, 1); assert.equal(controller.state.state, 'succeeded'); assert.equal(controller.start().state, 'waiting'); assert.equal(calls, 2);
 });
+test('reconnect controller schedules a failed asynchronous attempt', async () => {
+  const clock = fakeTimers(); const controller = createReconnectController({policy: createReconnectPolicy({maxAttempts: 2, baseDelayMs: 10, jitter: 0}), setTimeoutFn: clock.setTimeoutFn, clearTimeoutFn: clock.clearTimeoutFn, attempt: async () => { throw new Error('offline'); }});
+  controller.start(); await new Promise(resolve => setImmediate(resolve)); assert.equal(controller.state.state, 'waiting'); assert.equal(controller.state.attempt, 2);
+});

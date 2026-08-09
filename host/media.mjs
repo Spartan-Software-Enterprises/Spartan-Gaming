@@ -98,6 +98,8 @@ export function createEncoderPlan({codec = 'h264', width = 1920, height = 1080, 
   if (selected?.device) args.push('-vaapi_device', selected.device);
   args.push('-c:v', encoder, '-b:v', `${boundedBitrate}k`, '-maxrate', `${boundedBitrate}k`, '-bufsize', `${boundedBitrate * 2}k`, '-r', String(fps), '-g', String(fps * 2));
   if (selected?.encoder.includes('vaapi')) args.push('-vf', 'format=nv12,hwupload');
+  else if (encoder === 'libx264') args.push('-tune', 'zerolatency', '-preset', 'ultrafast');
+  else if (encoder === 'libvpx-vp9') args.push('-tune', 'zerolatency', '-deadline', 'realtime');
   args.push('-f', outputFormat, 'pipe:1');
   const hardware = Boolean(selected);
   return Object.freeze({kind: 'encoder', codec, outputFormat, width: positiveInteger(width, 'width', 1920, 7680), height: positiveInteger(height, 'height', 1080, 4320), framerate: fps, bitrateKbps: boundedBitrate, preference: hardware ? 'hardware' : preferHardware ? 'hardware-when-platform-adapter-provides-it' : 'software', hardware, encoder, device: selected?.device || null, availableEncoders: selected?.available || Object.freeze([]), process: createProcessLaunchPlan({executable: 'ffmpeg', args}), requires: Object.freeze(hardware ? ['hardware-encoder-device', 'webrtc-publisher'] : preferHardware ? ['platform-encoder-selection', 'webrtc-publisher'] : ['webrtc-publisher'])});

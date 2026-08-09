@@ -43,12 +43,12 @@ export function createNativePackageMatrix({manifest = loadNativePackageManifest(
   return Object.freeze(normalized.packages.map(entry => createNativePackagePlan({manifest: normalized, platform: entry.platform, sourceRoot, outRoot: outRoot ? path.join(outRoot, entry.platform) : undefined, installRoot: installRoot ? path.join(installRoot, entry.platform) : undefined, configuration})));
 }
 
-function commandAvailable(program) { const result = spawnSync(program, ['--version'], {stdio: 'ignore', shell: process.platform === 'win32'}); return !result.error && result.status === 0; }
+function commandAvailable(program) { const result = spawnSync(program, ['--version'], {stdio: 'ignore', shell: false}); return !result.error && result.status === 0; }
 export function executeNativePackagePlan(plan) {
   if (!plan.sourcePresent) throw new Error(`native package CMake source is not ready: ${plan.source}`);
   for (const command of plan.commands) {
     if (!commandAvailable(command.program)) throw new Error(`required native package tool is unavailable: ${command.program}`);
-    const result = spawnSync(command.program, command.args, {cwd: command.cwd, stdio: 'inherit', shell: process.platform === 'win32'});
+    const result = spawnSync(command.program, command.args, {cwd: command.cwd, stdio: 'inherit', shell: false});
     if (result.error) throw result.error;
     if (result.status !== 0) throw new Error(`${command.program} exited with status ${result.status}`);
   }
