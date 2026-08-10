@@ -181,6 +181,17 @@ response; it never accepts secrets as command-line arguments and never runs a
 shell. Use `--without-turn` only when an independently provisioned relay is
 already reachable through `SPARTAN_SIGNALING_TURN_URLS`.
 
+For a repeatable operator activation, run the manual `Production rollout`
+GitHub Actions workflow on a self-hosted runner that has Docker, the
+runner-local production Compose and environment files, mounted TLS material,
+and the secret environment expected by `deployment:check`. The workflow runs
+the configuration and TLS preflights before invoking the confirmed rollout,
+passes paths and endpoints through environment variables, and verifies the
+HTTPS health endpoint afterward. It does not upload secret files, accept
+secret values as workflow inputs, or provision a public relay. Configure the
+runner label and paths only after reviewing the target host, firewall, Redis,
+TURN, TLS, and external signing custody.
+
 For an operator-managed coturn relay, generate a bounded configuration from
 the same shared secret used by the signaling TURN credential endpoint:
 

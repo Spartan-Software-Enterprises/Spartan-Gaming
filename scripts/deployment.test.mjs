@@ -8,6 +8,7 @@ const dockerfile = fs.readFileSync('docker/signaling.Dockerfile', 'utf8');
 const compose = fs.readFileSync('docker-compose.yml', 'utf8');
 const productionCompose = fs.readFileSync('docker-compose.production.yml', 'utf8');
 const nativeRollout = fs.readFileSync('.github/workflows/native-package-rollout.yml', 'utf8');
+const productionRollout = fs.readFileSync('.github/workflows/production-rollout.yml', 'utf8');
 const hostService = fs.readFileSync('deploy/host/spartan-host.service', 'utf8');
 const turnService = fs.readFileSync('deploy/turn/coturn.service', 'utf8');
 const macHostPlist = fs.readFileSync('deploy/host/macos/com.spartan.gaming.host.plist', 'utf8');
@@ -71,6 +72,20 @@ test('production Compose exposes coturn only as an explicit operator profile', (
 
 test('native package rollout builds, verifies, and conditionally publishes signed artifacts', () => {
   assert.match(nativeRollout, /workflow_dispatch/); assert.match(nativeRollout, /tags:\s*\n\s*- 'v\*'/); assert.match(nativeRollout, /native:plan/); assert.match(nativeRollout, /release-manifest\.mjs/); assert.match(nativeRollout, /package-manifest\.unsigned\.json/); assert.match(nativeRollout, /sign-release\.mjs/); assert.match(nativeRollout, /SPARTAN_RELEASE_SIGNING_TOKEN/); assert.match(nativeRollout, /upload-artifact@v7/); assert.match(nativeRollout, /UNSIGNED-OPERATOR-SIGNATURE-REQUIRED/); assert.match(nativeRollout, /retention-days: 14/); assert.match(nativeRollout, /publish-native-release/); assert.match(nativeRollout, /RELEASE_SIGNING_PUBLIC_KEY_JWK/); assert.match(nativeRollout, /download-artifact@v7/); assert.match(nativeRollout, /contents: write/); assert.match(nativeRollout, /test ! -e.*UNSIGNED-OPERATOR-SIGNATURE-REQUIRED/); assert.match(nativeRollout, /verify-release\.mjs/); assert.match(nativeRollout, /gh release create/); assert.match(nativeRollout, /sha256sum/);
+});
+
+test('production rollout workflow keeps activation operator-controlled and secret-safe', () => {
+  assert.match(productionRollout, /workflow_dispatch:/);
+  assert.match(productionRollout, /runs-on: \$\{\{ inputs\.runner_label \}\}/);
+  assert.match(productionRollout, /deployment:check/);
+  assert.match(productionRollout, /deployment:preflight/);
+  assert.match(productionRollout, /deployment:rollout/);
+  assert.match(productionRollout, /--execute --confirm/);
+  assert.match(productionRollout, /COMPOSE_FILE: \$\{\{ inputs\.compose_file \}\}/);
+  assert.match(productionRollout, /ENV_FILE: \$\{\{ inputs\.env_file \}\}/);
+  assert.match(productionRollout, /args=\(--compose-file \"\$COMPOSE_FILE\"/);
+  assert.doesNotMatch(productionRollout, /SPARTAN_SIGNALING_SECRET\s*:/);
+  assert.doesNotMatch(productionRollout, /docker login/);
 });
 
 test('host deployment templates preserve shell-free, opt-in host startup', () => {

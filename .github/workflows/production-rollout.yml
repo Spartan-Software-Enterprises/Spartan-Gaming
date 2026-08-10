@@ -1,0 +1,71 @@
+name: Production rollout
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner_label:
+        description: 'Self-hosted runner label with Docker and the mounted production secret environment'
+        required: true
+        default: 'self-hosted'
+        type: string
+      compose_file:
+        description: 'Runner-local production Compose file'
+        required: true
+        default: 'docker-compose.production.yml'
+        type: string
+      env_file:
+        description: 'Runner-local Compose environment file; secret values stay outside GitHub'
+        required: true
+        type: string
+      project:
+        description: 'Docker Compose project name'
+        required: true
+        default: 'spartan-gaming'
+        type: string
+      health_endpoint:
+        description: 'HTTPS signaling health endpoint reachable from the runner'
+        required: true
+        type: string
+      admin_health_endpoint:
+        description: 'Optional HTTPS admin health endpoint'
+        required: false
+        type: string
+      check_admin:
+        description: 'Also verify the configured admin health endpoint'
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  rollout:
+    name: Deploy production signaling stack
+    runs-on: ${{ inputs.runner_label }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+      - name: Install deployment tooling
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Validate operator-managed production configuration
+        run: npm run deployment:check
+      - name: Verify mounted TLS and secret-file inputs
+        run: npm run deployment:preflight
+      - name: Apply Compose rollout and verify HTTPS health
+        shell: bash
+        env:
+          COMPOSE_FILE: ${{ inputs.compose_file }}
+          ENV_FILE: ${{ inputs.env_file }}
+          PROJECT_NAME: ${{ inputs.project }}
+          HEALTH_ENDPOINT: ${{ inputs.health_endpoint }}
+          ADMIN_HEALTH_ENDPOINT: ${{ inputs.admin_health_endpoint }}
+          CHECK_ADMIN: ${{ inputs.check_admin }}
+        run: |
+          set -euo pipefail
+          args=(--compose-file "$COMPOSE_FILE" --env-file "$ENV_FILE" --project "$PROJECT_NAME" --health "$HEALTH_ENDPOINT" --execute --confirm)
+          if [[ -n "$ADMIN_HEALTH_ENDPOINT" ]]; then args+=(--admin-health "$ADMIN_HEALTH_ENDPOINT"); fi
+          if [[ "$CHECK_ADMIN" == "true" ]]; then args+=(--check-admin); fi
+          npm run deployment:rollout -- "${args[@]}"
