@@ -1,0 +1,23 @@
+#!/usr/bin/env node
+import path from 'node:path';
+
+const ALIASES = Object.freeze({linux: 'linux', windows: 'win32', win32: 'win32', mac: 'darwin', macos: 'darwin', darwin: 'darwin'});
+function text(value) { return typeof value === 'string' ? value.trim() : ''; }
+function required(value, name) { const result = text(value); if (!result) throw new TypeError(`${name} is required`); return result; }
+function absolute(value, name) { const result = path.resolve(required(value, name)); if (result === path.parse(result).root) throw new TypeError(`${name} cannot be the filesystem root`); return result; }
+function platform(value) { const result = ALIASES[String(value || '').toLowerCase()]; if (!result) throw new TypeError(`unsupported host deployment platform: ${value}`); return result; }
+function integer(value, fallback, minimum, maximum, name) { const result = value === undefined ? fallback : Number(value); if (!Number.isInteger(result) || result < minimum || result > maximum) throw new RangeError(`${name} must be between ${minimum} and ${maximum}`); return result; }
+
+export function createHostDeploymentPlan({platform: targetPlatform, nodePath = process.execPath, hostRoot, hostId, hostName = 'Spartan Host', bind = '127.0.0.1', port = 8787, nativePackage, virtualGamepadPackage, enableInput = false, enableNativeMedia = false, enableNativeAudio = false, tlsKey, tlsCert, allowedOrigins} = {}) {
+  const selectedPlatform = platform(targetPlatform); const root = absolute(hostRoot, 'hostRoot'); const executable = absolute(nodePath, 'nodePath'); const id = required(hostId, 'hostId'); const name = required(hostName, 'hostName');
+  if (bind.includes('\n') || bind.includes('\r') || bind.includes(' ')) throw new TypeError('bind must be a single host address');
+  const selectedPort = integer(port, 8787, 0, 65535, 'port'); if (Boolean(tlsKey) !== Boolean(tlsCert)) throw new TypeError('tlsKey and tlsCert must be provided together');
+  const args = ['host/agent.mjs', '--id', id, '--name', name, '--bind', bind, '--port', String(selectedPort)];
+  if (nativePackage) args.push('--native-package', required(nativePackage, 'nativePackage')); if (virtualGamepadPackage) args.push('--virtual-gamepad-package', required(virtualGamepadPackage, 'virtualGamepadPackage')); if (enableInput) args.push('--enable-input'); if (enableNativeMedia) args.push('--enable-native-media'); if (enableNativeAudio) args.push('--enable-native-audio'); if (tlsKey) args.push('--tls-key', absolute(tlsKey, 'tlsKey'), '--tls-cert', absolute(tlsCert, 'tlsCert')); if (allowedOrigins?.length) args.push('--allowed-origins', allowedOrigins.map(required).join(','));
+  return Object.freeze({platform: selectedPlatform, cwd: root, executable, args: Object.freeze(args), environment: Object.freeze({SPARTAN_HOST_ROOT: root, SPARTAN_HOST_ID: id, SPARTAN_HOST_CONFIGURED: 'true'}), persistence: Object.freeze({secrets: 'external-secret-store', pairing: 'session-only', signalingTicket: 'session-only'}), security: Object.freeze({shell: false, inputOptIn: !enableInput, nativeMediaOptIn: !enableNativeMedia, nativeAudioOptIn: !enableNativeAudio})});
+}
+
+function argument(argv, name) { const index = argv.indexOf(name); return index < 0 ? '' : argv[index + 1]; }
+if (path.resolve(process.argv[1] || '') === path.resolve(new URL(import.meta.url).pathname)) {
+  try { const argv = process.argv.slice(2); const plan = createHostDeploymentPlan({platform: argument(argv, '--platform') || process.platform, hostRoot: argument(argv, '--host-root'), hostId: argument(argv, '--host-id'), hostName: argument(argv, '--host-name') || 'Spartan Host', nativePackage: argument(argv, '--native-package'), virtualGamepadPackage: argument(argv, '--virtual-gamepad-package'), port: argument(argv, '--port') || undefined, enableInput: argv.includes('--enable-input'), enableNativeMedia: argv.includes('--enable-native-media'), enableNativeAudio: argv.includes('--enable-native-audio')}); console.log(JSON.stringify(plan, null, 2)); } catch (error) { console.error(error.message); process.exitCode = 1; }
+}

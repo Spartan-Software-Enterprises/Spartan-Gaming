@@ -180,6 +180,13 @@ with per-file SHA-256 digests. An operator must pass the artifact through the ex
 package-signing service and install it through the verified adapter installer;
 the rollout workflow never treats a CI artifact as trusted code.
 
+Host deployment templates are under `deploy/host/`. The systemd unit keeps the
+reference host bound to localhost by default, runs as an unprivileged user,
+and does not enable remote input or native media implicitly. Windows Services,
+macOS launchd, and other supervisors can consume the same shell-free argument
+vector from `npm run host:deployment-plan`; pairing codes, signaling tickets,
+and secret values remain session- or secret-manager-owned.
+
 ## Native reference service
 
 Docker is optional. On a machine with Node.js 20 or newer:

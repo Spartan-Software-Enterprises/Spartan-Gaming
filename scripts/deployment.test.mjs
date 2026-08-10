@@ -6,6 +6,7 @@ const dockerfile = fs.readFileSync('docker/signaling.Dockerfile', 'utf8');
 const compose = fs.readFileSync('docker-compose.yml', 'utf8');
 const productionCompose = fs.readFileSync('docker-compose.production.yml', 'utf8');
 const nativeRollout = fs.readFileSync('.github/workflows/native-package-rollout.yml', 'utf8');
+const hostService = fs.readFileSync('deploy/host/spartan-host.service', 'utf8');
 
 test('signaling image is minimal, non-root, and health checked', () => {
   assert.match(dockerfile, /^FROM node:22-bookworm-slim/m);
@@ -53,4 +54,8 @@ test('production Compose mounts secrets and provisions the Redis broker dependen
 
 test('native package rollout builds isolated target artifacts without bypassing signing', () => {
   assert.match(nativeRollout, /workflow_dispatch/); assert.match(nativeRollout, /tags:\s*\n\s*- 'v\*'/); assert.match(nativeRollout, /native:plan/); assert.match(nativeRollout, /release-manifest\.mjs/); assert.match(nativeRollout, /package-manifest\.unsigned\.json/); assert.match(nativeRollout, /upload-artifact@v7/); assert.match(nativeRollout, /UNSIGNED-OPERATOR-SIGNATURE-REQUIRED/); assert.match(nativeRollout, /retention-days: 14/);
+});
+
+test('host deployment templates preserve shell-free, opt-in host startup', () => {
+  const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8')); assert.equal(packageJson.scripts['host:deployment-plan'], 'node scripts/deployment/host-plan.mjs'); assert.match(hostService, /NoNewPrivileges=true/); assert.match(hostService, /ProtectSystem=strict/); assert.match(hostService, /EnvironmentFile=-\/etc\/spartan-gaming\/host\.env/); assert.match(hostService, /host\/agent\.mjs/); assert.doesNotMatch(hostService, /enable-input/);
 });
