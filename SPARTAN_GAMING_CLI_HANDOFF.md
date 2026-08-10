@@ -121,6 +121,10 @@ review; stay within the AWS credit limit.
   upload. Cross-platform contracts run `31440843482` also succeeded; the
   repository-checks run for the same commit succeeded before this handoff
   update.
+- After updating both Android workflows to `actions/setup-java@v5`, debug run
+  `31441280407` succeeded on `804fef4`, including the APK artifact upload.
+  The setup-java deprecation warning is resolved; GitHub still reports the
+  upstream `setup-android@v3` Node-runtime warning.
 - The AWS full suite on `01ced66` passed 632 of 634 tests with 2 environment-
   gated skips and 0 failures; repository checks passed 431/431.
 - AWS Playwright 1.55.0 completed 22/22 navigations across 11 maintained
