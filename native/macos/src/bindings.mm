@@ -3,7 +3,7 @@
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreHaptics/CoreHaptics.h>
 #include <GameController/GameController.h>
-#include <IOKit/hid/IOHIDLib.h>
+#include <IOKit/hid/IOHIDUserDevice.h>
 #include <dispatch/dispatch.h>
 
 #include <algorithm>
