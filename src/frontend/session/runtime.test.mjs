@@ -32,6 +32,14 @@ test('session runtime accepts WebRTC answers and emits media streams', async () 
   media.emit('track', {streams: ['stream-01']}); assert.equal(media.answer.sdp, 'host-answer'); assert.deepEqual(streams, ['stream-01']);
 });
 
+test('session runtime applies the configured jitter buffer to capable receivers', async () => {
+  const signaling = fakeTransport(); const listeners = new Map(); const receiver = {jitterBufferTarget: null};
+  const media = {on(type, handler) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(handler); return () => listeners.get(type)?.delete(handler); }, async createOffer() { return {type: 'offer', sdp: 'browser-offer'}; }, close() {}, emit(type, value) { for (const handler of listeners.get(type) || []) handler(value); }};
+  const runtime = createSessionRuntime({signaling, media}); const offer = await runtime.start({backend: {id: 'spartan-host'}, preferences: {jitterBufferMs: 140}});
+  media.emit('track', {receiver, streams: []});
+  assert.equal(receiver.jitterBufferTarget, 140); assert.equal(offer.type, 'session.offer');
+});
+
 test('session runtime sends a new quality request after degraded telemetry', async () => {
   const signaling = fakeTransport(); const runtime = createSessionRuntime({signaling});
   const offer = await runtime.start({backend: {id: 'spartan-host'}});

@@ -1,8 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createWebRtcTransport, createWebSocketSignalTransport, createWebTransportSignalTransport, validateTransportMessage} from './transport.mjs';
+import {applyJitterBufferTarget, createWebRtcTransport, createWebSocketSignalTransport, createWebTransportSignalTransport, validateTransportMessage} from './transport.mjs';
 
 const message = {protocol: 'spartan-gaming/1', messageId: 'msg-test-01', sessionId: 'ses-test-01', type: 'session.offer', sentAt: '2026-08-07T12:00:00Z', payload: {}};
+
+test('jitter buffer target is bounded and capability-gated', () => {
+  const receiver = {jitterBufferTarget: null};
+  assert.equal(applyJitterBufferTarget(receiver, 720), true);
+  assert.equal(receiver.jitterBufferTarget, 500);
+  assert.equal(applyJitterBufferTarget(receiver, -10), true);
+  assert.equal(receiver.jitterBufferTarget, 0);
+  assert.equal(applyJitterBufferTarget({}, 60), false);
+  assert.equal(applyJitterBufferTarget(receiver, Number.NaN), false);
+});
 
 test('WebSocket signaling sends and receives validated envelopes', async () => { let instance; class FakeSocket { constructor(url) { instance = this; this.url = url; } send(value) { this.sent = JSON.parse(value); } close() { this.onclose?.({code: 1000}); } } const transport = createWebSocketSignalTransport({endpoint: 'ws://localhost:8787/signal', WebSocketImpl: FakeSocket}); const received = []; transport.on('message', value => received.push(value)); const opening = transport.connect(); instance.onopen(); await opening; transport.send(message); instance.onmessage({data: JSON.stringify(message)}); assert.equal(transport.state, 'open'); assert.deepEqual(instance.sent, message); assert.equal(received[0].sessionId, 'ses-test-01'); transport.close(); assert.equal(transport.state, 'closed'); });
 test('WebSocket signaling rejects insecure remote endpoints', () => { assert.throws(() => createWebSocketSignalTransport({endpoint: 'ws://remote.example/signal', WebSocketImpl: class {}}), /TLS/); });
