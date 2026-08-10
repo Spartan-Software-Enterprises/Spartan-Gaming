@@ -10,6 +10,7 @@ function messageSize(value) {
 }
 
 function encode(action, payload = {}) {
+  if (!Object.values(ACTIONS).includes(action)) throw new TypeError('unsupported Android bridge action');
   const message = JSON.stringify({version: 1, action, payload});
   if (messageSize(message) > MAX_MESSAGE_BYTES) throw new RangeError('Android bridge message exceeds the size limit');
   return message;

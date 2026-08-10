@@ -59,7 +59,8 @@ Install one instance on the primary WebView with `addJavascriptInterface` under
 the name `SpartanAndroid`; the shared frontend then sends versioned messages
 through `postMessage`. The bridge accepts only the bounded actions
 `android.policy`, `android.game-mode.query`, `android.controllers.snapshot`,
-and `android.text-input`, forwarding them to an Activity-owned `Handler`.
+and `android.text-input`, rejects non-object payloads, and forwards valid
+requests to an Activity-owned `Handler`.
 
 The bridge never exposes a `Context`, raw `InputDevice`, `InputConnection`, or
 arbitrary command/URL surface to JavaScript. The Activity remains responsible

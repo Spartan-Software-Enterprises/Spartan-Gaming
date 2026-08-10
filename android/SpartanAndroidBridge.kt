@@ -32,7 +32,7 @@ class SpartanAndroidBridge(
         return try {
             val message = JSONObject(raw)
             if (message.optInt("version", -1) != 1) return false
-            val payload = message.optJSONObject("payload") ?: JSONObject()
+            val payload = if (!message.has("payload")) JSONObject() else message.optJSONObject("payload") ?: return false
             when (message.optString("action")) {
                 "android.policy" -> handler.onPolicy(payload)
                 "android.game-mode.query" -> handler.onGameModeQuery()

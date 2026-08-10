@@ -23,5 +23,6 @@ test('Android bridge exposes bounded native requests and fails closed when absen
 test('Android bridge rejects oversized or malformed native bridge payloads', () => {
   const bridge = createAndroidBridge({bridge: {postMessage: () => { throw new Error('native rejected'); }}});
   assert.equal(bridge.send('android.policy', {text: 'x'.repeat(MAX_MESSAGE_BYTES)}).status, 'rejected');
+  assert.equal(bridge.send('android.unknown').reason, 'unsupported Android bridge action');
   assert.equal(createAndroidBridge({bridge: {postMessage: () => { throw new Error('\u0000 bad'); }}}).queryGameMode().reason, 'bridge rejected message');
 });
