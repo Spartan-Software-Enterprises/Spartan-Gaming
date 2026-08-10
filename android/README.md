@@ -37,3 +37,8 @@ Android 12+ it queries `GameManager` from `Activity.onResume()`, reports the
 observed system mode, and fails closed below API 31 or when the service is not
 available. The application does not attempt to change the system-selected
 mode; the shared frontend records the requested mode separately.
+
+`controller/AndroidControllerInventory.kt` provides a metadata-only inventory
+of Android gamepad/joystick sources, including bounded device identity fields
+and vibrator presence. It is intended to feed the shared controller profile
+normalizer; raw `InputDevice` or input-event objects never cross the bridge.

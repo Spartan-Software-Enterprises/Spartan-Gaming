@@ -9,6 +9,7 @@ required_files=(
   android/README.md
   android/gamenative/GameNativeHandoff.kt
   android/gamemode/AndroidGameModeBridge.kt
+  android/controller/AndroidControllerInventory.kt
   ROADMAP.md
   CONTRIBUTING.md
   SECURITY.md

@@ -158,6 +158,12 @@ caption behavior remains target-runtime validation work. The media/preferences
 suite passed 38/38 locally and on AWS at `c8884e9`; repository checks and the
 full package suite also exited successfully.
 
+The current Android controller increment adds the native
+`AndroidControllerInventory` metadata bridge and shared
+`normalizeAndroidControllerInventory()` helper. It preserves bounded device
+metadata and approved capability labels while leaving raw Android input events
+and hardware behavior to the native shell/lab.
+
 The current Proton/SteamOS increment adds a user-owned Linux/SteamOS Proton
 launch boundary. `host/proton.mjs` detects a selected installation, validates
 compatibility-prefix and allow-listed runtime options, and creates a shell-free
