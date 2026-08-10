@@ -76,6 +76,7 @@ export function resolveControllerProfile({profileId = 'auto', deviceName = '', p
   const requested = String(profileId || '').trim().toLowerCase();
   const available = [...profiles, ...BUILTIN_CONTROLLER_PROFILES];
   if (!requested || requested === 'auto' || requested === 'auto-detect') {
+    if (!String(deviceName || '').trim()) return fallback;
     return available.find(profile => matchesDevice(profile, deviceName)) || available.find(profile => profile.deviceMatch.toLowerCase() === 'any hid') || available.find(profile => profile.deviceMatch.toLowerCase() === 'any') || fallback;
   }
   return available.find(profile => profile.id === requested || profile.name.toLowerCase() === requested) || fallback;

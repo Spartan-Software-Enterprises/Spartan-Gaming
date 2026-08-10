@@ -3,6 +3,7 @@ import {createSessionEnvelope, createSessionManager} from '../session/session.mj
 import {readSessionPreferences} from '../session/preferences.mjs';
 import {createSessionRuntime} from '../session/runtime.mjs';
 import {createInputEventEnvelope, createInputMapper} from '../input/input.mjs';
+import {createControllerProfileStore, resolveControllerProfile} from '../input/profiles.mjs';
 import {createInputPermissionPolicy} from '../input/policy.mjs';
 import {createHapticsController} from '../input/haptics.mjs';
 import {createPointerInputEvent, createWheelInputEvent} from '../input/pointer.mjs';
@@ -42,7 +43,9 @@ let sessionPreferences = readSessionPreferences(globalThis.localStorage, undefin
 const recoveryHandoff = sessionPreferences.preferences.restoreSession && !pendingHostPair ? storedRecovery : null;
 let inputPolicy = createInputPermissionPolicy(sessionPreferences.capabilities);
 let haptics = createHapticsController({enabled: inputPolicy.allows('rumble')});
-let mapper = createInputMapper();
+const controllerProfiles = createControllerProfileStore({storage: profileStorage}).list();
+let activeControllerProfileId = sessionPreferences.preferences.controllerProfile;
+let mapper = createInputMapper({bindings: sessionPreferences.preferences.controllerBindings, deadzone: sessionPreferences.preferences.controllerDeadzone});
 const immersive = createImmersiveController({target: document.querySelector('[data-stage]')});
 let runtime = null;
 const elements = {
@@ -64,6 +67,15 @@ let negotiationAdjustments = [];
 let displayNegotiation = resolveDisplayNegotiation();
 const telemetryLog = createSessionTelemetryLog({enabled: false});
 const previousGamepad = new Map();
+
+function applyGamepadProfile(gamepad) {
+  if (sessionPreferences.preferences.controllerProfileSelection.toLowerCase() !== 'auto' && sessionPreferences.preferences.controllerProfileSelection.toLowerCase() !== 'auto-detect') return;
+  const profile = resolveControllerProfile({profileId: 'auto', deviceName: gamepad.id, profiles: controllerProfiles});
+  if (!profile || profile.id === activeControllerProfileId) return;
+  activeControllerProfileId = profile.id;
+  mapper = createInputMapper({bindings: profile.bindings, deadzone: profile.deadzone});
+  elements.message.textContent = `Controller profile: ${profile.name}.`;
+}
 
 elements.connectionEndpoint.value = resolveSignalingEndpoint({queryEndpoint: query.get('signal'), pendingEndpoint: pendingHostPair?.endpoint, recoveryEndpoint: recoveryHandoff?.endpoint, customEndpoint: sessionPreferences.preferences.customSignalingUrl});
 elements.connectionSession.value = query.get('session') || pendingHostPair?.sessionId || recoveryHandoff?.sessionId || 'ses-browser-host';
@@ -254,6 +266,6 @@ window.addEventListener('blur', () => applyFocusPolicy(true)); window.addEventLi
 ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(type => elements.stage.addEventListener(type, pointerInput, {passive: false}));
 elements.stage.addEventListener('wheel', wheelInput, {passive: false});
 window.addEventListener('gamepadconnected', () => apply({type: 'gamepad.connection', connected: true})); window.addEventListener('gamepaddisconnected', () => apply({type: 'gamepad.connection', connected: false}));
-const gamepadPollTimer = setInterval(() => { if (!inputPolicy.allows('gamepad')) { if (state.gamepadConnected !== false) apply({type: 'gamepad.connection', connected: false}); previousGamepad.clear(); return; } const gamepads = navigator.getGamepads?.() || []; const activeIndices = new Set([...gamepads].filter(Boolean).map(gamepad => gamepad.index)); for (const index of previousGamepad.keys()) { if (!activeIndices.has(index)) previousGamepad.delete(index); } const connected = [...gamepads].some(Boolean); if (connected !== state.gamepadConnected) apply({type: 'gamepad.connection', connected}); const pad = [...gamepads].find(Boolean); if (!pad) return; const normalized = mapper.normalize(pad); const previous = previousGamepad.get(normalized.index); normalized.buttons.forEach((button, index) => { if (!previous || button.pressed !== previous.buttons[index]?.pressed || button.value !== previous.buttons[index]?.value) { const event = mapper.mapButton(index, button.pressed, button.value) || mapper.mapNativeButton(index, button.pressed, button.value); if (event) emitInput({...event, source: 'gamepad', control: `button-${index}`}); } });   normalized.axes.forEach((value, index) => { const previousValue = previous?.axes[index] || 0; if (!previous || Math.abs(value - previousValue) > 0.001) { mapper.mapAxisTransition(index, value, previousValue).forEach(event => emitInput({...event, source: 'gamepad', control: `axis-${index}`})); mapper.mapNativeAxis(index, value, previousValue).forEach(event => emitInput({...event, source: 'gamepad', control: `axis-${index}`})); } }); previousGamepad.set(normalized.index, normalized); }, 100);
+const gamepadPollTimer = setInterval(() => { if (!inputPolicy.allows('gamepad')) { if (state.gamepadConnected !== false) apply({type: 'gamepad.connection', connected: false}); previousGamepad.clear(); return; } const gamepads = navigator.getGamepads?.() || []; const activeIndices = new Set([...gamepads].filter(Boolean).map(gamepad => gamepad.index)); for (const index of previousGamepad.keys()) { if (!activeIndices.has(index)) previousGamepad.delete(index); } const connected = [...gamepads].some(Boolean); if (connected !== state.gamepadConnected) apply({type: 'gamepad.connection', connected}); const pad = [...gamepads].find(Boolean); if (!pad) return; applyGamepadProfile(pad); const normalized = mapper.normalize(pad); const previous = previousGamepad.get(normalized.index); normalized.buttons.forEach((button, index) => { if (!previous || button.pressed !== previous.buttons[index]?.pressed || button.value !== previous.buttons[index]?.value) { const event = mapper.mapButton(index, button.pressed, button.value) || mapper.mapNativeButton(index, button.pressed, button.value); if (event) emitInput({...event, source: 'gamepad', control: `button-${index}`}); } });   normalized.axes.forEach((value, index) => { const previousValue = previous?.axes[index] || 0; if (!previous || Math.abs(value - previousValue) > 0.001) { mapper.mapAxisTransition(index, value, previousValue).forEach(event => emitInput({...event, source: 'gamepad', control: `axis-${index}`})); mapper.mapNativeAxis(index, value, previousValue).forEach(event => emitInput({...event, source: 'gamepad', control: `axis-${index}`})); } }); previousGamepad.set(normalized.index, normalized); }, 100);
 const suppliedStream = window.__SPARTAN_MEDIA_STREAM__; if (suppliedStream && typeof MediaStream !== 'undefined' && suppliedStream instanceof MediaStream) { const mediaState = attachMediaStreamTarget({video: elements.video, stream: suppliedStream, audioEnabled}); elements.audio.textContent = mediaState.hasAudio ? 'Active' : 'No track'; elements.video.play().catch(() => {}); }
 start(); apply({type: 'session.state', status: 'negotiating'});
