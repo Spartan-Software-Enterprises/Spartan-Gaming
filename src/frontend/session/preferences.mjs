@@ -22,7 +22,7 @@ function volume(value) { const number = Number(value); return Number.isFinite(nu
 function boundedOption(value, options, fallback) { return options.includes(value) ? value : fallback; }
 function normalizeCustomSignalingUrl(value) { try { const url = new URL(String(value || '')); const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) || url.hostname.endsWith('.local'); if (url.protocol !== 'wss:' && !(url.protocol === 'ws:' && local)) return null; url.username = ''; url.password = ''; url.hash = ''; return url.toString(); } catch { return null; } }
 
-export function createSessionPreferences(settings = {}, capabilities, workspace = null, controllerProfiles = []) {
+export function createSessionPreferences(settings = {}, capabilities, workspace = null, controllerProfiles = [], {controllerProfile: controllerProfileOverride} = {}) {
   const displayPolicy = resolveDisplayPolicy({settings, capabilities});
   const resolution = RESOLUTIONS[settings['streaming.resolution']] || RESOLUTIONS['1080p'];
   const maxFramerate = displayPolicy.maxRefreshRate || numberBeforeUnit(settings['streaming.framerate'], 60);
@@ -36,7 +36,7 @@ export function createSessionPreferences(settings = {}, capabilities, workspace 
   const qualityProfiles = createQualityProfiles({maxWidth: resolution[0], maxHeight: resolution[1], maxFramerate, bitrateKbps});
   const controllerSettings = resolveControllerPreferences(settings);
   const forceSoftwareDecode = settings['advanced.forceSoftwareDecode'] === true || settings['performance.forceSoftwareDecode'] === true;
-  const requestedControllerProfile = resolveWorkspaceControllerProfile(workspace || {}, controllerSettings.defaultProfile);
+  const requestedControllerProfile = typeof controllerProfileOverride === 'string' && controllerProfileOverride.trim() ? controllerProfileOverride.trim().slice(0, 80) : resolveWorkspaceControllerProfile(workspace || {}, controllerSettings.defaultProfile);
   const storedControllerProfile = resolveControllerProfile({profileId: requestedControllerProfile, profiles: controllerProfiles});
   const isCustomControllerProfile = Boolean(storedControllerProfile && controllerProfiles.some(profile => profile.id === storedControllerProfile.id));
   const controllerProfile = storedControllerProfile?.name || requestedControllerProfile;
@@ -63,4 +63,4 @@ export function createSessionPreferences(settings = {}, capabilities, workspace 
   return Object.freeze({capabilities: Object.freeze({video: Object.freeze({codecs: Object.freeze(negotiatedCodecs), maxWidth: resolution[0], maxHeight: resolution[1], maxFramerate, hdr: displayPolicy.hdr}), audio: Object.freeze({codecs: Object.freeze(['opus', 'aac']), channels: 2, spatialAudio: settings['media.spatialAudio'] === true, mono: settings['accessibility.monoAudio'] === true}), input: Object.freeze({gamepad: controllerSettings.allowGamepad, keyboard: true, pointer: true, rumble, hid: allowHid, adaptiveTriggers, gyro, multipleControllers: controllerSettings.multipleControllers, playerSlots: controllerSettings.playerSlots, inputMode: controllerSettings.inputMode, virtualGamepadBackend: controllerSettings.virtualGamepadBackend, hapticsBackend: controllerSettings.hapticsBackend, touchpad, backButtons, triggerMode: controllerSettings.triggerMode, steeringRange: controllerSettings.steeringRange, splitInput})}), preferences});
 }
 
-export function readSessionPreferences(storage = globalThis.localStorage, capabilities, {workspaceStorage = storage} = {}) { const settings = createSettingsStore({storage}).read(); const workspace = createWorkspaceStore({storage: workspaceStorage}).active; const controllerProfiles = createControllerProfileStore({storage: workspaceStorage}).list(); return createSessionPreferences(settings, capabilities, workspace, controllerProfiles); }
+export function readSessionPreferences(storage = globalThis.localStorage, capabilities, {workspaceStorage = storage, controllerProfile} = {}) { const settings = createSettingsStore({storage}).read(); const workspace = createWorkspaceStore({storage: workspaceStorage}).active; const controllerProfiles = createControllerProfileStore({storage: workspaceStorage}).list(); return createSessionPreferences(settings, capabilities, workspace, controllerProfiles, {controllerProfile}); }

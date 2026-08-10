@@ -41,7 +41,8 @@ let connectionSessionId = query.get('session') || pendingHostPair?.sessionId || 
 const manager = createSessionManager({idFactory: () => connectionSessionId || `ses-${crypto.randomUUID()}`});
 const transportPolicy = readTransportPolicy();
 const profileStorage = createActiveProfileStorage();
-let sessionPreferences = readSessionPreferences(globalThis.localStorage, undefined, {workspaceStorage: profileStorage});
+const controllerProfileOverride = query.get('controllerProfile') || undefined;
+let sessionPreferences = readSessionPreferences(globalThis.localStorage, undefined, {workspaceStorage: profileStorage, controllerProfile: controllerProfileOverride});
 const recoveryHandoff = sessionPreferences.preferences.restoreSession && !pendingHostPair ? storedRecovery : null;
 let inputPolicy = createInputPermissionPolicy(sessionPreferences.capabilities);
 let haptics = createHapticsController({enabled: inputPolicy.allows('rumble')});
@@ -126,7 +127,7 @@ async function loadAudioOutputs({applyPreference = false} = {}) {
 
 async function prepareSession() {
   if (sessionPreflightReady) return;
-  const preflight = await preparePlayerSession({workspaceStorage: profileStorage});
+  const preflight = await preparePlayerSession({workspaceStorage: profileStorage, controllerProfile: controllerProfileOverride});
   sessionPreferences = preflight.preferences;
   displayNegotiation = resolveDisplayNegotiation({preferences: sessionPreferences.preferences, requestedCapabilities: sessionPreferences.capabilities, displayCapabilities: sessionPreferences.preferences.displayPolicy});
   telemetryLog.setEnabled(sessionPreferences.preferences.sessionTelemetry);

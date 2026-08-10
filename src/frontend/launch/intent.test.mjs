@@ -7,7 +7,7 @@ const plan = {backendId: 'dolphin', action: 'choose-runtime', mode: 'native', re
 
 test('launch intents preserve backend-neutral routing metadata', () => {
   const intent = createLaunchIntent({entry, plan, profileId: 'living-room'});
-  assert.deepEqual(intent, {version: 1, backendId: 'dolphin', backendType: 'emulator', mode: 'native', action: 'choose-runtime', url: null, profileId: 'living-room', returnTo: '../dashboard/index.html', requirements: ['user-files'], capabilities: ['gamepad'], createdAt: intent.createdAt});
+  assert.deepEqual(intent, {version: 1, backendId: 'dolphin', backendType: 'emulator', mode: 'native', action: 'choose-runtime', url: null, profileId: 'living-room', controllerProfile: null, returnTo: '../dashboard/index.html', requirements: ['user-files'], capabilities: ['gamepad'], createdAt: intent.createdAt});
   assert.equal(Object.isFrozen(intent), true);
 });
 
@@ -20,6 +20,8 @@ test('launch intents persist only validated session-scoped data', () => {
   clearLaunchIntent(storage);
   assert.equal(readLaunchIntent(storage), null);
 });
+
+test('launch intents carry a bounded controller profile override', () => { const intent = createLaunchIntent({entry, plan, controllerProfile: 'PlayStation layout'}); assert.equal(intent.controllerProfile, 'PlayStation layout'); assert.throws(() => createLaunchIntent({entry, plan, controllerProfile: 'x'.repeat(81)}), /too long/); });
 
 test('launch intents reject insecure URLs and malformed stored values', () => {
   assert.throws(() => createLaunchIntent({entry: {...entry, backendType: 'provider'}, plan: {...plan, action: 'open-url', url: 'http://example.test'}}), /HTTPS/);

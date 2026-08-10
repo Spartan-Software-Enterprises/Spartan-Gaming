@@ -107,7 +107,7 @@ function launchEntry(entry, plan) {
   state.recent.add(entry.id);
   state.lastLaunch = launchHistory.record({backendId: entry.id, backendType: entry.backendType, name: entry.name, mode: plan.mode, action: plan.action, at: new Date().toISOString()});
   renderResume();
-  saveLaunchIntent(sessionStorage, createLaunchIntent({entry, plan, profileId: activeWorkspace.id, returnTo: './index.html'}));
+  saveLaunchIntent(sessionStorage, createLaunchIntent({entry, plan, profileId: activeWorkspace.id, controllerProfile: plan.integration?.controllerProfile, returnTo: './index.html'}));
   if (plan.readiness?.nextAction === 'run-diagnostics') { window.location.assign('../diagnostics/index.html'); return; }
   if (plan.readiness?.nextAction === 'choose-runtime' || plan.action === 'choose-runtime' || plan.action === 'configure-native-adapter') { window.location.assign('../emulation/index.html'); return; }
   if (plan.action === 'configure-host') { window.location.assign('../host/index.html'); return; }
