@@ -83,7 +83,7 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- The published code state is `7c996e1` on `main`; local and AWS worktrees are
+- The published code state is `7df0ec4` on `main`; local and AWS worktrees are
   clean and synchronized with `origin/main`.
 - `npm run check`: repository checks pass on the current code state locally
   and on the AWS dev server.
