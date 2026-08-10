@@ -68,5 +68,5 @@ export const BUILTIN_CONTROLLER_PROFILES = Object.freeze([
 export function resolveControllerProfile({profileId = 'auto', profiles = [], fallback = null} = {}) {
   const requested = String(profileId || '').trim().toLowerCase();
   if (!requested || requested === 'auto') return fallback;
-  return [...BUILTIN_CONTROLLER_PROFILES, ...profiles].find(profile => profile.id === requested || profile.name.toLowerCase() === requested) || fallback;
+  return [...profiles, ...BUILTIN_CONTROLLER_PROFILES].find(profile => profile.id === requested || profile.name.toLowerCase() === requested) || fallback;
 }
