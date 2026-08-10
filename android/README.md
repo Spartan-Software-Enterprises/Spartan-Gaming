@@ -42,3 +42,12 @@ mode; the shared frontend records the requested mode separately.
 of Android gamepad/joystick sources, including bounded device identity fields
 and vibrator presence. It is intended to feed the shared controller profile
 normalizer; raw `InputDevice` or input-event objects never cross the bridge.
+
+`src/frontend/input/text-entry.mjs` defines the shared controller/IME text-entry
+boundary. It preserves bounded text, selection, and composition ranges for
+Steam Deck and Android keyboard flows, but only marks an IME `show` request
+allowed when it came from a focused user gesture. The matching
+`text-input/AndroidGameTextInputContract.kt` is metadata-only: the Android
+shell must bind the official GameTextInput C API/Prefab library and report the
+result. Spartan does not expose raw `InputConnection` objects or claim Android
+keyboard behavior until an Android build and device test pass.

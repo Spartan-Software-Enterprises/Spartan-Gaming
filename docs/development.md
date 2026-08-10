@@ -195,6 +195,13 @@ The Android shell has a matching native Game Mode boundary in `android/gamemode/
 
 Android controller metadata is normalized by `src/frontend/input/android-controller.mjs` after the native `AndroidControllerInventory` bridge reports gamepad/joystick devices. The bridge keeps bounded IDs, names, vendor/product metadata, and approved haptics/motion/battery capabilities only; actual input events continue through the shared controller pipeline.
 
+Controller text entry uses `src/frontend/input/text-entry.mjs` to carry bounded
+text plus selection/composition ranges. Keyboard display is fail-closed until
+the request is both focused and user-initiated. Android's corresponding
+`text-input/AndroidGameTextInputContract.kt` is deliberately only a native
+metadata boundary; binding the GameTextInput C API/Prefab library and testing
+IME composition on an Android device remains a platform gate.
+
 Closed-caption preferences are shared through session settings and applied by `src/frontend/player/media.mjs` to available `captions` or `subtitles` text tracks. The selector honors the preferred language, disables competing tracks, and fails closed when a provider or stream does not expose WebVTT/text-track metadata.
 
 `host/steam-os-packaging.mjs` provides consent-gated, metadata-only desktop-entry and Steam non-Steam registration plans for the user-scope Flatpak profile. The plans never modify Flatpak, register with Steam, or execute a command; an operator must perform those actions on the target host.

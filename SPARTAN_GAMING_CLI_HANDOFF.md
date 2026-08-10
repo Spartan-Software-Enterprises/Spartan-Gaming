@@ -167,6 +167,15 @@ The combined Android/controller suite passed 6/6 locally and on AWS at
 `d39b66f`; repository checks and the full package suite also exited
 successfully.
 
+The current text-entry increment adds `src/frontend/input/text-entry.mjs` and
+the matching metadata-only `android/text-input/AndroidGameTextInputContract.kt`.
+Text, selection, and IME composition ranges are bounded and malformed payloads
+are rejected; showing the keyboard requires both focus and a user gesture.
+The native GameTextInput C API/Prefab binding and physical Android/SteamOS
+IME behavior remain intentionally unverified platform work. The focused
+text-entry suite passed 3/3 locally; rerun it with the full repository suite
+before publishing the next handoff.
+
 The current Proton/SteamOS increment adds a user-owned Linux/SteamOS Proton
 launch boundary. `host/proton.mjs` detects a selected installation, validates
 compatibility-prefix and allow-listed runtime options, and creates a shell-free
