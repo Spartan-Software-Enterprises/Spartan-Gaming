@@ -6,6 +6,9 @@ cd "$repo_root"
 
 required_files=(
   README.md
+  android/README.md
+  android/gamenative/GameNativeHandoff.kt
+  android/gamemode/AndroidGameModeBridge.kt
   ROADMAP.md
   CONTRIBUTING.md
   SECURITY.md

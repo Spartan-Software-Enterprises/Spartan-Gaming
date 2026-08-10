@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {detectAndroidFormFactor, resolveAndroidPolicy} from './android.mjs';
+import {detectAndroidFormFactor, resolveAndroidGameModeIntent, resolveAndroidPolicy} from './android.mjs';
 
 test('Android form factor follows current window width and density', () => {
   assert.equal(detectAndroidFormFactor({viewport: {width: 390}, density: 1}), 'phone');
@@ -25,4 +25,10 @@ test('Android policy fails closed for unknown settings and invalid form factors'
     formFactor: 'unknown', orientation: 'sensor', currentOrientation: 'unknown', keepScreenAwake: true,
     pictureInPicture: true, edgeToEdge: true, dataSaver: false, gameMode: 'Follow system', touchLayout: 'automatic',
   });
+});
+
+test('Android Game Mode intent is query-only and refreshes on resume', () => {
+  assert.deepEqual(resolveAndroidGameModeIntent({apiLevel: 34, requestedMode: 'Performance', observedMode: 'Performance'}), {apiLevel: 34, requestedMode: 'Performance', observedMode: 'Performance', supported: true, queryOnResume: true, appCanChangeMode: false, accepted: true});
+  assert.equal(resolveAndroidGameModeIntent({apiLevel: 30, requestedMode: 'Battery', observedMode: 'Unsupported'}).supported, false);
+  assert.equal(resolveAndroidGameModeIntent({apiLevel: 35, requestedMode: 'Battery', observedMode: 'Performance'}).accepted, false);
 });

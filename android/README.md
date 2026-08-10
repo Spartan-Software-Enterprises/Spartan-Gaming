@@ -31,3 +31,9 @@ or foldable using window bounds and optional window-segment data, then emits
 bounded intents for orientation, wake lock, PiP, edge-to-edge layout, mobile
 data savings, and Android Game Mode. The shell remains responsible for binding
 those intents to Android APIs and reporting whether each request was accepted.
+
+`gamemode/AndroidGameModeBridge.kt` is the native Game Mode boundary. On
+Android 12+ it queries `GameManager` from `Activity.onResume()`, reports the
+observed system mode, and fails closed below API 31 or when the service is not
+available. The application does not attempt to change the system-selected
+mode; the shared frontend records the requested mode separately.

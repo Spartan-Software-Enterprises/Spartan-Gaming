@@ -191,6 +191,8 @@ The explicit SteamOS host profile in `host/steam-os.mjs` also exposes the shared
 
 Electron now bridges bounded native power telemetry through `desktop/electron/power-runtime.mjs`: suspend/resume, AC/battery, thermal, and CPU speed-limit events reach the renderer through the preload API, while active sessions use Electron's power-save blocker (`prevent-display-sleep` for normal/performance modes and `prevent-app-suspension` for Battery saver). This is runtime plumbing, not evidence of hardware-specific thermal or suspend behavior.
 
+The Android shell has a matching native Game Mode boundary in `android/gamemode/AndroidGameModeBridge.kt`. It queries `GameManager` on every resume for API 31+ and reports the observed mode without trying to change the system setting; the frontend intent remains query-on-resume and fails closed when unsupported.
+
 `host/steam-os-packaging.mjs` provides consent-gated, metadata-only desktop-entry and Steam non-Steam registration plans for the user-scope Flatpak profile. The plans never modify Flatpak, register with Steam, or execute a command; an operator must perform those actions on the target host.
 
 Session input permissions are enforced by `src/frontend/input/policy.mjs` as well as advertised during capability negotiation. The player reconciles its permission policy with the host's negotiated capabilities after every `session.negotiated` event, so a host without virtual-gamepad injection (for example macOS or Windows keyboard/pointer adapters) stops gamepad polling instead of sending controller events that the host must reject. The player does not poll or forward disabled gamepad input, and input diagnostics distinguish a disconnected controller from one disabled by the active settings profile.

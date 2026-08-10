@@ -142,6 +142,12 @@ power and thermal behavior remain lab gates. The Electron suite passed 14/14
 locally and on AWS at `d203f1c`; repository checks and the full package suite
 also exited successfully.
 
+The Android mobile increment adds `android/gamemode/AndroidGameModeBridge.kt`
+and a shared `resolveAndroidGameModeIntent()` contract. Android 12+ shells
+query `GameManager` on resume, preserve the observed mode, and never claim the
+application can change the system-selected mode; Android hardware validation
+remains a lab gate.
+
 The current Proton/SteamOS increment adds a user-owned Linux/SteamOS Proton
 launch boundary. `host/proton.mjs` detects a selected installation, validates
 compatibility-prefix and allow-listed runtime options, and creates a shell-free

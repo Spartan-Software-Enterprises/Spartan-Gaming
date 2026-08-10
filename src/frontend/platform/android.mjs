@@ -42,4 +42,13 @@ export function resolveAndroidPolicy({settings = {}, formFactor = 'unknown', ori
   });
 }
 
+/** Describe the native GameManager query boundary; the app cannot change system Game Mode. */
+export function resolveAndroidGameModeIntent({apiLevel = 0, requestedMode = 'Follow system', observedMode = 'Unsupported'} = {}) {
+  const requested = GAME_MODES.includes(requestedMode) ? requestedMode : 'Follow system';
+  const observed = GAME_MODES.includes(observedMode) ? observedMode : 'Unsupported';
+  const numericApi = Number(apiLevel);
+  const supported = Number.isFinite(numericApi) && numericApi >= 31 && observed !== 'Unsupported';
+  return Object.freeze({apiLevel: Number.isFinite(numericApi) ? Math.max(0, Math.floor(numericApi)) : 0, requestedMode: requested, observedMode: observed, supported, queryOnResume: true, appCanChangeMode: false, accepted: requested === 'Follow system' || (supported && requested === observed)});
+}
+
 export {ANDROID_FORM_FACTORS, GAME_MODES, ORIENTATIONS};
