@@ -66,7 +66,8 @@
 
 ## Milestone 3: self-hosted stack
 
-- [ ] Windows and Linux host agent (native composition boundary, optional runtime package discovery, guarded input execution, package capture/audio lifecycles, package-backed Werift assembly, shell-free cross-platform host deployment plans, hardened Linux supervisor template, macOS launchd and Windows service-wrapper deployment guidance, session-scoped enrollment handoff, and an admin-only host enrollment route implemented; Redis-backed signaling, ephemeral TURN credentials, secret-file validation, hardened production Compose, opt-in coturn Compose profile, executable TLS rotation, bounded TURN relay configuration, hardened coturn service template, executable external signing-service client, tag/manual native rollout artifacts, conditional signed tag publication, and an explicit shell-free production rollout plan with live health verification are implemented; live relay provisioning and production service activation remain operator-owned).
+- [x] Cross-platform host agent and deployment control plane (native composition boundary, optional runtime package discovery, guarded input execution, package capture/audio lifecycles, package-backed Werift assembly, shell-free host deployment plans, hardened Linux supervisor template, macOS launchd and Windows service-wrapper guidance, session-scoped enrollment handoff, admin-only host enrollment, Redis-backed signaling, ephemeral TURN credentials, secret-file validation, hardened production Compose, opt-in coturn Compose profile, executable TLS rotation, bounded TURN relay configuration, hardened coturn service template, external signing-service client, tag/manual native rollout artifacts, conditional signed tag publication, and an explicit shell-free production rollout plan with live health verification).
+- [ ] Activate live relay provisioning and production services with operator-managed secrets, TLS, Redis, TURN, and external package-signing custody.
 - [x] Secure device pairing UX and frontend contract (agent/signaling implementation pending).
 - [x] Dependency-free reference host control plane (media and OS adapters pending).
 - [x] Shell-free managed process lifecycle with bounded output and pipeline rollback.
@@ -89,7 +90,9 @@
 - [x] User-facing transport and relay policy controls (runtime provider/host wiring pending).
 - [x] Controller, keyboard, pointer, and rumble forwarding contract (native OS injection pending).
 - [x] Shell-free native input executor boundary with permissions and rate limiting (OS adapter implementations pending).
-- [ ] Native OS input injection, audio return, and end-to-end haptics (Linux uinput virtual gamepad/force feedback, Windows XInput rumble, and macOS GameController/CoreHaptics output are implemented when their host capabilities are available; Linux portal consent and audio capture device enumeration are implemented; the full remote session is verified end-to-end over a real in-process Werift loopback with H.264 video and Opus audio; an explicit Linux uinput probe/input/force-feedback verifier is implemented, but real Linux hardware verification still requires a uinput device and FF-capable kernel, and Windows/macOS virtual gamepad injection remains pending).
+- [x] Native OS input, audio, and haptics adapters (Linux uinput virtual gamepad/force feedback, Windows XInput rumble, macOS GameController/CoreHaptics output when capabilities are available, Linux portal consent, audio-device enumeration, and the in-process Werift H.264/Opus loopback contract).
+- [ ] Validate native input, audio, and haptics on real Windows, macOS, and Linux hardware; Linux requires readable/writable `/dev/uinput` and an FF-capable kernel.
+- [ ] Provide Windows/macOS virtual gamepad injection through separately installed, verified virtual-device drivers.
 - [x] Cross-platform audio capture and publisher readiness contract (native audio publisher pending).
 - [x] Shell-free audio publisher and RTP handoff boundary with permission gating (native capture/codec adapters pending).
 - [x] Browser-to-host control-plane quality and input envelopes (OS adapters pending).
