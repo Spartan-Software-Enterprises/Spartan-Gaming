@@ -6,7 +6,7 @@ import {createServer as createHttpsServer} from 'node:https';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createSignalingBroker} from './broker.mjs';
-import {resolveConfiguredSecret} from './production-config.mjs';
+import {resolveConfiguredSecret, resolveProductionConfig} from './production-config.mjs';
 
 const DEFAULT_MAX_FRAME_BYTES = 64 * 1024;
 const DEFAULT_MAX_CONNECTIONS = 256;
@@ -128,7 +128,7 @@ export function createSignalingServer(options = {}) {
     if (sockets.size >= config.maxConnections) { rejectedConnections += 1; reject(socket, '503 Service Unavailable'); return; }
     if (url.pathname !== '/signal' || request.headers.upgrade?.toLowerCase() !== 'websocket' || request.headers['sec-websocket-version'] !== '13' || !request.headers['sec-websocket-key']) { rejectedConnections += 1; reject(socket); return; }
     socket.write(`HTTP/1.1 101 Switching Protocols\r\nUpgrade: WebSocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ${acceptKey(request.headers['sec-websocket-key'])}\r\n\r\n`);
-    sockets.add(socket); let buffer = Buffer.alloc(0); let participant; let detached = false; const limiter = createMessageRateLimiter({limit: config.maxMessagesPerSecond});
+    sockets.add(socket); let buffer = Buffer.alloc(0); let participant; let joining; const pending = []; let detached = false; const limiter = createMessageRateLimiter({limit: config.maxMessagesPerSecond});
     const cleanup = () => { if (detached) return; detached = true; sockets.delete(socket); participant?.detach(); };
     const fail = () => { cleanup(); socket.end(closeFrame()); };
     socket.on('data', chunk => {
@@ -137,14 +137,14 @@ export function createSignalingServer(options = {}) {
         if (!limiter.take()) { fail(); return; }
         try {
           const message = JSON.parse(textValue);
-          if (!participant) { if (message?.type !== 'signaling.join') throw new Error('signaling join required'); participant = broker.attach({sessionId: message.sessionId, role: message.role, ticket: message.ticket, send: value => socket.write(frame(JSON.stringify(value), config.maxFrameBytes))}); }
-          else participant.send(message);
+          if (!participant) { if (message?.type !== 'signaling.join') { if (joining) pending.push(message); else throw new Error('signaling join required'); } else if (joining) throw new Error('duplicate signaling join'); else { joining = Promise.resolve(broker.attach({sessionId: message.sessionId, role: message.role, ticket: message.ticket, send: value => socket.write(frame(JSON.stringify(value), config.maxFrameBytes))})).then(value => { if (detached) return value.detach?.(); participant = value; return Promise.all(pending.splice(0).map(item => participant.send(item))); }).catch(fail); } }
+          else Promise.resolve(participant.send(message)).catch(fail);
         } catch { fail(); }
       }, socket, config.maxFrameBytes);
     });
     socket.on('close', cleanup); socket.on('error', cleanup);
   });
-  return Object.freeze({config, broker, server, stats: () => Object.freeze({connections: sockets.size, rejectedConnections, ...broker.stats()}), start() { return new Promise((resolve, rejectStart) => { server.once('error', rejectStart); server.listen(config.port, config.bind, () => { server.removeListener('error', rejectStart); resolve(server.address()); }); }); }, close() { for (const socket of sockets) socket.destroy(); server.closeIdleConnections?.(); server.closeAllConnections?.(); if (!server.listening) return Promise.resolve(); return new Promise(resolve => { let settled = false; const finish = () => { if (settled) return; settled = true; resolve(); }; server.close(finish); const timeout = setTimeout(finish, SHUTDOWN_TIMEOUT_MS); timeout.unref?.(); }); }});
+  return Object.freeze({config, broker, server, stats: () => Object.freeze({connections: sockets.size, rejectedConnections, ...broker.stats()}), start() { return new Promise((resolve, rejectStart) => { server.once('error', rejectStart); server.listen(config.port, config.bind, () => { server.removeListener('error', rejectStart); resolve(server.address()); }); }); }, async close() { for (const socket of sockets) socket.destroy(); server.closeIdleConnections?.(); server.closeAllConnections?.(); if (server.listening) await new Promise(resolve => { let settled = false; const finish = () => { if (settled) return; settled = true; resolve(); }; server.close(finish); const timeout = setTimeout(finish, SHUTDOWN_TIMEOUT_MS); timeout.unref?.(); }); await broker.close?.(); }});
 }
 
 export async function loadBrokerAdapter({packageName, loader = name => import(name), options = {}} = {}) {
@@ -161,8 +161,9 @@ export async function loadBrokerAdapter({packageName, loader = name => import(na
 
 if (pathEqualsMain()) {
   try {
-    const args = parseArguments(process.argv.slice(2)); const allowedOrigins = String(args.get('allowed-origins') || process.env.SPARTAN_SIGNALING_ALLOWED_ORIGINS || '').split(',').map(text).filter(Boolean); const brokerPackage = text(args.get('broker-package') || process.env.SPARTAN_SIGNALING_BROKER_PACKAGE); const broker = brokerPackage ? await loadBrokerAdapter({packageName: brokerPackage, options: {environment: process.env}}) : undefined;
-    const {secret, adminSecret} = resolveSignalingSecrets({args});
+    if (process.env.NODE_ENV === 'production') resolveProductionConfig();
+    const args = parseArguments(process.argv.slice(2)); const allowedOrigins = String(args.get('allowed-origins') || process.env.SPARTAN_SIGNALING_ALLOWED_ORIGINS || '').split(',').map(text).filter(Boolean); const brokerPackage = text(args.get('broker-package') || process.env.SPARTAN_SIGNALING_BROKER_PACKAGE);
+    const {secret, adminSecret} = resolveSignalingSecrets({args}); const broker = brokerPackage ? await loadBrokerAdapter({packageName: brokerPackage, options: {environment: process.env, secret}}) : undefined;
     const service = createSignalingServer({...(broker ? {broker} : {}), secret, adminSecret, bind: args.get('bind') || process.env.SPARTAN_SIGNALING_BIND, port: args.get('port') || process.env.SPARTAN_SIGNALING_PORT, allowedOrigins, maxConnections: args.get('max-connections') || process.env.SPARTAN_SIGNALING_MAX_CONNECTIONS, maxMessagesPerSecond: args.get('max-messages-per-second') || process.env.SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND, tlsKey: args.get('tls-key') || process.env.SPARTAN_SIGNALING_TLS_KEY, tlsCert: args.get('tls-cert') || process.env.SPARTAN_SIGNALING_TLS_CERT});
     service.start().then(address => { const host = address.address === '0.0.0.0' ? '127.0.0.1' : address.address; const protocol = service.config.tls.enabled ? 'wss' : 'ws'; const httpProtocol = service.config.tls.enabled ? 'https' : 'http'; console.log(JSON.stringify({service: 'spartan-signaling-reference', endpoint: `${protocol}://${host}:${address.port}/signal`, health: `${httpProtocol}://${host}:${address.port}/health`, secure: service.config.tls.enabled, allowedOrigins: service.config.allowedOrigins, limits: {maxConnections: service.config.maxConnections, maxMessagesPerSecond: service.config.maxMessagesPerSecond}, warning: 'Reference signaling only; use secret management, clustered session storage, and separately provisioned STUN/TURN in production.'})); }).catch(error => { console.error(error.message); process.exitCode = 1; });
   } catch (error) {

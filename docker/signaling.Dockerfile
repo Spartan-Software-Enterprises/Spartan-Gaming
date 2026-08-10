@@ -2,8 +2,11 @@ FROM node:22-bookworm-slim
 
 WORKDIR /app
 
-# The reference service is dependency-free, but imports shared protocol
-# validators from the frontend tree. Keep the image limited to those files.
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --ignore-scripts
+
+# The signaling service imports shared protocol validators and the built-in
+# Redis broker from the frontend tree. Keep the image limited to those files.
 COPY signaling ./signaling
 COPY src/frontend/session ./src/frontend/session
 COPY src/frontend/transport ./src/frontend/transport

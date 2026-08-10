@@ -14,12 +14,12 @@ function encode(value) { return Buffer.from(value).toString('base64url'); }
 function decode(value) { return Buffer.from(value, 'base64url').toString('utf8'); }
 function sign(value, secret) { return createHmac('sha256', secret).update(value).digest('base64url'); }
 
-function makeTicket({sessionId, role, subject, expiresAt}, secret) {
+export function makeSignalingTicket({sessionId, role, subject, expiresAt}, secret) {
   const body = encode(JSON.stringify({version: 1, sessionId, role, subject, expiresAt}));
   return `${body}.${sign(body, secret)}`;
 }
 
-function verifyTicket(ticket, {secret, sessionId, role, now}) {
+export function verifySignalingTicket(ticket, {secret, sessionId, role, now}) {
   const [body, signature] = String(ticket || '').split('.');
   if (!body || !signature) throw new Error('invalid signaling ticket');
   const expected = sign(body, secret);
@@ -43,7 +43,7 @@ export function createSignalingBroker({secret, clock = () => Date.now(), session
     requiredString(subject, 'subject');
     const duration = Number(ttlMs);
     if (!Number.isFinite(duration) || duration < 1000 || duration > 24 * 60 * 60 * 1000) throw new RangeError('ticket TTL is out of bounds');
-    return makeTicket({sessionId, role, subject, expiresAt: clock() + duration}, signingSecret);
+    return makeSignalingTicket({sessionId, role, subject, expiresAt: clock() + duration}, signingSecret);
   };
   const sweep = () => {
     const cutoff = clock() - sessionTtlMs;
@@ -54,7 +54,7 @@ export function createSignalingBroker({secret, clock = () => Date.now(), session
     if (!ROLES.has(role)) throw new TypeError('role must be client or host');
     if (typeof send !== 'function') throw new TypeError('send must be a function');
     sweep();
-    verifyTicket(joinTicket, {secret: signingSecret, sessionId, role, now: clock});
+    verifySignalingTicket(joinTicket, {secret: signingSecret, sessionId, role, now: clock});
     let session = sessions.get(sessionId);
     if (!session) {
       if (sessions.size >= maxSessions) throw new Error('signaling broker session capacity reached');

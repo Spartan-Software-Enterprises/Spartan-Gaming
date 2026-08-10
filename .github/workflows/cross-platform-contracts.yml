@@ -105,3 +105,28 @@ jobs:
         run: npm run native:build-linux
       - name: Test installed Linux package
         run: npm run test:native-linux-package
+
+  redis-broker:
+    name: Redis broker integration
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+      - name: Install runtime dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Exercise Redis-backed signaling
+        env:
+          SPARTAN_TEST_REDIS_URL: redis://127.0.0.1:6379
+        run: npm run test:redis-broker

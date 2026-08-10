@@ -14,12 +14,10 @@ export SPARTAN_SIGNALING_SECRET="$(openssl rand -base64 32)"
 docker compose up --build signaling
 ```
 
-For the production-shaped template, provide the signed external broker package,
-secret files, TLS files, exact HTTPS origins, session-store kind, and TURN
-endpoints, then run:
+For the production-shaped template, provide secret files, TLS files, exact
+HTTPS origins, the TURN endpoints, and run:
 
 ```bash
-export SPARTAN_SIGNALING_BROKER_PATH=/opt/spartan/broker
 export SPARTAN_SIGNALING_SECRET_FILE=/run/secrets/spartan-signaling-secret
 export SPARTAN_SIGNALING_ADMIN_SECRET_FILE=/run/secrets/spartan-signaling-admin
 export SPARTAN_SIGNALING_TLS_KEY_FILE=/run/secrets/signaling.key
@@ -30,10 +28,13 @@ export SPARTAN_SIGNALING_TURN_URLS=turns:turn.example.com:5349
 docker compose -f docker-compose.production.yml up --build signaling
 ```
 
-`docker-compose.production.yml` mounts the broker read-only at
-`/opt/spartan/broker` and passes secret-file paths to the agent. It does not
-provision Redis, TURN, certificate issuance, or the signed broker package;
-those remain operator-owned production dependencies.
+`docker-compose.production.yml` uses the repository's Redis-backed broker and
+provisions a private Redis service for short-lived role ownership and pub/sub.
+The broker never persists signaling payloads. Set
+`SPARTAN_SIGNALING_REDIS_URL` when using an operator-managed Redis cluster;
+use `rediss://` for a TLS Redis endpoint outside the Compose network. TURN
+credentials, certificate issuance/rotation, and the exact browser origin
+remain operator-owned production inputs.
 
 The default Compose mapping binds `127.0.0.1:8790` on the host. The service
 health endpoint is:
@@ -96,15 +97,17 @@ upgrade route for `/signal`, origin policy, rate limits, access logging that
 redacts tokens, and a secret manager. Do not expose the plain `ws://` endpoint
 to the public internet.
 
-Production deployments also need a clustered session registry, durable
-operational monitoring, and separately provisioned STUN/TURN credentials.
-The in-memory broker is a reference boundary and is not a media relay.
+The production Compose profile includes a clustered-capable session registry
+and pub/sub broker. It still needs durable operational monitoring and
+separately provisioned STUN/TURN credentials; Redis is not a media relay.
 
 `createSignalingServer()` accepts an injected broker implementing `attach`,
 `issueTicket`, and `stats`. A production adapter can therefore provide
 clustered session routing and ticket custody behind the same authenticated
 WebSocket surface; the default in-memory broker remains development-only.
-Adapters may also implement `health()`; when present, `/health` and
+The built-in `signaling/redis-broker.mjs` adapter implements that contract
+using Redis, short-lived role locks, and session pub/sub. Adapters may also
+implement `health()`; when present, `/health` and
 `/admin/health` expose only bounded `status` and `backend` fields. Missing or
 failing health checks are reported as `not-reported` or `unavailable` and
 never make secret-bearing adapter details visible.

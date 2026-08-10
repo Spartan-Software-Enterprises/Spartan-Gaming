@@ -11,14 +11,10 @@ services:
       SPARTAN_SIGNALING_TLS_KEY: /run/secrets/tls_key
       SPARTAN_SIGNALING_TLS_CERT: /run/secrets/tls_cert
       SPARTAN_SIGNALING_ALLOWED_ORIGINS: ${SPARTAN_SIGNALING_ALLOWED_ORIGINS:?Set an exact HTTPS origin allowlist}
-      SPARTAN_SIGNALING_SESSION_STORE: ${SPARTAN_SIGNALING_SESSION_STORE:?Set redis, database, or external}
-      SPARTAN_SIGNALING_BROKER_PACKAGE: ${SPARTAN_SIGNALING_BROKER_PACKAGE:-/opt/spartan/broker/index.mjs}
+      SPARTAN_SIGNALING_SESSION_STORE: ${SPARTAN_SIGNALING_SESSION_STORE:-redis}
+      SPARTAN_SIGNALING_BROKER_PACKAGE: ${SPARTAN_SIGNALING_BROKER_PACKAGE:-/app/signaling/redis-broker.mjs}
+      SPARTAN_SIGNALING_REDIS_URL: ${SPARTAN_SIGNALING_REDIS_URL:-redis://redis:6379}
       SPARTAN_SIGNALING_TURN_URLS: ${SPARTAN_SIGNALING_TURN_URLS:?Set turn: or turns: endpoints}
-    volumes:
-      - type: bind
-        source: ${SPARTAN_SIGNALING_BROKER_PATH:?Mount the signed broker package directory}
-        target: /opt/spartan/broker
-        read_only: true
     secrets:
       - signaling_secret
       - signaling_admin_secret
@@ -35,6 +31,28 @@ services:
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    volumes:
+      - signaling-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
 
 secrets:
   signaling_secret:
@@ -45,3 +63,6 @@ secrets:
     file: ${SPARTAN_SIGNALING_TLS_KEY_FILE:?Mount the TLS private key file}
   tls_cert:
     file: ${SPARTAN_SIGNALING_TLS_CERT_FILE:?Mount the TLS certificate file}
+
+volumes:
+  signaling-redis:
