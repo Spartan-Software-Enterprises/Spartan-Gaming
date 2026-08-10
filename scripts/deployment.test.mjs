@@ -64,7 +64,7 @@ test('host deployment templates preserve shell-free, opt-in host startup', () =>
 test('TURN deployment template keeps relay startup hardened and credential-free', () => {
   const turnReadme = fs.readFileSync('deploy/turn/README.md', 'utf8');
   assert.match(turnReadme, /deployment:turn-config/);
-  assert.match(turnReadme, /does not\n+provision a public relay/);
+  assert.match(turnReadme, /does not\s+provision a public relay/);
   assert.match(turnService, /User=turnserver/);
   assert.match(turnService, /--config \/etc\/spartan-gaming\/turnserver\.conf/);
   assert.match(turnService, /--no-cli/);
