@@ -153,6 +153,13 @@ preflight and signaling process at startup; their contents are never returned.
 This validates operator
 prerequisites but does not provision those external services.
 
+Native package rollout artifacts are built by
+`.github/workflows/native-package-rollout.yml` on a manual dispatch or a
+version tag. Each target runner uploads an isolated package artifact and marks
+it as unsigned. An operator must pass the artifact through the external
+package-signing service and install it through the verified adapter installer;
+the rollout workflow never treats a CI artifact as trusted code.
+
 ## Native reference service
 
 Docker is optional. On a machine with Node.js 20 or newer:

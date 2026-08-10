@@ -5,6 +5,7 @@ import test from 'node:test';
 const dockerfile = fs.readFileSync('docker/signaling.Dockerfile', 'utf8');
 const compose = fs.readFileSync('docker-compose.yml', 'utf8');
 const productionCompose = fs.readFileSync('docker-compose.production.yml', 'utf8');
+const nativeRollout = fs.readFileSync('.github/workflows/native-package-rollout.yml', 'utf8');
 
 test('signaling image is minimal, non-root, and health checked', () => {
   assert.match(dockerfile, /^FROM node:22-bookworm-slim/m);
@@ -47,4 +48,8 @@ test('production Compose mounts secrets and provisions the Redis broker dependen
   assert.match(productionCompose, /SPARTAN_SIGNALING_TLS_KEY_FILE/);
   assert.match(productionCompose, /read_only: true/);
   assert.match(productionCompose, /no-new-privileges:true/);
+});
+
+test('native package rollout builds isolated target artifacts without bypassing signing', () => {
+  assert.match(nativeRollout, /workflow_dispatch/); assert.match(nativeRollout, /tags:\s*\n\s*- 'v\*'/); assert.match(nativeRollout, /native:plan/); assert.match(nativeRollout, /upload-artifact@v7/); assert.match(nativeRollout, /UNSIGNED-OPERATOR-SIGNATURE-REQUIRED/); assert.match(nativeRollout, /retention-days: 14/);
 });
