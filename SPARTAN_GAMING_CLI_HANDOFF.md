@@ -83,16 +83,16 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- The published code state is `9b8304d` on `main`; local and AWS worktrees are
+- The published code state is `7c996e1` on `main`; local and AWS worktrees are
   clean and synchronized with `origin/main`.
 - `npm run check`: repository checks pass on the current code state locally
   and on the AWS dev server.
-- `npm test`: the current local run completed with 628 tests, 624 passed,
-  4 skipped, and 0 failed. The AWS run completed with 628 tests, 626 passed,
+- `npm test`: the current local run completed with 632 tests, 628 passed,
+  4 skipped, and 0 failed. The AWS run completed with 632 tests, 630 passed,
   2 skipped, and 0 failed; the difference is environment-gated integration
   coverage, not a failure.
 - AWS Playwright 1.55.0 completed 22/22 navigations across 11 maintained
-  routes at desktop and mobile viewports on code commit `c462151`; all routes
+  routes at desktop and mobile viewports on code commit `7c996e1`; all routes
   returned 200 with meaningful bodies and no horizontal overflow. The
   protected pure JSON report is
   `~/.config/spartan-dev/evidence/playwright/spartan-playwright-runner.json`.
