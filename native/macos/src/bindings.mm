@@ -12,6 +12,15 @@
 #include <cstdlib>
 #include <string>
 
+// Xcode 26 omits the legacy user-device declarations from the public SDK.
+// Keep the optional path isolated behind the stable IOKit symbols; creation
+// failure remains a normal unavailable capability.
+typedef struct __IOHIDUserDevice* IOHIDUserDeviceRef;
+extern "C" IOHIDUserDeviceRef IOHIDUserDeviceCreate(CFAllocatorRef allocator, CFDictionaryRef properties);
+extern "C" IOReturn IOHIDUserDeviceHandleReport(IOHIDUserDeviceRef device, uint8_t* report, CFIndex report_length);
+extern "C" void IOHIDUserDeviceScheduleWithRunLoop(IOHIDUserDeviceRef device, CFRunLoopRef run_loop, CFStringRef mode);
+extern "C" void IOHIDUserDeviceUnscheduleFromRunLoop(IOHIDUserDeviceRef device, CFRunLoopRef run_loop, CFStringRef mode);
+
 namespace {
 
 IOHIDUserDeviceRef virtual_device = nullptr;
