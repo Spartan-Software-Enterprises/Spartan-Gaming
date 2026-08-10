@@ -28,12 +28,12 @@ export function detectHostEnvironment({platformName = platform(), releaseName = 
  * serializable capability descriptor into host health. The binding object is
  * returned separately for host composition and is never exposed in JSON.
  */
-export async function detectHostRuntime({platformName = platform(), releaseName = release(), commandProbe = commandAvailable, webrtcAdapters = [], packageName, loader, bindingOptions = {}, virtualGamepadPackageName, virtualGamepadBackend = 'Automatic', virtualGamepadDevice, virtualGamepadLoader, virtualGamepadOptions = {}} = {}) {
+export async function detectHostRuntime({platformName = platform(), releaseName = release(), commandProbe = commandAvailable, webrtcAdapters = [], packageName, loader, bindingOptions = {}, virtualGamepadPackageName, virtualGamepadBackend = 'Automatic', virtualGamepadDevice, virtualGamepadDevices, virtualGamepadLoader, virtualGamepadOptions = {}} = {}) {
   const base = detectHostEnvironment({platformName, releaseName, commandProbe, webrtcAdapters});
   let result;
   try { result = await loadPlatformNativeBindings({platform: platformName, packageName, loader, options: bindingOptions}); }
   catch (error) { result = Object.freeze({status: 'unavailable', platform: platformName, packageName: packageName || null, reason: error.message}); }
-  const virtualGamepadConfig = NATIVE_PLATFORMS.has(platformName) ? normalizeVirtualGamepadConfig({platform: platformName, backend: virtualGamepadBackend, packageName: virtualGamepadPackageName, deviceId: virtualGamepadDevice}) : Object.freeze({version: 1, platform: platformName, backend: 'Disabled', packageName: null, deviceId: null, compatible: true, requires: Object.freeze([])});
+  const virtualGamepadConfig = NATIVE_PLATFORMS.has(platformName) ? normalizeVirtualGamepadConfig({platform: platformName, backend: virtualGamepadBackend, packageName: virtualGamepadPackageName, deviceId: virtualGamepadDevice, deviceIds: virtualGamepadDevices}) : Object.freeze({version: 1, platform: platformName, backend: 'Disabled', packageName: null, deviceId: null, deviceIds: Object.freeze([]), compatible: true, requires: Object.freeze([])});
   let virtualResult = Object.freeze({status: 'not-required', platform: platformName, packageName: virtualGamepadConfig.packageName, reason: 'virtual gamepad is not available on this host platform', readiness: Object.freeze({state: 'not-required', reason: null})});
   if (NATIVE_PLATFORMS.has(platformName)) {
     virtualResult = Object.freeze({status: 'unconfigured', platform: platformName, packageName: virtualGamepadConfig.packageName, reason: 'virtual gamepad package is not configured', readiness: describeVirtualGamepadReadiness({config: virtualGamepadConfig})});

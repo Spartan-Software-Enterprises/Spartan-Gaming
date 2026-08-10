@@ -4,6 +4,7 @@ const AUDIO_BACKENDS = new Set(['Automatic', 'PipeWire', 'PulseAudio', 'WASAPI',
 
 function text(value, maximum = 256) { return typeof value === 'string' && value.trim() && value.length <= maximum ? value.trim() : undefined; }
 function number(value, fallback, minimum, maximum) { const result = Number(value); return Number.isInteger(result) ? Math.max(minimum, Math.min(maximum, result)) : fallback; }
+function deviceIds(value) { if (typeof value !== 'string') return []; return [...new Set(value.split(',').map(item => item.trim()).filter(Boolean))].slice(0, 8).filter(item => item.length <= 128); }
 
 /** Convert browser settings into a portable, secret-free host/agent config. */
 export function createHostConfigFromSettings({platform, settings = {}, host = {}} = {}) {
@@ -17,6 +18,7 @@ export function createHostConfigFromSettings({platform, settings = {}, host = {}
     virtualGamepadBackend: BACKENDS.has(settings['controllers.virtualGamepadBackend']) ? settings['controllers.virtualGamepadBackend'] : 'Automatic',
     ...(text(settings['controllers.virtualGamepadPackage'], 160) ? {virtualGamepadPackage: text(settings['controllers.virtualGamepadPackage'], 160)} : {}),
     ...(text(settings['controllers.virtualGamepadDevice'], 128) ? {virtualGamepadDevice: text(settings['controllers.virtualGamepadDevice'], 128)} : {}),
+    ...(deviceIds(settings['controllers.virtualGamepadDevices']).length ? {virtualGamepadDevices: deviceIds(settings['controllers.virtualGamepadDevices'])} : {}),
     enableInput: settings['host.allowInputInjection'] !== false,
     enableNativeMedia: settings['host.enableNativeMedia'] === true,
     enableNativeAudio: settings['host.enableNativeAudio'] === true,

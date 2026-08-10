@@ -39,7 +39,10 @@ setups. The host health document reports the normalized backend, package name,
 device ID, and readiness state; it never installs a driver or claims readiness
 from a package name alone. The frontend Controller settings expose the same
 package and device fields so exported profiles can be translated into a
-user-owned host deployment plan.
+user-owned host deployment plan. `controllers.virtualGamepadDevices` and
+`--virtual-gamepad-devices` additionally accept up to eight comma-separated
+slot IDs, preserving per-player device selection while keeping the legacy
+single-device field compatible.
 
 For repeatable supervisor configuration, pass `--config /path/to/host.json`
 to `host/agent.mjs` or include the same path in the shell-free deployment plan.

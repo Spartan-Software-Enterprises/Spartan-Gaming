@@ -46,7 +46,8 @@ const nativePackage = String(configured('native-package', 'nativePackage', proce
 const virtualGamepadPackage = String(configured('virtual-gamepad-package', 'virtualGamepadPackage', process.env.SPARTAN_VIRTUAL_GAMEPAD_PACKAGE || '')).trim() || undefined;
 const virtualGamepadBackend = String(configured('virtual-gamepad-backend', 'virtualGamepadBackend', process.env.SPARTAN_VIRTUAL_GAMEPAD_BACKEND || 'Automatic')).trim();
 const virtualGamepadDevice = String(configured('virtual-gamepad-device', 'virtualGamepadDevice', process.env.SPARTAN_VIRTUAL_GAMEPAD_DEVICE || '')).trim() || undefined;
-const hostRuntime = await detectHostRuntime({packageName: nativePackage, bindingOptions: {environment: process.env}, virtualGamepadPackageName: virtualGamepadPackage, virtualGamepadBackend, virtualGamepadDevice, virtualGamepadOptions: {environment: process.env}});
+const virtualGamepadDevices = args.get('virtual-gamepad-devices') ? String(args.get('virtual-gamepad-devices')).split(',').map(value => value.trim()).filter(Boolean).slice(0, 8) : (hostConfig.virtualGamepadDevices.length ? hostConfig.virtualGamepadDevices : String(process.env.SPARTAN_VIRTUAL_GAMEPAD_DEVICES || '').split(',').map(value => value.trim()).filter(Boolean).slice(0, 8));
+const hostRuntime = await detectHostRuntime({packageName: nativePackage, bindingOptions: {environment: process.env}, virtualGamepadPackageName: virtualGamepadPackage, virtualGamepadBackend, virtualGamepadDevice, virtualGamepadDevices, virtualGamepadOptions: {environment: process.env}});
 const environment = hostRuntime.environment;
 const inputEnabled = args.has('enable-input') ? args.get('enable-input') === true || args.get('enable-input') === 'true' : hostConfig.enableInput;
 const nativeMediaEnabled = args.has('enable-native-media') ? args.get('enable-native-media') === true || args.get('enable-native-media') === 'true' : hostConfig.enableNativeMedia;
