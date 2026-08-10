@@ -30,7 +30,7 @@ export function normalizeSteamOsProfile({platform = 'linux', detected = false, m
   if (!FRAMERATES.has(Number(framerate))) throw new RangeError('SteamOS framerate must be 30, 40, or 60');
   if (Number(width) !== 1280 || Number(height) !== 800) throw new RangeError('SteamOS handheld profile is capped at 1280x800');
   if (!['official-actions', 'fallback'].includes(steamInput)) throw new TypeError('Steam Input mode is unsupported');
-  return Object.freeze({platform, detected, mode, gamescopeEnabled: flag(gamescopeEnabled, 'gamescopeEnabled'), width: 1280, height: 800, framerate: Number(framerate), steamInput, controllerOnlyNavigation: true, launch: createSteamOsLaunchReadiness({mode: launchMode, steamAppId, protonConfigured, gamePathSelected}), requiresPhysicalValidation: true});
+  return Object.freeze({platform, detected, mode, gamescopeEnabled: flag(gamescopeEnabled, 'gamescopeEnabled'), width: 1280, height: 800, framerate: Number(framerate), fullscreen: mode === 'game', steamInput, controllerOnlyNavigation: true, overlaySafeInputFocus: true, sleepWakeRecovery: 'session-reconnect', power: Object.freeze({maxWidth: 1280, maxHeight: 800, supportedFramerates: Object.freeze([...FRAMERATES])}), launch: createSteamOsLaunchReadiness({mode: launchMode, steamAppId, protonConfigured, gamePathSelected}), requiresPhysicalValidation: true});
 }
 
 /** Detect only an explicit SteamOS os-release identity; generic Linux remains generic Linux. */

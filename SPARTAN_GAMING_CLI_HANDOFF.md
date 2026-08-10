@@ -189,6 +189,12 @@ and 0 failed. Physical Steam Deck controls, Steam Input bridge installation,
 and hardware-specific touchscreen/text-entry/haptic/navigation behavior remain
 lab gates.
 
+The current SteamOS session increment adds explicit Game Mode fullscreen,
+overlay-safe controller focus, 1280×800 and 30/40/60-FPS ceilings, and
+session-reconnect sleep/wake metadata to the host profile. These are tested
+contracts; physical suspend/resume, Gamescope, battery, and external-display
+behavior remain lab gates.
+
 The current SteamOS packaging increment adds a user-scope Flatpak filesystem
 contract and shell-free install, update, uninstall, and commit-pinned rollback
 plans. They require operator consent, a bounded SHA-256 artifact digest, and

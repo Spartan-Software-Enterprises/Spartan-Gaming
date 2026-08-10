@@ -5,7 +5,7 @@ import {createGamescopeLaunchPlan, createSteamOsLaunchReadiness, detectSteamOs, 
 test('SteamOS detection requires an explicit os-release identity', () => {
   assert.equal(detectSteamOs({platform: 'linux', readFile: () => 'NAME="Generic Linux"\nID=linux\n'}).detected, false);
   const profile = detectSteamOs({platform: 'linux', readFile: () => 'NAME="SteamOS"\nID=steamos\n'});
-  assert.equal(profile.detected, true); assert.equal(profile.width, 1280); assert.equal(profile.height, 800); assert.equal(profile.controllerOnlyNavigation, true);
+  assert.equal(profile.detected, true); assert.equal(profile.width, 1280); assert.equal(profile.height, 800); assert.equal(profile.controllerOnlyNavigation, true); assert.equal(profile.fullscreen, true); assert.equal(profile.overlaySafeInputFocus, true); assert.equal(profile.sleepWakeRecovery, 'session-reconnect'); assert.deepEqual(profile.power.supportedFramerates, [30, 40, 60]);
 });
 
 test('SteamOS policy bounds handheld refresh choices and rejects non-Linux hosts', () => {
