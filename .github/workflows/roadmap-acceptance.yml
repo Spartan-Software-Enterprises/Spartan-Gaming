@@ -9,7 +9,7 @@ on:
         default: 'self-hosted'
         type: string
       evidence_root:
-        description: 'Runner-local evidence root containing production, hardware, virtual-gamepad, and signed-manifest reports'
+        description: 'Runner-local evidence root containing production, desktop, SteamOS, virtual-gamepad, and signed-manifest reports'
         required: true
         type: string
       public_key_file:
@@ -41,6 +41,7 @@ jobs:
           for file in \
             production/rollout.json \
             hardware/linux.json hardware/win32.json hardware/darwin.json \
+            steam-os/steam-deck.json steam-os/steam-machine.json \
             virtual-gamepad/win32.json virtual-gamepad/darwin.json \
             signed-manifests/linux.json signed-manifests/win32.json signed-manifests/darwin.json; do
             test -f "$EVIDENCE_ROOT/$file"
@@ -57,6 +58,8 @@ jobs:
             --hardware-report "$EVIDENCE_ROOT/hardware/linux.json" \
             --hardware-report "$EVIDENCE_ROOT/hardware/win32.json" \
             --hardware-report "$EVIDENCE_ROOT/hardware/darwin.json" \
+            --steamos-report "$EVIDENCE_ROOT/steam-os/steam-deck.json" \
+            --steamos-report "$EVIDENCE_ROOT/steam-os/steam-machine.json" \
             --virtual-gamepad-report "$EVIDENCE_ROOT/virtual-gamepad/win32.json" \
             --virtual-gamepad-report "$EVIDENCE_ROOT/virtual-gamepad/darwin.json" \
             --signed-manifest "$EVIDENCE_ROOT/signed-manifests/linux.json" \

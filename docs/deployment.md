@@ -199,10 +199,12 @@ health statuses; it does not include environment values, endpoint bodies,
 tokens, or certificate material.
 
 After collecting the production report, one native exercise report from each
-Windows, macOS, and Linux runner, the two desktop virtual-gamepad exercise
-reports, and the three signed-package verification reports, run
+Windows, macOS, and Linux runner, physical Steam Deck and SteamOS desktop
+reports, the two desktop virtual-gamepad exercise reports, and the three
+signed-package verification reports, run
 `npm run roadmap:acceptance` with repeated `--hardware-report`,
-`--virtual-gamepad-report`, and `--signed-package-report` options. The command
+`--steamos-report`, `--virtual-gamepad-report`, and `--signed-package-report`
+options. The command
 produces a bounded acceptance ledger and exits non-zero until every external
 gate is represented by verified evidence. It never treats hosted contract CI,
 an unsigned package, or a configuration-only report as completion. Signed
@@ -212,10 +214,16 @@ hand-written `{status: "verified"}` summary is rejected.
 For stronger signing evidence, pass each actual signed manifest with repeated
 `--signed-manifest` options and provide `--public-key-file`; the ledger then
 performs WebCrypto verification itself instead of trusting a summary report.
+The SteamOS gate requires both `steam-deck` and `steam-machine` (or
+`steam-os-desktop`) runtime reports. Each report must verify Game Mode,
+Desktop Mode, Steam Input/glyphs, text entry, touch/trackpad/gyro/rear
+controls, Gamescope, Proton/native launch, suspend/resume, battery, and
+external display behavior.
 The manual `Roadmap acceptance` workflow automates this final check on a
 self-hosted runner. Its evidence root must contain `production/rollout.json`,
 one native exercise report per desktop platform, one exercised virtual-driver
-report for Windows and macOS, and three signed manifests. The workflow only
+report for Windows and macOS, two physical SteamOS reports, and three signed
+manifests. The workflow only
 uploads the bounded acceptance ledger; it does not upload the evidence root or
 the public key file.
 The workflow requires a ready broker health signal by default; this proves the

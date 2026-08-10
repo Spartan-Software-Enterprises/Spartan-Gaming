@@ -269,6 +269,14 @@ virtual-device drivers, and physical SteamOS/Steam Deck validation open. Those
 gates cannot be truthfully closed on the current AWS Linux server and remain
 documented in `docs/future-local-validation.md`.
 
+The roadmap acceptance ledger now explicitly requires two additional
+secret-free reports: `--steamos-report` for a physical `steam-deck` target and
+for a `steam-machine`/`steam-os-desktop` target. Each must report runtime
+verification for Game Mode, Desktop Mode, Steam Input/glyphs, text entry,
+touch/trackpad/gyro/rear controls, Gamescope, Proton/native launch,
+suspend/resume, battery, and external display behavior. Missing reports keep
+the ledger incomplete.
+
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
 `scripts/frontend/serve.test.mjs`. Before pushing future work, run
