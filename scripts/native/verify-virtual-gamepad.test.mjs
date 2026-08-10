@@ -25,6 +25,11 @@ test('virtual-gamepad verifier fails closed when the live driver probe is missin
   assert.equal(report.status, 'unavailable'); assert.match(report.reason, /verifyDriver/);
 });
 
+test('virtual-gamepad verifier bounds live driver identity metadata', async () => {
+  const report = await verifyInstalledVirtualGamepad({platform: 'windows', installRoot: '/opt/adapters', id: 'windows-driver', publicKeyJwk: key, requireDriver: true, verifyManifest: async () => true, loadModule: async () => ({createVirtualGamepad: async () => ({platform: 'win32', verifyDriver: async () => ({state: 'ready', name: 'x'.repeat(129)}), execute() {}, close() {}})}), fsImpl: {readFile: asyncFiles()}});
+  assert.equal(report.status, 'unavailable'); assert.match(report.reason, /name is too long/);
+});
+
 test('virtual-gamepad verifier fails closed for a rejected signature or malformed package', async () => {
   const report = await verifyInstalledVirtualGamepad({platform: 'macos', installRoot: '/opt/spartan/adapters', id: 'mac-driver', publicKeyJwk: key, verifyManifest: async () => false, fsImpl: {readFile: async file => file.endsWith('current.json') ? JSON.stringify({id: 'mac-driver', version: '1.0.0'}) : JSON.stringify({id: 'mac-driver', version: '1.0.0', kind: 'virtual-gamepad', platform: 'darwin', format: 'directory', entrypoint: 'adapter.mjs', files: [{path: 'adapter.mjs', type: 'file', sizeBytes: 1, integrity: 'sha256-file'}], signature: {algorithm: 'ECDSA', value: 'unsigned', signer: 'test'}})}});
   assert.equal(report.status, 'unavailable'); assert.match(report.reason, /verification failed/);

@@ -6,6 +6,7 @@ import {createInstalledAdapterManifestVerifier, createInstalledAdapterRuntime} f
 
 const PLATFORMS = Object.freeze({windows: 'win32', win: 'win32', win32: 'win32', macos: 'darwin', mac: 'darwin', osx: 'darwin', darwin: 'darwin', linux: 'linux'});
 function text(value) { return typeof value === 'string' ? value.trim() : ''; }
+function driverText(value, name) { const result = text(value); if (result.length > 128) throw new Error(`virtual-gamepad driver ${name} is too long`); return result; }
 function required(value, name) { const result = text(value); if (!result) throw new TypeError(`${name} is required`); return result; }
 function platform(value) { const result = PLATFORMS[text(value).toLowerCase()]; if (!result) throw new TypeError(`unsupported virtual-gamepad platform: ${value}`); return result; }
 function argument(argv, name) { const index = argv.indexOf(name); return index < 0 ? '' : argv[index + 1]; }
@@ -24,7 +25,8 @@ export async function verifyInstalledVirtualGamepad({platform: targetPlatform, i
       if (typeof adapter.verifyDriver !== 'function') throw new Error('virtual-gamepad adapter must expose verifyDriver() for driver acceptance');
       const result = await adapter.verifyDriver();
       if (!result || result.state !== 'ready') throw new Error('virtual-gamepad driver is not ready');
-      driver = Object.freeze({state: 'ready', ...(text(result.name) ? {name: text(result.name)} : {}), ...(text(result.version) ? {version: text(result.version)} : {})});
+      const driverName = driverText(result.name, 'name'); const driverVersion = driverText(result.version, 'version');
+      driver = Object.freeze({state: 'ready', ...(driverName ? {name: driverName} : {}), ...(driverVersion ? {version: driverVersion} : {})});
     }
     const report = {kind: 'virtual-gamepad-exercise', verification: execute ? 'signed-runtime-exercise' : 'signed-runtime-observation', status: 'ready', platform: selectedPlatform, installRoot: root, adapterId: loaded.manifest.id, version: loaded.manifest.version, adapterKind: loaded.manifest.kind, entrypoint: loaded.manifest.entrypoint, capabilities: Object.freeze({virtualGamepad: true, execute: typeof adapter.execute === 'function'}), ...(driver ? {driver} : {})};
     if (execute) {
