@@ -37,6 +37,11 @@ four operator-managed values are present together:
 keystore and passwords never belong in GitHub or this repository. Run
 `./gradlew :app:assembleRelease` only from the signing workstation/service;
 the resulting signature still requires external custody and release evidence.
+The manual `.github/workflows/android-release.yml` workflow uses the same
+boundary with a protected `android-release` environment and a base64-encoded
+keystore secret. It verifies the APK with `apksigner` and uploads only the APK
+and digest; the keystore is materialized in the runner temporary directory and
+removed at job exit.
 Permissions, WebView lifecycle, and physical device behavior remain lab gates.
 Android Studio is not required on the headless build server; the committed
 wrapper provides the reproducible CLI build.

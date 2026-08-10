@@ -53,6 +53,19 @@ test('Android release signing fails closed and never stores credentials in sourc
   assert.doesNotMatch(build, /keyPassword\s*=\s*"/);
 });
 
+test('Android signed release workflow keeps keystore material external', () => {
+  const workflow = fs.readFileSync(path.join(root, '..', '.github/workflows/android-release.yml'), 'utf8');
+  assert.match(workflow, /workflow_dispatch/);
+  assert.match(workflow, /environment: android-release/);
+  assert.match(workflow, /SPARTAN_ANDROID_KEYSTORE_B64/);
+  assert.match(workflow, /base64 --decode/);
+  assert.match(workflow, /SPARTAN_ANDROID_STORE_PASSWORD/);
+  assert.match(workflow, /:app:assembleRelease/);
+  assert.match(workflow, /apksigner.*verify/);
+  assert.match(workflow, /actions\/upload-artifact@v7/);
+  assert.doesNotMatch(workflow, /BEGIN (RSA |EC )?PRIVATE KEY/);
+});
+
 test('Android shell keeps native actions bounded and lifecycle-scoped', () => {
   const activity = read('app/src/main/kotlin/com/spartan/gaming/app/MainActivity.kt');
   assert.match(activity, /removeJavascriptInterface\("SpartanAndroid"\)/);
