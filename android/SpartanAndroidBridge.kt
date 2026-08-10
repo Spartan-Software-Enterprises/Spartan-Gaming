@@ -24,6 +24,7 @@ class SpartanAndroidBridge(
         fun onGameModeQuery(): Boolean
         fun onControllerInventoryQuery(): Boolean
         fun onTextInput(payload: JSONObject): Boolean
+        fun onGameNativeLaunch(payload: JSONObject): Boolean
     }
 
     @JavascriptInterface
@@ -38,6 +39,7 @@ class SpartanAndroidBridge(
                 "android.game-mode.query" -> handler.onGameModeQuery()
                 "android.controllers.snapshot" -> handler.onControllerInventoryQuery()
                 "android.text-input" -> handler.onTextInput(payload)
+                "android.gamenative.launch" -> handler.onGameNativeLaunch(payload)
                 else -> false
             }
         } catch (_: JSONException) {

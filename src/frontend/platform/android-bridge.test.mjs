@@ -20,6 +20,15 @@ test('Android bridge exposes bounded native requests and fails closed when absen
   assert.equal(messages.length, 2);
 });
 
+test('Android bridge only forwards validated GameNative library handoffs', () => {
+  const messages = [];
+  const bridge = createAndroidBridge({bridge: {postMessage: value => { messages.push(JSON.parse(value)); return true; }}});
+  assert.deepEqual(bridge.launchGameNative({appId: 12345, store: 'steam'}), {status: 'requested', action: ACTIONS.gameNative, accepted: true});
+  assert.deepEqual(messages[0], {version: 1, action: 'android.gamenative.launch', payload: {appId: 12345, store: 'STEAM'}});
+  assert.equal(bridge.launchGameNative({appId: 0, store: 'STEAM'}).status, 'rejected');
+  assert.equal(bridge.launchGameNative({appId: 12345, store: 'URL'}).status, 'rejected');
+});
+
 test('Android bridge rejects oversized or malformed native bridge payloads', () => {
   const bridge = createAndroidBridge({bridge: {postMessage: () => { throw new Error('native rejected'); }}});
   assert.equal(bridge.send('android.policy', {text: 'x'.repeat(MAX_MESSAGE_BYTES)}).status, 'rejected');

@@ -1,5 +1,6 @@
-const ACTIONS = Object.freeze({policy: 'android.policy', gameMode: 'android.game-mode.query', controllers: 'android.controllers.snapshot', textInput: 'android.text-input'});
+const ACTIONS = Object.freeze({policy: 'android.policy', gameMode: 'android.game-mode.query', controllers: 'android.controllers.snapshot', textInput: 'android.text-input', gameNative: 'android.gamenative.launch'});
 const MAX_MESSAGE_BYTES = 16 * 1024;
+const GAME_NATIVE_STORES = new Set(['STEAM', 'EPIC', 'GOG', 'AMAZON']);
 
 function boundedText(value, fallback = '') {
   return typeof value === 'string' && value.length <= 512 && !/[\u0000\r\n]/.test(value) ? value : fallback;
@@ -40,7 +41,13 @@ export function createAndroidBridge({bridge = globalThis.SpartanAndroid} = {}) {
     queryGameMode() { return send(ACTIONS.gameMode); },
     requestControllerInventory() { return send(ACTIONS.controllers); },
     requestTextInput(request) { return send(ACTIONS.textInput, request); },
+    launchGameNative({appId, store} = {}) {
+      const numericId = Number(appId);
+      const normalizedStore = typeof store === 'string' ? store.trim().toUpperCase() : '';
+      if (!Number.isSafeInteger(numericId) || numericId <= 0 || !GAME_NATIVE_STORES.has(normalizedStore)) return Object.freeze({status: 'rejected', action: ACTIONS.gameNative, reason: 'GameNative requires a positive library app ID and supported store'});
+      return send(ACTIONS.gameNative, {appId: numericId, store: normalizedStore});
+    },
   });
 }
 
-export {ACTIONS, MAX_MESSAGE_BYTES};
+export {ACTIONS, GAME_NATIVE_STORES, MAX_MESSAGE_BYTES};

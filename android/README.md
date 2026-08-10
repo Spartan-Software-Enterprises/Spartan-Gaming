@@ -59,8 +59,13 @@ Install one instance on the primary WebView with `addJavascriptInterface` under
 the name `SpartanAndroid`; the shared frontend then sends versioned messages
 through `postMessage`. The bridge accepts only the bounded actions
 `android.policy`, `android.game-mode.query`, `android.controllers.snapshot`,
-and `android.text-input`, rejects non-object payloads, and forwards valid
-requests to an Activity-owned `Handler`.
+`android.text-input`, and `android.gamenative.launch`, rejects non-object
+payloads, and forwards valid requests to an Activity-owned `Handler`.
+
+The GameNative action carries only a positive numeric library app ID and one of
+`STEAM`, `EPIC`, `GOG`, or `AMAZON`; the Activity handler should delegate to
+`GameNativeHandoff` so package resolution and the official release fallback
+remain user-mediated.
 
 The bridge never exposes a `Context`, raw `InputDevice`, `InputConnection`, or
 arbitrary command/URL surface to JavaScript. The Activity remains responsible
