@@ -68,7 +68,7 @@ export const settingsCategories = [
   },
   {
     id: 'controllers', label: 'Controllers', icon: '⌁', description: 'Gamepads, HID devices, mappings, and rumble.', settings: [
-      select('controllers.defaultProfile', 'Default controller profile', 'Profile used for new games and providers.', ['Auto-detect', 'Xbox layout', 'PlayStation layout', 'Nintendo layout', 'Keyboard and mouse'], 'Auto-detect'),
+      select('controllers.defaultProfile', 'Default controller profile', 'Profile used for new games and providers.', ['Auto-detect', 'Xbox layout', 'PlayStation layout', 'DualSense / DualShock', 'Nintendo layout', 'Switch Pro Controller', 'Steam Deck', 'Stadia controller', '8BitDo / XInput', 'Arcade stick', 'Racing wheel and pedals', 'Flight stick and throttle', 'Generic HID controller', 'Keyboard and mouse'], 'Auto-detect'),
       select('controllers.inputMode', 'Controller input mode', 'Select how connected controllers are exposed to games and remote hosts.', ['Auto-detect', 'XInput', 'DirectInput', 'Standard Gamepad', 'HID passthrough'], 'Auto-detect'),
       toggle('controllers.multipleControllers', 'Allow multiple controllers', 'Expose more than one connected controller to multiplayer games and hosts.', true),
       select('controllers.playerSlots', 'Controller player slots', 'Maximum number of controller slots available to a session.', ['1', '2', '4', '8'], '4'),
