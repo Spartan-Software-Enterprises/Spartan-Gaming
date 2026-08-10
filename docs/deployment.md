@@ -83,6 +83,9 @@ The in-memory broker is a reference boundary and is not a media relay.
 `issueTicket`, and `stats`. A production adapter can therefore provide
 clustered session routing and ticket custody behind the same authenticated
 WebSocket surface; the default in-memory broker remains development-only.
+The executable can load such an operator-installed adapter with
+`SPARTAN_SIGNALING_BROKER_PACKAGE` or `--broker-package`; the package must
+export `createBroker()` and return the validated broker contract.
 
 Before promoting a deployment, run `npm run deployment:check` with
 `SPARTAN_SIGNALING_SECRET`, `SPARTAN_SIGNALING_ADMIN_SECRET`,

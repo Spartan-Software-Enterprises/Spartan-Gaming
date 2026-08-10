@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createMessageRateLimiter, createSignalingServer, isOriginAllowed, normalizeServiceOptions} from './agent.mjs';
+import {createMessageRateLimiter, createSignalingServer, isOriginAllowed, loadBrokerAdapter, normalizeServiceOptions} from './agent.mjs';
 
 test('signaling service defaults are bounded and origins are opt-in', () => {
   const config = normalizeServiceOptions({secret: 'test'});
@@ -61,4 +61,11 @@ test('signaling server accepts an injected broker for clustered production adapt
   const service = createSignalingServer({broker, bind: '127.0.0.1', port: 0});
   try { const address = await service.start(); const response = await fetch(`http://127.0.0.1:${address.port}/health`); assert.equal(response.status, 200); assert.equal((await response.json()).sessions, 0); }
   finally { await service.close(); }
+});
+
+test('broker adapter loader requires a validated external broker package', async () => {
+  const broker = {issueTicket() {}, attach() {}, stats() { return {sessions: 0, participants: 0}; }};
+  const loaded = await loadBrokerAdapter({packageName: '@test/clustered-broker', loader: async name => { assert.equal(name, '@test/clustered-broker'); return {createBroker: async options => { assert.equal(options.environment.NODE_ENV, 'test'); return broker; }}; }, options: {environment: {NODE_ENV: 'test'}}});
+  assert.equal(loaded, broker);
+  await assert.rejects(() => loadBrokerAdapter({packageName: '@test/invalid', loader: async () => ({})}), /must export createBroker/);
 });

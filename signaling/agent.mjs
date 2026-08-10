@@ -131,10 +131,22 @@ export function createSignalingServer(options = {}) {
   return Object.freeze({config, broker, server, stats: () => Object.freeze({connections: sockets.size, rejectedConnections, ...broker.stats()}), start() { return new Promise((resolve, rejectStart) => { server.once('error', rejectStart); server.listen(config.port, config.bind, () => { server.removeListener('error', rejectStart); resolve(server.address()); }); }); }, close() { for (const socket of sockets) socket.destroy(); server.closeIdleConnections?.(); server.closeAllConnections?.(); if (!server.listening) return Promise.resolve(); return new Promise(resolve => { let settled = false; const finish = () => { if (settled) return; settled = true; resolve(); }; server.close(finish); const timeout = setTimeout(finish, SHUTDOWN_TIMEOUT_MS); timeout.unref?.(); }); }});
 }
 
+export async function loadBrokerAdapter({packageName, loader = name => import(name), options = {}} = {}) {
+  if (typeof packageName !== 'string' || !packageName.trim()) throw new TypeError('broker package name is required');
+  if (typeof loader !== 'function') throw new TypeError('broker loader must be a function');
+  let module;
+  try { module = await loader(packageName.trim()); } catch { throw new Error('signaling broker package failed to load'); }
+  if (typeof module?.createBroker !== 'function') throw new Error('signaling broker package must export createBroker');
+  let broker;
+  try { broker = await module.createBroker(options); } catch { throw new Error('signaling broker package initialization failed'); }
+  if (!broker || typeof broker.attach !== 'function' || typeof broker.issueTicket !== 'function' || typeof broker.stats !== 'function') throw new Error('signaling broker package returned an invalid broker');
+  return broker;
+}
+
 if (pathEqualsMain()) {
   try {
-    const args = parseArguments(process.argv.slice(2)); const allowedOrigins = String(args.get('allowed-origins') || process.env.SPARTAN_SIGNALING_ALLOWED_ORIGINS || '').split(',').map(text).filter(Boolean);
-    const service = createSignalingServer({secret: args.get('secret') || process.env.SPARTAN_SIGNALING_SECRET, adminSecret: args.get('admin-secret') || process.env.SPARTAN_SIGNALING_ADMIN_SECRET, bind: args.get('bind') || process.env.SPARTAN_SIGNALING_BIND, port: args.get('port') || process.env.SPARTAN_SIGNALING_PORT, allowedOrigins, maxConnections: args.get('max-connections') || process.env.SPARTAN_SIGNALING_MAX_CONNECTIONS, maxMessagesPerSecond: args.get('max-messages-per-second') || process.env.SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND, tlsKey: args.get('tls-key') || process.env.SPARTAN_SIGNALING_TLS_KEY, tlsCert: args.get('tls-cert') || process.env.SPARTAN_SIGNALING_TLS_CERT});
+    const args = parseArguments(process.argv.slice(2)); const allowedOrigins = String(args.get('allowed-origins') || process.env.SPARTAN_SIGNALING_ALLOWED_ORIGINS || '').split(',').map(text).filter(Boolean); const brokerPackage = text(args.get('broker-package') || process.env.SPARTAN_SIGNALING_BROKER_PACKAGE); const broker = brokerPackage ? await loadBrokerAdapter({packageName: brokerPackage, options: {environment: process.env}}) : undefined;
+    const service = createSignalingServer({...(broker ? {broker} : {}), secret: args.get('secret') || process.env.SPARTAN_SIGNALING_SECRET, adminSecret: args.get('admin-secret') || process.env.SPARTAN_SIGNALING_ADMIN_SECRET, bind: args.get('bind') || process.env.SPARTAN_SIGNALING_BIND, port: args.get('port') || process.env.SPARTAN_SIGNALING_PORT, allowedOrigins, maxConnections: args.get('max-connections') || process.env.SPARTAN_SIGNALING_MAX_CONNECTIONS, maxMessagesPerSecond: args.get('max-messages-per-second') || process.env.SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND, tlsKey: args.get('tls-key') || process.env.SPARTAN_SIGNALING_TLS_KEY, tlsCert: args.get('tls-cert') || process.env.SPARTAN_SIGNALING_TLS_CERT});
     service.start().then(address => { const host = address.address === '0.0.0.0' ? '127.0.0.1' : address.address; const protocol = service.config.tls.enabled ? 'wss' : 'ws'; const httpProtocol = service.config.tls.enabled ? 'https' : 'http'; console.log(JSON.stringify({service: 'spartan-signaling-reference', endpoint: `${protocol}://${host}:${address.port}/signal`, health: `${httpProtocol}://${host}:${address.port}/health`, secure: service.config.tls.enabled, allowedOrigins: service.config.allowedOrigins, limits: {maxConnections: service.config.maxConnections, maxMessagesPerSecond: service.config.maxMessagesPerSecond}, warning: 'Reference signaling only; use secret management, clustered session storage, and separately provisioned STUN/TURN in production.'})); }).catch(error => { console.error(error.message); process.exitCode = 1; });
   } catch (error) {
     console.error(error.message);
