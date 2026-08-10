@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {createReadStream} from 'node:fs';
+import {createReadStream, existsSync} from 'node:fs';
 import {stat} from 'node:fs/promises';
 import {createServer} from 'node:http';
 import path from 'node:path';
@@ -10,6 +10,7 @@ const frontendRoot = path.join(repositoryRoot, 'src/frontend');
 const MIME_TYPES = Object.freeze({
   '.css': 'text/css; charset=utf-8',
   '.html': 'text/html; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
   '.ico': 'image/x-icon',
   '.js': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
@@ -47,9 +48,15 @@ function createAssetResolver({root = frontendRoot, publicRoot = repositoryRoot} 
     if (decoded === '/service-worker.mjs') return {file: path.join(root, 'service-worker.mjs')};
     if (decoded.startsWith('/pwa/')) return {file: safePath(path.join(root, 'pwa'), decoded.slice('/pwa'.length))};
     for (const mount of mounts) {
+      if (mount.urlPrefix !== '/src/frontend' && !decoded.endsWith('.json')) continue;
       if (decoded === mount.urlPrefix || decoded.startsWith(`${mount.urlPrefix}/`)) {
         return {file: safePath(mount.root, decoded.slice(mount.urlPrefix.length) || '/')};
       }
+    }
+    if (decoded.endsWith('.mjs') || decoded.endsWith('.js')) {
+      const frontendFile = safePath(root, decoded);
+      if (frontendFile && existsSync(frontendFile)) return {file: frontendFile};
+      return {file: safePath(publicRoot, decoded)};
     }
     const firstSegment = decoded.split('/')[1];
     if (firstSegment && ['adapters', 'dashboard', 'diagnostics', 'emulation', 'host', 'input', 'player', 'providers', 'settings', 'startup', 'workspaces'].includes(firstSegment)) return {file: safePath(root, decoded)};

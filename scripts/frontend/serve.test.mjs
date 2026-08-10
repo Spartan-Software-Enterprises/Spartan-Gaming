@@ -26,7 +26,17 @@ test('frontend server redirects the origin to the dashboard and serves catalogs'
   assert.equal((await catalog.json()).catalogVersion, 1);
   const emulation = await fetch(`${origin}/emulation/emulation-page.mjs`);
   assert.equal(emulation.status, 200);
+  assert.equal(emulation.headers.get('content-type'), 'text/javascript; charset=utf-8');
   assert.match(await emulation.text(), /loadVerifiedBrowserEmulatorAdapter/);
+  const providerModule = await fetch(`${origin}/providers/session-cleanup.mjs`);
+  assert.equal(providerModule.status, 200);
+  assert.equal(providerModule.headers.get('content-type'), 'text/javascript; charset=utf-8');
+  const frontendModule = await fetch(`${origin}/catalog.mjs`);
+  assert.equal(frontendModule.status, 200);
+  assert.equal(frontendModule.headers.get('content-type'), 'text/javascript; charset=utf-8');
+  const hostModule = await fetch(`${origin}/host/launch-request.mjs`);
+  assert.equal(hostModule.status, 200);
+  assert.equal(hostModule.headers.get('content-type'), 'text/javascript; charset=utf-8');
 }));
 
 test('frontend server exposes the service worker aliases and rejects traversal', () => withServer(async origin => {

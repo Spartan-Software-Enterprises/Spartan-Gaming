@@ -63,16 +63,62 @@ lacking a kernel or device path capable of force feedback.
 ## Current development evidence
 
 The configured Amazon Linux 2023 development host has been synchronized with
-the current `main` branch (`61e4013`) and has successfully run the repository
-dependency install, Linux native package build, and executable `/dev/uinput`
-button/axis sequence. The resulting verifier reported `status: ready` and
-`input: verified`. A separate force-feedback exercise returned `EINVAL` while
-uploading the kernel effect, so haptics are not accepted as verified on this
-headless host. The full desktop exercise also remains unavailable because the
-host has no FFmpeg runtime and its native audio capability is unavailable.
-Its secret-free development rollout report records healthy reference
-signaling, a ready Redis broker, a ready TURN credential service, and
-reachable TURN network probing.
+`main` and has successfully run the repository dependency install, Linux
+native package build, executable `/dev/uinput` button/axis sequence, and the
+full desktop exercise using the Docker-pinned FFmpeg wrapper. The latest Linux
+hardware report recorded `status: ready` with capture, audio, input, and
+haptics verified. The host also runs the reference signaling, Redis, and TURN
+development services. These results remain Linux-host evidence only; they do
+not prove Windows, macOS, Android hardware, Fire TV, Roku, or production
+package signing.
+
+The remote Chromium/Playwright pass used Playwright 1.55.0 and headless
+Chromium on this host. It covered 11 desktop routes plus dashboard, settings,
+and player at a 390x844 mobile viewport; all navigations returned 200, pages
+were meaningful and overlay-free, dashboard search and provider navigation
+worked, Android settings navigation worked, diagnostics reached “Ready for
+compatible sessions” with 21 capability cards, and mobile horizontal overflow
+was false. Headless Chromium may report a non-fatal WebGPU initialization
+warning. Screenshots and the JSON report are retained outside Git under
+`/tmp/spartan-playwright-results` and `/tmp/spartan-playwright.json`.
+
+### Connection and host inventory
+
+The following identifies the existing development host without publishing any
+secret material:
+
+| Field | Value |
+| --- | --- |
+| AWS instance | `i-0d3d5c3c1724d02f4` |
+| Instance type | `t3.small` |
+| OS | Amazon Linux 2023 |
+| Region/AZ | `us-east-1b` |
+| Public address | `100.59.33.221` (not reserved; may change) |
+| Disk | 30 GiB encrypted gp3 |
+| SSH source restriction | `173.80.1.14/32` |
+| Project checkout | `/home/ec2-user/Spartan-Gaming` |
+| Frontend test origin | `http://127.0.0.1:4173` (SSH-local only) |
+| Evidence directory | `/home/ec2-user/.config/spartan-dev/evidence` |
+
+Connect with:
+
+```bash
+ssh -i ~/.ssh/spartan-dev ec2-user@100.59.33.221
+```
+
+The private key is operator-managed at
+`/data/data/com.termux/files/home/.ssh/spartan-dev` on the development device.
+Private keys, passwords, TLS private keys, Redis credentials, TURN secrets,
+and provider credentials must never be copied into this repository, README,
+handoff, issue, or chat transcript. The host's secret files are referenced by
+path and environment configuration only; their values are intentionally
+redacted. Rotate the key or service secrets through the operator's secret
+store if exposure is suspected.
+
+The installed toolchain is Git, Rust/Cargo, GCC, CMake, Node.js/npm, Python,
+Docker, Playwright 1.55.0, and the Amazon Linux GUI/media dependencies needed
+by headless Chromium. The development services are Redis, signaling, and TURN;
+no public game ports are opened.
 The report is retained outside Git at
 `~/.config/spartan-dev/evidence/production/rollout.json`.
 

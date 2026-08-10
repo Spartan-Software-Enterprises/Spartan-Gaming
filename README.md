@@ -45,7 +45,7 @@ host/                  Portable reference host control plane and pairing authori
 third_party/           Third-party notices and integration metadata
 ```
 
-## Building
+## Building and remote validation
 
 Run the frontend locally from a real HTTP origin with:
 
@@ -62,6 +62,13 @@ The first milestone will document the supported Chromium checkout and build
 configuration. See [CONTRIBUTING.md](CONTRIBUTING.md) and
 [docs/architecture.md](docs/architecture.md).
 
+The preferred validation environment is the low-cost Amazon Linux development
+host documented in [docs/aws-dev-validation.md](docs/aws-dev-validation.md).
+That runbook includes the complete connection metadata, setup commands,
+service boundaries, evidence locations, and platform limitations. The current
+agent continuation state is maintained in
+[SPARTAN_GAMING_CLI_HANDOFF.md](SPARTAN_GAMING_CLI_HANDOFF.md).
+
 ## Project principles
 
 - Open source and auditable by default.
@@ -73,7 +80,13 @@ configuration. See [CONTRIBUTING.md](CONTRIBUTING.md) and
 
 ## Status
 
-Spartan Gaming is in the foundation and architecture phase. Follow [ROADMAP.md](ROADMAP.md) for the current sequence of work.
+Spartan Gaming is in the foundation and architecture phase. The shared
+frontend, Electron-first desktop shell, Android policy surface, controller
+profiles, provider/emulator catalogs, host control plane, and diagnostics
+contracts are implemented and covered by automated tests. Follow
+[ROADMAP.md](ROADMAP.md) for the current sequence of work and its explicit
+external acceptance gates. No platform or device is called complete without
+the corresponding real hardware, driver, signing, or production evidence.
 
 Interactive frontend surfaces include the [gaming dashboard](src/frontend/dashboard/index.html), which merges provider, emulator, and browser-game catalogs into one searchable library; the [session player](src/frontend/player/index.html), with stream, overlay, quality, reconnect, capture, controller, and live RTT/loss/decode/jitter/bitrate diagnostics; the [controller profile manager](src/frontend/input/profiles.html), with persistent remapping and deadzone controls; the [host profile manager](src/frontend/host/index.html), with secure endpoint validation and one-time pairing handoff; the [emulation center](src/frontend/emulation/index.html), with core metadata and legal user-file launch plans; the [compatibility diagnostics center](src/frontend/diagnostics/index.html), with local capability probing and redacted reports; and the [settings control center](src/frontend/settings/index.html), covering browser, gaming, streaming, controllers, emulation, providers, performance, privacy, accessibility, profiles, and updates. Browser-game catalog entries are HTTPS-only official links: Spartan Gaming launches them in a normal web context and does not mirror, redistribute, or inject into their content.
 
