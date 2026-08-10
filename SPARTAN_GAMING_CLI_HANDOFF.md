@@ -176,6 +176,15 @@ IME behavior remain intentionally unverified platform work. The focused
 text-entry suite passed 3/3 locally; rerun it with the full repository suite
 before publishing the next handoff.
 
+The remote Playwright pass initially exposed dashboard horizontal overflow at
+the 390x844 mobile viewport. Commit `40f9f65` wraps the dynamically added
+console-mode and workspace controls on small screens. Playwright 1.55.0 then
+passed all 22 navigations across 11 maintained routes at desktop and mobile
+viewports, including search/settings smoke checks. The protected report is
+stored on AWS at
+`~/.config/spartan-dev/evidence/playwright/spartan-playwright.json`; this is
+browser-surface evidence only and does not replace physical device validation.
+
 The current Proton/SteamOS increment adds a user-owned Linux/SteamOS Proton
 launch boundary. `host/proton.mjs` detects a selected installation, validates
 compatibility-prefix and allow-listed runtime options, and creates a shell-free

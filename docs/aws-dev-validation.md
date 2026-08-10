@@ -72,14 +72,17 @@ development services. These results remain Linux-host evidence only; they do
 not prove Windows, macOS, Android hardware, Fire TV, Roku, or production
 package signing.
 
-The remote Chromium/Playwright pass used Playwright 1.55.0 and headless
-Chromium on this host. It covered 11 desktop routes plus dashboard, settings,
-and player at a 390x844 mobile viewport; all navigations returned 200, pages
-were meaningful and overlay-free, dashboard search and provider navigation
-worked, Android settings navigation worked, diagnostics reached “Ready for
-compatible sessions” with 21 capability cards, and mobile horizontal overflow
-was false. Headless Chromium may report a non-fatal WebGPU initialization
-warning. Retain artifacts only in the protected evidence directory:
+The latest remote Chromium/Playwright pass used Playwright 1.55.0 and headless
+Chromium on commit `40f9f65`. It covered 11 maintained routes at 1280x800 and
+390x844, including dashboard, settings, player, diagnostics, adapters,
+emulation, host, workspaces, providers, and both controller tools. All 22
+navigations returned 200 with meaningful bodies, dashboard search and settings
+controls rendered, and mobile horizontal overflow was false. The exact report
+is retained at
+`~/.config/spartan-dev/evidence/playwright/spartan-playwright.json`; it is
+protected evidence outside Git. Headless Chromium may report a non-fatal
+WebGPU initialization warning. Retain artifacts only in the protected evidence
+directory:
 
 ```bash
 evidence="$HOME/.config/spartan-dev/evidence/playwright"
