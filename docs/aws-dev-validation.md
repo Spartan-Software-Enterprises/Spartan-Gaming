@@ -163,6 +163,24 @@ game ports, and cannot prove physical Windows/macOS devices, desktop virtual
 gamepad drivers, or external signing custody. The Linux force-feedback probe
 also remains a separate capability result from basic uinput input readiness.
 
+## SSH recovery procedure
+
+On 2026-08-10 the configured host repeatedly timed out during the SSH banner
+after a small-host Gradle release-signing workload. Treat that as an
+infrastructure incident, not as proof of a code or signing result. Before any
+state-changing action, use the protected AWS inventory to inspect the instance
+state, system-status checks, CPU-credit balance, security-group source range,
+and current public address. Do not stop/start, resize, replace, or open ports
+on this instance without a cost and network review: the address is ephemeral
+and the project is subject to an AWS credit limit.
+
+After SSH recovers, run `uptime`, inspect for leftover Gradle/Java processes,
+confirm `git status -sb`, and then rerun only bounded Android or repository
+commands. If the host remains unavailable, GitHub Actions is the authoritative
+fallback for repository, cross-platform, and Android debug contract checks;
+those results must not be described as physical hardware or production
+evidence.
+
 ## Evidence boundary
 
 This host can provide Linux package-build and uinput-input evidence. It does
