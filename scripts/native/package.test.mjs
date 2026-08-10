@@ -10,6 +10,7 @@ import './verify-virtual-gamepad.test.mjs';
 import {createNativePackageMatrix, createNativePackagePlan, parseNativePackageArguments} from './package.mjs';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const hardwareWorkflow = fs.readFileSync(path.join(repositoryRoot, '.github/workflows/hardware-validation.yml'), 'utf8');
 
 test('native package CLI maps all desktop targets to isolated plans', () => {
   const matrix = createNativePackageMatrix({sourceRoot: '/external/spartan', outRoot: '/external/out', installRoot: '/external/install'});
@@ -53,4 +54,19 @@ test('desktop native package sources expose platform API implementations and pac
 test('native package CLI rejects malformed options and unsupported platforms', () => {
   assert.throws(() => createNativePackagePlan({platform: 'android', sourceRoot: '/external/spartan'}), /unsupported/);
   assert.throws(() => parseNativePackageArguments(['--unknown']), /unknown native package option/);
+});
+
+test('hardware validation workflow requires real platform capabilities and signed adapters', () => {
+  assert.match(hardwareWorkflow, /workflow_dispatch:/);
+  assert.match(hardwareWorkflow, /runs-on: \$\{\{ inputs\.runner_label \}\}/);
+  assert.match(hardwareWorkflow, /native:verify-desktop/);
+  assert.match(hardwareWorkflow, /--require-hardware/);
+  assert.match(hardwareWorkflow, /--require-input/);
+  assert.match(hardwareWorkflow, /--require-audio/);
+  assert.match(hardwareWorkflow, /--require-haptics/);
+  assert.match(hardwareWorkflow, /native:verify-linux/);
+  assert.match(hardwareWorkflow, /--execute --rumble/);
+  assert.match(hardwareWorkflow, /native:verify-virtual-gamepad/);
+  assert.match(hardwareWorkflow, /test -f \"\$PUBLIC_KEY_FILE\"/);
+  assert.doesNotMatch(hardwareWorkflow, /SPARTAN_.*SECRET\s*:/);
 });

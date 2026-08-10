@@ -247,6 +247,15 @@ attached or that a real haptic effect was felt. The final hardware gate must
 run this check on each target operating system with the intended devices
 connected, then record the result in the release handoff.
 
+The manual `Hardware validation gate` GitHub Actions workflow provides that
+operator-run surface on a labeled self-hosted Windows, macOS, or Linux runner.
+It requires native input, audio, and haptics readiness, and can explicitly run
+the Linux `/dev/uinput` button/axis and force-feedback sequence. It can also
+verify a separately installed signed virtual-gamepad package using a
+runner-local public-key file. The workflow is intentionally manual and fails
+closed; a passing package contract or hosted CI runner does not substitute for
+connecting the target controller, audio device, and display hardware.
+
 For a separately installed Windows or macOS virtual-gamepad adapter, verify
 the signed package before enabling it in the host configuration:
 

@@ -1,0 +1,85 @@
+name: Hardware validation gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner_label:
+        description: 'Self-hosted runner label for the connected target hardware'
+        required: true
+        default: 'self-hosted'
+        type: string
+      platform:
+        description: 'Target native platform'
+        required: true
+        type: choice
+        options:
+          - linux
+          - windows
+          - macos
+      install_root:
+        description: 'Runner-local installed native package root'
+        required: true
+        type: string
+      verify_linux_device:
+        description: 'On Linux, run the explicit uinput and force-feedback sequence'
+        required: true
+        default: false
+        type: boolean
+      verify_virtual_gamepad:
+        description: 'Verify the installed signed virtual-gamepad package'
+        required: true
+        default: false
+        type: boolean
+      virtual_install_root:
+        description: 'Runner-local virtual-gamepad adapter install root'
+        required: false
+        type: string
+      virtual_adapter_id:
+        description: 'Installed virtual-gamepad adapter ID'
+        required: false
+        type: string
+      public_key_file:
+        description: 'Runner-local public-key JWK file for adapter verification'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate ${{ inputs.platform }} hardware
+    runs-on: ${{ inputs.runner_label }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+      - name: Install native verification tooling
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Require native package and platform capabilities
+        shell: bash
+        env:
+          TARGET_PLATFORM: ${{ inputs.platform }}
+          INSTALL_ROOT: ${{ inputs.install_root }}
+        run: npm run native:verify-desktop -- --platform "$TARGET_PLATFORM" --install-root "$INSTALL_ROOT" --require-hardware --require-input --require-audio --require-haptics
+      - name: Exercise Linux uinput and force feedback
+        if: ${{ inputs.platform == 'linux' && inputs.verify_linux_device }}
+        shell: bash
+        env:
+          INSTALL_ROOT: ${{ inputs.install_root }}
+        run: npm run native:verify-linux -- --install-root "$INSTALL_ROOT" --execute --rumble
+      - name: Verify signed virtual-gamepad package
+        if: ${{ inputs.verify_virtual_gamepad }}
+        shell: bash
+        env:
+          TARGET_PLATFORM: ${{ inputs.platform }}
+          VIRTUAL_INSTALL_ROOT: ${{ inputs.virtual_install_root }}
+          VIRTUAL_ADAPTER_ID: ${{ inputs.virtual_adapter_id }}
+          PUBLIC_KEY_FILE: ${{ inputs.public_key_file }}
+        run: |
+          set -euo pipefail
+          test -n "$VIRTUAL_INSTALL_ROOT"
+          test -n "$VIRTUAL_ADAPTER_ID"
+          test -f "$PUBLIC_KEY_FILE"
+          npm run native:verify-virtual-gamepad -- --platform "$TARGET_PLATFORM" --install-root "$VIRTUAL_INSTALL_ROOT" --adapter-id "$VIRTUAL_ADAPTER_ID" --public-key-file "$PUBLIC_KEY_FILE"
