@@ -81,7 +81,7 @@ emulation, host, workspaces, providers, and both controller tools. All 22
 navigations returned 200 with meaningful bodies, dashboard search and settings
 controls rendered, and mobile horizontal overflow was false. The exact report
 is retained at
-`~/.config/spartan-dev/evidence/playwright/spartan-playwright.json`; it is
+`~/.config/spartan-dev/evidence/playwright/spartan-playwright-runner.json`; it is
 protected evidence outside Git. Headless Chromium may report a non-fatal
 WebGPU initialization warning. Retain artifacts only in the protected evidence
 directory:
@@ -90,9 +90,9 @@ directory:
 evidence="$HOME/.config/spartan-dev/evidence/playwright"
 install -d -m 700 "$evidence"
 cp -a /tmp/spartan-playwright-results "$evidence/"
-cp /tmp/spartan-playwright.json "$evidence/"
+cp /tmp/spartan-playwright-pure.json "$evidence/spartan-playwright-runner.json"
 chmod -R go-rwx "$evidence"
-rm -rf /tmp/spartan-playwright-results /tmp/spartan-playwright.json
+rm -rf /tmp/spartan-playwright-results /tmp/spartan-playwright-pure.json
 ```
 
 The protected copies are outside Git at
@@ -138,8 +138,10 @@ redacted. Rotate the key or service secrets through the operator's secret
 store if exposure is suspected.
 
 The installed toolchain is Git, Rust/Cargo, GCC, CMake, Node.js/npm, Python,
-Docker, Playwright 1.55.0, and the Amazon Linux GUI/media dependencies needed
-by headless Chromium. The development services are Redis, signaling, and TURN;
+Docker, and the Amazon Linux GUI/media dependencies needed by headless
+Chromium. Playwright 1.55.0 is installed temporarily for the protected smoke
+run, outside the project checkout. The development services are Redis,
+signaling, and TURN;
 no public game ports are opened.
 The report is retained outside Git at
 `~/.config/spartan-dev/evidence/production/rollout.json`.

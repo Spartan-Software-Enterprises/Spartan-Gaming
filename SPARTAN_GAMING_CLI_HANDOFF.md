@@ -185,7 +185,7 @@ console-mode and workspace controls on small screens. Playwright 1.55.0 then
 passed all 22 navigations across 11 maintained routes at desktop and mobile
 viewports, including search/settings smoke checks. The protected report is
 stored on AWS at
-`~/.config/spartan-dev/evidence/playwright/spartan-playwright.json`; this is
+`~/.config/spartan-dev/evidence/playwright/spartan-playwright-runner.json`; this is
 browser-surface evidence only and does not replace physical device validation.
 
 The current Proton/SteamOS increment adds a user-owned Linux/SteamOS Proton
