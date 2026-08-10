@@ -34,6 +34,7 @@
     "deployment:tls-check": "node scripts/deployment/tls-rotation.mjs",
     "deployment:turn-config": "node scripts/deployment/turn-relay.mjs",
     "host:deployment-plan": "node scripts/deployment/host-plan.mjs",
+    "host:enrollment-plan": "node -e \"import('./host/enrollment.mjs').then(({createHostEnrollmentPlan}) => console.log(JSON.stringify(createHostEnrollmentPlan({endpoint: process.env.SPARTAN_HOST_SIGNAL_ENDPOINT, sessionId: process.env.SPARTAN_HOST_SIGNAL_SESSION, ticket: process.env.SPARTAN_HOST_SIGNAL_TICKET}).diagnostics)))\"",
     "check": "./scripts/check-repository.sh",
     "chromium:environment": "node scripts/chromium/check-environment.mjs",
     "chromium:bootstrap": "node scripts/chromium/bootstrap.mjs",

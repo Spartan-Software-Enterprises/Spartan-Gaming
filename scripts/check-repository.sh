@@ -109,6 +109,8 @@ required_files=(
   host/pairing.test.mjs
   host/signaling.mjs
   host/signaling.test.mjs
+  host/enrollment.mjs
+  host/enrollment.test.mjs
   host/session.mjs
   host/session.test.mjs
   host/capabilities.mjs
@@ -401,6 +403,7 @@ node --check host/publisher.integration.test.mjs
 node --check signaling/agent.integration.test.mjs
 node --check host/pairing.mjs
 node --check host/signaling.mjs
+node --check host/enrollment.mjs
 node --check host/session.mjs
 node --check host/capabilities.mjs
 node --check host/adapters.mjs

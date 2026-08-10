@@ -57,6 +57,14 @@ endpoint exposes readiness and process state without returning local paths.
 
 For a deployed signaling service, the same agent can join as a host participant with `--signal-endpoint`, `--signal-session`, and `--signal-ticket`. The ticket is role-scoped, supplied out of band, held in memory, and never written to the health response. The direct endpoint and outbound signaling mode share the same session answer and input/quality handling path.
 
+`host/enrollment.mjs` validates this production handoff as a transient plan.
+It requires a TLS endpoint for remote signaling, a bounded session identifier,
+and a role-scoped host ticket; diagnostics redact the ticket and mark all
+enrollment material memory-only. The agent also accepts
+`SPARTAN_HOST_SIGNAL_ENDPOINT`, `SPARTAN_HOST_SIGNAL_SESSION`, and
+`SPARTAN_HOST_SIGNAL_TICKET` for supervisor-provided runtime environment, but
+those values must not be placed in a persistent profile or deployment bundle.
+
 `host/adapter-installer.mjs` is the native updater boundary for signed frontend install requests. It validates user-scoped paths, stages artifacts under a private staging directory, verifies the declared SHA-256 digest and an injected signature verifier, publishes a versioned directory and atomically replaced `current.json` pointer, and removes its own staging/publication on failure. It never invokes a shell or extracts/executes an artifact; platform package managers and archive-specific adapters remain outside this transaction.
 
 `host/adapter-package.mjs` adds the package-content boundary. Package manifests
