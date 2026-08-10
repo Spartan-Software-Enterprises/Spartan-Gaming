@@ -164,6 +164,11 @@ review; stay within the AWS credit limit.
   were therefore not run. This host also has no Docker, Redis, or coturn
   executable, so it cannot produce production-service or Linux hardware-gate
   evidence. These results are environment boundaries, not completion claims.
+- GitHub API inspection on 2026-08-10 returned no registered self-hosted
+  runners. The Hardware validation gate, Production rollout, and Roadmap
+  acceptance workflows therefore remain operator-triggered definitions only;
+  they require a connected target machine/evidence directory and are not
+  proven by hosted contract CI.
 - Local verification on 2026-08-10 passed repository checks `431/431`, Android
   shell checks `5/5`, and the isolated Werift H.264/Opus loopback test. The
   complete serial suite (`npm run test:serial`) passed `630/634` with 4
