@@ -1,6 +1,7 @@
 #include <node_api.h>
 #include <linux/input-event-codes.h>
 #include <linux/uinput.h>
+#include <dirent.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -16,9 +17,14 @@
 #include <thread>
 #include <vector>
 
+#ifndef UI_GET_SYSNAME
+#define UI_GET_SYSNAME(len) _IOC(_IOC_READ, UINPUT_IOCTL_BASE, 44, len)
+#endif
+
 namespace {
 
 int device_fd = -1;
+int ff_device_fd = -1;
 int rumble_effect_id = -1;
 bool device_readable = false;
 unsigned int ff_gain = 0xffff;
@@ -32,6 +38,27 @@ std::vector<double> pending_weak;
 
 void queue_rumble_state();
 void handle_ff_event(const input_event& event);
+
+std::string locate_event_node() {
+  char sysname[64]{};
+  if (ioctl(device_fd, UI_GET_SYSNAME(sizeof(sysname)), sysname) < 0 || !sysname[0]) return {};
+  const std::string directory = std::string("/sys/devices/virtual/input/") + sysname;
+  for (int attempt = 0; attempt < 50; ++attempt) {
+    DIR* entries = opendir(directory.c_str());
+    if (entries) {
+      while (dirent* entry = readdir(entries)) {
+        if (std::strncmp(entry->d_name, "event", 5) == 0) {
+          const std::string candidate = std::string("/dev/input/") + entry->d_name;
+          closedir(entries);
+          if (access(candidate.c_str(), R_OK | W_OK) == 0) return candidate;
+        }
+      }
+      closedir(entries);
+    }
+    usleep(10'000);
+  }
+  return {};
+}
 
 napi_value fail(napi_env env, const char* message) {
   napi_throw_error(env, nullptr, message);
@@ -173,6 +200,8 @@ bool ensure_device() {
   }
   if (ioctl(device_fd, UI_DEV_CREATE) < 0) { close(device_fd); device_fd = -1; return false; }
   usleep(20'000);
+  const std::string event_node = locate_event_node();
+  if (!event_node.empty()) ff_device_fd = open(event_node.c_str(), O_RDWR | O_NONBLOCK);
   ff_worker_running = true;
   ff_worker = std::thread(ff_worker_loop);
   return true;
@@ -199,13 +228,14 @@ napi_value execute(napi_env env, napi_callback_info info) {
     effect.u.rumble.weak_magnitude = static_cast<__u16>(bounded_weak * 65535.0);
     effect.replay.length = static_cast<__u16>(duration < 0.0 ? 0.0 : duration > 5000.0 ? 5000.0 : duration);
     effect.replay.delay = static_cast<__u16>(delay < 0.0 ? 0.0 : delay > 5000.0 ? 5000.0 : delay);
-    if (ioctl(device_fd, EVIOCSFF, &effect) < 0) return fail_errno(env, "failed to upload Linux force-feedback effect");
+    if (ff_device_fd < 0) return fail(env, "Linux virtual gamepad force-feedback event device is unavailable");
+    if (ioctl(ff_device_fd, EVIOCSFF, &effect) < 0) return fail_errno(env, "failed to upload Linux force-feedback effect");
     rumble_effect_id = effect.id;
     input_event event{};
     event.type = EV_FF;
     event.code = static_cast<unsigned short>(effect.id);
     event.value = 1;
-    if (write(device_fd, &event, sizeof(event)) != static_cast<ssize_t>(sizeof(event))) return fail_errno(env, "failed to play Linux force-feedback effect");
+    if (write(ff_device_fd, &event, sizeof(event)) != static_cast<ssize_t>(sizeof(event))) return fail_errno(env, "failed to play Linux force-feedback effect");
     napi_value result; napi_get_boolean(env, true, &result); return result;
   }
   if (kind == "button") {
@@ -224,7 +254,9 @@ napi_value execute(napi_env env, napi_callback_info info) {
 
 napi_value close(napi_env env, napi_callback_info) {
   ff_worker_running = false;
-  if (device_fd >= 0) { if (rumble_effect_id >= 0) ioctl(device_fd, EVIOCRMFF, rumble_effect_id); ioctl(device_fd, UI_DEV_DESTROY); }
+  if (ff_device_fd >= 0 && rumble_effect_id >= 0) ioctl(ff_device_fd, EVIOCRMFF, rumble_effect_id);
+  if (ff_device_fd >= 0) { ::close(ff_device_fd); ff_device_fd = -1; }
+  if (device_fd >= 0) { ioctl(device_fd, UI_DEV_DESTROY); }
   if (ff_worker.joinable()) ff_worker.join();
   if (device_fd >= 0) { ::close(device_fd); device_fd = -1; rumble_effect_id = -1; }
   device_readable = false;

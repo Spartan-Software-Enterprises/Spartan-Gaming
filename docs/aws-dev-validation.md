@@ -38,6 +38,13 @@ printf '%s\n' 'KERNEL=="uinput", GROUP="spartan-gaming", MODE="0660"' \
   | sudo tee /etc/udev/rules.d/99-spartan-uinput.rules >/dev/null
 sudo udevadm control --reload-rules
 sudo udevadm trigger --subsystem-match=misc --sysname-match=uinput
+
+# Also install deploy/host/linux/99-spartan-gamepad.rules so the generated
+# virtual gamepad event node is readable/writable without broad input access.
+sudo install -m 0644 deploy/host/linux/99-spartan-gamepad.rules \
+  /etc/udev/rules.d/99-spartan-gamepad.rules
+sudo udevadm control --reload-rules
+sudo udevadm trigger --subsystem-match=input --sysname-match=event*
 ```
 
 After logging in again, build and exercise the Linux input boundary:
