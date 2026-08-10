@@ -74,6 +74,10 @@ services:
     init: true
     cap_drop:
       - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+      - SETUID
+      - SETGID
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
