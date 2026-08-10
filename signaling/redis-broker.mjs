@@ -1,5 +1,4 @@
 import {randomUUID} from 'node:crypto';
-import {createClient} from 'redis';
 import {makeSignalingTicket, verifySignalingTicket} from './broker.mjs';
 import {validateTransportMessage} from '../src/frontend/transport/transport.mjs';
 
@@ -25,6 +24,7 @@ function roleOther(role) { return role === 'client' ? 'host' : 'client'; }
 export async function createBroker({secret, environment = process.env, redis = {}, clock = () => Date.now(), sessionTtlMs = DEFAULT_TTL_MS, maxSessions = 1000} = {}) {
   const signingSecret = required(secret, 'secret');
   const url = redisUrl(redis.url || environment.SPARTAN_SIGNALING_REDIS_URL);
+  const {createClient} = await import('redis');
   const ttlMs = positive(sessionTtlMs, DEFAULT_TTL_MS, 24 * 60 * 60 * 1000);
   const command = createClient({url});
   const subscriber = command.duplicate();

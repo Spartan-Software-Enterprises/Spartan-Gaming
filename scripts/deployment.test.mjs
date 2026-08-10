@@ -35,10 +35,12 @@ test('production preflight is part of the published deployment surface', () => {
   assert.match(fs.readFileSync('signaling/production-config.mjs', 'utf8'), /production broker package/);
 });
 
-test('production Compose mounts secrets and an external broker package', () => {
+test('production Compose mounts secrets and provisions the Redis broker dependency', () => {
   assert.match(productionCompose, /SPARTAN_SIGNALING_SECRET_FILE: \/run\/secrets\/signaling_secret/);
   assert.match(productionCompose, /SPARTAN_SIGNALING_BROKER_PACKAGE/);
-  assert.match(productionCompose, /SPARTAN_SIGNALING_BROKER_PATH/);
+  assert.match(productionCompose, /SPARTAN_SIGNALING_REDIS_URL/);
+  assert.match(productionCompose, /image: redis:7\.4-alpine/);
+  assert.match(productionCompose, /condition: service_healthy/);
   assert.match(productionCompose, /SPARTAN_SIGNALING_TLS_KEY_FILE/);
   assert.match(productionCompose, /read_only: true/);
   assert.match(productionCompose, /no-new-privileges:true/);
