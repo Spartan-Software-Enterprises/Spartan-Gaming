@@ -275,7 +275,11 @@ window.addEventListener('gamepadconnected', () => apply({type: 'gamepad.connecti
 const gamepadPollTimer = setInterval(() => {
   if (!inputPolicy.allows('gamepad')) { if (state.gamepadConnected !== false) apply({type: 'gamepad.connection', connected: false}); previousGamepad.clear(); gamepadMappers.clear(); gamepadProfileIds.clear(); return; }
   const allGamepads = [...(navigator.getGamepads?.() || [])].filter(Boolean);
-  const limit = sessionPreferences.preferences.controllerSettings.multipleControllers ? sessionPreferences.preferences.controllerSettings.playerSlots : 1;
+  const negotiatedInput = state.negotiated?.input;
+  const multipleControllers = sessionPreferences.preferences.controllerSettings.multipleControllers && negotiatedInput?.multipleControllers !== false;
+  const configuredSlots = sessionPreferences.preferences.controllerSettings.playerSlots;
+  const negotiatedSlots = Number.isInteger(negotiatedInput?.playerSlots) ? negotiatedInput.playerSlots : configuredSlots;
+  const limit = multipleControllers ? Math.max(1, Math.min(configuredSlots, negotiatedSlots)) : 1;
   const gamepads = allGamepads.slice(0, limit);
   const activeIndices = new Set(gamepads.map(gamepad => gamepad.index));
   for (const index of previousGamepad.keys()) { if (!activeIndices.has(index)) { previousGamepad.delete(index); gamepadMappers.delete(index); gamepadProfileIds.delete(index); } }

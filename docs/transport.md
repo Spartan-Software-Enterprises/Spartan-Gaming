@@ -118,4 +118,6 @@ explicit profile selection always wins over device matching.
 When multiple controller slots are negotiated, the player polls the bounded
 configured slot count, resolves each device independently, and carries its
 bounded `gamepadIndex` through the input envelope so a native or external
-virtual-gamepad adapter can preserve player assignment.
+virtual-gamepad adapter can preserve player assignment. After negotiation, the
+player also caps polling to the host-accepted `playerSlots` and disables extra
+slots when the host declines `multipleControllers`.
