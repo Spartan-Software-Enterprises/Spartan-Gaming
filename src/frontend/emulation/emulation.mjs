@@ -26,7 +26,7 @@ export function resolveEmulationPreferences(settings = {}) {
   const renderer = typeof settings['emulation.renderer'] === 'string' && settings['emulation.renderer'].trim() ? settings['emulation.renderer'] : 'Automatic';
   const shaderPreset = SHADER_PRESETS.has(settings['emulation.shaderPreset']) ? settings['emulation.shaderPreset'] : 'Sharp bilinear';
   const saveLocation = SAVE_LOCATIONS.has(settings['emulation.saveLocation']) ? settings['emulation.saveLocation'] : 'Profile storage';
-  return Object.freeze({preference: frontend, renderer, scanLibraries: settings['emulation.scanLibraries'] !== false, autoSaveStates: settings['emulation.autoSaveStates'] !== false, cloudSaves: settings['emulation.cloudSaves'] === true, saveLocation, integerScaling: settings['emulation.integerScaling'] !== false, vsync: settings['emulation.vsync'] !== false, shaderPreset, rewind: settings['emulation.rewind'] === true, netplay: settings['emulation.netplay'] === true});
+  return Object.freeze({preference: frontend, renderer, allowWebGpu: settings['performance.webgpu'] !== false, scanLibraries: settings['emulation.scanLibraries'] !== false, autoSaveStates: settings['emulation.autoSaveStates'] !== false, cloudSaves: settings['emulation.cloudSaves'] === true, saveLocation, integerScaling: settings['emulation.integerScaling'] !== false, vsync: settings['emulation.vsync'] !== false, shaderPreset, rewind: settings['emulation.rewind'] === true, netplay: settings['emulation.netplay'] === true});
 }
 
 export function createUserFileRecord(file, {kind = 'game', userSelected = true, sha256: suppliedDigest} = {}) {

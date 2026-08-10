@@ -28,13 +28,13 @@ function runtimeFor(core, preference) {
   return 'native-adapter';
 }
 
-export function createEmulatorIntegration(core, {preference = 'automatic', renderer = 'Automatic', report = {}, adapterRegistry = null, allowUnsignedAdapters = false, platform = report.browser?.platform, runtimeProfiles = []} = {}) {
+export function createEmulatorIntegration(core, {preference = 'automatic', renderer = 'Automatic', allowWebGpu = true, report = {}, adapterRegistry = null, allowUnsignedAdapters = false, platform = report.browser?.platform, runtimeProfiles = []} = {}) {
   if (!core?.id || !core.mode) throw new TypeError('A normalized emulator core is required');
   const preset = CORE_PRESETS[core.id] || {controllerProfile: 'Auto-detect', renderer: 'Automatic', features: ['save-state'], notes: []};
   const runtime = runtimeFor(core, RUNTIME_PREFERENCE[preference] || preference);
   const adapter = adapterRegistry?.resolve?.(core.id, {kind: 'emulator', platform, allowUnsigned: allowUnsignedAdapters}) || null;
-  const browserReady = runtime === 'browser-wasm' && (report.graphics?.webgpuAdapter === true || report.graphics?.webgl === true || report.graphics === undefined);
-  const selectedRenderer = renderer === 'Automatic' ? preset.renderer : renderer;
+  const browserReady = runtime === 'browser-wasm' && ((allowWebGpu !== false && report.graphics?.webgpuAdapter === true) || report.graphics?.webgl === true || report.graphics === undefined);
+  const selectedRenderer = renderer === 'WebGPU' && allowWebGpu === false ? 'WebGL fallback' : renderer === 'Automatic' ? preset.renderer : renderer;
   const firmwareRequired = ['pcsx2', 'rpcs3', 'xemu', 'vita3k'].includes(core.id);
   const runtimeSelection = resolveRuntimeProfile({coreId: core.id, preference: runtime, profiles: runtimeProfiles, platform: platform || 'browser', browserReady});
   return Object.freeze({coreId: core.id, runtime, renderer: selectedRenderer, controllerProfile: preset.controllerProfile, features: Object.freeze([...preset.features]), browserReady, adapter, runtimeProfile: runtimeSelection.profile, runtimeReadiness: runtimeSelection, content: Object.freeze({gameFiles: true, firmwareFiles: firmwareRequired, userSelectedOnly: true, licenseRequired: true}), notes: Object.freeze([...preset.notes, ...(adapter?.status === 'blocked' ? [adapter.reason] : []), ...(runtimeSelection.status !== 'ready' ? [runtimeSelection.reason] : []), ...(runtime === 'browser-wasm' && !browserReady ? ['Browser graphics capability is not confirmed; native adapter fallback is recommended.'] : [])])});
