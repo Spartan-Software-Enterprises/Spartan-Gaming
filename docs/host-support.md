@@ -29,6 +29,16 @@ export `createVirtualGamepad()` with the same platform and an `execute()`
 method. The host muxes only button/axis operations to that package and keeps
 keyboard, pointer, and haptic operations on the native adapter.
 
+Use `--virtual-gamepad-backend` with `Automatic`, `Linux uinput`, `Windows
+external driver`, `macOS external driver`, `Browser Gamepad`, or `Disabled` to
+make the intended controller path explicit. `--virtual-gamepad-device` carries
+an optional bounded driver-specific device identifier for multi-controller
+setups. The host health document reports the normalized backend, package name,
+device ID, and readiness state; it never installs a driver or claims readiness
+from a package name alone. The frontend Controller settings expose the same
+package and device fields so exported profiles can be translated into a
+user-owned host deployment plan.
+
 Host capability documents distinguish `input.gamepad` (a controller input
 path) from `input.virtualGamepad` (an OS-created virtual device). The latter
 is true only for a ready Linux uinput binding today; Windows/macOS keyboard,
