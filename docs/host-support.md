@@ -51,6 +51,11 @@ options, split-input, deadzone, and polling preference. The host normalizes
 and enforces these values before dispatching native input; unsupported native
 features remain unavailable rather than silently falling back.
 
+The `/health` response exposes the normalized `controllerPolicy` without
+pairing material or driver secrets, allowing an Electron host preflight or
+operator to confirm the effective profile, slots, permissions, and haptics
+policy before accepting a session.
+
 For repeatable supervisor configuration, pass `--config /path/to/host.json`
 to `host/agent.mjs` or include the same path in the shell-free deployment plan.
 The JSON contract covers host identity, bind/limits, native packages, media
