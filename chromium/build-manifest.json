@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "product": "Spartan Gaming",
+  "source": {
+    "repository": "https://chromium.googlesource.com/chromium/src.git",
+    "channel": "development-main",
+    "branch": "refs/heads/main",
+    "rebasePolicy": "rebase-at-least-weekly-and-before-each-integration-milestone; pin-stable-branch-head-commit-for-releases"
+  },
+  "checkout": {
+    "managedOutsideRepository": true,
+    "environmentVariable": "SPARTAN_CHROMIUM_SRC",
+    "requiredTools": ["git", "python3", "gclient", "gn", "autoninja"]
+  },
+  "targets": [
+    { "id": "linux", "args": "chromium/args/linux.gn", "buildTarget": "chrome", "artifact": "spartan-gaming-dev-linux", "binary": "chrome" },
+    { "id": "mac", "args": "chromium/args/mac.gn", "buildTarget": "chrome", "artifact": "spartan-gaming-dev-mac", "binary": "Chromium.app" },
+    { "id": "windows", "args": "chromium/args/windows.gn", "buildTarget": "chrome", "artifact": "spartan-gaming-dev-windows", "binary": "chrome.exe" }
+  ],
+  "productIntegration": {
+    "shellEntry": "src/frontend/dashboard/index.html",
+    "settingsEntry": "src/frontend/settings/index.html",
+    "playerEntry": "src/frontend/player/index.html",
+    "overlayEntry": "src/frontend/diagnostics/index.html",
+    "integrationStatus": "external-chromium-app-shell-launcher"
+  }
+}

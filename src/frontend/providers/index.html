@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Spartan Gaming — Provider Profiles</title><link rel="stylesheet" href="./profiles.css"></head>
+  <body><main class="provider-shell">
+    <header><a class="brand" href="../dashboard/index.html"><span class="mark">S</span><span>SPARTAN <small>GAMING</small></span></a><a class="back" href="../settings/index.html">Settings</a></header>
+    <section class="heading"><p class="eyebrow">PROVIDER PROFILES</p><h1>Make every service feel native.</h1><p>Store region, quality, launch, and account-label preferences locally. Credentials, cookies, tokens, and provider secrets never enter these profiles.</p></section>
+    <section class="provider-workspace"><aside class="provider-list panel"><div class="panel-head"><h2>Providers</h2><span data-count></span></div><div data-providers class="loading">Loading provider catalog…</div></aside><section class="editor panel"><div data-editor class="empty">Select a provider to configure its profile.</div></section></section>
+    <section class="portable panel"><div><p class="eyebrow">PORTABLE PREFERENCES</p><h2>Export or import profiles</h2><p>Only local launch preferences are included.</p></div><div class="actions"><button class="secondary" data-export>Export</button><label class="secondary file-label">Import<input data-import type="file" accept="application/json"></label></div></section>
+    <section class="portable panel catalog-portable"><div><p class="eyebrow">COMMUNITY CATALOG</p><h2>Extend provider compatibility</h2><p>Import HTTPS-only, untrusted metadata from a community source. It cannot override built-in providers or execute code.</p></div><div class="actions"><button class="secondary" data-catalog-export>Export catalog</button><label class="secondary file-label">Import catalog<input data-catalog-import type="file" accept="application/json"></label></div></section>
+    <div class="notice" data-notice role="status" aria-live="polite"></div>
+  </main><script type="module" src="./profiles-page.mjs"></script></body>
+</html>

@@ -1,0 +1,27 @@
+[Unit]
+Description=Spartan Gaming coturn relay
+Documentation=https://github.com/coturn/coturn/wiki/turnserver
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=turnserver
+Group=turnserver
+ExecStart=/usr/bin/turnserver --config /etc/spartan-gaming/turnserver.conf --no-cli
+Restart=on-failure
+RestartSec=5s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6
+ReadOnlyPaths=/etc/spartan-gaming/turnserver.conf
+ReadOnlyPaths=/etc/spartan-gaming/turn.crt
+ReadOnlyPaths=/etc/spartan-gaming/turn.key
+
+[Install]
+WantedBy=multi-user.target

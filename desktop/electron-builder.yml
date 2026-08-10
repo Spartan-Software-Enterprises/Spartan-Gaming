@@ -1,0 +1,34 @@
+appId: com.spartan.gaming
+productName: Spartan Gaming
+artifactName: Spartan-Gaming-${version}-${os}-${arch}.${ext}
+directories:
+  output: dist-electron
+  buildResources: desktop/build-resources
+files:
+  - desktop/electron/**
+  - scripts/frontend/**
+  - src/frontend/**
+  - providers/**
+  - emulators/**
+  - games/**
+  - favicon.ico
+asar: true
+protocols:
+  - name: Spartan Gaming Launch
+    schemes:
+      - spartan
+linux:
+  category: Game
+  target:
+    - AppImage
+    - deb
+mac:
+  category: public.app-category.games
+  target:
+    - dmg
+win:
+  target:
+    - nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

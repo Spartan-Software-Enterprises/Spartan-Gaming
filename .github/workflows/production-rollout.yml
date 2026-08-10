@@ -1,0 +1,110 @@
+name: Production rollout
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner_label:
+        description: 'Self-hosted runner label with Docker and the mounted production secret environment'
+        required: true
+        default: 'self-hosted'
+        type: string
+      compose_file:
+        description: 'Runner-local production Compose file'
+        required: true
+        default: 'docker-compose.production.yml'
+        type: string
+      env_file:
+        description: 'Runner-local Compose environment file; secret values stay outside GitHub'
+        required: true
+        type: string
+      project:
+        description: 'Docker Compose project name'
+        required: true
+        default: 'spartan-gaming'
+        type: string
+      health_endpoint:
+        description: 'HTTPS signaling health endpoint reachable from the runner'
+        required: true
+        type: string
+      admin_health_endpoint:
+        description: 'Optional HTTPS admin health endpoint'
+        required: false
+        type: string
+      check_admin:
+        description: 'Also verify the configured admin health endpoint'
+        required: true
+        default: false
+        type: boolean
+      require_broker:
+        description: 'Require the live health response to report a ready production broker'
+        required: true
+        default: true
+        type: boolean
+      check_turn:
+        description: 'Verify the authenticated TURN credential service and configured relay URLs'
+        required: true
+        default: true
+        type: boolean
+      check_turn_network:
+        description: 'Also require bounded TCP/TLS reachability to every returned TURN endpoint'
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  rollout:
+    name: Deploy production signaling stack
+    runs-on: ${{ inputs.runner_label }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+      - name: Install deployment tooling
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Validate operator-managed production configuration
+        shell: bash
+        env:
+          DEPLOYMENT_ENV_FILE: ${{ inputs.env_file }}
+        run: |
+          set -euo pipefail
+          node --env-file="$DEPLOYMENT_ENV_FILE" scripts/validate-production-config.mjs
+      - name: Verify mounted TLS and secret-file inputs
+        shell: bash
+        env:
+          DEPLOYMENT_ENV_FILE: ${{ inputs.env_file }}
+        run: |
+          set -euo pipefail
+          node --env-file="$DEPLOYMENT_ENV_FILE" scripts/deployment/production-preflight.mjs
+      - name: Apply Compose rollout and verify HTTPS health
+        shell: bash
+        env:
+          COMPOSE_FILE: ${{ inputs.compose_file }}
+          ENV_FILE: ${{ inputs.env_file }}
+          PROJECT_NAME: ${{ inputs.project }}
+          HEALTH_ENDPOINT: ${{ inputs.health_endpoint }}
+          ADMIN_HEALTH_ENDPOINT: ${{ inputs.admin_health_endpoint }}
+          CHECK_ADMIN: ${{ inputs.check_admin }}
+          REQUIRE_BROKER: ${{ inputs.require_broker }}
+          CHECK_TURN: ${{ inputs.check_turn }}
+          CHECK_TURN_NETWORK: ${{ inputs.check_turn_network }}
+        run: |
+          set -euo pipefail
+          args=(--compose-file "$COMPOSE_FILE" --env-file "$ENV_FILE" --project "$PROJECT_NAME" --health "$HEALTH_ENDPOINT" --execute --confirm)
+          if [[ -n "$ADMIN_HEALTH_ENDPOINT" ]]; then args+=(--admin-health "$ADMIN_HEALTH_ENDPOINT"); fi
+          if [[ "$CHECK_ADMIN" == "true" ]]; then args+=(--check-admin); fi
+          if [[ "$REQUIRE_BROKER" == "true" ]]; then args+=(--require-broker); fi
+          if [[ "$CHECK_TURN" == "true" ]]; then args+=(--check-turn); fi
+          if [[ "$CHECK_TURN_NETWORK" == "true" ]]; then args+=(--check-turn-network); fi
+          node --env-file="$ENV_FILE" scripts/deployment/production-rollout.mjs "${args[@]}" --report-file "$RUNNER_TEMP/spartan-production-rollout.json"
+      - name: Retain secret-free rollout evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: spartan-production-rollout-evidence
+          path: ${{ runner.temp }}/spartan-production-rollout.json
+          if-no-files-found: ignore
+          retention-days: 14

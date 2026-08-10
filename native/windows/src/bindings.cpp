@@ -1,0 +1,263 @@
+#include <node_api.h>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <Xinput.h>
+
+#include <string>
+#include <thread>
+
+namespace {
+
+napi_value fail(napi_env env, const char* message) {
+  napi_throw_error(env, nullptr, message);
+  return nullptr;
+}
+
+napi_value unsupported(napi_env env, const char* message) {
+  napi_throw_error(env, "ERR_UNSUPPORTED_INPUT", message);
+  return nullptr;
+}
+
+bool property(napi_env env, napi_value object, const char* name, napi_value* value) {
+  bool has = false;
+  if (napi_has_named_property(env, object, name, &has) != napi_ok || !has) return false;
+  return napi_get_named_property(env, object, name, value) == napi_ok;
+}
+
+std::string string_property(napi_env env, napi_value object, const char* name) {
+  napi_value value;
+  if (!property(env, object, name, &value)) return {};
+  size_t length = 0;
+  napi_get_value_string_utf8(env, value, nullptr, 0, &length);
+  std::string result(length + 1, '\0');
+  napi_get_value_string_utf8(env, value, result.data(), length + 1, &length);
+  result.resize(length);
+  return result;
+}
+
+bool bool_property(napi_env env, napi_value object, const char* name, bool fallback) {
+  napi_value value;
+  if (!property(env, object, name, &value)) return fallback;
+  bool result = fallback;
+  napi_get_value_bool(env, value, &result);
+  return result;
+}
+
+LONG number_property(napi_env env, napi_value object, const char* name, LONG fallback) {
+  napi_value value;
+  if (!property(env, object, name, &value)) return fallback;
+  double result = static_cast<double>(fallback);
+  napi_get_value_double(env, value, &result);
+  return static_cast<LONG>(result);
+}
+
+double double_property(napi_env env, napi_value object, const char* name, double fallback) {
+  napi_value value;
+  if (!property(env, object, name, &value)) return fallback;
+  double result = fallback;
+  napi_get_value_double(env, value, &result);
+  return result;
+}
+
+WORD rumble_magnitude(napi_env env, napi_value object, const char* name, double fallback) {
+  const double value = double_property(env, object, name, fallback);
+  return static_cast<WORD>(value < 0.0 ? 0.0 : value > 1.0 ? 65535.0 : value * 65535.0);
+}
+
+WORD key_code(const std::string& control) {
+  if (control.size() == 4 && control.rfind("Key", 0) == 0 && control[3] >= 'A' && control[3] <= 'Z') return static_cast<WORD>(control[3]);
+  if (control.size() == 6 && control.rfind("Digit", 0) == 0 && control[5] >= '0' && control[5] <= '9') return static_cast<WORD>(control[5]);
+  if (control == "Space") return VK_SPACE;
+  if (control == "Enter") return VK_RETURN;
+  if (control == "Escape") return VK_ESCAPE;
+  if (control == "Tab") return VK_TAB;
+  if (control == "Backspace") return VK_BACK;
+  if (control == "Comma") return VK_OEM_COMMA;
+  if (control == "Period") return VK_OEM_PERIOD;
+  if (control == "Semicolon") return VK_OEM_1;
+  if (control == "Quote") return VK_OEM_7;
+  if (control == "Backquote") return VK_OEM_3;
+  if (control == "Slash") return VK_OEM_2;
+  if (control == "Backslash") return VK_OEM_5;
+  if (control == "Minus") return VK_OEM_MINUS;
+  if (control == "Equal") return VK_OEM_PLUS;
+  if (control == "BracketLeft") return VK_OEM_4;
+  if (control == "BracketRight") return VK_OEM_6;
+  if (control == "IntlBackslash") return VK_OEM_102;
+  if (control == "IntlRo") return VK_OEM_8;
+  if (control == "IntlYen") return VK_OEM_5;
+  if (control == "ArrowUp") return VK_UP;
+  if (control == "ArrowDown") return VK_DOWN;
+  if (control == "ArrowLeft") return VK_LEFT;
+  if (control == "ArrowRight") return VK_RIGHT;
+  if (control == "ControlLeft") return VK_LCONTROL;
+  if (control == "ControlRight") return VK_RCONTROL;
+  if (control == "ShiftLeft") return VK_LSHIFT;
+  if (control == "ShiftRight") return VK_RSHIFT;
+  if (control == "AltLeft") return VK_LMENU;
+  if (control == "AltRight") return VK_RMENU;
+  if (control == "MetaLeft") return VK_LWIN;
+  if (control == "MetaRight") return VK_RWIN;
+  if (control == "CapsLock") return VK_CAPITAL;
+  if (control == "Home") return VK_HOME;
+  if (control == "End") return VK_END;
+  if (control == "PageUp") return VK_PRIOR;
+  if (control == "PageDown") return VK_NEXT;
+  if (control == "Insert") return VK_INSERT;
+  if (control == "Delete") return VK_DELETE;
+  if (control == "F1") return VK_F1; if (control == "F2") return VK_F2; if (control == "F3") return VK_F3; if (control == "F4") return VK_F4;
+  if (control == "F5") return VK_F5; if (control == "F6") return VK_F6; if (control == "F7") return VK_F7; if (control == "F8") return VK_F8;
+  if (control == "F9") return VK_F9; if (control == "F10") return VK_F10; if (control == "F11") return VK_F11; if (control == "F12") return VK_F12;
+  if (control == "F13") return VK_F13; if (control == "F14") return VK_F14; if (control == "F15") return VK_F15; if (control == "F16") return VK_F16;
+  if (control == "F17") return VK_F17; if (control == "F18") return VK_F18; if (control == "F19") return VK_F19; if (control == "F20") return VK_F20;
+  if (control == "F21") return VK_F21; if (control == "F22") return VK_F22; if (control == "F23") return VK_F23; if (control == "F24") return VK_F24;
+  if (control == "NumLock") return VK_NUMLOCK;
+  if (control == "PrintScreen") return VK_SNAPSHOT;
+  if (control == "ScrollLock") return VK_SCROLL;
+  if (control == "Pause") return VK_PAUSE;
+  if (control == "ContextMenu") return VK_APPS;
+  if (control == "Numpad0") return VK_NUMPAD0; if (control == "Numpad1") return VK_NUMPAD1; if (control == "Numpad2") return VK_NUMPAD2; if (control == "Numpad3") return VK_NUMPAD3;
+  if (control == "Numpad4") return VK_NUMPAD4; if (control == "Numpad5") return VK_NUMPAD5; if (control == "Numpad6") return VK_NUMPAD6; if (control == "Numpad7") return VK_NUMPAD7;
+  if (control == "Numpad8") return VK_NUMPAD8; if (control == "Numpad9") return VK_NUMPAD9;
+  if (control == "NumpadDecimal") return VK_DECIMAL;
+  if (control == "NumpadAdd") return VK_ADD;
+  if (control == "NumpadSubtract") return VK_SUBTRACT;
+  if (control == "NumpadMultiply") return VK_MULTIPLY;
+  if (control == "NumpadDivide") return VK_DIVIDE;
+  if (control == "NumpadEnter") return VK_RETURN;
+  if (control == "AudioVolumeMute") return VK_VOLUME_MUTE;
+  if (control == "AudioVolumeDown") return VK_VOLUME_DOWN;
+  if (control == "AudioVolumeUp") return VK_VOLUME_UP;
+  if (control == "MediaTrackNext") return VK_MEDIA_NEXT_TRACK;
+  if (control == "MediaTrackPrevious") return VK_MEDIA_PREV_TRACK;
+  if (control == "MediaStop") return VK_MEDIA_STOP;
+  if (control == "MediaPlayPause") return VK_MEDIA_PLAY_PAUSE;
+  if (control == "MediaSelect") return VK_LAUNCH_MEDIA_SELECT;
+  if (control == "BrowserBack") return VK_BROWSER_BACK;
+  if (control == "BrowserForward") return VK_BROWSER_FORWARD;
+  if (control == "BrowserRefresh") return VK_BROWSER_REFRESH;
+  if (control == "BrowserStop") return VK_BROWSER_STOP;
+  if (control == "BrowserSearch") return VK_BROWSER_SEARCH;
+  if (control == "BrowserFavorites") return VK_BROWSER_FAVORITES;
+  if (control == "BrowserHome") return VK_BROWSER_HOME;
+  if (control == "LaunchMail") return VK_LAUNCH_MAIL;
+  if (control == "LaunchApp1") return VK_LAUNCH_APP1;
+  if (control == "LaunchApp2") return VK_LAUNCH_APP2;
+  if (control == "Sleep") return VK_SLEEP;
+  if (control == "Print") return VK_PRINT;
+  if (control == "Select") return VK_SELECT;
+  if (control == "Execute") return VK_EXECUTE;
+  if (control == "Help") return VK_HELP;
+  return 0;
+}
+
+DWORD mouse_button_flags(const std::string& control, const std::string& action) {
+  DWORD down = 0;
+  DWORD up = 0;
+  if (control == "button-0") { down = MOUSEEVENTF_LEFTDOWN; up = MOUSEEVENTF_LEFTUP; }
+  else if (control == "button-1") { down = MOUSEEVENTF_MIDDLEDOWN; up = MOUSEEVENTF_MIDDLEUP; }
+  else if (control == "button-2") { down = MOUSEEVENTF_RIGHTDOWN; up = MOUSEEVENTF_RIGHTUP; }
+  else return 0;
+  if (action == "pointer:down") return down;
+  if (action == "pointer:up" || action == "pointer:cancel") return up;
+  return action == "pointer:move" ? MOUSEEVENTF_MOVE : 0;
+}
+
+napi_value execute(napi_env env, napi_callback_info info) {
+  napi_value argv[1]; size_t argc = 1;
+  if (napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr) != napi_ok || argc < 1) return fail(env, "input operation is required");
+  const std::string kind = string_property(env, argv[0], "kind");
+  if (kind == "rumble") {
+    const LONG requested_index = number_property(env, argv[0], "gamepadIndex", 0);
+    if (requested_index < 0 || requested_index > 3) return fail(env, "Windows XInput supports gamepad indexes 0 through 3");
+    const DWORD index = static_cast<DWORD>(requested_index);
+    const LONG duration = number_property(env, argv[0], "durationMs", 0);
+    const LONG delay = number_property(env, argv[0], "startDelay", 0);
+    const double value = double_property(env, argv[0], "value", 0.0);
+    const WORD strong = rumble_magnitude(env, argv[0], "strongMagnitude", value);
+    const WORD weak = rumble_magnitude(env, argv[0], "weakMagnitude", value);
+    XINPUT_STATE state{};
+    if (XInputGetState(index, &state) != ERROR_SUCCESS) return fail(env, "Windows XInput controller is unavailable");
+    if (duration <= 0) {
+      XINPUT_VIBRATION stop{};
+      XInputSetState(index, &stop);
+      napi_value result; napi_get_boolean(env, true, &result); return result;
+    }
+    const auto play = [index, strong, weak, duration, delay]() {
+      if (delay > 0) Sleep(static_cast<DWORD>(delay > 5000 ? 5000 : delay));
+      XINPUT_VIBRATION vibration{};
+      vibration.wLeftMotorSpeed = strong;
+      vibration.wRightMotorSpeed = weak;
+      if (XInputSetState(index, &vibration) != ERROR_SUCCESS) return;
+      Sleep(static_cast<DWORD>(duration > 5000 ? 5000 : duration));
+      XINPUT_VIBRATION stop{};
+      XInputSetState(index, &stop);
+    };
+    if (delay > 0) std::thread(play).detach();
+    else {
+      XINPUT_VIBRATION vibration{};
+      vibration.wLeftMotorSpeed = strong;
+      vibration.wRightMotorSpeed = weak;
+      if (XInputSetState(index, &vibration) != ERROR_SUCCESS) return fail(env, "Windows XInput controller is unavailable");
+      if (duration > 0) std::thread([index, duration]() { Sleep(static_cast<DWORD>(duration > 5000 ? 5000 : duration)); XINPUT_VIBRATION stop{}; XInputSetState(index, &stop); }).detach();
+    }
+    napi_value result; napi_get_boolean(env, true, &result); return result;
+  }
+  INPUT input{};
+  input.type = INPUT_KEYBOARD;
+  if (kind == "key") {
+    const std::string control = string_property(env, argv[0], "control");
+    const WORD code = key_code(control);
+    if (!code) return unsupported(env, "unsupported Windows SendInput key");
+    input.ki.wVk = code;
+    input.ki.dwFlags = bool_property(env, argv[0], "pressed", false) ? 0 : KEYEVENTF_KEYUP;
+    if (control == "NumpadEnter" || control == "NumpadDivide") input.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
+  } else if (kind == "pointer") {
+    input.type = INPUT_MOUSE;
+    const std::string action = string_property(env, argv[0], "action");
+    input.mi.dx = number_property(env, argv[0], "deltaX", 0);
+    input.mi.dy = number_property(env, argv[0], "deltaY", 0);
+    if (action == "pointer:wheel") {
+      const LONG horizontal = number_property(env, argv[0], "deltaX", 0);
+      const LONG vertical = number_property(env, argv[0], "deltaY", 0);
+      if (vertical != 0) { input.mi.dwFlags = MOUSEEVENTF_WHEEL; input.mi.mouseData = vertical > 0 ? WHEEL_DELTA : -WHEEL_DELTA; }
+      else if (horizontal != 0) { input.mi.dwFlags = MOUSEEVENTF_HWHEEL; input.mi.mouseData = horizontal > 0 ? WHEEL_DELTA : -WHEEL_DELTA; }
+      else return fail(env, "empty Windows mouse wheel event");
+      input.mi.dx = 0; input.mi.dy = 0;
+    } else if (action == "pointer:move") {
+      input.mi.dwFlags = MOUSEEVENTF_MOVE;
+    } else {
+      input.mi.dwFlags = mouse_button_flags(string_property(env, argv[0], "control"), action);
+      if (!input.mi.dwFlags) return unsupported(env, "unsupported Windows mouse button event");
+    }
+  } else {
+    return unsupported(env, "Windows native input supports keyboard, pointer, and XInput rumble events only");
+  }
+  if (SendInput(1, &input, sizeof(INPUT)) != 1) return fail(env, "Windows SendInput failed; grant remote-input permission");
+  napi_value result; napi_get_boolean(env, true, &result); return result;
+}
+
+napi_value close(napi_env env, napi_callback_info) {
+  napi_value result; napi_get_undefined(env, &result); return result;
+}
+
+napi_value create_bindings(napi_env env, napi_callback_info) {
+  napi_value result; napi_create_object(env, &result);
+  napi_value platform; napi_create_string_utf8(env, "win32", NAPI_AUTO_LENGTH, &platform); napi_set_named_property(env, result, "platform", platform);
+  napi_value capabilities; napi_create_object(env, &capabilities);
+  napi_value true_value; napi_get_boolean(env, true, &true_value);
+  napi_value false_value; napi_get_boolean(env, false, &false_value);
+  napi_set_named_property(env, capabilities, "input", true_value); napi_set_named_property(env, capabilities, "keyboard", true_value); napi_set_named_property(env, capabilities, "pointer", true_value); napi_set_named_property(env, capabilities, "gamepad", false_value); napi_set_named_property(env, capabilities, "virtualGamepad", false_value); napi_set_named_property(env, capabilities, "rumble", true_value);
+  napi_set_named_property(env, result, "capabilities", capabilities);
+  napi_value input; napi_create_object(env, &input); napi_value execute_fn; napi_create_function(env, "execute", NAPI_AUTO_LENGTH, execute, nullptr, &execute_fn); napi_set_named_property(env, input, "execute", execute_fn); napi_value close_fn; napi_create_function(env, "close", NAPI_AUTO_LENGTH, close, nullptr, &close_fn); napi_set_named_property(env, input, "close", close_fn); napi_set_named_property(env, result, "input", input);
+  return result;
+}
+
+} // namespace
+
+NAPI_MODULE_INIT() {
+  napi_value factory;
+  napi_create_function(env, "createBindings", NAPI_AUTO_LENGTH, create_bindings, nullptr, &factory);
+  napi_set_named_property(env, exports, "createBindings", factory);
+  return exports;
+}

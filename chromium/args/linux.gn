@@ -1,0 +1,10 @@
+# Spartan Gaming development args for Chromium on Linux.
+# Copy these into the GN args for an external Chromium checkout and adjust
+# target_cpu, feature flags, and hardware paths for the host machine.
+is_official_build = false
+is_component_build = true
+symbol_level = 1
+blink_symbol_level = 0
+enable_nacl = false
+use_ozone = true
+ozone_auto_platforms = [ "wayland", "x11" ]

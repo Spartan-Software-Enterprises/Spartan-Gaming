@@ -1,0 +1,77 @@
+name: Roadmap acceptance
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner_label:
+        description: 'Self-hosted runner label with the operator evidence directory'
+        required: true
+        default: 'self-hosted'
+        type: string
+      evidence_root:
+        description: 'Runner-local evidence root containing production, desktop, SteamOS, virtual-gamepad, and signed-manifest reports'
+        required: true
+        type: string
+      public_key_file:
+        description: 'Runner-local public-key JWK used to verify every signed native manifest'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  accept:
+    name: Verify roadmap evidence
+    runs-on: ${{ inputs.runner_label }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+      - name: Validate runner-local evidence layout
+        shell: bash
+        env:
+          EVIDENCE_ROOT: ${{ inputs.evidence_root }}
+          PUBLIC_KEY_FILE: ${{ inputs.public_key_file }}
+        run: |
+          set -euo pipefail
+          test -d "$EVIDENCE_ROOT"
+          test -f "$PUBLIC_KEY_FILE"
+          for file in \
+            production/rollout.json \
+            hardware/linux.json hardware/win32.json hardware/darwin.json \
+            steam-os/steam-deck.json steam-os/steam-machine.json \
+            virtual-gamepad/win32.json virtual-gamepad/darwin.json \
+            signed-manifests/linux.json signed-manifests/win32.json signed-manifests/darwin.json; do
+            test -f "$EVIDENCE_ROOT/$file"
+          done
+      - name: Verify complete roadmap evidence
+        shell: bash
+        env:
+          EVIDENCE_ROOT: ${{ inputs.evidence_root }}
+          PUBLIC_KEY_FILE: ${{ inputs.public_key_file }}
+        run: |
+          set -euo pipefail
+          npm run roadmap:acceptance -- \
+            --production-report "$EVIDENCE_ROOT/production/rollout.json" \
+            --hardware-report "$EVIDENCE_ROOT/hardware/linux.json" \
+            --hardware-report "$EVIDENCE_ROOT/hardware/win32.json" \
+            --hardware-report "$EVIDENCE_ROOT/hardware/darwin.json" \
+            --steamos-report "$EVIDENCE_ROOT/steam-os/steam-deck.json" \
+            --steamos-report "$EVIDENCE_ROOT/steam-os/steam-machine.json" \
+            --virtual-gamepad-report "$EVIDENCE_ROOT/virtual-gamepad/win32.json" \
+            --virtual-gamepad-report "$EVIDENCE_ROOT/virtual-gamepad/darwin.json" \
+            --signed-manifest "$EVIDENCE_ROOT/signed-manifests/linux.json" \
+            --signed-manifest "$EVIDENCE_ROOT/signed-manifests/win32.json" \
+            --signed-manifest "$EVIDENCE_ROOT/signed-manifests/darwin.json" \
+            --public-key-file "$PUBLIC_KEY_FILE" \
+            --report-file "$RUNNER_TEMP/spartan-roadmap-acceptance.json"
+      - name: Retain acceptance ledger
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: spartan-roadmap-acceptance
+          path: ${{ runner.temp }}/spartan-roadmap-acceptance.json
+          if-no-files-found: ignore
+          retention-days: 14

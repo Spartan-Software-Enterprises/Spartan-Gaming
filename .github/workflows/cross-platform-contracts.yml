@@ -1,0 +1,132 @@
+name: Cross-platform contracts
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  electron-desktop:
+    name: Electron desktop package (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: mac
+          - os: windows-latest
+            platform: windows
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+      - name: Install Electron dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Test Electron shell contracts
+        run: npm run electron:test
+      - name: Build unpacked Electron desktop artifact
+        run: npm run desktop:package -- --dir
+
+  contracts:
+    name: ${{ matrix.platform }} contracts
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: mac
+          - os: windows-latest
+            platform: windows
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+      - name: Run dependency-free contract suite
+        if: matrix.platform != 'windows'
+        run: npm test --ignore-scripts
+      - name: Run serialized dependency-free contract suite on Windows
+        if: matrix.platform == 'windows'
+        run: npm run test:serial --ignore-scripts
+      - name: Run optional Werift adapter contract in isolation
+        run: npm run test:werift
+      - name: Run optional virtual gamepad adapter contract
+        run: npm run test:virtual-gamepad
+      - name: Run device presentation contract
+        run: npm run test:platform
+      - name: Run display policy contract
+        run: npm run test:display
+      - name: Validate Chromium target contract
+        run: npm run chromium:validate -- --platform ${{ matrix.platform }}
+      - name: Validate Chromium shell launch contract
+        run: npm run test:chromium-launch
+      - name: Validate native package plan contract
+        run: npm run native:plan -- --matrix --json
+      - name: Validate signed browser adapter loader contract
+        run: npm run test:browser-adapter
+      - name: Validate Linux reference adapter contract
+        run: npm run test:native-linux
+      - name: Install Node-API headers for desktop native package
+        if: matrix.platform != 'linux'
+        run: npm install --ignore-scripts --no-audit --no-fund node-api-headers@1.9.0
+      - name: Build Windows native input package
+        if: matrix.platform == 'windows'
+        run: npm run native:plan -- --platform windows --execute
+      - name: Test installed Windows native input package
+        if: matrix.platform == 'windows'
+        run: npm run test:native-windows-package
+      - name: Build macOS native input package
+        if: matrix.platform == 'mac'
+        run: npm run native:plan -- --platform macos --execute
+      - name: Test installed macOS native input package
+        if: matrix.platform == 'mac'
+        run: npm run test:native-macos-package
+
+  native-linux-package:
+    name: native Linux package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+      - name: Install Node-API headers
+        run: npm install --ignore-scripts --no-audit --no-fund node-api-headers@1.9.0
+      - name: Build Linux Node-API package
+        run: npm run native:build-linux
+      - name: Test installed Linux package
+        run: npm run test:native-linux-package
+
+  redis-broker:
+    name: Redis broker integration
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+      - name: Install runtime dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Exercise Redis-backed signaling
+        env:
+          SPARTAN_TEST_REDIS_URL: redis://127.0.0.1:6379
+        run: npm run test:redis-broker

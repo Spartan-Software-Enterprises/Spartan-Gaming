@@ -1,0 +1,46 @@
+name: Frontend distribution
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: ${{ matrix.platform }} frontend artifact
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: macos
+          - os: windows-latest
+            platform: windows
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+      - name: Build portable frontend distribution
+        run: npm run frontend:build -- --out out/spartan-frontend
+      - name: Verify packaged entrypoints
+        shell: node {0}
+        run: |
+          import {readFile} from 'node:fs/promises';
+          const manifest = JSON.parse(await readFile('out/spartan-frontend/spartan-frontend-manifest.json', 'utf8'));
+          for (const entry of Object.values(manifest.entrypoints)) await readFile(`out/spartan-frontend${entry}index.html`);
+          await readFile('out/spartan-frontend/providers/catalog.json');
+          await readFile('out/spartan-frontend/emulators/catalog.json');
+          console.log(`verified ${manifest.product} ${manifest.artifact} on ${process.platform}`);
+      - name: Upload frontend artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: spartan-frontend-${{ matrix.platform }}
+          path: out/spartan-frontend
+          if-no-files-found: error
+          retention-days: 14

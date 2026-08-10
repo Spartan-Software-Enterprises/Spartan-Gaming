@@ -1,0 +1,30 @@
+{
+  "catalogVersion": 1,
+  "updatedAt": "2026-08-08",
+  "policy": {
+    "shipRoms": false,
+    "shipBios": false,
+    "allowUserSelectedFiles": true,
+    "requireLicenseMetadata": true
+  },
+  "projects": [
+    {"id":"libretro","name":"Libretro cores","systems":["multi-system"],"mode":"browser-or-native","priority":"tier-1","url":"https://www.libretro.com/","license":"per-core"},
+    {"id":"retroarch","name":"RetroArch","systems":["multi-system"],"mode":"native-reference","priority":"tier-1","url":"https://www.retroarch.com/","license":"GPL-3.0"},
+    {"id":"dolphin","name":"Dolphin","systems":["gamecube","wii"],"mode":"native","priority":"tier-1","url":"https://dolphin-emu.org/","license":"GPL-2.0-or-later"},
+    {"id":"pcsx2","name":"PCSX2","systems":["playstation-2"],"mode":"native","priority":"tier-1","url":"https://pcsx2.net/","license":"GPL-3.0-or-later"},
+    {"id":"rpcs3","name":"RPCS3","systems":["playstation-3"],"mode":"native","priority":"tier-1","url":"https://rpcs3.net/","license":"GPL-2.0-or-later"},
+    {"id":"ppsspp","name":"PPSSPP","systems":["psp"],"mode":"browser-or-native","priority":"tier-1","url":"https://www.ppsspp.org/","license":"GPL-2.0-or-later"},
+    {"id":"duckstation","name":"DuckStation","systems":["playstation-1"],"mode":"native","priority":"tier-1","url":"https://www.duckstation.org/","license":"GPL-3.0-or-later"},
+    {"id":"cemu","name":"Cemu","systems":["wii-u"],"mode":"native","priority":"tier-1","url":"https://cemu.info/","license":"MPL-2.0"},
+    {"id":"vita3k","name":"Vita3K","systems":["playstation-vita"],"mode":"native","priority":"tier-2","url":"https://vita3k.org/","license":"GPL-2.0"},
+    {"id":"melonds","name":"melonDS","systems":["nintendo-ds"],"mode":"native-or-wasm-candidate","priority":"tier-2","url":"https://melonds.kuribo64.net/","license":"GPL-2.0-or-later"},
+    {"id":"azahar","name":"Azahar","systems":["nintendo-3ds"],"mode":"native","priority":"tier-2","url":"https://www.azahar-emu.org/","license":"GPL-2.0-or-later"},
+    {"id":"mame","name":"MAME","systems":["arcade"],"mode":"browser-or-native","priority":"tier-1","url":"https://www.mamedev.org/","license":"GPL-2.0-or-later"},
+    {"id":"flycast","name":"Flycast","systems":["dreamcast","naomi","atomiswave"],"mode":"native-or-wasm-candidate","priority":"tier-2","url":"https://www.flycast.dev/","license":"GPL-2.0-or-later"},
+    {"id":"xemu","name":"xemu","systems":["original-xbox"],"mode":"native","priority":"tier-2","url":"https://xemu.app/","license":"GPL-2.0-or-later"},
+    {"id":"scummvm","name":"ScummVM","systems":["adventure-engines"],"mode":"browser-or-native","priority":"tier-1","url":"https://www.scummvm.org/","license":"GPL-3.0-or-later"},
+    {"id":"dosbox-staging","name":"DOSBox Staging","systems":["dos"],"mode":"native-or-wasm-candidate","priority":"tier-1","url":"https://www.dosbox-staging.org/","license":"GPL-2.0-or-later"},
+    {"id":"ruffle","name":"Ruffle","systems":["flash","web-games"],"mode":"browser-or-native","priority":"tier-2","url":"https://ruffle.rs/","license":"MIT OR Apache-2.0"},
+    {"id":"sameboy","name":"SameBoy","systems":["game-boy","game-boy-color","super-game-boy"],"mode":"native-or-wasm-candidate","priority":"tier-2","url":"https://sameboy.github.io/","license":"GPL-3.0-or-later"}
+  ]
+}

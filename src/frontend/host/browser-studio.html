@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#10151b">
+    <title>Spartan Gaming — Browser Host Studio</title>
+    <link rel="stylesheet" href="./browser-studio.css">
+  </head>
+  <body>
+    <main class="studio-shell">
+      <header><a class="brand" href="./index.html"><span class="mark">S</span><span>SPARTAN <small>GAMING</small></span></a><a class="back" href="./index.html">Host profiles</a></header>
+      <section class="heading"><p class="eyebrow">BROWSER HOST STUDIO</p><h1>Share a display with your session.</h1><p>Use an authenticated, short-lived signaling ticket to host a user-approved display capture from this browser. Nothing starts, records, or transmits until you choose a display and start the host.</p></section>
+      <section class="studio-grid">
+        <section class="panel setup">
+          <div class="panel-head"><div><p class="eyebrow">HOST CONNECTION</p><h2>Session details</h2></div><span data-state>Idle</span></div>
+          <div class="form">
+            <label class="wide">Signaling endpoint<input data-endpoint type="url" placeholder="wss://relay.example/signal" autocomplete="url"></label>
+            <label>Session ID<input data-session-id value="ses-browser-host" maxlength="128" autocomplete="off"></label>
+            <label>Host ID<input data-host-id value="browser-host" maxlength="120" autocomplete="off"></label>
+            <label class="wide">Host name<input data-host-name value="Browser Host" maxlength="80"></label>
+            <label class="wide">Short-lived host ticket<input data-ticket type="password" placeholder="Paste a role-scoped ticket" autocomplete="off"></label>
+            <div class="capture-options wide">
+              <label class="check"><input data-audio type="checkbox"> Include system audio</label>
+              <label class="check"><input data-microphone type="checkbox"> Include microphone</label>
+              <label data-microphone-picker hidden>Microphone<select data-microphone-device disabled><option value="">System default microphone</option></select></label>
+              <label>Capture surface<select data-surface><option value="monitor">Entire display</option><option value="window">Application window</option><option value="browser">Browser tab</option></select></label>
+              <label>Target framerate<select data-framerate><option value="30">30 FPS</option><option value="60" selected>60 FPS</option><option value="120">120 FPS</option><option value="144">144 FPS</option></select></label>
+            </div>
+          </div>
+          <div class="actions"><button class="secondary" data-capture type="button">Choose display</button><button class="primary" data-start type="button" disabled>Start host</button><button class="secondary" data-stop type="button" disabled>Stop</button></div>
+          <p class="hint" data-status>Choose a display to begin. The browser will ask for permission.</p>
+        </section>
+        <section class="panel preview"><div class="panel-head"><div><p class="eyebrow">LOCAL PREVIEW</p><h2>Captured display</h2></div><span class="chip">Not recorded</span></div><video data-preview playsinline muted></video><p class="hint">The preview is local to this tab. A remote client receives media only after the host runtime is started and a compatible offer is negotiated.</p></section>
+      </section>
+      <section class="panel activity"><div class="panel-head"><div><p class="eyebrow">HOST ACTIVITY</p><h2>Session log</h2></div></div><pre data-log aria-live="polite">No activity yet.</pre></section>
+      <section class="notice"><h3>Security boundary</h3><p>Use only tickets issued for this session and host role. Tickets are held in memory, never stored, and should be issued over a trusted administrative channel. Browser Host does not launch games or inject OS input.</p></section>
+    </main>
+    <script type="module" src="./browser-studio.mjs"></script>
+  </body>
+</html>

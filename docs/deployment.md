@@ -1,0 +1,403 @@
+# Self-hosted deployment
+
+Spartan Gaming includes a dependency-free reference signaling service for
+user-owned hosts. It routes authenticated protocol-v1 control messages only;
+it does not carry game media, terminate TLS, provide STUN/TURN, launch games,
+or store credentials.
+
+## Docker Compose
+
+Generate a long random secret, then start the service:
+
+```bash
+export SPARTAN_SIGNALING_SECRET="$(openssl rand -base64 32)"
+docker compose up --build signaling
+```
+
+For the production-shaped template, provide secret files, TLS files, exact
+HTTPS origins, the TURN endpoints, and run:
+
+```bash
+export SPARTAN_SIGNALING_SECRET_FILE=/run/secrets/spartan-signaling-secret
+export SPARTAN_SIGNALING_ADMIN_SECRET_FILE=/run/secrets/spartan-signaling-admin
+export SPARTAN_SIGNALING_TURN_SECRET_FILE=/run/secrets/spartan-turn-shared-secret
+export SPARTAN_SIGNALING_TLS_KEY_FILE=/run/secrets/signaling.key
+export SPARTAN_SIGNALING_TLS_CERT_FILE=/run/secrets/signaling.crt
+export SPARTAN_SIGNALING_ALLOWED_ORIGINS=https://play.example.com
+export SPARTAN_SIGNALING_SESSION_STORE=redis
+export SPARTAN_SIGNALING_TURN_URLS=turns:turn.example.com:5349
+docker compose -f docker-compose.production.yml up --build signaling
+```
+
+Before starting the rollout, run the secret-safe preflight in the same
+operator environment. It validates the production configuration and checks
+that the mounted TLS key and certificate are readable regular files without
+printing their contents:
+
+```bash
+npm run deployment:check
+npm run deployment:preflight
+```
+
+`docker-compose.production.yml` uses the repository's Redis-backed broker and
+provisions a private Redis service for short-lived role ownership and pub/sub.
+The broker never persists signaling payloads. Set
+`SPARTAN_SIGNALING_REDIS_URL` when using an operator-managed Redis cluster;
+use `rediss://` for a TLS Redis endpoint outside the Compose network. TURN
+credentials are minted through the admin-only TURN credential route from the
+mounted shared secret. Certificate issuance/rotation and the exact browser
+origin remain operator-owned production inputs.
+
+Before reloading a rotated certificate pair, validate that it is not expired
+and that the private key matches the certificate:
+
+```bash
+npm run deployment:tls-check -- --key /run/secrets/signaling.key --cert /run/secrets/signaling.crt
+```
+
+The checker prints only certificate subject, issuer, and remaining days. For
+an application-owned pair, `rotateTlsCertificatePair()` in
+`scripts/deployment/tls-rotation.mjs` validates the replacement first, stages
+the key with mode `0600` and certificate with mode `0644`, publishes both, and
+restores the previous pair if publication fails. Reload the signaling process
+only after the rotation operation succeeds; the utility does not restart
+containers or contact an external certificate authority.
+
+The default Compose mapping binds `127.0.0.1:8790` on the host. The service
+health endpoint is:
+
+```text
+http://127.0.0.1:8790/health
+```
+
+The service rejects oversized or unmasked WebSocket frames, requires the
+authenticated join frame before protocol messages, and enforces bounded
+connections and message rates. For browser deployments, set an exact-origin
+allowlist, for example:
+
+```bash
+export SPARTAN_SIGNALING_ALLOWED_ORIGINS="https://play.example.com"
+export SPARTAN_SIGNALING_MAX_CONNECTIONS=512
+export SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND=240
+```
+
+The reference signaling process supports direct TLS when both certificate
+paths are supplied:
+
+```bash
+export SPARTAN_SIGNALING_TLS_KEY=/run/secrets/signaling.key
+export SPARTAN_SIGNALING_TLS_CERT=/run/secrets/signaling.crt
+```
+
+This changes the advertised endpoint from `ws://` to `wss://` and protects the
+health/admin HTTP routes with the same certificate. A production deployment
+should normally terminate TLS at a managed reverse proxy and rotate keys
+outside the application container.
+
+The direct host agent accepts the same deployment pattern with
+`SPARTAN_HOST_TLS_KEY` and `SPARTAN_HOST_TLS_CERT`, or `--tls-key` and
+`--tls-cert`. The frontend can then store the resulting `wss://.../session`
+endpoint in a host profile and retain the one-time pairing code boundary.
+
+The health response reports configured limits and rejected connection counts,
+but never returns tickets, subjects, or session payloads.
+
+For operator tooling, optionally set a separate
+`SPARTAN_SIGNALING_ADMIN_SECRET`. With that secret, use `Authorization: Bearer
+<secret>` over a private TLS-admin route: `GET /admin/health` returns the same
+bounded operational counters, and `POST /admin/tickets` accepts
+`{"sessionId":"...","role":"client|host","subject":"...","ttlMs":60000}`
+and returns a short-lived scoped ticket. The admin secret must be delivered by
+a secret manager and must never be placed in browser configuration, URLs, or
+logs. The admin API is disabled when the secret is empty.
+
+`POST /admin/turn-credentials` accepts `{"subject":"browser-01","ttlSeconds":600}`
+and returns an ephemeral TURN REST username, HMAC credential, TTL, and the
+configured TURN URLs. It requires the same admin bearer secret and a distinct
+mounted TURN shared secret.
+
+`POST /admin/host-enrollment` accepts
+`{"endpoint":"wss://signal.example/signal","sessionId":"...","subject":"host-01","ttlMs":60000}`
+and returns the endpoint plus one role-scoped host ticket. The endpoint must
+be credential-free and remote endpoints must use `wss://`. This is the audited
+operator enrollment handoff consumed by `host/enrollment.mjs`; the returned
+ticket must be passed to the host only in memory or through a short-lived
+supervisor environment and must never be persisted in a profile or log.
+
+The container runs as the unprivileged `node` user, with a read-only root
+filesystem, dropped Linux capabilities, a small no-exec temporary filesystem,
+and `no-new-privileges`. The secret is supplied at runtime and is never baked
+into the image or committed to the repository.
+
+## Remote access
+
+The Compose file is intentionally localhost-only. For a remote client, place
+the service behind a maintained TLS reverse proxy with an explicit WebSocket
+upgrade route for `/signal`, origin policy, rate limits, access logging that
+redacts tokens, and a secret manager. Do not expose the plain `ws://` endpoint
+to the public internet.
+
+The production Compose profile includes a clustered-capable session registry
+and pub/sub broker. It still needs durable operational monitoring and
+separately provisioned STUN/TURN credentials; Redis is not a media relay.
+
+`createSignalingServer()` accepts an injected broker implementing `attach`,
+`issueTicket`, and `stats`. A production adapter can therefore provide
+clustered session routing and ticket custody behind the same authenticated
+WebSocket surface; the default in-memory broker remains development-only.
+The built-in `signaling/redis-broker.mjs` adapter implements that contract
+using Redis, short-lived role locks, and session pub/sub. Adapters may also
+implement `health()`; when present, `/health` and
+`/admin/health` expose only bounded `status` and `backend` fields. Missing or
+failing health checks are reported as `not-reported` or `unavailable` and
+never make secret-bearing adapter details visible.
+The executable can load such an operator-installed adapter with
+`SPARTAN_SIGNALING_BROKER_PACKAGE` or `--broker-package`; the package must
+export `createBroker()` and return the validated broker contract.
+
+Before promoting a deployment, run `npm run deployment:check` with
+`SPARTAN_SIGNALING_SECRET` (or `SPARTAN_SIGNALING_SECRET_FILE`),
+`SPARTAN_SIGNALING_ADMIN_SECRET` (or `SPARTAN_SIGNALING_ADMIN_SECRET_FILE`),
+`SPARTAN_SIGNALING_TLS_KEY`, `SPARTAN_SIGNALING_TLS_CERT`,
+`SPARTAN_SIGNALING_ALLOWED_ORIGINS`, `SPARTAN_SIGNALING_SESSION_STORE`, and
+`SPARTAN_SIGNALING_BROKER_PACKAGE`, and `SPARTAN_SIGNALING_TURN_URLS` set. The
+broker package must export the validated `createBroker()` contract; the
+preflight requires strong distinct
+secrets, HTTPS origins, a non-memory session store (`redis`, `database`, or
+`external`), and `turn:`/`turns:` endpoints; it prints only a redacted
+configuration summary and never emits secret values. Inline and file forms
+cannot be supplied together. Mounted secret files are read by both the
+preflight and signaling process at startup; their contents are never returned.
+This validates operator
+prerequisites but does not provision those external services.
+
+For an explicit, shell-free deployment handoff, `npm run deployment:rollout`
+prints a production rollout plan containing the Compose preflight, detached
+startup command, and HTTPS health endpoint. Add `--execute --confirm` only on
+an operator-controlled machine after the secret files, TLS material, Redis,
+and TURN inputs have been reviewed. Execution runs `docker compose config
+--quiet`, starts the selected services, and verifies the signaling health
+response; it never accepts secrets as command-line arguments and never runs a
+shell. Use `--without-turn` only when an independently provisioned relay is
+already reachable through `SPARTAN_SIGNALING_TURN_URLS`.
+
+For a repeatable operator activation, run the manual `Production rollout`
+GitHub Actions workflow on a self-hosted runner that has Docker, the
+runner-local production Compose and environment files, mounted TLS material,
+and the secret environment expected by `deployment:check`. The workflow runs
+the configuration and TLS preflights with Node's runner-local `--env-file`
+before invoking the confirmed rollout, passes paths and endpoints through
+environment variables, and verifies the HTTPS health endpoint afterward. It
+does not upload secret files, accept secret values as workflow inputs, or
+provision a public relay. Configure the runner label and paths only after
+reviewing the target host, firewall, Redis, TURN, TLS, and external signing
+custody.
+On successful execution it also writes a bounded, secret-free rollout report
+and retains it as a short-lived GitHub artifact. The report records only the
+rollout status, whether the TURN profile was selected, and normalized service
+health statuses; it does not include environment values, endpoint bodies,
+tokens, or certificate material.
+
+After collecting the production report, one native exercise report from each
+Windows, macOS, and Linux runner, physical Steam Deck and SteamOS desktop
+reports, the two desktop virtual-gamepad exercise reports, and the three
+signed-package verification reports, run
+`npm run roadmap:acceptance` with repeated `--hardware-report`,
+`--steamos-report`, `--virtual-gamepad-report`, and `--signed-package-report`
+options. The command
+produces a bounded acceptance ledger and exits non-zero until every external
+gate is represented by verified evidence. It never treats hosted contract CI,
+an unsigned package, or a configuration-only report as completion. Signed
+package reports must be emitted by `native:verify-release`; they carry the
+`signed-release-manifest` kind and `webcrypto` verification marker, so a
+hand-written `{status: "verified"}` summary is rejected.
+For stronger signing evidence, pass each actual signed manifest with repeated
+`--signed-manifest` options and provide `--public-key-file`; the ledger then
+performs WebCrypto verification itself instead of trusting a summary report.
+The SteamOS gate requires both `steam-deck` and `steam-machine` (or
+`steam-os-desktop`) runtime reports. Each report must verify Game Mode,
+Desktop Mode, Steam Input/glyphs, text entry, touch/trackpad/gyro/rear
+controls, Gamescope, Proton/native launch, suspend/resume, battery, and
+external display behavior.
+The manual `Roadmap acceptance` workflow automates this final check on a
+self-hosted runner. Its evidence root must contain `production/rollout.json`,
+one native exercise report per desktop platform, one exercised virtual-driver
+report for Windows and macOS, two physical SteamOS reports, and three signed
+manifests. The workflow only
+uploads the bounded acceptance ledger; it does not upload the evidence root or
+the public key file.
+The workflow requires a ready broker health signal by default; this proves the
+running signaling service can reach its configured Redis/production broker,
+not merely that a Redis URL exists in an environment file. Operators using a
+separately managed session backend may explicitly disable that requirement
+only after reviewing the backend's independent health evidence.
+It also checks the authenticated TURN credential service by default. That
+check proves the signaling service can mint short-lived credentials for the
+configured `turn:`/`turns:` URLs; it does not claim that a client has completed
+a media relay transaction. A real relay connectivity test remains part of the
+hardware/network acceptance run.
+The optional `check_turn_network` workflow input adds a bounded TCP/TLS probe
+for every returned endpoint. A passing probe means the runner completed a
+transport handshake only; it does not replace authenticated TURN allocation
+and media-path testing from the target network.
+
+For an operator-managed coturn relay, generate a bounded configuration from
+the same shared secret used by the signaling TURN credential endpoint:
+
+```bash
+npm run deployment:turn-config -- \
+  --secret-file /run/secrets/spartan-turn-shared-secret \
+  --output /run/secrets/turnserver.conf \
+  --realm turn.example.com \
+  --external-ip 203.0.113.10 \
+  --tls-cert /run/secrets/turn.crt \
+  --tls-key /run/secrets/turn.key
+```
+
+The generator validates the relay and TLS settings, writes the result with
+mode `0600`, and never prints the shared secret. Run coturn using the generated
+file and expose only the required UDP/TCP listener and relay-port range. The
+relay remains operator-owned; the repository does not silently provision a
+public TURN service. For Linux systemd deployments,
+`deploy/turn/coturn.service` provides a hardened, credential-free service
+template for the generated configuration. `deploy/turn/README.md` documents
+installation and firewall review. The unit is not enabled by the repository
+and still requires an operator to install coturn, provide certificates and the
+shared-secret file, and verify NAT/relay-port routing.
+
+The production Compose file also contains an explicit `turn` profile for a
+Linux coturn container. Start it only with `docker compose --profile turn up`
+after supplying `SPARTAN_TURN_IMAGE`, the generated config, and certificate
+secret files. The profile uses host networking because coturn allocates a
+bounded UDP relay range; operators must still review the generated port range,
+firewall, NAT, and image provenance. The profile is disabled by default and
+does not replace external certificate or secret management.
+
+Native package rollout artifacts are built by
+`.github/workflows/native-package-rollout.yml` on a manual dispatch or a
+version tag. Each target runner uploads an isolated package artifact and marks
+it as unsigned; it includes a deterministic `package-manifest.unsigned.json`
+with per-file SHA-256 digests. An operator must pass the artifact through the external
+package-signing service and install it through the verified adapter installer;
+the rollout workflow never treats a CI artifact as trusted code.
+
+On a desktop host, `npm run native:verify-desktop` performs an observation-only
+capability check against the selected native package. It does not inject input,
+start capture, or start audio. Use `--platform windows|macos|linux` and
+`--install-root <path>` when the package is outside its default location. The
+report distinguishes package readiness, input/audio/haptics capability
+readiness, Linux `/dev/uinput` access, and the separate Windows/macOS
+virtual-driver requirement. Operators may add `--require-hardware`,
+`--require-input`, `--require-audio`, `--require-haptics`, or
+`--require-virtual-gamepad` to turn those reported requirements into distinct
+non-zero exit statuses for deployment validation. The verifier only inspects
+bindings and permissions; it does not claim that a physical controller is
+attached or that a real haptic effect was felt. The final hardware gate must
+run this check on each target operating system with the intended devices
+connected, then record the result in the release handoff.
+
+The manual hardware gate also runs an explicit exercise after the observation
+check. `--execute --confirm --require-execution` starts and stops the selected
+capture and audio lifecycles, sends an F20 press/release pair, and requests a
+short rumble. The exercise is bounded and opt-in because it requires screen and
+microphone permissions and can affect the focused desktop or an attached
+controller. `SPARTAN_HARDWARE_CAPTURE_SOURCE` and
+`SPARTAN_HARDWARE_AUDIO_SOURCE` may be supplied by the runner for non-default
+devices. A report marked ready proves that the adapter accepted the operations;
+it does not replace an operator confirming the captured media and felt haptic
+response. Exercise reports are marked `kind: native-hardware-report` with
+`verification: runtime-exercise`; capability-only observations are deliberately
+not eligible for the final acceptance gate.
+
+The manual `Hardware validation gate` GitHub Actions workflow provides that
+operator-run surface on a labeled self-hosted Windows, macOS, or Linux runner.
+It requires native input, audio, and haptics readiness, and can explicitly run
+the Linux `/dev/uinput` button/axis and force-feedback sequence. It can also
+verify a separately installed signed virtual-gamepad package using a
+runner-local public-key file. The workflow is intentionally manual and fails
+closed; a passing package contract or hosted CI runner does not substitute for
+connecting the target controller, audio device, and display hardware.
+Each run retains short-lived capability reports as a GitHub artifact. The
+reports contain normalized readiness states and package paths, not controller
+input, credentials, private keys, or adapter contents; treat them as operator
+evidence for the corresponding platform run.
+
+For a separately installed Windows or macOS virtual-gamepad adapter, verify
+the signed package before enabling it in the host configuration:
+
+```bash
+npm run native:verify-virtual-gamepad -- \
+  --platform windows \
+  --install-root 'C:/Spartan/adapters' \
+  --adapter-id windows-virtual-gamepad \
+  --public-key-file /run/secrets/virtual-gamepad-public-key.json \
+  --require-driver
+```
+
+The command verifies the current pointer, manifest identity, platform and
+package kind, every declared file digest, the release signature, the factory
+contract, and (with `--require-driver`) an adapter-provided `verifyDriver()`
+probe that confirms the separately installed OS driver is ready. The probe may
+return only bounded identity metadata such as driver name and version; it must
+not return device paths, credentials, or controller input. It never executes a
+controller operation; the actual driver/hardware exercise remains an
+operator-run final gate. To run the bounded injection exercise after signature
+and driver verification, add
+`--execute --confirm --require-execution`; it sends button 0 press/release and
+axis 0 neutral through the installed adapter and records only the operation
+count. The resulting report is marked `kind: virtual-gamepad-exercise` with
+`verification: signed-runtime-exercise`. Keep the target game or other
+input-sensitive application closed while
+performing this test.
+
+When `RELEASE_SIGNING_SERVICE_URL` is configured as a repository variable, or
+`signing_service_url` is supplied to a manual rollout, the workflow can call
+that external HTTPS service with the `SPARTAN_RELEASE_SIGNING_TOKEN` secret.
+`npm run native:sign-release` validates that the service returns the exact
+unsigned manifest plus a signature, writes a separate signed manifest, and
+never accepts a token on the command line or prints it. Without both operator
+inputs, the workflow intentionally remains unsigned. For a version tag, once
+all three platform jobs produce signed manifests and the repository variable
+`RELEASE_SIGNING_PUBLIC_KEY_JWK` is configured, the publish job verifies each
+signature with WebCrypto, checks the canonical platform ID and absence of the
+unsigned marker, creates deterministic platform tarballs plus a SHA-256
+checksum file, and publishes them to the matching GitHub release. It never
+creates a release from unsigned or cryptographically unverifiable artifacts.
+
+Host deployment templates are under `deploy/host/`. The systemd and macOS
+launchd templates keep the reference host bound to localhost by default, run
+as an unprivileged user, and do not enable remote input or native media
+implicitly. The Windows service guidance covers approved external wrappers.
+All supervisors can consume the same shell-free argument vector from
+`npm run host:deployment-plan`; pairing codes, signaling tickets, and secret
+values remain session- or secret-manager-owned.
+
+## Native reference service
+
+Docker is optional. On a machine with Node.js 20 or newer:
+
+```bash
+SPARTAN_SIGNALING_SECRET="local-development-only" npm run signaling
+```
+
+Use `--bind`, `--port`, and `--secret` for local service customization. The
+browser transport joins with a short-lived, role-scoped ticket; it must not
+store the signing secret.
+
+## Provisioning join tickets
+
+Mint tickets out of band on the operator or host machine. Issue one ticket
+for each role in the same session, and deliver the ticket only to that role:
+
+```bash
+export SPARTAN_SIGNALING_SECRET="$(openssl rand -base64 32)"
+node scripts/issue-signaling-ticket.mjs --session ses-example-01 --role client --subject browser-01
+node scripts/issue-signaling-ticket.mjs --session ses-example-01 --role host --subject host-01
+```
+
+The command prints a JSON record containing the short-lived ticket. Tickets
+are scoped to one session and role, and should be passed in memory to
+`createWebSocketSignalTransport({join})`; do not put them in a URL, profile
+export, source file, or browser local storage. A production provisioning
+service should authenticate the operator and deliver the same claims through
+an audited secret-exchange channel.

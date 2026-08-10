@@ -1,0 +1,3 @@
+# Grant only the Spartan virtual gamepad event node to the dedicated host group.
+# Keep /dev/input physical-device permissions unchanged.
+KERNEL=="event*", ATTRS{name}=="Spartan Gaming Virtual Gamepad", GROUP="spartan-gaming", MODE="0660"

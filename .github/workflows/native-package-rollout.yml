@@ -1,0 +1,108 @@
+name: Native package rollout artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      signing_service_url:
+        description: 'Optional HTTPS release signing endpoint'
+        required: false
+        type: string
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  native-package:
+    name: native package artifact (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: macos
+          - os: windows-latest
+            platform: windows
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+      - name: Install native build dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Build native package into an isolated rollout directory
+        run: npm run native:plan -- --platform ${{ matrix.platform }} --out-root out/rollout-${{ matrix.platform }} --install-root out/rollout-${{ matrix.platform }}/install --execute
+      - name: Write unsigned rollout marker
+        shell: bash
+        run: |
+          node scripts/native/release-manifest.mjs --platform ${{ matrix.platform }} --install-root out/rollout-${{ matrix.platform }}/install --version build-${{ github.sha }} --output out/rollout-${{ matrix.platform }}/package-manifest.unsigned.json
+          node -e "const fs=require('fs'); fs.writeFileSync('out/rollout-${{ matrix.platform }}/install/UNSIGNED-OPERATOR-SIGNATURE-REQUIRED.txt','This native package is a CI build artifact. Sign its adapter manifest through the external release signing service before installation.\n')"
+      - name: Sign native package manifest through external custody service
+        if: ${{ inputs.signing_service_url != '' || vars.RELEASE_SIGNING_SERVICE_URL != '' }}
+        env:
+          RELEASE_SIGNING_SERVICE_URL: ${{ inputs.signing_service_url || vars.RELEASE_SIGNING_SERVICE_URL }}
+          SPARTAN_RELEASE_SIGNING_TOKEN: ${{ secrets.SPARTAN_RELEASE_SIGNING_TOKEN }}
+        shell: bash
+        run: |
+          test -n "$SPARTAN_RELEASE_SIGNING_TOKEN"
+          node scripts/native/sign-release.mjs \
+            --manifest out/rollout-${{ matrix.platform }}/package-manifest.unsigned.json \
+            --output out/rollout-${{ matrix.platform }}/package-manifest.signed.json \
+            --service-url "$RELEASE_SIGNING_SERVICE_URL"
+          rm -f out/rollout-${{ matrix.platform }}/install/UNSIGNED-OPERATOR-SIGNATURE-REQUIRED.txt
+      - name: Upload native rollout artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: spartan-native-${{ matrix.platform }}-${{ github.sha }}
+          path: |
+            out/rollout-${{ matrix.platform }}/install
+            out/rollout-${{ matrix.platform }}/package-manifest.unsigned.json
+            out/rollout-${{ matrix.platform }}/package-manifest.signed.json
+          if-no-files-found: error
+          retention-days: 14
+
+  publish-native-release:
+    name: publish signed native release
+    needs: native-package
+    if: ${{ github.ref_type == 'tag' && (inputs.signing_service_url != '' || vars.RELEASE_SIGNING_SERVICE_URL != '') && vars.RELEASE_SIGNING_PUBLIC_KEY_JWK != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download signed platform artifacts
+        uses: actions/download-artifact@v7
+        with:
+          pattern: spartan-native-*
+          path: out/rollout-artifacts
+          merge-multiple: false
+      - name: Verify and archive signed packages
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          SPARTAN_RELEASE_SIGNING_PUBLIC_KEY_JWK: ${{ vars.RELEASE_SIGNING_PUBLIC_KEY_JWK }}
+        run: |
+          set -euo pipefail
+          for platform in linux macos windows; do
+            artifact="out/rollout-artifacts/spartan-native-${platform}-${GITHUB_SHA}"
+            expected_platform="$platform"
+            case "$platform" in
+              macos) expected_platform=darwin ;;
+              windows) expected_platform=win32 ;;
+            esac
+            test -f "$artifact/package-manifest.signed.json"
+            test -d "$artifact/install"
+            test ! -e "$artifact/install/UNSIGNED-OPERATOR-SIGNATURE-REQUIRED.txt"
+            node scripts/native/verify-release.mjs --manifest "$artifact/package-manifest.signed.json" --public-key-env SPARTAN_RELEASE_SIGNING_PUBLIC_KEY_JWK
+            node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync(process.argv[1])); if (m.platform !== process.argv[2]) process.exit(1);" "$artifact/package-manifest.signed.json" "$expected_platform"
+            tar -czf "spartan-native-${platform}-${RELEASE_TAG}.tar.gz" -C "$artifact" install package-manifest.signed.json
+          done
+          sha256sum spartan-native-*.tar.gz > spartan-native-${RELEASE_TAG}.sha256
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" --repo "${{ github.repository }}" --verify-tag --title "Spartan Gaming ${{ github.ref_name }}" --generate-notes spartan-native-*.tar.gz "spartan-native-${{ github.ref_name }}.sha256"

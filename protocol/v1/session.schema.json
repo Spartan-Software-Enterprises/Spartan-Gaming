@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spartangaming.org/protocol/v1/session.schema.json",
+  "title": "Spartan Gaming v1 session message",
+  "description": "Transport-neutral envelope for browser, host, signaling, and relay messages.",
+  "type": "object",
+  "required": ["protocol", "messageId", "sessionId", "type", "sentAt", "payload"],
+  "properties": {
+    "protocol": {
+      "const": "spartan-gaming/1"
+    },
+    "messageId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{8,128}$"
+    },
+    "sessionId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{8,128}$"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "session.offer",
+        "session.answer",
+        "session.ice-candidate",
+        "session.reconnect",
+        "input.event",
+        "quality.request",
+        "telemetry.health",
+        "session.close"
+      ]
+    },
+    "sentAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}
+
