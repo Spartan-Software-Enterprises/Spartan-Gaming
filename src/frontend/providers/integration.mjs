@@ -54,7 +54,8 @@ export function createProviderIntegration(entry, {profile = {}, report = {}} = {
   if (regionHint !== 'automatic') notes.push(`Region hint: ${REGION_LABELS[regionHint]}. The provider decides actual availability.`);
   if (profile.autoFullscreen === true) notes.push('Fullscreen is requested after the provider surface is ready when the browser permits it.');
   if (missingCapabilities.length) notes.push('Connect a supported controller before starting this service.');
-  return Object.freeze({providerId: entry.id, mode, embedUrl, controllerProfile: preset.controllerProfile || (entry.capabilities?.includes('gamepad') ? 'Auto-detect' : null), quality: profile.quality && profile.quality !== 'balanced' ? profile.quality : (preset.quality || 'balanced'), regionHint, regionLabel: REGION_LABELS[regionHint], autoFullscreen: profile.autoFullscreen !== false, surfaces: surfaceList(entry), requirements, missingCapabilities: Object.freeze(missingCapabilities), health: Object.freeze({strategy: 'reachability-only', url: entry.url, authenticated: false}), notes: Object.freeze(notes)});
+  const controllerProfile = profile.controllerProfile && profile.controllerProfile !== 'Auto-detect' ? profile.controllerProfile : (preset.controllerProfile || (entry.capabilities?.includes('gamepad') ? 'Auto-detect' : null));
+  return Object.freeze({providerId: entry.id, mode, embedUrl, controllerProfile, quality: profile.quality && profile.quality !== 'balanced' ? profile.quality : (preset.quality || 'balanced'), regionHint, regionLabel: REGION_LABELS[regionHint], autoFullscreen: profile.autoFullscreen !== false, surfaces: surfaceList(entry), requirements, missingCapabilities: Object.freeze(missingCapabilities), health: Object.freeze({strategy: 'reachability-only', url: entry.url, authenticated: false}), notes: Object.freeze(notes)});
 }
 
 export function providerTroubleshooting(integration) {
