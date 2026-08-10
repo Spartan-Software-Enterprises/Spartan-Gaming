@@ -9,6 +9,13 @@ function nativeBindingSummary(environment = {}) {
   return Object.freeze({status, platform: typeof environment.platform === 'string' ? environment.platform : null, packageName: typeof binding.packageName === 'string' ? binding.packageName : null, reason: typeof binding.reason === 'string' ? binding.reason : null, capabilities});
 }
 
+function virtualGamepadBindingSummary(environment = {}) {
+  const binding = environment.virtualGamepadBinding || {};
+  const status = ['available', 'unavailable'].includes(binding.status) ? binding.status : 'not-reported';
+  const capabilities = binding.capabilities && typeof binding.capabilities === 'object' ? Object.freeze(Object.fromEntries(Object.entries(binding.capabilities).filter(([key, value]) => typeof value === 'boolean').slice(0, 16))) : Object.freeze({});
+  return Object.freeze({status, platform: typeof binding.platform === 'string' ? binding.platform : (typeof environment.platform === 'string' ? environment.platform : null), packageName: typeof binding.packageName === 'string' ? binding.packageName : null, reason: typeof binding.reason === 'string' ? binding.reason : null, capabilities});
+}
+
 export function createHostPreflight({capabilities = {}, environment = {}, clientTransports = TRANSPORTS} = {}) {
   const media = capabilities.media || {};
   const publisher = capabilities.publisher || {};
@@ -25,5 +32,5 @@ export function createHostPreflight({capabilities = {}, environment = {}, client
     {id: 'input', label: 'Host input', status: input.gamepad || input.keyboard || input.pointer ? 'ready' : 'warning', detail: input.gamepad || input.keyboard || input.pointer ? 'Input adapter advertised' : 'Host input adapter is not configured'},
   ]);
   const blocking = checks.filter(check => check.status === 'missing');
-  return Object.freeze({status: blocking.length ? 'configuration-required' : 'ready', transport: transport || null, checks, blocking: Object.freeze(blocking.map(check => check.id)), hostName: environment.hostName || null, nativeBinding: nativeBindingSummary(environment), tools: Object.freeze(environment.tools && typeof environment.tools === 'object' ? {ffmpeg: Boolean(environment.tools.ffmpeg), gstreamer: Boolean(environment.tools.gstreamer)} : {})});
+  return Object.freeze({status: blocking.length ? 'configuration-required' : 'ready', transport: transport || null, checks, blocking: Object.freeze(blocking.map(check => check.id)), hostName: environment.hostName || null, nativeBinding: nativeBindingSummary(environment), virtualGamepadBinding: virtualGamepadBindingSummary(environment), tools: Object.freeze(environment.tools && typeof environment.tools === 'object' ? {ffmpeg: Boolean(environment.tools.ffmpeg), gstreamer: Boolean(environment.tools.gstreamer)} : {})});
 }
