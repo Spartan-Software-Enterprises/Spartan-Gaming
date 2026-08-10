@@ -207,7 +207,11 @@ that external HTTPS service with the `SPARTAN_RELEASE_SIGNING_TOKEN` secret.
 `npm run native:sign-release` validates that the service returns the exact
 unsigned manifest plus a signature, writes a separate signed manifest, and
 never accepts a token on the command line or prints it. Without both operator
-inputs, the workflow intentionally remains unsigned.
+inputs, the workflow intentionally remains unsigned. For a version tag, once
+all three platform jobs produce signed manifests, the publish job verifies the
+signature fields and absence of the unsigned marker, creates deterministic
+platform tarballs plus a SHA-256 checksum file, and publishes them to the
+matching GitHub release. It never creates a release from unsigned artifacts.
 
 Host deployment templates are under `deploy/host/`. The systemd and macOS
 launchd templates keep the reference host bound to localhost by default, run

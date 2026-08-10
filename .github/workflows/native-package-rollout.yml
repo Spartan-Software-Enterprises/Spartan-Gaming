@@ -65,3 +65,42 @@ jobs:
             out/rollout-${{ matrix.platform }}/package-manifest.signed.json
           if-no-files-found: error
           retention-days: 14
+
+  publish-native-release:
+    name: publish signed native release
+    needs: native-package
+    if: ${{ github.ref_type == 'tag' && (inputs.signing_service_url != '' || vars.RELEASE_SIGNING_SERVICE_URL != '') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download signed platform artifacts
+        uses: actions/download-artifact@v7
+        with:
+          pattern: spartan-native-*
+          path: out/rollout-artifacts
+          merge-multiple: false
+      - name: Verify and archive signed packages
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          for platform in linux macos windows; do
+            artifact="out/rollout-artifacts/spartan-native-${platform}-${GITHUB_SHA}"
+            expected_platform="$platform"
+            case "$platform" in
+              macos) expected_platform=darwin ;;
+              windows) expected_platform=win32 ;;
+            esac
+            test -f "$artifact/package-manifest.signed.json"
+            test -d "$artifact/install"
+            test ! -e "$artifact/install/UNSIGNED-OPERATOR-SIGNATURE-REQUIRED.txt"
+            node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync(process.argv[1])); if (!m.signature?.value || m.platform !== process.argv[2]) process.exit(1);" "$artifact/package-manifest.signed.json" "$expected_platform"
+            tar -czf "spartan-native-${platform}-${RELEASE_TAG}.tar.gz" -C "$artifact" install package-manifest.signed.json
+          done
+          sha256sum spartan-native-*.tar.gz > spartan-native-${RELEASE_TAG}.sha256
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" --repo "${{ github.repository }}" --verify-tag --title "Spartan Gaming ${{ github.ref_name }}" --generate-notes spartan-native-*.tar.gz "spartan-native-${{ github.ref_name }}.sha256"
