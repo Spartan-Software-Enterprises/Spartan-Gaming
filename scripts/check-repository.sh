@@ -132,6 +132,8 @@ required_files=(
   host/game-launcher.test.mjs
   host/proton.mjs
   host/proton.test.mjs
+  host/steam-os.mjs
+  host/steam-os.test.mjs
   host/launch-request.mjs
   host/launch-request.test.mjs
   host/publisher.mjs
@@ -498,7 +500,9 @@ node --check native/linux/index.mjs
 node --check native/desktop/reference-adapter.mjs
 node --check host/game-launcher.mjs
 node --check host/proton.mjs
+node --check host/steam-os.mjs
 node --check host/launch-request.mjs
+node --test host/proton.test.mjs host/steam-os.test.mjs
 node --test src/frontend/settings/control.test.mjs
 node --test src/frontend/adapters/manifest-registry.test.mjs
 node --test src/frontend/player/volume.test.mjs

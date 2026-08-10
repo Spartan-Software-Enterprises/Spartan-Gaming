@@ -303,6 +303,12 @@ Proton is not bundled or downloaded, and this integration does not bypass DRM,
 anti-cheat, or authentication. Steam Input, Gamescope, Game Mode, and physical
 Deck execution remain local-lab validation gates.
 
+The normalized Linux host configuration also carries an explicit SteamOS
+profile: it accepts only an `ID=steamos` or `VARIANT_ID=steamos` signal, bounds
+the handheld profile to 1280×800 and 30/40/60 FPS, and can produce a shell-free
+Gamescope wrapper plan using operator-selected game and Gamescope paths.
+Generic Linux is never labeled SteamOS from a browser user-agent.
+
 The same launcher can be supplied to `createNativeWeriftHost`; it is started
 only after the remote offer has passed capability negotiation, before video or
 audio publishers start, and is stopped during session teardown.
