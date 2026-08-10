@@ -14,7 +14,7 @@ function modulePath(installRoot) { return pathToFileURL(path.resolve(installRoot
 /** Inspect a native package without injecting input, opening capture, or starting audio. */
 export async function verifyDesktopCapabilities({platform = process.platform, installRoot, loadModule = specifier => import(specifier), access = fs.access, environment = process.env} = {}) {
   const selectedPlatform = requiredPlatform(platform); const root = path.resolve(text(installRoot) || defaultInstallRoot(selectedPlatform));
-  const report = {platform: selectedPlatform, installRoot: root, package: {state: 'unavailable'}, hardware: {state: 'not-checked'}, virtualGamepad: {state: selectedPlatform === 'linux' ? 'not-checked' : 'external-driver-required'}};
+  const report = {platform: selectedPlatform, installRoot: root, package: {state: 'unavailable'}, capabilities: {input: {state: 'not-checked'}, audio: {state: 'not-checked'}, haptics: {state: 'not-checked'}}, hardware: {state: 'not-checked'}, virtualGamepad: {state: selectedPlatform === 'linux' ? 'not-checked' : 'external-driver-required'}};
   if (selectedPlatform === 'linux') {
     try { await access('/dev/uinput', fsConstants.R_OK | fsConstants.W_OK); report.hardware = {state: 'ready', device: '/dev/uinput'}; }
     catch { report.hardware = {state: 'unavailable', reason: 'readable and writable /dev/uinput is required'}; }
@@ -26,6 +26,7 @@ export async function verifyDesktopCapabilities({platform = process.platform, in
     bindings = await module.createBindings({environment});
     const capabilities = bindings?.capabilities || {};
     const methods = {input: typeof bindings?.input?.execute === 'function', capture: typeof bindings?.capture?.start === 'function', audio: typeof bindings?.audio?.start === 'function'};
+    report.capabilities = {input: {state: methods.input && capabilities.input !== false ? 'ready' : 'unavailable', reason: methods.input && capabilities.input !== false ? null : 'native input binding is unavailable'}, audio: {state: methods.audio && capabilities.audio !== false ? 'ready' : 'unavailable', reason: methods.audio && capabilities.audio !== false ? null : 'native audio capture binding is unavailable'}, haptics: {state: methods.input && capabilities.rumble === true ? 'ready' : 'unavailable', reason: methods.input && capabilities.rumble === true ? null : 'native haptics/rumble capability is unavailable'}};
     const nativeReady = methods.input && methods.capture && methods.audio;
     report.package = {state: nativeReady ? 'ready' : 'incomplete', capabilities: Object.freeze({...capabilities}), methods: Object.freeze(methods)};
     if (selectedPlatform === 'linux') report.virtualGamepad = {state: capabilities.virtualGamepad && report.hardware.state === 'ready' ? 'ready' : 'unavailable', reason: capabilities.virtualGamepad ? report.hardware.reason || null : 'Linux package does not expose virtual gamepad capability'};
@@ -43,5 +44,8 @@ if (path.resolve(process.argv[1] || '') === path.resolve(new URL(import.meta.url
     console.log(JSON.stringify(report, null, 2));
     if (argv.includes('--require-hardware') && report.status !== 'ready') process.exitCode = 2;
     if (argv.includes('--require-virtual-gamepad') && report.virtualGamepad.state !== 'ready') process.exitCode = 3;
+    if (argv.includes('--require-input') && report.capabilities.input.state !== 'ready') process.exitCode = 4;
+    if (argv.includes('--require-audio') && report.capabilities.audio.state !== 'ready') process.exitCode = 5;
+    if (argv.includes('--require-haptics') && report.capabilities.haptics.state !== 'ready') process.exitCode = 6;
   } catch (error) { console.error(`native capability verification failed: ${error.message}`); process.exitCode = 1; }
 }

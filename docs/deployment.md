@@ -215,10 +215,16 @@ On a desktop host, `npm run native:verify-desktop` performs an observation-only
 capability check against the selected native package. It does not inject input,
 start capture, or start audio. Use `--platform windows|macos|linux` and
 `--install-root <path>` when the package is outside its default location. The
-report distinguishes package readiness, Linux `/dev/uinput` access, and the
-separate Windows/macOS virtual-driver requirement. Operators may add
-`--require-hardware` or `--require-virtual-gamepad` to turn those reported
-requirements into a non-zero exit status for deployment validation.
+report distinguishes package readiness, input/audio/haptics capability
+readiness, Linux `/dev/uinput` access, and the separate Windows/macOS
+virtual-driver requirement. Operators may add `--require-hardware`,
+`--require-input`, `--require-audio`, `--require-haptics`, or
+`--require-virtual-gamepad` to turn those reported requirements into distinct
+non-zero exit statuses for deployment validation. The verifier only inspects
+bindings and permissions; it does not claim that a physical controller is
+attached or that a real haptic effect was felt. The final hardware gate must
+run this check on each target operating system with the intended devices
+connected, then record the result in the release handoff.
 
 When `RELEASE_SIGNING_SERVICE_URL` is configured as a repository variable, or
 `signing_service_url` is supplied to a manual rollout, the workflow can call

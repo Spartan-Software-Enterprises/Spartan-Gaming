@@ -6,6 +6,12 @@ test('desktop capability verification is observation-only and reports a ready in
   const calls = [];
   const report = await verifyDesktopCapabilities({platform: 'win32', installRoot: '/opt/spartan/native', loadModule: async specifier => { assert.match(specifier, /index\.mjs$/); return {createBindings: async options => { calls.push(options); return {capabilities: {keyboard: true, pointer: true, rumble: true}, input: {execute() {}}, capture: {start() {}}, audio: {start() {}}, close() { calls.push('closed'); }}; }}; }});
   assert.equal(report.status, 'ready'); assert.equal(report.package.state, 'ready'); assert.equal(report.virtualGamepad.state, 'external-driver-required'); assert.equal(calls.at(-1), 'closed');
+  assert.equal(report.capabilities.input.state, 'ready'); assert.equal(report.capabilities.audio.state, 'ready'); assert.equal(report.capabilities.haptics.state, 'ready');
+});
+
+test('desktop capability verification separates missing audio and haptics from input readiness', async () => {
+  const report = await verifyDesktopCapabilities({platform: 'win32', loadModule: async () => ({createBindings: async () => ({capabilities: {input: true, audio: false, rumble: false}, input: {execute() {}}, capture: {start() {}}, audio: {}, close() {}})})});
+  assert.equal(report.capabilities.input.state, 'ready'); assert.equal(report.capabilities.audio.state, 'unavailable'); assert.equal(report.capabilities.haptics.state, 'unavailable');
 });
 
 test('desktop capability verification reports missing Linux uinput without claiming readiness', async () => {
