@@ -1,4 +1,5 @@
 import {normalizeRemoteInputEvent} from '../src/frontend/input/input.mjs';
+import {controllerPolicyAllowsEvent, normalizeControllerPolicy} from '../src/frontend/input/controller-policy.mjs';
 
 const PLATFORMS = new Set(['win32', 'darwin', 'linux']);
 const STATES = new Set(['unconfigured', 'plan-only', 'ready', 'active', 'failed']);
@@ -59,7 +60,7 @@ export function virtualGamepadPermissionGranted({inputEnabled = false, inputAdap
  * adapter. The adapter owns platform APIs; this boundary owns permissions,
  * rate limiting, lifecycle, and the prohibition on shell-based dispatch.
  */
-export function createNativeInputExecutor({platform, adapter, permissions = {}, maxEventsPerSecond = 240, clock = () => Date.now()} = {}) {
+export function createNativeInputExecutor({platform, adapter, permissions = {}, controllerPolicy = normalizeControllerPolicy(), maxEventsPerSecond = 240, clock = () => Date.now()} = {}) {
   if (!PLATFORMS.has(platform)) throw new TypeError(`unsupported input platform: ${platform}`);
   if (!adapter || adapter.platform !== platform || typeof adapter.execute !== 'function') throw new TypeError('native input adapter must match the platform and implement execute(operation)');
   const limit = Number(maxEventsPerSecond);
@@ -72,6 +73,7 @@ export function createNativeInputExecutor({platform, adapter, permissions = {}, 
     async dispatch(event) {
       if (state !== 'ready' && state !== 'active') throw new Error(`native input executor is ${state}`);
       const plan = createInputInjectionPlan({platform, event, permissions});
+      if (!controllerPolicyAllowsEvent(event, controllerPolicy)) throw new Error('controller input is disabled by the active controller policy');
       if (!plan.permission.granted) throw new Error(`native input permission not granted: ${plan.permission.name}`);
       checkRate();
       state = 'active';

@@ -44,10 +44,18 @@ user-owned host deployment plan. `controllers.virtualGamepadDevices` and
 slot IDs, preserving per-player device selection while keeping the legacy
 single-device field compatible.
 
+The exported host configuration also carries the complete controller policy
+from the Electron Settings screen: profile and input mode, player-slot limits,
+gamepad/HID and rumble permissions, haptics features, trigger and steering
+options, split-input, deadzone, and polling preference. The host normalizes
+and enforces these values before dispatching native input; unsupported native
+features remain unavailable rather than silently falling back.
+
 For repeatable supervisor configuration, pass `--config /path/to/host.json`
 to `host/agent.mjs` or include the same path in the shell-free deployment plan.
 The JSON contract covers host identity, bind/limits, native packages, media
-opt-ins, audio choices, TLS paths, origins, and all virtual-gamepad settings.
+opt-ins, audio choices, TLS paths, origins, virtual-gamepad settings, and the
+controller policy.
 It rejects unknown fields and secrets such as pairing codes or tickets; CLI
 flags override file values, while pairing and signaling credentials remain
 session-scoped.

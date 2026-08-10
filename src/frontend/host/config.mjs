@@ -1,3 +1,5 @@
+import {controllerPolicyFromSettings} from '../input/controller-policy.mjs';
+
 const PLATFORMS = new Set(['win32', 'darwin', 'linux']);
 const BACKENDS = new Set(['Automatic', 'Browser Gamepad', 'Linux uinput', 'Windows external driver', 'macOS external driver', 'Disabled']);
 const AUDIO_BACKENDS = new Set(['Automatic', 'PipeWire', 'PulseAudio', 'WASAPI', 'CoreAudio']);
@@ -19,6 +21,7 @@ export function createHostConfigFromSettings({platform, settings = {}, host = {}
     ...(text(settings['controllers.virtualGamepadPackage'], 160) ? {virtualGamepadPackage: text(settings['controllers.virtualGamepadPackage'], 160)} : {}),
     ...(text(settings['controllers.virtualGamepadDevice'], 128) ? {virtualGamepadDevice: text(settings['controllers.virtualGamepadDevice'], 128)} : {}),
     ...(deviceIds(settings['controllers.virtualGamepadDevices']).length ? {virtualGamepadDevices: deviceIds(settings['controllers.virtualGamepadDevices'])} : {}),
+    controllerPolicy: controllerPolicyFromSettings(settings),
     enableInput: settings['host.allowInputInjection'] !== false,
     enableNativeMedia: settings['host.enableNativeMedia'] === true,
     enableNativeAudio: settings['host.enableNativeAudio'] === true,
