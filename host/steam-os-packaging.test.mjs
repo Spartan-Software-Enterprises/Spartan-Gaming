@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createSteamOsInstallPlan, createSteamOsUninstallPlan, createSteamOsUpdatePlan, normalizeSteamOsPackagingProfile} from './steam-os-packaging.mjs';
+import {createSteamOsInstallPlan, createSteamOsLaunchRegistrationPlan, createSteamOsUninstallPlan, createSteamOsUpdatePlan, normalizeSteamOsPackagingProfile} from './steam-os-packaging.mjs';
 
 test('SteamOS packaging profile is user-scoped and immutable-host safe', () => {
   const profile = normalizeSteamOsPackagingProfile({appId: 'com.spartan.gaming'});
@@ -28,4 +28,15 @@ test('SteamOS updates expose commit-pinned rollback and consent-gated removal', 
   assert.deepEqual(rollback.process.args, ['--user', 'update', '--commit=abcdef12', 'com.spartan.gaming']);
   assert.equal(rollback.kind, 'steamos-flatpak-rollback');
   assert.deepEqual(uninstall.process.args, ['--user', 'uninstall', '--delete-data', 'com.spartan.gaming']);
+});
+
+test('SteamOS packaging exposes consent-gated desktop and Steam non-Steam registration metadata', () => {
+  const profile = normalizeSteamOsPackagingProfile();
+  assert.throws(() => createSteamOsLaunchRegistrationPlan({profile, consentGiven: false}), /consent/);
+  const desktop = createSteamOsLaunchRegistrationPlan({profile, consentGiven: true, arguments: ['--profile', 'deck']});
+  assert.equal(desktop.desktopEntry.Exec, 'flatpak run com.spartan.gaming --profile deck');
+  assert.equal(desktop.steamNonSteamHandoff, false);
+  const steam = createSteamOsLaunchRegistrationPlan({profile, mode: 'steam-non-steam', consentGiven: true});
+  assert.equal(steam.steamNonSteamHandoff, true);
+  assert.ok(steam.requires.includes('operator-steam-non-steam-registration'));
 });

@@ -189,6 +189,8 @@ Steam Deck-oriented actions are defined in `src/frontend/input/steam-input.mjs` 
 
 The explicit SteamOS host profile in `host/steam-os.mjs` also exposes the shared session/power contract: Game Mode fullscreen, overlay-safe controller focus, bounded 1280×800 and 30/40/60-FPS limits, and session-reconnect recovery metadata for sleep/wake. These fields describe the required host behavior and do not claim that a physical SteamOS runtime has been exercised.
 
+`host/steam-os-packaging.mjs` provides consent-gated, metadata-only desktop-entry and Steam non-Steam registration plans for the user-scope Flatpak profile. The plans never modify Flatpak, register with Steam, or execute a command; an operator must perform those actions on the target host.
+
 Session input permissions are enforced by `src/frontend/input/policy.mjs` as well as advertised during capability negotiation. The player reconciles its permission policy with the host's negotiated capabilities after every `session.negotiated` event, so a host without virtual-gamepad injection (for example macOS or Windows keyboard/pointer adapters) stops gamepad polling instead of sending controller events that the host must reject. The player does not poll or forward disabled gamepad input, and input diagnostics distinguish a disconnected controller from one disabled by the active settings profile.
 
 Host-issued rumble events use `src/frontend/input/haptics.mjs` to request bounded `dual-rumble` effects on the selected browser gamepad. Unsupported actuators, denied settings, and rejected browser promises fail closed without affecting the session.

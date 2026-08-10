@@ -2,6 +2,7 @@ import {createProcessLaunchPlan} from './adapters.mjs';
 
 const APP_ID = /^[a-z][a-z0-9-]*(?:\.[a-z0-9-]+)+$/;
 const COMMIT = /^[a-f0-9]{8,64}$/i;
+const REGISTRATION_MODES = new Set(['desktop-entry', 'steam-non-steam']);
 
 function localPath(value, name) {
   if (typeof value !== 'string' || !value.trim() || value.length > 2048 || /[\u0000\r\n]/.test(value) || /^[a-z]+:\/\//i.test(value) || value.startsWith('\\\\')) throw new TypeError(`${name} must be a bounded local path`);
@@ -53,3 +54,15 @@ export function createSteamOsUninstallPlan({profile, consentGiven = false, delet
   consent(consentGiven);
   return Object.freeze({kind: 'steamos-flatpak-uninstall', profile, process: process({args: ['--user', 'uninstall', ...(deleteData ? ['--delete-data'] : []), profile.appId]}), requires: Object.freeze(['detected-steamos-host', 'user-scope-flatpak', 'operator-consent']), execution: 'operator-run-only'});
 }
+
+/** Describe desktop and Steam non-Steam registration without modifying the host or Steam client. */
+export function createSteamOsLaunchRegistrationPlan({profile, mode = 'desktop-entry', consentGiven = false, arguments: launchArguments = []} = {}) {
+  if (!profile?.immutableHostSafe || profile.installScope !== 'user') throw new TypeError('a normalized user-scope SteamOS packaging profile is required');
+  consent(consentGiven);
+  if (!REGISTRATION_MODES.has(mode)) throw new TypeError('SteamOS launch registration mode is unsupported');
+  if (!Array.isArray(launchArguments) || launchArguments.length > 16 || launchArguments.some(value => typeof value !== 'string' || value.length > 256 || /[\u0000\r\n]/.test(value))) throw new TypeError('launch registration arguments must be bounded strings');
+  const exec = ['flatpak', 'run', profile.appId, ...launchArguments].join(' ');
+  return Object.freeze({kind: 'steamos-launch-registration', profile, mode, desktopEntry: Object.freeze({Name: 'Spartan Gaming', Type: 'Application', Exec: exec, Terminal: false}), steamNonSteamHandoff: mode === 'steam-non-steam', requires: Object.freeze(['installed-user-scope-flatpak', 'operator-consent', ...(mode === 'steam-non-steam' ? ['operator-steam-non-steam-registration'] : []),]), execution: 'operator-run-only'});
+}
+
+export {REGISTRATION_MODES as STEAMOS_REGISTRATION_MODES};

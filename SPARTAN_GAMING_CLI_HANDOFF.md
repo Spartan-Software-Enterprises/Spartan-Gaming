@@ -203,6 +203,11 @@ privileged or signing-key operation is performed. Focused SteamOS packaging,
 SteamOS, and Proton validation passed 10/10 locally; the complete launcher
 matrix passed 20/20 on both local and AWS environments at `37deaf6`. AWS full
 validation then passed 618 of 620 tests with 2 skips and 0 failures.
+The packaging contract also exposes consent-gated desktop-entry and Steam
+non-Steam registration metadata; actual registration remains operator-run on a
+physical SteamOS host. The current SteamOS/Proton/packaging targeted suite
+passed 11/11 locally; AWS verification is required after this documentation
+commit is published.
 
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
