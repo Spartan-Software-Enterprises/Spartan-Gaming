@@ -181,7 +181,9 @@ contract and shell-free install, update, uninstall, and commit-pinned rollback
 plans. They require operator consent, a bounded SHA-256 artifact digest, and
 separately verified package signatures; no Flatpak command is executed and no
 privileged or signing-key operation is performed. Focused SteamOS packaging,
-SteamOS, and Proton validation passed 10/10 locally.
+SteamOS, and Proton validation passed 10/10 locally; the complete launcher
+matrix passed 20/20 on both local and AWS environments at `37deaf6`. AWS full
+validation then passed 618 of 620 tests with 2 skips and 0 failures.
 
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
