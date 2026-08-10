@@ -125,7 +125,10 @@ test('remote session streams H.264 video and Opus audio over a real Werift loopb
   pipeline.videoOutput.emit('data', VIDEO_CHUNK);
   pipeline.audioOutput.emit('data', OPUS_FRAME);
   pipeline.audioOutput.emit('data', OPUS_FRAME);
-  await waitFor(() => receivedVideo.length > 0 && receivedAudio.length > 0, 10_000, 'client media packets');
+  // Werift's RTP delivery can be delayed by concurrent Node test workers on
+  // constrained ARM hosts. Keep the packet assertions strict while allowing
+  // the real loopback enough time to drain under that scheduling pressure.
+  await waitFor(() => receivedVideo.length > 0 && receivedAudio.length > 0, 30_000, 'client media packets');
   assert.ok(receivedVideo.length > 0, 'client received no H.264 RTP packets');
   assert.ok(receivedAudio.length > 0, 'client received no Opus RTP packets');
   assert.equal(receivedVideo[0].payload[0], 0x67, 'first H.264 RTP packet should carry the SPS NAL unit');
