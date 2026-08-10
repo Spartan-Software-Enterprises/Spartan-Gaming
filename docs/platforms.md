@@ -26,6 +26,13 @@ Emulation, Host, Diagnostics, and other frontend entrypoints. Changing the
 presentation mode synchronizes the navigator and tears down polling when a
 controller-first surface is no longer selected.
 
+Android mobile policy is window-adaptive: the shared policy classifies the
+current Android window as phone, tablet, or foldable from its bounds and
+optional native window-segment evidence. Settings expose orientation, wake
+lock, PiP, edge-to-edge, mobile-data, and Android Game Mode intent. These are
+safe intents for the Android shell; they do not claim that a browser can grant
+the corresponding OS permission or lifecycle behavior by itself.
+
 ## Shared layers
 
 - Gaming dashboard and session model.

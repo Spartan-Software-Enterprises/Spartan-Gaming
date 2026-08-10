@@ -20,3 +20,11 @@ The bridge intentionally requires an app ID selected from Spartan's verified
 user-owned library. It never guesses IDs from names or sends arbitrary URLs to
 the GameNative activity.
 
+## Mobile policy boundary
+
+The shared frontend exposes `src/frontend/platform/android.mjs` for the
+Android shell to consume. It classifies the current window as a phone, tablet,
+or foldable using window bounds and optional window-segment data, then emits
+bounded intents for orientation, wake lock, PiP, edge-to-edge layout, mobile
+data savings, and Android Game Mode. The shell remains responsible for binding
+those intents to Android APIs and reporting whether each request was accepted.

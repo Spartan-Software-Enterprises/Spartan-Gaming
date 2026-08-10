@@ -43,6 +43,16 @@ export const settingsCategories = [
     ],
   },
   {
+    id: 'mobile', label: 'Android mobile', icon: '▤', description: 'Phone, tablet, foldable, and handheld playback behavior.', settings: [
+      select('mobile.orientation', 'Preferred orientation', 'Choose the orientation requested when a mobile game session enters fullscreen.', ['Automatic', 'Landscape', 'Portrait'], 'Automatic'),
+      toggle('mobile.keepScreenAwake', 'Keep screen awake during sessions', 'Request a wake lock while an active game session is playing; Android may still revoke it for system policy.', true),
+      toggle('mobile.pictureInPicture', 'Allow Picture-in-Picture', 'Allow an Android shell to continue stream playback in a system PiP window when supported.', true),
+      toggle('mobile.edgeToEdge', 'Use edge-to-edge layout', 'Let the mobile shell draw behind system bars while preserving safe areas for touch controls.', true),
+      toggle('mobile.dataSaver', 'Mobile data saver', 'Prefer lower bandwidth and conservative recovery behavior on metered mobile networks.', false),
+      select('mobile.gameMode', 'Android Game Mode intent', 'Tell the Android shell whether to request standard, performance, or battery-oriented game behavior.', ['Follow system', 'Performance', 'Battery', 'Standard'], 'Follow system'),
+    ],
+  },
+  {
     id: 'gaming', label: 'Gaming', icon: '✦', description: 'Library, launch behavior, overlays, and game sessions.', settings: [
       toggle('gaming.autoFullscreen', 'Enter fullscreen on launch', 'Request fullscreen when a provider or emulator session begins.', true),
       toggle('gaming.hideBrowserChrome', 'Hide browser chrome in sessions', 'Remove tabs and navigation controls while a game session is active.', true),
