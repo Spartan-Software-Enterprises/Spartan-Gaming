@@ -15,6 +15,8 @@ test('browser emulator runtime validates files and manages the full lifecycle', 
 
 test('browser emulator runtime forwards the selected source only to the adapter boundary', async () => { const impl = adapter(); const runtime = createBrowserEmulatorRuntime({adapter: impl}); const selected = {...game, source}; await runtime.load({core, gameFile: selected}); assert.equal(impl.calls[0][1].gameFile.source, source); assert.equal(Object.keys(impl.calls[0][1].gameFile).includes('source'), false); await runtime.stop(); });
 
+test('browser emulator runtime forwards the WebAssembly threads policy to the adapter', async () => { const impl = adapter(); const runtime = createBrowserEmulatorRuntime({adapter: impl}); await runtime.load({core, gameFile: game, settings: {allowWebAssemblyThreads: false}}); assert.equal(impl.calls[0][1].settings.allowWebAssemblyThreads, false); await runtime.stop(); });
+
 test('browser emulator runtime rejects unsupported cores and adapter failures', async () => {
   const impl = adapter(); const runtime = createBrowserEmulatorRuntime({adapter: impl});
   await assert.rejects(() => runtime.load({core: {id: 'dolphin'}, gameFile: game}), /does not support/);
