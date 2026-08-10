@@ -7,6 +7,7 @@ const THEMES = Object.freeze({'Spartan Dark': 'dark', 'Spartan Light': 'light', 
 const DENSITIES = Object.freeze({Comfortable: 'comfortable', Compact: 'compact', 'Controller-first': 'controller'});
 const TAB_LAYOUTS = Object.freeze({'Top tabs': 'top', 'Vertical tabs': 'vertical', 'Compact tabs': 'compact', 'Hidden in gaming mode': 'hidden-gaming'});
 const LOCALES = Object.freeze({English: 'en', Spanish: 'es', French: 'fr', German: 'de', Japanese: 'ja', Korean: 'ko'});
+const TV_NAVIGATION_INTERVALS = Object.freeze({Automatic: 100, Responsive: 60, Balanced: 100, 'Low power': 150});
 
 export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
   const accent = ACCENTS[settings['appearance.accent']] || ACCENTS.Cyan;
@@ -17,6 +18,10 @@ export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
   const presentation = resolvePresentationProfile({settings, detectedMode, viewport: environment.viewport});
   const platform = detectRuntimePlatform({navigatorRef: environment.navigatorRef, userAgent: environment.userAgent, viewport: environment.viewport});
   const compatibility = resolvePlatformCompatibility({platform, capabilities: environment.capabilities});
+  const remoteNavigationSpeed = settings['television.remoteNavigationSpeed'] || 'Automatic';
+  const remoteNavigationIntervalMs = TV_NAVIGATION_INTERVALS[remoteNavigationSpeed] || TV_NAVIGATION_INTERVALS.Automatic;
+  const remoteDeadzone = Math.max(0.15, Math.min(0.6, (Number(settings['television.remoteDeadzone']) || 35) / 100));
+  const safeArea = Math.max(0, Math.min(10, Number(settings['television.safeArea']) || 0));
   return Object.freeze({
     accent,
     theme,
@@ -47,6 +52,15 @@ export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
     hideBrowserChrome: settings['gaming.hideBrowserChrome'] !== false,
     overlayPosition: settings['gaming.overlayPosition'] || 'Top right',
     overlayOpacity: Number.isFinite(opacity) ? Math.max(20, Math.min(100, opacity)) : 92,
+    television: Object.freeze({
+      remoteNavigationSpeed,
+      remoteNavigationIntervalMs,
+      remoteDeadzone,
+      focusWrap: settings['television.focusWrap'] !== false,
+      showPointer: settings['television.showPointer'] === true,
+      safeArea,
+      autoHideChrome: settings['television.autoHideChrome'] !== false,
+    }),
   });
 }
 
@@ -83,6 +97,9 @@ html[data-spartan-navigation="remote-controller"] :focus-visible{outline-width:4
 html[data-spartan-device-mode="television"] .content,html[data-spartan-device-mode="television"] .main{max-width:1440px;padding-left:6vw;padding-right:6vw}
 html[data-spartan-device-mode="television"] .cards{grid-template-columns:repeat(4,minmax(0,1fr))}
 html[data-spartan-device-mode="television"] .hero h2{font-size:clamp(36px,4vw,58px)}
+html[data-spartan-device-mode="television"]{--spartan-tv-safe-area:5%}
+html[data-spartan-device-mode="television"] .content,html[data-spartan-device-mode="television"] .main{padding-left:var(--spartan-tv-safe-area);padding-right:var(--spartan-tv-safe-area)}
+html[data-spartan-device-mode="television"][data-spartan-tv-pointer="hidden"]{cursor:none}
 html[data-spartan-device-mode="mobile"] body,html[data-spartan-device-mode="handheld"] body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 html[data-spartan-device-mode="mobile"] .content,html[data-spartan-device-mode="handheld"] .content,html[data-spartan-device-mode="mobile"] .main,html[data-spartan-device-mode="handheld"] .main{padding-bottom:calc(45px + env(safe-area-inset-bottom))}
 `;
@@ -103,6 +120,8 @@ export function applyRuntimeUiSettings(documentRef, settings = {}, {navigation =
   root.dataset.spartanPlatform = resolved.platform;
   root.dataset.spartanEnginePolicy = resolved.enginePolicy;
   root.dataset.spartanColorVision = resolved.colorVision;
+  root.dataset.spartanTvPointer = resolved.television.showPointer ? 'visible' : 'hidden';
+  root.style.setProperty('--spartan-tv-safe-area', `${resolved.television.safeArea}%`);
   if (resolved.screenReaderHints) root.dataset.spartanScreenReaderHints = ''; else delete root.dataset.spartanScreenReaderHints;
   root.dataset.spartanOverlay = resolved.showOverlay ? 'visible' : 'hidden';
   if (resolved.hideBrowserChrome) root.dataset.spartanHideBrowserChrome = ''; else delete root.dataset.spartanHideBrowserChrome;
@@ -119,6 +138,11 @@ export function applyRuntimeUiSettings(documentRef, settings = {}, {navigation =
   if (!documentRef.getElementById(STYLE_ID)) {
     const style = documentRef.createElement('style'); style.id = STYLE_ID; style.textContent = RUNTIME_STYLES; documentRef.head?.append(style);
   }
-  syncRuntimeControllerNavigation(documentRef, navigation);
+  syncRuntimeControllerNavigation(documentRef, {
+    intervalMs: resolved.television.remoteNavigationIntervalMs,
+    deadzone: resolved.television.remoteDeadzone,
+    wrapNavigation: resolved.television.focusWrap,
+    ...navigation,
+  });
   return resolved;
 }

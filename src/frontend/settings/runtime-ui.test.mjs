@@ -4,7 +4,7 @@ import {applyRuntimeUiSettings, resolveRuntimeUiSettings} from './runtime-ui.mjs
 
 test('runtime UI settings normalize appearance, accessibility, and overlay preferences', () => {
   const settings = resolveRuntimeUiSettings({'appearance.accent': 'Amber', 'appearance.theme': 'Spartan Light', 'appearance.density': 'Controller-first', 'appearance.uiScale': 200, 'accessibility.reduceMotion': true, 'accessibility.highContrast': true, 'gaming.showOverlay': false, 'gaming.hideBrowserChrome': false, 'gaming.overlayOpacity': 5, 'gaming.overlayPosition': 'Bottom left'}, {navigatorRef: {userAgent: '', platform: ''}});
-  assert.deepEqual(settings, {accent: '#f5c563', theme: 'light', density: 'controller', tabLayout: 'top', locale: 'en', translucentChrome: true, showStatusBar: false, uiScale: 140, deviceMode: 'desktop', navigation: 'pointer-keyboard', touchControls: false, preferFullscreen: false, effectiveUiScale: 140, layoutColumns: 3, platform: 'unknown', enginePolicy: 'chromium-capable', supportLevel: 'platform-adapted', featureGates: {webFrontend: true, remoteStreaming: true, browserEmulation: false, nativeChromiumShell: true, nativeHostPackaging: true, tvRemoteNavigation: false}, narrowViewport: false, reduceMotion: true, highContrast: true, largeText: false, focusRing: true, screenReaderHints: false, colorVision: 'None', showOverlay: false, hideBrowserChrome: false, overlayPosition: 'Bottom left', overlayOpacity: 20});
+  assert.deepEqual(settings, {accent: '#f5c563', theme: 'light', density: 'controller', tabLayout: 'top', locale: 'en', translucentChrome: true, showStatusBar: false, uiScale: 140, deviceMode: 'desktop', navigation: 'pointer-keyboard', touchControls: false, preferFullscreen: false, effectiveUiScale: 140, layoutColumns: 3, platform: 'unknown', enginePolicy: 'chromium-capable', supportLevel: 'platform-adapted', featureGates: {webFrontend: true, remoteStreaming: true, browserEmulation: false, nativeChromiumShell: true, nativeHostPackaging: true, tvRemoteNavigation: false}, narrowViewport: false, reduceMotion: true, highContrast: true, largeText: false, focusRing: true, screenReaderHints: false, colorVision: 'None', showOverlay: false, hideBrowserChrome: false, overlayPosition: 'Bottom left', overlayOpacity: 20, television: {remoteNavigationSpeed: 'Automatic', remoteNavigationIntervalMs: 100, remoteDeadzone: 0.35, focusWrap: true, showPointer: false, safeArea: 0, autoHideChrome: true}});
 });
 
 test('runtime UI applies the configured document locale with a safe fallback', () => {
@@ -50,6 +50,22 @@ test('runtime UI exposes Fire TV remote-navigation metadata', () => {
   assert.equal(settings.enginePolicy, 'chromium-capable');
   assert.equal(settings.featureGates.tvRemoteNavigation, true);
   assert.equal(root.dataset.spartanPlatform, 'fire-tv');
+});
+
+test('television settings configure safe area, pointer visibility, and navigation policy', () => {
+  const root = {dataset: {}, style: {values: new Map(), setProperty(key, value) { this.values.set(key, value); }}};
+  const nodes = new Map();
+  const navigatorRef = {userAgent: 'Roku/DVP-12.5 (12.5.0. build 4178)', platform: 'Roku'};
+  const documentRef = {defaultView: {navigator: navigatorRef, innerWidth: 1920}, documentElement: root, head: {append(node) { nodes.set(node.id, node); }}, getElementById(id) { return nodes.get(id); }, createElement() { return {id: '', textContent: ''}; }};
+  const settings = {'television.remoteNavigationSpeed': 'Responsive', 'television.focusWrap': false, 'television.remoteDeadzone': 50, 'television.showPointer': true, 'television.safeArea': 8};
+  const resolved = resolveRuntimeUiSettings(settings, {navigatorRef, viewport: {width: 1920}});
+  assert.equal(resolved.television.remoteNavigationIntervalMs, 60);
+  assert.equal(resolved.television.remoteDeadzone, 0.5);
+  assert.equal(resolved.television.focusWrap, false);
+  applyRuntimeUiSettings(documentRef, settings, {navigation: {scheduler: () => null}});
+  assert.equal(root.dataset.spartanPlatform, 'roku');
+  assert.equal(root.dataset.spartanTvPointer, 'visible');
+  assert.equal(root.style.values.get('--spartan-tv-safe-area'), '8%');
 });
 
 test('runtime UI settings toggle the player chrome dataset', () => {

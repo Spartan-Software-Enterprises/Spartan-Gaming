@@ -33,6 +33,16 @@ export const settingsCategories = [
     ],
   },
   {
+    id: 'television', label: 'Television', icon: '▣', description: 'Remote navigation, safe areas, and living-room presentation.', settings: [
+      select('television.remoteNavigationSpeed', 'Remote navigation speed', 'Control how often Fire TV, Roku, and other television targets poll a connected controller.', ['Automatic', 'Responsive', 'Balanced', 'Low power'], 'Automatic'),
+      toggle('television.focusWrap', 'Wrap remote focus', 'Move focus to the opposite edge when directional navigation reaches the end of a row or page.', true),
+      range('television.remoteDeadzone', 'Remote stick dead zone', 'Ignore small analog movement while navigating television menus.', 15, 60, 1, 35, '%'),
+      toggle('television.showPointer', 'Show pointer on television', 'Keep a pointer visible for television browsers that expose mouse or touch input.', false),
+      range('television.safeArea', 'Television safe area', 'Inset content to protect controls from overscan and rounded-corner clipping.', 0, 10, 1, 5, '%'),
+      toggle('television.autoHideChrome', 'Hide browser chrome on television', 'Prefer a clean living-room presentation when the television target enters fullscreen.', true),
+    ],
+  },
+  {
     id: 'gaming', label: 'Gaming', icon: '✦', description: 'Library, launch behavior, overlays, and game sessions.', settings: [
       toggle('gaming.autoFullscreen', 'Enter fullscreen on launch', 'Request fullscreen when a provider or emulator session begins.', true),
       toggle('gaming.hideBrowserChrome', 'Hide browser chrome in sessions', 'Remove tabs and navigation controls while a game session is active.', true),

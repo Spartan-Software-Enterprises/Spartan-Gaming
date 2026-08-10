@@ -9,6 +9,8 @@ Supported baseline:
 
 - dashboard, settings, provider catalog, and official HTTPS handoffs;
 - large-focus-target television navigation and fullscreen requests;
+- configurable remote polling speed, analog dead zone, focus wrapping, pointer
+  visibility, and overscan-safe content in the Television settings category;
 - capability-gated WebRTC playback, controller access, and browser emulation;
 - manual device-mode override when a vendor browser hides its device identity.
 
