@@ -54,6 +54,12 @@ path) from `input.virtualGamepad` (an OS-created virtual device). The latter
 is true only for a ready Linux uinput binding today; Windows/macOS keyboard,
 pointer, and haptic support does not imply virtual-gamepad injection.
 
+Hosts whose runtime platform is outside the native desktop matrix (for
+example, Android/Termux) remain usable for the dependency-free control plane
+and shell-free, user-approved local process launch. They report native media,
+OS input, and virtual-gamepad capabilities as unavailable or not required;
+they do not masquerade as Linux, Windows, or macOS adapters.
+
 An operator with the optional `werift` package and an installed platform binding
 can run the executable media path with `--enable-native-media`. This mode keeps
 the same one-time pairing and launch-request checks, then bridges the accepted

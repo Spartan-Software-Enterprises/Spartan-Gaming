@@ -161,6 +161,16 @@ preflight and signaling process at startup; their contents are never returned.
 This validates operator
 prerequisites but does not provision those external services.
 
+For an explicit, shell-free deployment handoff, `npm run deployment:rollout`
+prints a production rollout plan containing the Compose preflight, detached
+startup command, and HTTPS health endpoint. Add `--execute --confirm` only on
+an operator-controlled machine after the secret files, TLS material, Redis,
+and TURN inputs have been reviewed. Execution runs `docker compose config
+--quiet`, starts the selected services, and verifies the signaling health
+response; it never accepts secrets as command-line arguments and never runs a
+shell. Use `--without-turn` only when an independently provisioned relay is
+already reachable through `SPARTAN_SIGNALING_TURN_URLS`.
+
 For an operator-managed coturn relay, generate a bounded configuration from
 the same shared secret used by the signaling TURN credential endpoint:
 

@@ -1,7 +1,7 @@
 import {createProcessLaunchPlan} from './adapters.mjs';
 import {createManagedProcess} from './process.mjs';
 
-const PLATFORMS = new Set(['win32', 'darwin', 'linux']);
+const PLATFORMS = new Set(['win32', 'darwin', 'linux', 'android']);
 const RUNTIME_KINDS = new Set(['native-adapter', 'native-emulator', 'libretro-core']);
 
 function requiredText(value, name, maximum = 1024) {

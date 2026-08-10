@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
+import './deployment/production-rollout.test.mjs';
 
 const dockerfile = fs.readFileSync('docker/signaling.Dockerfile', 'utf8');
 const compose = fs.readFileSync('docker-compose.yml', 'utf8');

@@ -11,6 +11,8 @@ import {loadVirtualGamepadAdapter} from './virtual-gamepad-loader.mjs';
 import {createInputAdapterMux} from './input-adapter-mux.mjs';
 import {describeVirtualGamepadReadiness, normalizeVirtualGamepadConfig} from './virtual-gamepad-config.mjs';
 
+const NATIVE_PLATFORMS = new Set(['win32', 'darwin', 'linux']);
+
 function commandAvailable(command) { try { return spawnSync(command, ['-version'], {stdio: 'ignore', windowsHide: true}).status === 0; } catch { return false; } }
 
 export function detectHostEnvironment({platformName = platform(), releaseName = release(), commandProbe = commandAvailable, webrtcAdapters = []} = {}) {
@@ -31,9 +33,12 @@ export async function detectHostRuntime({platformName = platform(), releaseName 
   let result;
   try { result = await loadPlatformNativeBindings({platform: platformName, packageName, loader, options: bindingOptions}); }
   catch (error) { result = Object.freeze({status: 'unavailable', platform: platformName, packageName: packageName || null, reason: error.message}); }
-  const virtualGamepadConfig = normalizeVirtualGamepadConfig({platform: platformName, backend: virtualGamepadBackend, packageName: virtualGamepadPackageName, deviceId: virtualGamepadDevice});
-  let virtualResult = Object.freeze({status: 'unconfigured', platform: platformName, packageName: virtualGamepadConfig.packageName, reason: 'virtual gamepad package is not configured', readiness: describeVirtualGamepadReadiness({config: virtualGamepadConfig})});
-  if (virtualGamepadPackageName || ['Disabled', 'Browser Gamepad'].includes(virtualGamepadConfig.backend)) virtualResult = await loadVirtualGamepadAdapter({platform: platformName, config: virtualGamepadConfig, loader: virtualGamepadLoader, options: virtualGamepadOptions});
+  const virtualGamepadConfig = NATIVE_PLATFORMS.has(platformName) ? normalizeVirtualGamepadConfig({platform: platformName, backend: virtualGamepadBackend, packageName: virtualGamepadPackageName, deviceId: virtualGamepadDevice}) : Object.freeze({version: 1, platform: platformName, backend: 'Disabled', packageName: null, deviceId: null, compatible: true, requires: Object.freeze([])});
+  let virtualResult = Object.freeze({status: 'not-required', platform: platformName, packageName: virtualGamepadConfig.packageName, reason: 'virtual gamepad is not available on this host platform', readiness: Object.freeze({state: 'not-required', reason: null})});
+  if (NATIVE_PLATFORMS.has(platformName)) {
+    virtualResult = Object.freeze({status: 'unconfigured', platform: platformName, packageName: virtualGamepadConfig.packageName, reason: 'virtual gamepad package is not configured', readiness: describeVirtualGamepadReadiness({config: virtualGamepadConfig})});
+    if (virtualGamepadPackageName || ['Disabled', 'Browser Gamepad'].includes(virtualGamepadConfig.backend)) virtualResult = await loadVirtualGamepadAdapter({platform: platformName, config: virtualGamepadConfig, loader: virtualGamepadLoader, options: virtualGamepadOptions});
+  }
   const capabilities = result.status === 'available' ? result.capabilities : {};
   const nativeInput = Boolean(result.status === 'available' && (capabilities.input || capabilities.keyboard || capabilities.pointer || capabilities.gamepad || capabilities.rumble));
   const nativeCapture = Boolean(result.status === 'available' && capabilities.capture);
