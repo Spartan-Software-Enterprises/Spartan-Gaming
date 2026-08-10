@@ -45,6 +45,16 @@ export function createControllerProfileStore({storage, key = CONTROLLER_PROFILES
 export const BUILTIN_CONTROLLER_PROFILES = Object.freeze([
   createControllerProfile({id: 'xbox-layout', name: 'Xbox layout'}),
   createControllerProfile({id: 'playstation-layout', name: 'PlayStation layout', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0'}}),
+  createControllerProfile({id: 'dualsense-layout', name: 'DualSense / DualShock', deviceMatch: 'Sony Wireless Controller', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0', touchpad: 'button-13', create: 'button-10', options: 'button-11', mic: 'button-14'}}),
+  createControllerProfile({id: 'nintendo-layout', name: 'Nintendo Switch layout', deviceMatch: 'Nintendo', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0'}}),
+  createControllerProfile({id: 'switch-pro-layout', name: 'Switch Pro Controller', deviceMatch: 'Nintendo Switch Pro', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0', capture: 'button-13'}}),
+  createControllerProfile({id: 'steam-deck-layout', name: 'Steam Deck', deviceMatch: 'Steam Deck', bindings: {...DEFAULT_BINDINGS, menu: 'button-9', view: 'button-10', leftPaddle: 'button-13', rightPaddle: 'button-14', touchpadLeft: 'button-15'}}),
+  createControllerProfile({id: 'stadia-layout', name: 'Stadia controller', deviceMatch: 'Stadia', bindings: {...DEFAULT_BINDINGS, assistant: 'button-10', capture: 'button-11'}}),
+  createControllerProfile({id: 'eightbitdo-layout', name: '8BitDo / XInput', deviceMatch: '8BitDo', bindings: {...DEFAULT_BINDINGS}}),
+  createControllerProfile({id: 'arcade-layout', name: 'Arcade stick', deviceMatch: 'arcade', bindings: {confirm: 'button-0', cancel: 'button-1', menu: 'button-7', pause: 'button-6', moveUp: 'axis-1-negative', moveDown: 'axis-1-positive', moveLeft: 'axis-0-negative', moveRight: 'axis-0-positive'}}),
+  createControllerProfile({id: 'racing-wheel-layout', name: 'Racing wheel and pedals', deviceMatch: 'wheel', bindings: {accelerate: 'axis-2-positive', brake: 'axis-3-positive', steer: 'axis-0', clutch: 'axis-4-positive', handbrake: 'button-0', pause: 'button-9'}}),
+  createControllerProfile({id: 'flight-stick-layout', name: 'Flight stick and throttle', deviceMatch: 'flight', bindings: {pitch: 'axis-1', roll: 'axis-0', yaw: 'axis-2', throttle: 'axis-3', fire: 'button-0', pause: 'button-9'}}),
+  createControllerProfile({id: 'generic-hid-layout', name: 'Generic HID controller', deviceMatch: 'any HID', bindings: {...DEFAULT_BINDINGS}}),
   createControllerProfile({id: 'keyboard-mouse', name: 'Keyboard and mouse', bindings: {confirm: 'key-Enter', cancel: 'key-Escape', menu: 'key-Tab', pause: 'key-P'}}),
 ]);
 

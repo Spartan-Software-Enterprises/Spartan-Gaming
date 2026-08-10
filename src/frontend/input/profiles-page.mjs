@@ -3,7 +3,7 @@ import {BUILTIN_CONTROLLER_PROFILES, createControllerProfile, createControllerPr
 import {createActiveProfileStorage} from '../profiles/storage.mjs';
 
 const store = createControllerProfileStore({storage: createActiveProfileStorage({storage: window.localStorage})});
-const controls = ['button-0', 'button-1', 'button-2', 'button-3', 'button-8', 'button-9', 'axis-0-negative', 'axis-0-positive', 'axis-1-negative', 'axis-1-positive', 'key-Enter', 'key-Escape', 'key-Tab', 'key-P'];
+const controls = ['button-0', 'button-1', 'button-2', 'button-3', 'button-4', 'button-5', 'button-6', 'button-7', 'button-8', 'button-9', 'button-10', 'button-11', 'button-12', 'button-13', 'button-14', 'button-15', 'axis-0', 'axis-0-negative', 'axis-0-positive', 'axis-1', 'axis-1-negative', 'axis-1-positive', 'axis-2', 'axis-2-negative', 'axis-2-positive', 'axis-3', 'axis-3-negative', 'axis-3-positive', 'axis-4', 'axis-4-negative', 'axis-4-positive', 'axis-5', 'axis-5-negative', 'axis-5-positive', 'key-Enter', 'key-Escape', 'key-Tab', 'key-P', 'mouse-left', 'mouse-right', 'mouse-middle'];
 let profiles = [...BUILTIN_CONTROLLER_PROFILES, ...store.list()]; let active = profiles[0];
 const list = document.querySelector('[data-profile-list]'); const bindings = document.querySelector('[data-bindings]'); const notice = document.querySelector('[data-notice]');
 function toast(message) { notice.textContent = message; notice.classList.add('visible'); setTimeout(() => notice.classList.remove('visible'), 2300); }
