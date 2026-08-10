@@ -78,4 +78,12 @@ jobs:
           args=(--compose-file "$COMPOSE_FILE" --env-file "$ENV_FILE" --project "$PROJECT_NAME" --health "$HEALTH_ENDPOINT" --execute --confirm)
           if [[ -n "$ADMIN_HEALTH_ENDPOINT" ]]; then args+=(--admin-health "$ADMIN_HEALTH_ENDPOINT"); fi
           if [[ "$CHECK_ADMIN" == "true" ]]; then args+=(--check-admin); fi
-          npm run deployment:rollout -- "${args[@]}"
+          npm run deployment:rollout -- "${args[@]}" --report-file "$RUNNER_TEMP/spartan-production-rollout.json"
+      - name: Retain secret-free rollout evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: spartan-production-rollout-evidence
+          path: ${{ runner.temp }}/spartan-production-rollout.json
+          if-no-files-found: ignore
+          retention-days: 14

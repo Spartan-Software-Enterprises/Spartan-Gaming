@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
-import {createProductionRolloutPlan, executeProductionRollout} from './production-rollout.mjs';
+import {createProductionRolloutPlan, createProductionRolloutReport, executeProductionRollout} from './production-rollout.mjs';
 
 test('production rollout plan is shell-free, explicit, and secret-free', () => {
   const plan = createProductionRolloutPlan({composeFile: '/srv/spartan/docker-compose.production.yml', envFile: '/run/secrets/spartan.env', project: 'spartan-prod', healthEndpoint: 'https://play.example/health', adminHealthEndpoint: 'https://play.example/admin/health'});
@@ -17,6 +17,9 @@ test('production rollout can verify live service health through injected boundar
   const commands = [];
   const result = await executeProductionRollout(plan, {runner: async command => { commands.push(command); }, fetchImpl: async endpoint => { assert.equal(endpoint, 'http://127.0.0.1:8790/health'); return {ok: true, status: 200, async json() { return {status: 'ok', service: 'spartan-signaling'}; }}; }});
   assert.equal(commands.length, 2); assert.equal(result.status, 'healthy'); assert.equal(result.primary.service, 'spartan-signaling');
+  const report = createProductionRolloutReport(plan, result, {now: '2026-08-10T12:00:00.000Z'});
+  assert.deepEqual(report, {version: 1, kind: 'production-rollout', status: 'healthy', recordedAt: '2026-08-10T12:00:00.000Z', includeTurn: true, primary: {status: 'healthy', service: 'spartan-signaling', health: 'ok'}, admin: null});
+  assert.equal(JSON.stringify(report).includes('SPARTAN_'), false);
 });
 
 test('production rollout rejects unsafe endpoints and invalid runners', async () => {

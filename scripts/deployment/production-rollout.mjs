@@ -1,9 +1,11 @@
 #!/usr/bin/env node
+import {writeFile} from 'node:fs/promises';
 import path from 'node:path';
 
 const COMPOSE_SERVICES = Object.freeze(['signaling', 'redis', 'turn']);
 
 function text(value) { return typeof value === 'string' ? value.trim() : ''; }
+function evidenceText(value) { return text(value).slice(0, 128); }
 function required(value, name) { const result = text(value); if (!result) throw new TypeError(`${name} is required`); return result; }
 function absolute(value, name) { const result = path.resolve(required(value, name)); if (result === path.parse(result).root) throw new TypeError(`${name} cannot be the filesystem root`); return result; }
 function projectName(value) { const result = required(value, 'projectName'); if (!/^[a-z0-9][a-z0-9_-]{0,62}$/i.test(result)) throw new TypeError('projectName must contain only letters, numbers, hyphens, and underscores'); return result; }
@@ -54,7 +56,7 @@ async function checkHealth(endpoint, {fetchImpl = fetch, timeoutMs = 10_000} = {
     if (!response?.ok) throw new Error(`health endpoint returned HTTP ${response?.status ?? 'unknown'}`);
     const body = await response.json();
     if (!body || typeof body !== 'object' || typeof body.service !== 'string') throw new Error('health endpoint returned an invalid service status');
-    return Object.freeze({status: 'healthy', service: body.service, health: typeof body.status === 'string' ? body.status : 'ok'});
+    return Object.freeze({status: 'healthy', service: evidenceText(body.service), health: evidenceText(typeof body.status === 'string' ? body.status : 'ok')});
   } finally { clearTimeout(timeout); }
 }
 
@@ -68,6 +70,14 @@ export async function executeProductionRollout(plan, {runner = defaultRunner, fe
   return Object.freeze({status: 'healthy', primary, admin});
 }
 
+/** Create bounded, secret-free evidence suitable for an operator artifact. */
+export function createProductionRolloutReport(plan, result, {now = new Date()} = {}) {
+  if (!plan?.health || result?.status !== 'healthy') throw new TypeError('a healthy rollout result is required');
+  return Object.freeze({version: 1, kind: 'production-rollout', status: 'healthy', recordedAt: new Date(now).toISOString(), includeTurn: plan.security.turn, primary: Object.freeze({status: result.primary?.status, service: evidenceText(result.primary?.service), health: evidenceText(result.primary?.health)}), admin: result.admin ? Object.freeze({status: result.admin.status, service: evidenceText(result.admin.service), health: evidenceText(result.admin.health)}) : null});
+}
+
+async function writeReport(file, report) { if (!text(file)) return; const target = path.resolve(file); if (target === path.parse(target).root) throw new TypeError('report file cannot be the filesystem root'); await writeFile(target, `${JSON.stringify(report, null, 2)}\n`, {encoding: 'utf8', mode: 0o600}); }
+
 function argument(argv, name) { const index = argv.indexOf(name); return index < 0 ? '' : argv[index + 1]; }
 if (path.resolve(process.argv[1] || '') === path.resolve(new URL(import.meta.url).pathname)) {
   try {
@@ -75,6 +85,6 @@ if (path.resolve(process.argv[1] || '') === path.resolve(new URL(import.meta.url
     const plan = createProductionRolloutPlan({composeFile: argument(argv, '--compose-file') || 'docker-compose.production.yml', project: argument(argv, '--project') || 'spartan-gaming', envFile: argument(argv, '--env-file') || undefined, healthEndpoint: argument(argv, '--health') || 'https://127.0.0.1/health', adminHealthEndpoint: argument(argv, '--admin-health') || undefined, includeTurn: !argv.includes('--without-turn'), composeExecutable: argument(argv, '--compose-executable') || 'docker'});
     if (!argv.includes('--execute')) { console.log(JSON.stringify(plan, null, 2)); process.exit(0); }
     if (!argv.includes('--confirm')) throw new Error('production execution requires --confirm');
-    const result = await executeProductionRollout(plan, {checkAdmin: argv.includes('--check-admin')}); console.log(JSON.stringify(result));
+    const result = await executeProductionRollout(plan, {checkAdmin: argv.includes('--check-admin')}); const report = createProductionRolloutReport(plan, result); await writeReport(argument(argv, '--report-file'), report); console.log(JSON.stringify(result));
   } catch (error) { console.error(`production rollout failed: ${error.message}`); process.exitCode = 1; }
 }

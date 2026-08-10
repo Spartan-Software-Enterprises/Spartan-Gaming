@@ -192,6 +192,11 @@ does not upload secret files, accept secret values as workflow inputs, or
 provision a public relay. Configure the runner label and paths only after
 reviewing the target host, firewall, Redis, TURN, TLS, and external signing
 custody.
+On successful execution it also writes a bounded, secret-free rollout report
+and retains it as a short-lived GitHub artifact. The report records only the
+rollout status, whether the TURN profile was selected, and normalized service
+health statuses; it does not include environment values, endpoint bodies,
+tokens, or certificate material.
 
 For an operator-managed coturn relay, generate a bounded configuration from
 the same shared secret used by the signaling TURN credential endpoint:

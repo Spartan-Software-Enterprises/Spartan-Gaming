@@ -80,6 +80,8 @@ test('production rollout workflow keeps activation operator-controlled and secre
   assert.match(productionRollout, /node --env-file="\$DEPLOYMENT_ENV_FILE" scripts\/validate-production-config\.mjs/);
   assert.match(productionRollout, /node --env-file="\$DEPLOYMENT_ENV_FILE" scripts\/deployment\/production-preflight\.mjs/);
   assert.match(productionRollout, /deployment:rollout/);
+  assert.match(productionRollout, /--report-file/);
+  assert.match(productionRollout, /actions\/upload-artifact@v7/);
   assert.match(productionRollout, /--execute --confirm/);
   assert.match(productionRollout, /COMPOSE_FILE: \$\{\{ inputs\.compose_file \}\}/);
   assert.match(productionRollout, /ENV_FILE: \$\{\{ inputs\.env_file \}\}/);
