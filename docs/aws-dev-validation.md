@@ -56,7 +56,7 @@ lacking a kernel or device path capable of force feedback.
 ## Current development evidence
 
 The configured Amazon Linux 2023 development host has been synchronized with
-the current `main` branch (`a4f93a0`) and has successfully run the repository
+the current `main` branch (`5dd29ac`) and has successfully run the repository
 dependency install, Linux native package build, and executable `/dev/uinput`
 input sequence. The resulting verifier reported `status: ready`,
 `input: verified`, and `forceFeedback: not-requested`. Its secret-free
