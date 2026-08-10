@@ -87,10 +87,12 @@ tasks.named("preBuild") {
     dependsOn(packageFrontendAssets)
 }
 
-tasks.named("assembleRelease") {
-    doFirst {
-        check(releaseSigningConfigured) {
-            "assembleRelease requires operator-managed Android signing environment variables"
+tasks.configureEach {
+    if (name == "assembleRelease") {
+        doFirst {
+            check(releaseSigningConfigured) {
+                "assembleRelease requires operator-managed Android signing environment variables"
+            }
         }
     }
 }
