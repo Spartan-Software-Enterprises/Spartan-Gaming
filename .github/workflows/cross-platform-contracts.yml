@@ -59,6 +59,8 @@ jobs:
         run: npm run test:serial --ignore-scripts
       - name: Run optional Werift adapter contract in isolation
         run: npm run test:werift
+      - name: Run optional virtual gamepad adapter contract
+        run: npm run test:virtual-gamepad
       - name: Run device presentation contract
         run: npm run test:platform
       - name: Run display policy contract
