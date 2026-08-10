@@ -188,7 +188,7 @@ export async function createBindings({environment = DEFAULT_ENVIRONMENT, spawnIm
   const inputReady = xdotool && hasDisplay;
   const consent = createPortalConsent({environment: env, probe: spawnProbe});
   const display = hasDisplay ? createX11DisplayProbe(spawnProbe) : null;
-  const encoderProbe = ffmpeg ? createFfmpegEncoderProbe({command: 'ffmpeg', run: (command, args, options) => { const result = spawnSync(command, args, {encoding: 'utf8', ...options}); return result?.error ? null : String(result.stdout || ''); }}) : () => false;
+  const encoderProbe = ffmpeg ? createFfmpegEncoderProbe({command: 'ffmpeg', run: (command, args, options) => { const result = spawnProbe(command, args, {encoding: 'utf8', ...options}); return result?.error ? null : String(result.stdout || ''); }}) : () => false;
   const encoders = Object.freeze(['h264', 'vp9', 'av1'].flatMap(codec => { const selected = selectHardwareEncoder({codec, platform: PLATFORM, probe: encoderProbe}); return selected ? [Object.freeze({codec, encoder: selected.encoder, device: selected.device})] : []; }));
   const capture = captureController({environment: env, spawnImpl, processFactory, consent});
   const audio = audioController({environment: env, spawnImpl, processFactory, consent, spawnProbe});
