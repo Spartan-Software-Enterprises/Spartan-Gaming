@@ -5,6 +5,7 @@ import {createSessionRuntime} from '../session/runtime.mjs';
 import {createInputEventEnvelope, createInputMapper} from '../input/input.mjs';
 import {createControllerProfileStore, resolveControllerProfile} from '../input/profiles.mjs';
 import {createInputPermissionPolicy} from '../input/policy.mjs';
+import {controllerPollingIntervalMs} from '../input/controller-policy.mjs';
 import {createHapticsController} from '../input/haptics.mjs';
 import {createPointerInputEvent, createWheelInputEvent} from '../input/pointer.mjs';
 import {createWebRtcTransport, createWebSocketSignalTransport, createWebTransportSignalTransport} from '../transport/transport.mjs';
@@ -292,6 +293,6 @@ const gamepadPollTimer = setInterval(() => {
     normalized.axes.forEach((value, index) => { const previousValue = previous?.axes[index] || 0; if (!previous || Math.abs(value - previousValue) > 0.001) { padMapper.mapAxisTransition(index, value, previousValue).forEach(event => emitInput({...event, source: 'gamepad', control: `axis-${index}`, gamepadIndex: normalized.index})); padMapper.mapNativeAxis(index, value, previousValue).forEach(event => emitInput({...event, source: 'gamepad', control: `axis-${index}`, gamepadIndex: normalized.index})); } });
     previousGamepad.set(normalized.index, normalized);
   }
-}, 100);
+}, controllerPollingIntervalMs(sessionPreferences.preferences.inputPolling));
 const suppliedStream = window.__SPARTAN_MEDIA_STREAM__; if (suppliedStream && typeof MediaStream !== 'undefined' && suppliedStream instanceof MediaStream) { const mediaState = attachMediaStreamTarget({video: elements.video, stream: suppliedStream, audioEnabled}); elements.audio.textContent = mediaState.hasAudio ? 'Active' : 'No track'; elements.video.play().catch(() => {}); }
 start(); apply({type: 'session.state', status: 'negotiating'});

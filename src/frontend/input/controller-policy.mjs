@@ -7,6 +7,7 @@ const VIRTUAL_GAMEPAD_BACKENDS = new Set(['Automatic', 'Browser Gamepad', 'Linux
 const HAPTICS = new Set(['Automatic', 'Browser vibration', 'Native rumble', 'Disabled']);
 const TRIGGERS = new Set(['Analog and digital', 'Analog only', 'Digital only']);
 const LATENCY = new Set(['Automatic', 'Standard', 'High frequency']);
+const INPUT_POLL_INTERVALS = Object.freeze({Automatic: 100, Standard: 50, 'High frequency': 16});
 function choice(value, allowed, fallback) { return allowed.has(value) ? value : fallback; }
 function flag(value, fallback) { return typeof value === 'boolean' ? value : fallback; }
 function integer(value, fallback, minimum, maximum) { const number = Number(value); return Number.isInteger(number) ? Math.max(minimum, Math.min(maximum, number)) : fallback; }
@@ -18,6 +19,8 @@ export function normalizeControllerPolicy(input = {}) {
 export function controllerPolicyFromSettings(settings = {}) {
   return normalizeControllerPolicy({defaultProfile: settings['controllers.defaultProfile'], inputMode: settings['controllers.inputMode'], virtualGamepadBackend: settings['controllers.virtualGamepadBackend'], hapticsBackend: settings['controllers.hapticsBackend'], multipleControllers: settings['controllers.multipleControllers'], playerSlots: settings['controllers.playerSlots'], allowGamepad: settings['controllers.allowGamepad'], allowHid: settings['controllers.allowHid'], rumble: settings['controllers.rumble'], adaptiveTriggers: settings['controllers.adaptiveTriggers'], gyro: settings['controllers.gyro'], touchpad: settings['controllers.touchpad'], backButtons: settings['controllers.backButtons'], triggerMode: settings['controllers.triggerMode'], steeringRange: settings['controllers.steeringRange'], splitInput: settings['controllers.splitInput'], deadzone: settings['controllers.deadzone'], inputLatency: settings['controllers.inputLatency']});
 }
+
+export function controllerPollingIntervalMs(inputLatency = 'Automatic') { return INPUT_POLL_INTERVALS[inputLatency] || INPUT_POLL_INTERVALS.Automatic; }
 
 export function controllerPolicyAllowsEvent(event, policy = normalizeControllerPolicy()) {
   const normalized = normalizeControllerPolicy(policy); const kind = event?.kind || (event?.source === 'gamepad' ? 'button' : event?.source);
