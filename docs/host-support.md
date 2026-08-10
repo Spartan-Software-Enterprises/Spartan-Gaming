@@ -161,8 +161,10 @@ additionally exposes rumble through XInput for attached Xbox-compatible
 controllers, but does not claim virtual gamepad injection. Linux exposes a
 uinput virtual gamepad and force feedback when `/dev/uinput` is available.
 macOS additionally exposes haptic output for attached controllers that report
-GameController/CoreHaptics support; it does not claim virtual gamepad
-injection. Missing controllers or unsupported haptic localities fail closed.
+GameController/CoreHaptics support and attempts a generic IOHIDUserDevice
+virtual gamepad with standard buttons and four axes when the OS permits virtual
+HID creation; missing entitlements or rejected device creation fail closed.
+Missing controllers or unsupported haptic localities also fail closed.
 The kit delegates only declared operations (`start`/`stop` for capture and
 audio, `execute` for input) and fails closed when a package does not provide
 its required methods.
@@ -434,5 +436,6 @@ kernel-mode HID source driver and the Windows Driver Kit; the user-mode
 is an app-configured controller surface, not a general
 system-wide macOS device bridge. Until signed, platform-specific driver
 packages and their installation/permission UX exist, the host advertises
-Windows/macOS virtual-gamepad capability as unavailable rather than silently
+Windows virtual-gamepad capability as unavailable; macOS reports its virtual
+HID capability only after device creation succeeds rather than silently
 falling back to keyboard or pointer injection.

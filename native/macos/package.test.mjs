@@ -51,3 +51,13 @@ test('macOS native input contract marks unsupported operations as soft errors', 
   assert.match(source, /unsupported\(env, "unsupported macOS CGEvent key"\)/);
   assert.match(source, /unsupported\(env, "unsupported macOS mouse button event"\)/);
 });
+
+test('macOS native input contract exposes a fail-closed IOHID virtual gamepad path', async () => {
+  const source = await (await import('node:fs/promises')).readFile(new URL('./src/bindings.mm', import.meta.url), 'utf8');
+  assert.match(source, /IOHIDUserDeviceCreate/);
+  assert.match(source, /IOHIDUserDeviceHandleReport/);
+  assert.match(source, /IOHIDUserDeviceScheduleWithRunLoop/);
+  assert.match(source, /virtual-gamepad button/);
+  assert.match(source, /virtual-gamepad axis/);
+  assert.match(source, /virtualGamepad\", true_value/);
+});
