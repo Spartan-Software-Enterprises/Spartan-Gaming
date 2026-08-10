@@ -21,7 +21,12 @@ async function exerciseBindings(bindings, {durationMs = 250, delay = ms => new P
     if (typeof bindings.audio?.start !== 'function' || typeof bindings.audio?.stop !== 'function') throw new Error('native audio lifecycle is unavailable');
     await bindings.audio.start({permissionGranted: true, source: environment.SPARTAN_HARDWARE_AUDIO_SOURCE || undefined}); active.push(bindings.audio); result.audio = 'verified';
     if (typeof bindings.input?.execute !== 'function') throw new Error('native input execution is unavailable');
-    await bindings.input.execute({kind: 'key', control: 'F20', pressed: true}); await bindings.input.execute({kind: 'key', control: 'F20', pressed: false}); result.input = 'verified';
+    if (bindings.capabilities?.gamepad === true) {
+      await bindings.input.execute({kind: 'button', control: 'button-0', pressed: true}); await bindings.input.execute({kind: 'button', control: 'button-0', pressed: false});
+    } else {
+      await bindings.input.execute({kind: 'key', control: 'F20', pressed: true}); await bindings.input.execute({kind: 'key', control: 'F20', pressed: false});
+    }
+    result.input = 'verified';
     if (bindings.capabilities?.rumble !== true) throw new Error('native haptics/rumble capability is unavailable');
     await bindings.input.execute({kind: 'rumble', gamepadIndex: 0, strongMagnitude: 0.25, weakMagnitude: 0.15, durationMs: Math.min(durationMs, 500)}); result.haptics = 'verified';
     await delay(durationMs);

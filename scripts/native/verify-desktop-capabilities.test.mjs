@@ -16,6 +16,14 @@ test('desktop capability verification can explicitly exercise capture, audio, in
   assert.deepEqual(calls.filter(call => call[0] === 'input').map(call => call[1]), [{kind: 'key', control: 'F20', pressed: true}, {kind: 'key', control: 'F20', pressed: false}, {kind: 'rumble', gamepadIndex: 0, strongMagnitude: 0.25, weakMagnitude: 0.15, durationMs: 250}]); assert.equal(calls.at(-1)[0], 'bindings');
 });
 
+test('desktop capability verification exercises a native gamepad when that is the available input path', async () => {
+  const operations = [];
+  const lifecycle = {async start() {}, async stop() {}};
+  const report = await verifyDesktopCapabilities({platform: 'linux', execute: true, delay: async () => {}, access: async () => {}, loadModule: async () => ({createBindings: async () => ({capabilities: {gamepad: true, input: true, rumble: true}, input: {async execute(operation) { operations.push(operation); }}, capture: lifecycle, audio: lifecycle, close() {}})})});
+  assert.equal(report.status, 'ready');
+  assert.deepEqual(operations, [{kind: 'button', control: 'button-0', pressed: true}, {kind: 'button', control: 'button-0', pressed: false}, {kind: 'rumble', gamepadIndex: 0, strongMagnitude: 0.25, weakMagnitude: 0.15, durationMs: 250}]);
+});
+
 test('desktop capability verification separates missing audio and haptics from input readiness', async () => {
   const report = await verifyDesktopCapabilities({platform: 'win32', loadModule: async () => ({createBindings: async () => ({capabilities: {input: true, audio: false, rumble: false}, input: {execute() {}}, capture: {start() {}}, audio: {}, close() {}})})});
   assert.equal(report.capabilities.input.state, 'ready'); assert.equal(report.capabilities.audio.state, 'unavailable'); assert.equal(report.capabilities.haptics.state, 'unavailable');
