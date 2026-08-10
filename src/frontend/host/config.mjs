@@ -33,6 +33,8 @@ export function createHostConfigFromSettings({platform, settings = {}, host = {}
     audioCodec: option(settings['host.audioCodec'], AUDIO_CODECS, 'Automatic'),
     virtualGamepadBackend: BACKENDS.has(settings['controllers.virtualGamepadBackend']) ? settings['controllers.virtualGamepadBackend'] : 'Automatic',
     ...(text(settings['controllers.virtualGamepadPackage'], 160) ? {virtualGamepadPackage: text(settings['controllers.virtualGamepadPackage'], 160)} : {}),
+    ...(text(settings['host.virtualGamepadInstallRoot'], 1024) ? {virtualGamepadInstallRoot: text(settings['host.virtualGamepadInstallRoot'], 1024)} : {}),
+    ...(text(settings['host.virtualGamepadAdapterId'], 128) ? {virtualGamepadAdapterId: text(settings['host.virtualGamepadAdapterId'], 128)} : {}),
     ...(text(settings['controllers.virtualGamepadDevice'], 128) ? {virtualGamepadDevice: text(settings['controllers.virtualGamepadDevice'], 128)} : {}),
     ...(deviceIds(settings['controllers.virtualGamepadDevices']).length ? {virtualGamepadDevices: deviceIds(settings['controllers.virtualGamepadDevices'])} : {}),
     controllerPolicy: controllerPolicyFromSettings(settings),

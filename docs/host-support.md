@@ -49,9 +49,10 @@ make the intended controller path explicit. `--virtual-gamepad-device` carries
 an optional bounded driver-specific device identifier for multi-controller
 setups. The host health document reports the normalized backend, package name,
 device ID, and readiness state; it never installs a driver or claims readiness
-from a package name alone. The frontend Controller settings expose the same
-package and device fields so exported profiles can be translated into a
-user-owned host deployment plan. `controllers.virtualGamepadDevices` and
+from a package name alone. The frontend Controller settings expose the package
+and device fields, while Host settings expose the host-local install root and
+verified adapter ID so host.json export can carry the complete deployment
+selection. `controllers.virtualGamepadDevices` and
 `--virtual-gamepad-devices` additionally accept up to eight comma-separated
 slot IDs, preserving per-player device selection while keeping the legacy
 single-device field compatible.

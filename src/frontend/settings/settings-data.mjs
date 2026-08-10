@@ -136,6 +136,8 @@ export const settingsCategories = [
       toggle('host.captureMicrophone', 'Capture host microphone', 'Allow an explicitly selected host microphone to be shared with a session.', false),
       select('host.audioCodec', 'Host audio codec', 'Audio codec requested for host-to-player return audio.', ['Automatic', 'Opus', 'AAC'], 'Automatic'),
       text('host.nativePackage', 'Native host package', 'Optional installed platform package used for capture, audio, and OS input. The host never downloads packages from this setting.', ''),
+      text('host.virtualGamepadInstallRoot', 'Virtual gamepad install root', 'Host-local directory containing verified virtual-gamepad adapter packages. This path is used only when exporting host configuration.', ''),
+      text('host.virtualGamepadAdapterId', 'Virtual gamepad adapter ID', 'Stable ID of the verified virtual-gamepad adapter package installed on the host.', ''),
       toggle('host.enableNativeMedia', 'Enable native host media', 'Allow a configured native host package and WebRTC adapter to publish display video.', false),
       toggle('host.enableNativeAudio', 'Enable native host audio', 'Allow a configured native host package to return explicitly permitted host audio.', false),
       text('host.audioSource', 'Host audio source', 'Optional platform-specific capture source passed to the user-owned host.', ''),
