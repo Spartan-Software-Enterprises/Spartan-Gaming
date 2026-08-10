@@ -52,6 +52,9 @@ services:
       - /tmp:rw,noexec,nosuid,size=16m
     cap_drop:
       - ALL
+    cap_add:
+      - SETUID
+      - SETGID
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
