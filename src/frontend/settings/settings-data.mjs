@@ -257,6 +257,8 @@ export const settingsCategories = [
       toggle('accessibility.screenReaderHints', 'Screen-reader hints', 'Add context to complex game-session and controller controls.'),
       toggle('accessibility.stickyKeys', 'Sticky modifier keys', 'Allow modifier keys to be pressed sequentially.'),
       toggle('accessibility.monoAudio', 'Mono audio', 'Mix stereo output into a single channel.'),
+      select('accessibility.captionMode', 'Closed captions', 'Show captions or subtitles when the active media surface provides text tracks.', ['Off', 'On'], 'Off'),
+      select('accessibility.captionLanguage', 'Caption language', 'Preferred caption or subtitle language; Automatic follows the media default.', ['Automatic', 'English', 'Spanish', 'French', 'German', 'Japanese'], 'Automatic'),
       select('accessibility.touchLayout', 'Touch-control layout', 'Default virtual controller layout on touch devices.', ['Automatic', 'Minimal', 'Full gamepad', 'Custom'], 'Automatic'),
       action('accessibility.remapShortcuts', 'Remap browser shortcuts', 'Configure keyboard, controller, switch, and voice shortcuts.', 'Open shortcut editor'),
     ],

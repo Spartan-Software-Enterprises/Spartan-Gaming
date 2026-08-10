@@ -150,6 +150,12 @@ remains a lab gate. The Android policy suite passed 4/4 locally and on AWS at
 `8fc8d0e`; repository checks and the full package suite also exited
 successfully.
 
+The current accessibility increment adds closed-caption mode/language settings
+and `applyCaptionPreference()` in `src/frontend/player/media.mjs`. It selects
+one matching captions/subtitles text track, disables competing tracks, and
+fails closed when the media surface exposes no text tracks. WebVTT/provider
+caption behavior remains target-runtime validation work.
+
 The current Proton/SteamOS increment adds a user-owned Linux/SteamOS Proton
 launch boundary. `host/proton.mjs` detects a selected installation, validates
 compatibility-prefix and allow-listed runtime options, and creates a shell-free

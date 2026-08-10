@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {attachMediaStreamTarget, canUsePictureInPicture, describeMediaStream, observeMediaStream, setMediaAudioEnabled, togglePictureInPicture} from './media.mjs';
+import {applyCaptionPreference, attachMediaStreamTarget, canUsePictureInPicture, describeMediaStream, normalizeCaptionPreference, observeMediaStream, setMediaAudioEnabled, togglePictureInPicture} from './media.mjs';
 
 const stream = {getTracks: () => [{kind: 'video'}, {kind: 'audio'}]};
 
@@ -54,4 +54,13 @@ test('media coordinator rejects missing targets and streams', () => {
   assert.throws(() => attachMediaStreamTarget({video: {}, stream: {}}), /MediaStream/);
   assert.throws(() => setMediaAudioEnabled(null, true), /video target/);
   assert.throws(() => observeMediaStream(stream, null), /onChange/);
+});
+
+test('caption preferences select one matching text track and fail safely without tracks', () => {
+  assert.deepEqual(normalizeCaptionPreference({mode: 'On', language: 'Spanish'}), {mode: 'On', language: 'Spanish'});
+  const tracks = [{kind: 'captions', language: 'en', default: true, mode: 'disabled'}, {kind: 'subtitles', language: 'es', mode: 'disabled'}];
+  const video = {textTracks: tracks};
+  assert.deepEqual(applyCaptionPreference(video, {mode: 'On', language: 'Spanish'}), {supported: true, active: 'es', preference: {mode: 'On', language: 'Spanish'}});
+  assert.equal(tracks[0].mode, 'disabled'); assert.equal(tracks[1].mode, 'showing');
+  assert.equal(applyCaptionPreference({}, {mode: 'On'}).supported, false);
 });

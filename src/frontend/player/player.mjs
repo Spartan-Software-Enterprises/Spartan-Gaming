@@ -13,7 +13,7 @@ import {readTransportPolicy, resolveSignalingEndpoint, resolveSignalingTransport
 import {createPlayerState, formatLatency, formatNegotiatedCapabilities, formatRate, reducePlayerState} from './player-state.mjs';
 import {captureVideoFrame, createInstantReplayController, createRecordingController} from '../capture/capture.mjs';
 import {createImmersiveController} from './immersive.mjs';
-import {attachMediaStreamTarget, canUsePictureInPicture, describeMediaStream, observeMediaStream, setMediaAudioEnabled, togglePictureInPicture} from './media.mjs';
+import {applyCaptionPreference, attachMediaStreamTarget, canUsePictureInPicture, describeMediaStream, observeMediaStream, setMediaAudioEnabled, togglePictureInPicture} from './media.mjs';
 import {hasAuthenticatedPlayerConnection, normalizePlayerConnection} from './connection.mjs';
 import {clearPendingHostPair, readPendingHostPair} from '../host/host.mjs';
 import {installLanHandoffListener} from '../host/lan-handoff.mjs';
@@ -167,7 +167,7 @@ async function connect(connectionValues = {}) {
       try { instantReplay = createInstantReplayController({stream, durationSeconds: sessionPreferences.preferences.replayLengthSeconds, codec: sessionPreferences.preferences.recordingCodec}); instantReplay.start(); if (elements.replay) elements.replay.disabled = false; }
       catch { if (elements.replay) elements.replay.disabled = true; }
     }
-    const mediaState = attachMediaStreamTarget({video: elements.video, stream, audioEnabled});
+    const mediaState = attachMediaStreamTarget({video: elements.video, stream, audioEnabled}); applyCaptionPreference(elements.video, sessionPreferences.preferences);
     mediaObservation?.disconnect();
     mediaObservation = observeMediaStream(stream, nextState => { elements.audio.textContent = nextState.hasAudio ? (audioEnabled ? 'Active' : 'Muted') : 'No track'; });
     elements.audio.textContent = mediaState.hasAudio ? (audioEnabled ? 'Active' : 'Muted') : 'No track'; elements.video.play().catch(() => {});
@@ -302,5 +302,5 @@ const gamepadPollTimer = setInterval(() => {
     previousGamepad.set(normalized.index, normalized);
   }
 }, controllerPollingIntervalMs(sessionPreferences.preferences.inputPolling));
-const suppliedStream = window.__SPARTAN_MEDIA_STREAM__; if (suppliedStream && typeof MediaStream !== 'undefined' && suppliedStream instanceof MediaStream) { const mediaState = attachMediaStreamTarget({video: elements.video, stream: suppliedStream, audioEnabled}); elements.audio.textContent = mediaState.hasAudio ? 'Active' : 'No track'; elements.video.play().catch(() => {}); }
+const suppliedStream = window.__SPARTAN_MEDIA_STREAM__; if (suppliedStream && typeof MediaStream !== 'undefined' && suppliedStream instanceof MediaStream) { const mediaState = attachMediaStreamTarget({video: elements.video, stream: suppliedStream, audioEnabled}); applyCaptionPreference(elements.video, sessionPreferences.preferences); elements.audio.textContent = mediaState.hasAudio ? 'Active' : 'No track'; elements.video.play().catch(() => {}); }
 start(); apply({type: 'session.state', status: 'negotiating'});

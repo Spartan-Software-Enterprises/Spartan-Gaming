@@ -193,6 +193,8 @@ Electron now bridges bounded native power telemetry through `desktop/electron/po
 
 The Android shell has a matching native Game Mode boundary in `android/gamemode/AndroidGameModeBridge.kt`. It queries `GameManager` on every resume for API 31+ and reports the observed mode without trying to change the system setting; the frontend intent remains query-on-resume and fails closed when unsupported.
 
+Closed-caption preferences are shared through session settings and applied by `src/frontend/player/media.mjs` to available `captions` or `subtitles` text tracks. The selector honors the preferred language, disables competing tracks, and fails closed when a provider or stream does not expose WebVTT/text-track metadata.
+
 `host/steam-os-packaging.mjs` provides consent-gated, metadata-only desktop-entry and Steam non-Steam registration plans for the user-scope Flatpak profile. The plans never modify Flatpak, register with Steam, or execute a command; an operator must perform those actions on the target host.
 
 Session input permissions are enforced by `src/frontend/input/policy.mjs` as well as advertised during capability negotiation. The player reconciles its permission policy with the host's negotiated capabilities after every `session.negotiated` event, so a host without virtual-gamepad injection (for example macOS or Windows keyboard/pointer adapters) stops gamepad polling instead of sending controller events that the host must reject. The player does not poll or forward disabled gamepad input, and input diagnostics distinguish a disconnected controller from one disabled by the active settings profile.
