@@ -96,5 +96,6 @@ the official release fallback remain user-mediated.
 The bridge never exposes a `Context`, raw `InputDevice`, `InputConnection`, or
 arbitrary command/URL surface to JavaScript. The Activity remains responsible
 for WebView lifecycle, origin policy, Android permissions, GameTextInput,
-GameNative consent, and native result callbacks. This contract is compile and
-device-lab work until an Android shell is added and exercised on real targets.
+GameNative consent, and native result callbacks. This contract still requires
+Android SDK compilation and physical device validation; the repository shell
+test does not substitute for an APK build or device run.

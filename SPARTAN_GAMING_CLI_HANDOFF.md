@@ -83,7 +83,7 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- The published code state is `9d09590` on `main`; local and AWS worktrees are
+- The published code state is `115d7ce` on `main`; local and AWS worktrees are
   clean and synchronized with `origin/main`.
 - `npm run check`: repository checks pass on the current code state locally
   and on the AWS dev server.
@@ -91,6 +91,10 @@ review; stay within the AWS credit limit.
   4 skipped, and 0 failed. The AWS run completed with 634 tests, 632 passed,
   2 skipped, and 0 failed; the difference is environment-gated integration
   coverage, not a failure.
+- The Android shell contract passed 2/2 locally and on AWS. Neither host has
+  Gradle, an Android wrapper, or an Android SDK, so APK compilation, signing,
+  permissions, WebView lifecycle, and physical device behavior remain open
+  lab gates.
 - AWS Playwright 1.55.0 completed 22/22 navigations across 11 maintained
   routes at desktop and mobile viewports on code commit `7c996e1`; all routes
   returned 200 with meaningful bodies and no horizontal overflow. The
@@ -129,6 +133,14 @@ delivered once and removed from the in-flight set. Focused Android/settings
 validation passed 12/12 locally, while the full local suite passed 634 tests
 with 630 passed, 4 skipped, and 0 failed; the AWS suite passed 634 tests with
 632 passed, 2 skipped, and 0 failed. The change is published at `9d09590`.
+
+The current Android application-shell increment adds `android/app/`, a
+Gradle/Kotlin WebView host that packages the shared frontend through
+`WebViewAssetLoader`, installs the bounded bridge for the Activity lifecycle,
+and routes GameNative/controller/Game Mode actions through native boundaries.
+The shell contract passed 2/2 locally and on AWS at `115d7ce`; APK build and
+device validation remain explicitly unverified because the available hosts do
+not contain Android SDK/Gradle tooling.
 
 The latest Electron increment completes the background-app workflow: enabling
 `general.backgroundApps` now creates a native tray entry with restore and quit
