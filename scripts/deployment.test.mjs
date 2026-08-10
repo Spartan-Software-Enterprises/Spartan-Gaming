@@ -86,6 +86,8 @@ test('production rollout workflow keeps activation operator-controlled and secre
   assert.match(productionRollout, /--require-broker/);
   assert.match(productionRollout, /check_turn/);
   assert.match(productionRollout, /--check-turn/);
+  assert.match(productionRollout, /check_turn_network/);
+  assert.match(productionRollout, /--check-turn-network/);
   assert.match(productionRollout, /node --env-file="\$ENV_FILE" scripts\/deployment\/production-rollout\.mjs/);
   assert.match(productionRollout, /--execute --confirm/);
   assert.match(productionRollout, /COMPOSE_FILE: \$\{\{ inputs\.compose_file \}\}/);

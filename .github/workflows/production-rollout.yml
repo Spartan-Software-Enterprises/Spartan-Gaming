@@ -45,6 +45,11 @@ on:
         required: true
         default: true
         type: boolean
+      check_turn_network:
+        description: 'Also require bounded TCP/TLS reachability to every returned TURN endpoint'
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -85,6 +90,7 @@ jobs:
           CHECK_ADMIN: ${{ inputs.check_admin }}
           REQUIRE_BROKER: ${{ inputs.require_broker }}
           CHECK_TURN: ${{ inputs.check_turn }}
+          CHECK_TURN_NETWORK: ${{ inputs.check_turn_network }}
         run: |
           set -euo pipefail
           args=(--compose-file "$COMPOSE_FILE" --env-file "$ENV_FILE" --project "$PROJECT_NAME" --health "$HEALTH_ENDPOINT" --execute --confirm)
@@ -92,6 +98,7 @@ jobs:
           if [[ "$CHECK_ADMIN" == "true" ]]; then args+=(--check-admin); fi
           if [[ "$REQUIRE_BROKER" == "true" ]]; then args+=(--require-broker); fi
           if [[ "$CHECK_TURN" == "true" ]]; then args+=(--check-turn); fi
+          if [[ "$CHECK_TURN_NETWORK" == "true" ]]; then args+=(--check-turn-network); fi
           node --env-file="$ENV_FILE" scripts/deployment/production-rollout.mjs "${args[@]}" --report-file "$RUNNER_TEMP/spartan-production-rollout.json"
       - name: Retain secret-free rollout evidence
         if: ${{ always() }}

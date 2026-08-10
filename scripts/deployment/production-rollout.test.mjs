@@ -39,6 +39,14 @@ test('production rollout verifies TURN credentials without retaining secrets', a
   assert.equal(JSON.stringify(createProductionRolloutReport(plan, result)).includes('admin-secret'), false);
 });
 
+test('TURN network probe reports bounded transport reachability without exposing hosts', async () => {
+  const {probeTurnEndpoints} = await import('./production-rollout.mjs');
+  const seen = [];
+  const result = await probeTurnEndpoints(['turn:turn.example:3478', 'turns:secure.example:5349'], {connector: async endpoint => { seen.push(endpoint); }});
+  assert.deepEqual(result, {status: 'reachable', total: 2, reachable: 2});
+  assert.deepEqual(seen.map(item => [item.scheme, item.port]), [['turn', 3478], ['turns', 5349]]);
+});
+
 test('production rollout rejects unsafe endpoints and invalid runners', async () => {
   assert.throws(() => createProductionRolloutPlan({healthEndpoint: 'http://relay.example/health'}), /HTTPS/);
   assert.throws(() => createProductionRolloutPlan({project: 'spartan prod'}), /projectName/);

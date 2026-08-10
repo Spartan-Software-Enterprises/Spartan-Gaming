@@ -207,6 +207,10 @@ check proves the signaling service can mint short-lived credentials for the
 configured `turn:`/`turns:` URLs; it does not claim that a client has completed
 a media relay transaction. A real relay connectivity test remains part of the
 hardware/network acceptance run.
+The optional `check_turn_network` workflow input adds a bounded TCP/TLS probe
+for every returned endpoint. A passing probe means the runner completed a
+transport handshake only; it does not replace authenticated TURN allocation
+and media-path testing from the target network.
 
 For an operator-managed coturn relay, generate a bounded configuration from
 the same shared secret used by the signaling TURN credential endpoint:

@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import {writeFile} from 'node:fs/promises';
+import {connect as tcpConnect} from 'node:net';
 import path from 'node:path';
+import {connect as tlsConnect} from 'node:tls';
 import {resolveConfiguredSecret} from '../../signaling/production-config.mjs';
 
 const COMPOSE_SERVICES = Object.freeze(['signaling', 'redis', 'turn']);
@@ -25,6 +27,30 @@ function turnCredentialUrl(value) {
   const parsed = new URL(required(value, 'adminHealthEndpoint'));
   parsed.pathname = '/admin/turn-credentials'; parsed.search = ''; parsed.hash = '';
   return parsed.toString();
+}
+
+function parseTurnEndpoint(value) {
+  const raw = required(value, 'TURN endpoint').trim(); const match = /^(turns?):(.+)$/i.exec(raw); if (!match) throw new TypeError('TURN endpoint must use turn: or turns:');
+  let authority = match[2].split(/[/?#]/, 1)[0]; let host; let port;
+  if (authority.startsWith('[')) { const end = authority.indexOf(']'); if (end < 0) throw new TypeError('TURN IPv6 endpoint is malformed'); host = authority.slice(1, end); port = authority.slice(end + 1).replace(/^:/, ''); }
+  else { const separator = authority.lastIndexOf(':'); if (separator > -1 && /^\d+$/.test(authority.slice(separator + 1))) { host = authority.slice(0, separator); port = authority.slice(separator + 1); } else host = authority; }
+  const numericPort = port ? Number(port) : match[1].toLowerCase() === 'turns' ? 5349 : 3478;
+  if (!host || !Number.isInteger(numericPort) || numericPort < 1 || numericPort > 65535) throw new TypeError('TURN endpoint host or port is invalid');
+  return Object.freeze({scheme: match[1].toLowerCase(), host, port: numericPort});
+}
+
+function connectTurnEndpoint(endpoint, {timeoutMs = 5000} = {}) {
+  return new Promise((resolve, reject) => {
+    const socket = endpoint.scheme === 'turns' ? tlsConnect({host: endpoint.host, port: endpoint.port, servername: endpoint.host, rejectUnauthorized: true}) : tcpConnect({host: endpoint.host, port: endpoint.port});
+    let settled = false; const finish = (error) => { if (settled) return; settled = true; clearTimeout(timeout); socket.destroy(); error ? reject(error) : resolve(); };
+    const timeout = setTimeout(() => finish(new Error('TURN endpoint connection timed out')), timeoutMs); timeout.unref?.();
+    socket.once(endpoint.scheme === 'turns' ? 'secureConnect' : 'connect', () => finish()); socket.once('error', finish);
+  });
+}
+
+export async function probeTurnEndpoints(urls, {connector = connectTurnEndpoint, timeoutMs = 5000} = {}) {
+  const endpoints = urls.map(parseTurnEndpoint); const results = await Promise.all(endpoints.map(async endpoint => { try { await connector(endpoint, {timeoutMs}); return true; } catch { return false; } }));
+  return Object.freeze({status: results.every(Boolean) ? 'reachable' : 'unavailable', total: results.length, reachable: results.filter(Boolean).length});
 }
 
 function composeArgs({composeExecutable: executable, composeFile, project, envFile, includeTurn, action}) {
@@ -68,7 +94,7 @@ async function checkHealth(endpoint, {fetchImpl = fetch, timeoutMs = 10_000} = {
   } finally { clearTimeout(timeout); }
 }
 
-async function checkTurnCredentials(endpoint, {adminSecret, fetchImpl = fetch, timeoutMs = 10_000} = {}) {
+async function checkTurnCredentials(endpoint, {adminSecret, fetchImpl = fetch, checkNetwork = false, turnConnector = connectTurnEndpoint, timeoutMs = 10_000} = {}) {
   const secret = text(adminSecret); if (!secret) throw new Error('TURN credential check requires the mounted admin secret');
   const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), timeoutMs); timeout.unref?.();
   try {
@@ -76,19 +102,21 @@ async function checkTurnCredentials(endpoint, {adminSecret, fetchImpl = fetch, t
     if (!response?.ok) throw new Error(`TURN credential endpoint returned HTTP ${response?.status ?? 'unknown'}`);
     const body = await response.json(); const urls = Array.isArray(body?.urls) ? body.urls.filter(value => typeof value === 'string' && /^turns?:/i.test(value)).map(value => value.slice(0, 160)) : [];
     if (!urls.length || typeof body?.username !== 'string' || typeof body?.credential !== 'string' || !Number.isInteger(body?.ttlSeconds)) throw new Error('TURN credential endpoint returned an invalid response');
-    return Object.freeze({status: 'ready', urlCount: urls.length, ttlSeconds: Math.min(body.ttlSeconds, 86_400)});
+    const network = checkNetwork ? await probeTurnEndpoints(urls, {connector: turnConnector, timeoutMs: Math.min(timeoutMs, 10_000)}) : null;
+    if (network?.status !== undefined && network.status !== 'reachable') throw new Error(`TURN endpoint transport reachability failed (${network.reachable}/${network.total})`);
+    return Object.freeze({status: 'ready', urlCount: urls.length, ttlSeconds: Math.min(body.ttlSeconds, 86_400), ...(network ? {network} : {})});
   } finally { clearTimeout(timeout); }
 }
 
 /** Execute a previously-created plan with injected runner/fetch boundaries. */
-export async function executeProductionRollout(plan, {runner = defaultRunner, fetchImpl = fetch, checkAdmin = false, checkTurn = false, adminSecret, timeoutMs = 10_000} = {}) {
+export async function executeProductionRollout(plan, {runner = defaultRunner, fetchImpl = fetch, checkAdmin = false, checkTurn = false, checkTurnNetwork = false, turnConnector = connectTurnEndpoint, adminSecret, timeoutMs = 10_000} = {}) {
   if (!plan || plan.status !== 'planned' || !plan.compose?.preflight || !plan.compose?.up) throw new TypeError('a valid production rollout plan is required');
   if (typeof runner !== 'function') throw new TypeError('runner must be a function');
   await runner(plan.compose.preflight); await runner(plan.compose.up);
   const primary = await checkHealth(plan.health.endpoint, {fetchImpl, timeoutMs});
   if (plan.health.required.includes('broker') && primary.broker?.status !== 'ready') throw new Error('production broker health is not ready');
   const admin = checkAdmin && plan.health.adminEndpoint ? await checkHealth(plan.health.adminEndpoint, {fetchImpl, timeoutMs}) : null;
-  const turn = checkTurn ? await checkTurnCredentials(plan.health.adminEndpoint, {adminSecret, fetchImpl, timeoutMs}) : null;
+  const turn = checkTurn ? await checkTurnCredentials(plan.health.adminEndpoint, {adminSecret, fetchImpl, checkNetwork: checkTurnNetwork, turnConnector, timeoutMs}) : null;
   if (plan.health.required.includes('turn-credential-service') && !turn) throw new Error('TURN credential service check was required');
   return Object.freeze({status: 'healthy', primary, admin, turn});
 }
@@ -96,7 +124,7 @@ export async function executeProductionRollout(plan, {runner = defaultRunner, fe
 /** Create bounded, secret-free evidence suitable for an operator artifact. */
 export function createProductionRolloutReport(plan, result, {now = new Date()} = {}) {
   if (!plan?.health || result?.status !== 'healthy') throw new TypeError('a healthy rollout result is required');
-  return Object.freeze({version: 1, kind: 'production-rollout', status: 'healthy', recordedAt: new Date(now).toISOString(), includeTurn: plan.security.turn, required: Object.freeze([...plan.health.required]), primary: Object.freeze({status: result.primary?.status, service: evidenceText(result.primary?.service), health: evidenceText(result.primary?.health), ...(result.primary?.broker ? {broker: Object.freeze({status: evidenceText(result.primary.broker.status), backend: evidenceText(result.primary.broker.backend)})} : {})}), admin: result.admin ? Object.freeze({status: result.admin.status, service: evidenceText(result.admin.service), health: evidenceText(result.admin.health), ...(result.admin.broker ? {broker: Object.freeze({status: evidenceText(result.admin.broker.status), backend: evidenceText(result.admin.broker.backend)})} : {})}) : null, turn: result.turn ? Object.freeze({status: result.turn.status, urlCount: result.turn.urlCount, ttlSeconds: result.turn.ttlSeconds}) : null});
+  return Object.freeze({version: 1, kind: 'production-rollout', status: 'healthy', recordedAt: new Date(now).toISOString(), includeTurn: plan.security.turn, required: Object.freeze([...plan.health.required]), primary: Object.freeze({status: result.primary?.status, service: evidenceText(result.primary?.service), health: evidenceText(result.primary?.health), ...(result.primary?.broker ? {broker: Object.freeze({status: evidenceText(result.primary.broker.status), backend: evidenceText(result.primary.broker.backend)})} : {})}), admin: result.admin ? Object.freeze({status: result.admin.status, service: evidenceText(result.admin.service), health: evidenceText(result.admin.health), ...(result.admin.broker ? {broker: Object.freeze({status: evidenceText(result.admin.broker.status), backend: evidenceText(result.admin.broker.backend)})} : {})}) : null, turn: result.turn ? Object.freeze({status: result.turn.status, urlCount: result.turn.urlCount, ttlSeconds: result.turn.ttlSeconds, ...(result.turn.network ? {network: Object.freeze({status: result.turn.network.status, total: result.turn.network.total, reachable: result.turn.network.reachable})} : {})}) : null});
 }
 
 async function writeReport(file, report) { if (!text(file)) return; const target = path.resolve(file); if (target === path.parse(target).root) throw new TypeError('report file cannot be the filesystem root'); await writeFile(target, `${JSON.stringify(report, null, 2)}\n`, {encoding: 'utf8', mode: 0o600}); }
@@ -109,6 +137,6 @@ if (path.resolve(process.argv[1] || '') === path.resolve(new URL(import.meta.url
     if (!argv.includes('--execute')) { console.log(JSON.stringify(plan, null, 2)); process.exit(0); }
     if (!argv.includes('--confirm')) throw new Error('production execution requires --confirm');
     const adminSecret = argv.includes('--check-turn') ? resolveConfiguredSecret({env: process.env, name: 'SPARTAN_SIGNALING_ADMIN_SECRET'}) : undefined;
-    const result = await executeProductionRollout(plan, {checkAdmin: argv.includes('--check-admin'), checkTurn: argv.includes('--check-turn'), adminSecret}); const report = createProductionRolloutReport(plan, result); await writeReport(argument(argv, '--report-file'), report); console.log(JSON.stringify(result));
+    const result = await executeProductionRollout(plan, {checkAdmin: argv.includes('--check-admin'), checkTurn: argv.includes('--check-turn'), checkTurnNetwork: argv.includes('--check-turn-network'), adminSecret}); const report = createProductionRolloutReport(plan, result); await writeReport(argument(argv, '--report-file'), report); console.log(JSON.stringify(result));
   } catch (error) { console.error(`production rollout failed: ${error.message}`); process.exitCode = 1; }
 }
