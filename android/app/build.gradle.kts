@@ -21,7 +21,7 @@ android {
 
     sourceSets["main"].kotlin.setSrcDirs(
         listOf(
-            rootProject.file("SpartanAndroidBridge.kt"),
+            rootProject.file("bridge/src/main/kotlin"),
             rootProject.file("controller"),
             rootProject.file("gamemode"),
             rootProject.file("gamenative"),

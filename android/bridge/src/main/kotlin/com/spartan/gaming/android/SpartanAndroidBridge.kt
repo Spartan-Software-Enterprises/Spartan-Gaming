@@ -9,14 +9,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.Locale
 
-/**
- * Bounded WebView bridge for shared Spartan Android policy requests.
- *
- * The Activity owns the Handler implementation and must still apply Android
- * permissions, lifecycle, GameTextInput, controller, and GameNative policy.
- * This class intentionally does not expose Context or raw Android objects to
- * JavaScript and never executes an arbitrary command or URL.
- */
+/** Bounded WebView bridge for shared Spartan Android policy requests. */
 class SpartanAndroidBridge(
     private val handler: Handler,
     private val resultSink: ResultSink? = null,

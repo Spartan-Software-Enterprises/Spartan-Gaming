@@ -77,7 +77,8 @@ keyboard behavior until an Android build and device test pass.
 
 ## WebView bridge
 
-`SpartanAndroidBridge.kt` is the narrow JavaScript bridge for an Android shell.
+`bridge/src/main/kotlin/com/spartan/gaming/android/SpartanAndroidBridge.kt` is
+the narrow JavaScript bridge for an Android shell.
 Install one instance on the primary WebView with `addJavascriptInterface` under
 the name `SpartanAndroid`; the shared frontend then sends versioned messages
 through `postMessage`. The bridge accepts only the bounded actions

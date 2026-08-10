@@ -200,7 +200,8 @@ text-entry suite passed 3/3 locally; rerun it with the full repository suite
 before publishing the next handoff.
 
 The current Android bridge increment adds `src/frontend/platform/android-bridge.mjs`
-and `android/SpartanAndroidBridge.kt`. Android WebView policy requests now use a
+and `android/bridge/src/main/kotlin/com/spartan/gaming/android/SpartanAndroidBridge.kt`.
+Android WebView policy requests now use a
 versioned, 16-KiB-bounded message protocol through the optional `SpartanAndroid`
 interface; native handlers may separately query Game Mode, controller inventory,
 or text input. The bridge fails closed for missing, oversized, malformed, or
