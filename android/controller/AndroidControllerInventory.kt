@@ -18,7 +18,7 @@ data class AndroidControllerDevice(
 )
 
 object AndroidControllerInventory {
-    fun snapshot(context: Context): List<AndroidControllerDevice> = InputDevice.getDeviceIds().mapNotNull { id ->
+    fun snapshot(context: Context): List<AndroidControllerDevice> = InputDevice.getDeviceIds().asList().mapNotNull { id ->
         val device = InputDevice.getDevice(id) ?: return@mapNotNull null
         if (!isController(device.sources)) return@mapNotNull null
         AndroidControllerDevice(

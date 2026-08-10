@@ -56,8 +56,9 @@ class MainActivity : Activity() {
         window.navigationBarColor = Color.rgb(16, 21, 27)
         webView = WebView(this)
         configureWebView(webView)
-        bridge = SpartanAndroidBridge(NativeHandler(this), resultSink)
-        webView.addJavascriptInterface(bridge, "SpartanAndroid")
+        val nativeBridge = SpartanAndroidBridge(NativeHandler(this), resultSink)
+        bridge = nativeBridge
+        webView.addJavascriptInterface(nativeBridge, "SpartanAndroid")
         setContentView(webView)
         webView.loadUrl(FRONTEND_URL)
     }
