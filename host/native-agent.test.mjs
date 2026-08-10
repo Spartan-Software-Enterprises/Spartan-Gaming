@@ -31,3 +31,10 @@ test('native Werift connection forwards the selected audio device source into th
   const offer = createSessionEnvelope({sessionId: 'ses-native-audio-device', type: 'session.offer', payload: {sdp: {type: 'offer', sdp: 'offer'}, transports: ['webrtc'], video: {codecs: ['h264']}, audio: {codecs: ['opus']}, input: {gamepad: false, keyboard: true, pointer: true, rumble: false}}});
   await native.start(); native.receive(offer); await new Promise(resolve => setTimeout(resolve, 0)); assert.equal(plans[0].source, 'alsa_input.usb-mic'); assert.equal(plans[0].backend, 'pipewire'); assert.equal(plans[0].permissionGranted, true); native.close();
 });
+
+test('native Werift connection preserves host capture and audio policy metadata for adapters', async () => {
+  const capturePlans = []; const audioPlans = [];
+  const native = createNativeWeriftConnection({connection: {send() {}, close() {}}, sessionId: 'ses-native-policy', platform: 'linux', module: fakeWerift(), bindings: {platform: 'linux', capture: {plan(options) { capturePlans.push(options); return {platform: 'linux', output: {target: 'stdout'}, process: {shell: false, args: []}}; }}, audio: {plan(options) { audioPlans.push(options); return {platform: 'linux', channels: 2, sampleRate: 48000, output: {target: 'stdout', requiresPublisher: true}, process: {shell: false, args: []}}; }}}, includeAudio: true, captureOptions: {audio: false, sourceSelection: 'Selected window'}, audioOptions: {captureSystemAudio: false, captureMicrophone: true}, permissions: {microphone: true}});
+  const offer = createSessionEnvelope({sessionId: 'ses-native-policy', type: 'session.offer', payload: {sdp: {type: 'offer', sdp: 'offer'}, transports: ['webrtc'], video: {codecs: ['h264']}, audio: {codecs: ['opus']}, input: {gamepad: false, keyboard: true, pointer: true, rumble: false}}});
+  await native.start(); native.receive(offer); await new Promise(resolve => setTimeout(resolve, 0)); assert.equal(capturePlans[0].sourceSelection, 'Selected window'); assert.equal(capturePlans[0].audio, false); assert.equal(audioPlans[0].captureSystemAudio, false); assert.equal(audioPlans[0].captureMicrophone, true); native.close();
+});
