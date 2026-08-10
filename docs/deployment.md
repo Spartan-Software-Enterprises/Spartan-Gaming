@@ -29,6 +29,16 @@ export SPARTAN_SIGNALING_TURN_URLS=turns:turn.example.com:5349
 docker compose -f docker-compose.production.yml up --build signaling
 ```
 
+Before starting the rollout, run the secret-safe preflight in the same
+operator environment. It validates the production configuration and checks
+that the mounted TLS key and certificate are readable regular files without
+printing their contents:
+
+```bash
+npm run deployment:check
+npm run deployment:preflight
+```
+
 `docker-compose.production.yml` uses the repository's Redis-backed broker and
 provisions a private Redis service for short-lived role ownership and pub/sub.
 The broker never persists signaling payloads. Set

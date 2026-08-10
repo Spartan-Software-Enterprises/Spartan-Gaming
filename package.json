@@ -37,6 +37,7 @@
     "host": "node host/agent.mjs",
     "signaling": "node signaling/agent.mjs",
     "deployment:check": "node scripts/validate-production-config.mjs",
+    "deployment:preflight": "node scripts/deployment/production-preflight.mjs",
     "deployment:tls-check": "node scripts/deployment/tls-rotation.mjs",
     "deployment:turn-config": "node scripts/deployment/turn-relay.mjs",
     "deployment:rollout": "node scripts/deployment/production-rollout.mjs",

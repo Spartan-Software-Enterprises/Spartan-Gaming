@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
 import './deployment/production-rollout.test.mjs';
+import './deployment/production-preflight.test.mjs';
 
 const dockerfile = fs.readFileSync('docker/signaling.Dockerfile', 'utf8');
 const compose = fs.readFileSync('docker-compose.yml', 'utf8');
@@ -35,6 +36,7 @@ test('Compose keeps the reference signaling service local and requires a secret'
 test('production preflight is part of the published deployment surface', () => {
   const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
   assert.equal(packageJson.scripts['deployment:check'], 'node scripts/validate-production-config.mjs');
+  assert.equal(packageJson.scripts['deployment:preflight'], 'node scripts/deployment/production-preflight.mjs');
   assert.equal(packageJson.scripts['deployment:tls-check'], 'node scripts/deployment/tls-rotation.mjs');
   assert.equal(packageJson.scripts['deployment:turn-config'], 'node scripts/deployment/turn-relay.mjs');
   assert.match(fs.readFileSync('scripts/deployment/tls-rotation.mjs', 'utf8'), /rotateTlsCertificatePair/);
@@ -42,6 +44,7 @@ test('production preflight is part of the published deployment surface', () => {
   assert.match(fs.readFileSync('signaling/production-config.mjs', 'utf8'), /resolveConfiguredSecret/);
   assert.match(fs.readFileSync('signaling/agent.mjs', 'utf8'), /resolveSignalingSecrets/);
   assert.match(fs.readFileSync('signaling/production-config.mjs', 'utf8'), /production broker package/);
+  assert.match(fs.readFileSync('scripts/deployment/production-preflight.mjs', 'utf8'), /verifyProductionInputs/);
 });
 
 test('production Compose mounts secrets and provisions the Redis broker dependency', () => {
