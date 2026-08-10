@@ -156,7 +156,8 @@ prerequisites but does not provision those external services.
 Native package rollout artifacts are built by
 `.github/workflows/native-package-rollout.yml` on a manual dispatch or a
 version tag. Each target runner uploads an isolated package artifact and marks
-it as unsigned. An operator must pass the artifact through the external
+it as unsigned; it includes a deterministic `package-manifest.unsigned.json`
+with per-file SHA-256 digests. An operator must pass the artifact through the external
 package-signing service and install it through the verified adapter installer;
 the rollout workflow never treats a CI artifact as trusted code.
 

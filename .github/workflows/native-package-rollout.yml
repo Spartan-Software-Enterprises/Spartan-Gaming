@@ -35,11 +35,14 @@ jobs:
       - name: Write unsigned rollout marker
         shell: bash
         run: |
+          node scripts/native/release-manifest.mjs --platform ${{ matrix.platform }} --install-root out/rollout-${{ matrix.platform }}/install --version build-${{ github.sha }} --output out/rollout-${{ matrix.platform }}/package-manifest.unsigned.json
           node -e "const fs=require('fs'); fs.writeFileSync('out/rollout-${{ matrix.platform }}/install/UNSIGNED-OPERATOR-SIGNATURE-REQUIRED.txt','This native package is a CI build artifact. Sign its adapter manifest through the external release signing service before installation.\n')"
       - name: Upload native rollout artifact
         uses: actions/upload-artifact@v7
         with:
           name: spartan-native-${{ matrix.platform }}-${{ github.sha }}
-          path: out/rollout-${{ matrix.platform }}/install
+          path: |
+            out/rollout-${{ matrix.platform }}/install
+            out/rollout-${{ matrix.platform }}/package-manifest.unsigned.json
           if-no-files-found: error
           retention-days: 14
