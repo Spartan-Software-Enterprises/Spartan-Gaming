@@ -81,8 +81,11 @@ session-scoped.
 
 Host capability documents distinguish `input.gamepad` (a controller input
 path) from `input.virtualGamepad` (an OS-created virtual device). The latter
-is true only for a ready Linux uinput binding today; Windows/macOS keyboard,
-pointer, and haptic support does not imply virtual-gamepad injection.
+is true only when the selected backend reports ready: today that means a Linux
+uinput binding, while Windows/macOS require a ready external driver package.
+Disabled, Browser Gamepad, and incompatible backend selections never claim an
+OS virtual device; keyboard, pointer, and haptic support does not imply virtual
+gamepad injection.
 
 Hosts whose runtime platform is outside the native desktop matrix (for
 example, Android/Termux) remain usable for the dependency-free control plane
