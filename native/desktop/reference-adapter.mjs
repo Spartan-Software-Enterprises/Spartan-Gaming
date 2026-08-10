@@ -1,6 +1,6 @@
 import {spawn, spawnSync} from 'node:child_process';
 const {createAudioCapturePlan} = await import('../../host/audio.mjs').catch(() => import('./host/audio.mjs'));
-const {createCapturePlan} = await import('../../host/media.mjs').catch(() => import('./host/media.mjs'));
+const {createCapturePlan, resolveFfmpegCommand} = await import('../../host/media.mjs').catch(() => import('./host/media.mjs'));
 const {createManagedProcess} = await import('../../host/process.mjs').catch(() => import('./host/process.mjs'));
 
 const PLATFORMS = new Set(['win32', 'darwin']);
@@ -56,7 +56,8 @@ function audioController({platform, environment, spawnImpl, processFactory}) {
 export async function createBindings({platform, environment = process.env, spawnImpl = spawn, spawnProbe = spawnSync, processFactory = createManagedProcess} = {}) {
   if (!PLATFORMS.has(platform)) throw new TypeError(`unsupported desktop reference platform: ${platform}`);
   const env = {...environment};
-  const ffmpeg = commandAvailable('ffmpeg', spawnProbe);
+  const ffmpegCommand = resolveFfmpegCommand(env);
+  const ffmpeg = commandAvailable(ffmpegCommand, spawnProbe);
   const capture = captureController({platform, environment: env, spawnImpl, processFactory});
   const audio = audioController({platform, environment: env, spawnImpl, processFactory});
   return Object.freeze({platform, capabilities: Object.freeze({capture: ffmpeg, audio: ffmpeg, input: false, keyboard: false, pointer: false, gamepad: false, virtualGamepad: false, rumble: false, technologies: Object.freeze({capture: platform === 'darwin' ? 'FFmpeg AVFoundation' : 'FFmpeg gdigrab', audio: platform === 'darwin' ? 'FFmpeg AVFoundation/CoreAudio' : 'FFmpeg WASAPI'}), requires: Object.freeze(['screen-capture-permission', 'microphone-permission', 'native-input-adapter'])}), capture, audio, async close() { await Promise.allSettled([capture.stop(), audio.stop()]); }});

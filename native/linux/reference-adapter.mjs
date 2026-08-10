@@ -179,7 +179,8 @@ function audioController({environment, spawnImpl, processFactory, consent, spawn
  */
 export async function createBindings({environment = DEFAULT_ENVIRONMENT, spawnImpl = spawn, spawnProbe = spawnSync, processFactory = createManagedProcess} = {}) {
   const env = {...environment};
-  const ffmpeg = commandAvailable('ffmpeg', spawnProbe);
+  const ffmpegCommand = typeof environment.SPARTAN_FFMPEG_COMMAND === 'string' && environment.SPARTAN_FFMPEG_COMMAND.trim() ? environment.SPARTAN_FFMPEG_COMMAND.trim() : 'ffmpeg';
+  const ffmpeg = commandAvailable(ffmpegCommand, spawnProbe);
   const xdotool = commandAvailable('xdotool', spawnProbe);
   const hasDisplay = Boolean(env.DISPLAY);
   const hasPipewireSession = Boolean(env.WAYLAND_DISPLAY || env.XDG_RUNTIME_DIR);
@@ -188,7 +189,7 @@ export async function createBindings({environment = DEFAULT_ENVIRONMENT, spawnIm
   const inputReady = xdotool && hasDisplay;
   const consent = createPortalConsent({environment: env, probe: spawnProbe});
   const display = hasDisplay ? createX11DisplayProbe(spawnProbe) : null;
-  const encoderProbe = ffmpeg ? createFfmpegEncoderProbe({command: 'ffmpeg', run: (command, args, options) => { const result = spawnProbe(command, args, {encoding: 'utf8', ...options}); return result?.error ? null : String(result.stdout || ''); }}) : () => false;
+  const encoderProbe = ffmpeg ? createFfmpegEncoderProbe({command: ffmpegCommand, run: (command, args, options) => { const result = spawnProbe(command, args, {encoding: 'utf8', ...options}); return result?.error ? null : String(result.stdout || ''); }}) : () => false;
   const encoders = Object.freeze(['h264', 'vp9', 'av1'].flatMap(codec => { const selected = selectHardwareEncoder({codec, platform: PLATFORM, probe: encoderProbe}); return selected ? [Object.freeze({codec, encoder: selected.encoder, device: selected.device})] : []; }));
   const capture = captureController({environment: env, spawnImpl, processFactory, consent});
   const audio = audioController({environment: env, spawnImpl, processFactory, consent, spawnProbe});

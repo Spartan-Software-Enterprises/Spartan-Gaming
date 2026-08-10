@@ -16,6 +16,13 @@ test('audio capture plans validate permissions and remain shell-free', () => {
   assert.equal(plan.output.requiresPublisher, true);
 });
 
+test('audio capture and encoder plans preserve the explicit FFmpeg executable', () => {
+  const command = '/opt/spartan/bin/ffmpeg-wrapper';
+  const capture = createAudioCapturePlan({platform: 'linux', backend: 'pipewire', source: 'default', environment: {XDG_RUNTIME_DIR: '/run/user/1000', SPARTAN_FFMPEG_COMMAND: command}});
+  assert.equal(capture.process.executable, command);
+  assert.equal(createAudioEncoderPlan({ffmpegCommand: command}).process.executable, command);
+});
+
 test('audio publisher plans bound codec bitrate and capabilities', () => {
   const capture = createAudioCapturePlan({platform: 'win32', backend: 'wasapi', source: 'default', environment: {microphoneGranted: true}});
   const publisher = createAudioPublisherPlan({capturePlan: capture, bitrateKbps: 9999});

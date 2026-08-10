@@ -14,6 +14,14 @@ const HARDWARE_ENCODERS = Object.freeze({
 });
 const VAAPI_DEVICE = Object.freeze(['/dev/dri/renderD128', '/dev/dri/renderD129']);
 
+/** Resolve an explicitly configured FFmpeg executable without invoking a shell. */
+export function resolveFfmpegCommand(environment = {}) {
+  const configured = typeof environment.SPARTAN_FFMPEG_COMMAND === 'string' ? environment.SPARTAN_FFMPEG_COMMAND.trim() : '';
+  if (!configured) return 'ffmpeg';
+  if (configured.length > 256 || /[\u0000-\u001f\u007f\s]/.test(configured)) throw new TypeError('SPARTAN_FFMPEG_COMMAND must be a shell-free executable path or name');
+  return configured;
+}
+
 function commandOutputProbe(command, args, options) {
   try {
     const result = spawnSync(command, args, {encoding: 'utf8', windowsHide: true, ...options});
@@ -70,7 +78,7 @@ export function createCapturePlan({platform, sourceType, source, width = 1920, h
   else if (platform === 'linux' && sourceType === 'pipewire') args.push('-f', 'pipewire', '-framerate', String(fps), '-i', source);
   else if (platform === 'darwin') args.push('-f', 'avfoundation', '-framerate', String(fps), '-video_size', size, '-i', audio ? `${source}:default` : `${source}:none`);
   else args.push('-f', 'gdigrab', '-framerate', String(fps), '-video_size', size, '-i', source);
-  return Object.freeze({kind: 'capture', platform, sourceType, permission, process: createProcessLaunchPlan({executable: 'ffmpeg', args}), output: Object.freeze({container: 'matroska', target: 'stdout', requiresPublisher: true, audio})});
+  return Object.freeze({kind: 'capture', platform, sourceType, permission, process: createProcessLaunchPlan({executable: resolveFfmpegCommand(environment), args}), output: Object.freeze({container: 'matroska', target: 'stdout', requiresPublisher: true, audio})});
 }
 
 function probeEncoders(probe = null, platform = null, codec = null) {
@@ -89,7 +97,7 @@ export function selectHardwareEncoder({codec = 'h264', platform = null, probe = 
   return Object.freeze({encoder, platform, device: devicePath, available: Object.freeze(available)});
 }
 
-export function createEncoderPlan({codec = 'h264', width = 1920, height = 1080, framerate = 60, bitrateKbps = 10000, preferHardware = true, platform = null, probe = null, device = null, outputFormat = ELEMENTARY_FORMATS[codec]} = {}) {
+export function createEncoderPlan({codec = 'h264', width = 1920, height = 1080, framerate = 60, bitrateKbps = 10000, preferHardware = true, platform = null, probe = null, device = null, outputFormat = ELEMENTARY_FORMATS[codec], ffmpegCommand = 'ffmpeg'} = {}) {
   if (!CODECS[codec]) throw new TypeError(`unsupported encoder codec: ${codec}`);
   const fps = positiveInteger(framerate, 'framerate', 60, 240); const boundedBitrate = positiveInteger(bitrateKbps, 'bitrateKbps', 10000, 1000000);
   const selected = preferHardware ? selectHardwareEncoder({codec, platform, probe, device}) : null;
@@ -100,5 +108,5 @@ export function createEncoderPlan({codec = 'h264', width = 1920, height = 1080, 
   if (selected?.encoder.includes('vaapi')) args.push('-vf', 'format=nv12,hwupload');
   args.push('-f', outputFormat, 'pipe:1');
   const hardware = Boolean(selected);
-  return Object.freeze({kind: 'encoder', codec, outputFormat, width: positiveInteger(width, 'width', 1920, 7680), height: positiveInteger(height, 'height', 1080, 4320), framerate: fps, bitrateKbps: boundedBitrate, preference: hardware ? 'hardware' : preferHardware ? 'hardware-when-platform-adapter-provides-it' : 'software', hardware, encoder, device: selected?.device || null, availableEncoders: selected?.available || Object.freeze([]), process: createProcessLaunchPlan({executable: 'ffmpeg', args}), requires: Object.freeze(hardware ? ['hardware-encoder-device', 'webrtc-publisher'] : preferHardware ? ['platform-encoder-selection', 'webrtc-publisher'] : ['webrtc-publisher'])});
+  return Object.freeze({kind: 'encoder', codec, outputFormat, width: positiveInteger(width, 'width', 1920, 7680), height: positiveInteger(height, 'height', 1080, 4320), framerate: fps, bitrateKbps: boundedBitrate, preference: hardware ? 'hardware' : preferHardware ? 'hardware-when-platform-adapter-provides-it' : 'software', hardware, encoder, device: selected?.device || null, availableEncoders: selected?.available || Object.freeze([]), process: createProcessLaunchPlan({executable: resolveFfmpegCommand({SPARTAN_FFMPEG_COMMAND: ffmpegCommand}), args}), requires: Object.freeze(hardware ? ['hardware-encoder-device', 'webrtc-publisher'] : preferHardware ? ['platform-encoder-selection', 'webrtc-publisher'] : ['webrtc-publisher'])});
 }

@@ -1,5 +1,6 @@
 import {createProcessLaunchPlan} from './adapters.mjs';
 import {createOggOpusPacketExtractor} from './ogg-opus.mjs';
+import {resolveFfmpegCommand} from './media.mjs';
 
 const PLATFORMS = new Set(['win32', 'darwin', 'linux']);
 const BACKENDS = new Set(['wasapi', 'coreaudio', 'pipewire', 'pulse']);
@@ -89,7 +90,7 @@ export function createAudioCapturePlan({platform, backend, source, channels = 2,
   else if (backend === 'pipewire') args.unshift('-f', 'pipewire');
   else args.unshift('-f', 'pulse');
   args.push('-i', source, '-f', 'f32le', 'pipe:1');
-  return Object.freeze({kind: 'audio-capture', platform, backend, source, channels: boundedChannels, sampleRate: boundedRate, permission, process: createProcessLaunchPlan({executable: 'ffmpeg', args}), output: Object.freeze({format: 'f32le', target: 'stdout', requiresPublisher: true})});
+  return Object.freeze({kind: 'audio-capture', platform, backend, source, channels: boundedChannels, sampleRate: boundedRate, permission, process: createProcessLaunchPlan({executable: resolveFfmpegCommand(environment), args}), output: Object.freeze({format: 'f32le', target: 'stdout', requiresPublisher: true})});
 }
 
 export function createAudioPublisherPlan({capturePlan, codec = 'opus', bitrateKbps = 128} = {}) {
@@ -99,13 +100,13 @@ export function createAudioPublisherPlan({capturePlan, codec = 'opus', bitrateKb
 }
 
 /** Create a shell-free encoder plan for raw float PCM captured by the audio plan. */
-export function createAudioEncoderPlan({codec = 'opus', bitrateKbps = 128, channels = 2, sampleRate = 48000} = {}) {
+export function createAudioEncoderPlan({codec = 'opus', bitrateKbps = 128, channels = 2, sampleRate = 48000, ffmpegCommand = 'ffmpeg'} = {}) {
   if (!CODECS.has(codec)) throw new TypeError(`unsupported audio codec: ${codec}`);
   const boundedChannels = bounded(channels, 2, 1, 8); const boundedRate = bounded(sampleRate, 48000, 8000, 192000); const boundedBitrate = bounded(bitrateKbps, 128, 16, 512);
   const encoder = codec === 'opus' ? 'libopus' : 'aac';
   const container = codec === 'opus' ? 'ogg-opus' : 'adts';
   const outputArgs = codec === 'opus' ? ['-frame_duration', '20', '-f', 'opus', '-page_duration', '20000', 'pipe:1'] : ['-f', 'adts', 'pipe:1'];
-  return Object.freeze({kind: 'audio-encoder', codec, channels: boundedChannels, sampleRate: boundedRate, bitrateKbps: boundedBitrate, process: createProcessLaunchPlan({executable: 'ffmpeg', args: ['-hide_banner', '-loglevel', 'warning', '-f', 'f32le', '-ar', String(boundedRate), '-ac', String(boundedChannels), '-i', 'pipe:0', '-c:a', encoder, '-b:a', `${boundedBitrate}k`, ...outputArgs]}), output: Object.freeze({container, target: 'stdout'}), requires: Object.freeze(['native-audio-capture', 'webrtc-audio-publisher'])});
+  return Object.freeze({kind: 'audio-encoder', codec, channels: boundedChannels, sampleRate: boundedRate, bitrateKbps: boundedBitrate, process: createProcessLaunchPlan({executable: resolveFfmpegCommand({SPARTAN_FFMPEG_COMMAND: ffmpegCommand}), args: ['-hide_banner', '-loglevel', 'warning', '-f', 'f32le', '-ar', String(boundedRate), '-ac', String(boundedChannels), '-i', 'pipe:0', '-c:a', encoder, '-b:a', `${boundedBitrate}k`, ...outputArgs]}), output: Object.freeze({container, target: 'stdout'}), requires: Object.freeze(['native-audio-capture', 'webrtc-audio-publisher'])});
 }
 
 export function normalizeAudioCapabilities(audio = {}) {
