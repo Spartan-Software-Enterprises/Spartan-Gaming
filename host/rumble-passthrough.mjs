@@ -1,4 +1,5 @@
 import {createSessionEnvelope} from '../src/frontend/session/session.mjs';
+import {controllerPolicyAllowsEvent, normalizeControllerPolicy} from '../src/frontend/input/controller-policy.mjs';
 
 function bounded(value, fallback, minimum, maximum) { const number = Number(value); return Number.isFinite(number) ? Math.max(minimum, Math.min(maximum, number)) : fallback; }
 
@@ -8,17 +9,19 @@ function bounded(value, fallback, minimum, maximum) { const number = Number(valu
  * readRumbleEvents(); adapters without such a source leave the controller
  * idle so the transport contract stays platform-neutral.
  */
-export function createRumbleBroadcastController({adapter, intervalMs = 50, setIntervalImpl = setInterval, clearIntervalImpl = clearInterval} = {}) {
+export function createRumbleBroadcastController({adapter, controllerPolicy = normalizeControllerPolicy(), intervalMs = 50, setIntervalImpl = setInterval, clearIntervalImpl = clearInterval} = {}) {
   const sessions = new Set();
   let timer = null;
   let sequence = 0;
   const read = typeof adapter?.readRumbleEvents === 'function' ? adapter.readRumbleEvents.bind(adapter) : null;
   const broadcast = rumble => {
+    const gamepadIndex = bounded(rumble?.gamepadIndex ?? rumble?.index, 0, 0, 15);
+    if (!controllerPolicyAllowsEvent({kind: 'rumble', source: 'host', gamepadIndex}, controllerPolicy)) return;
     const strongMagnitude = bounded(rumble?.strongMagnitude, 0, 0, 1);
     const weakMagnitude = bounded(rumble?.weakMagnitude, 0, 0, 1);
     for (const session of sessions) {
       try {
-        session.send(createSessionEnvelope({sessionId: session.sessionId, type: 'input.event', sequence: sequence += 1, payload: {type: 'input.event', source: 'host', kind: 'rumble', action: 'rumble', gamepadIndex: 0, durationMs: 0, strongMagnitude, weakMagnitude}}));
+        session.send(createSessionEnvelope({sessionId: session.sessionId, type: 'input.event', sequence: sequence += 1, payload: {type: 'input.event', source: 'host', kind: 'rumble', action: 'rumble', gamepadIndex, durationMs: 0, strongMagnitude, weakMagnitude}}));
       } catch { /* a closing session must not stop haptics for the remaining sessions */ }
     }
   };

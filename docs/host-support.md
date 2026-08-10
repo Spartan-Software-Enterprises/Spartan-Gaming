@@ -458,7 +458,10 @@ missing or read-only `/dev/uinput` disables the reader while leaving write-only
 gamepad injection and rumble intact. The host-to-client rumble contract is
 platform-neutral: Windows and macOS expose write-only haptics to attached
 controllers and cannot observe host-local force feedback, so only the Linux
-binding forwards host-issued rumble events.
+binding forwards host-issued rumble events. Reported controller indices remain
+bounded and are filtered through the negotiated `playerSlots`,
+`multipleControllers`, and haptics policy before broadcast; a reader that does
+not expose an index safely targets slot zero.
 
 
 The reference host calls `detectHostRuntime()` during startup. It loads the

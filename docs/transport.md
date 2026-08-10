@@ -121,3 +121,7 @@ bounded `gamepadIndex` through the input envelope so a native or external
 virtual-gamepad adapter can preserve player assignment. After negotiation, the
 player also caps polling to the host-accepted `playerSlots` and disables extra
 slots when the host declines `multipleControllers`.
+Host-observed rumble uses the same bounded slot policy: adapters may report a
+controller index, while adapters without one safely target slot zero. The host
+filters rumble by the negotiated slot count, multiple-controller setting, and
+haptics permission before forwarding it to clients.

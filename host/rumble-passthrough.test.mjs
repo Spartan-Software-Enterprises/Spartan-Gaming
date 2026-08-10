@@ -24,6 +24,23 @@ test('rumble broadcast forwards bounded host rumble to every subscribed session'
   }
 });
 
+test('rumble broadcast preserves controller slots and enforces controller policy', () => {
+  const {received, first} = collectedSessions();
+  const controller = createRumbleBroadcastController({adapter: {readRumbleEvents: () => [{index: 1, strongMagnitude: 0.5, weakMagnitude: 0.25}, {gamepadIndex: 8, strongMagnitude: 1} ]}, controllerPolicy: {playerSlots: 2, multipleControllers: true}});
+  controller.add(first);
+  controller.poll();
+  assert.equal(received.length, 1);
+  assert.equal(received[0].envelope.payload.gamepadIndex, 1);
+});
+
+test('rumble broadcast defaults adapters without a reported slot to player one', () => {
+  const {received, first} = collectedSessions();
+  const controller = createRumbleBroadcastController({adapter: {readRumbleEvents: () => [{strongMagnitude: 0.5} ]}});
+  controller.add(first);
+  controller.poll();
+  assert.equal(received[0].envelope.payload.gamepadIndex, 0);
+});
+
 test('rumble broadcast leaves sessions without a reader idle', () => {
   const {received, first} = collectedSessions();
   let intervalCount = 0;
