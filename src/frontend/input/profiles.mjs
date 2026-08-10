@@ -1,6 +1,7 @@
 import {DEFAULT_BINDINGS} from './input.mjs';
 
 export const CONTROLLER_PROFILES_KEY = 'spartan-gaming.controller-profiles.v1';
+export const CONTROLLER_PROFILE_VERSION = 1;
 const PROFILE_ID = /^[a-z0-9][a-z0-9._-]{1,63}$/;
 
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
@@ -39,6 +40,8 @@ export function createControllerProfileStore({storage, key = CONTROLLER_PROFILES
     get(id) { return read().find(profile => profile.id === id); },
     save(profile) { const normalized = createControllerProfile(profile); const profiles = read().filter(item => item.id !== normalized.id); profiles.push(normalized); write(profiles); return normalized; },
     remove(id) { write(read().filter(profile => profile.id !== id)); },
+    export() { return JSON.stringify({version: CONTROLLER_PROFILE_VERSION, profiles: read()}, null, 2); },
+    import(value) { const parsed = typeof value === 'string' ? JSON.parse(value) : value; if (parsed?.version !== CONTROLLER_PROFILE_VERSION || !Array.isArray(parsed.profiles)) throw new TypeError('controller profile export version is unsupported'); const normalized = parsed.profiles.map(createControllerProfile); const ids = new Set(); for (const profile of normalized) { if (ids.has(profile.id)) throw new Error(`duplicate controller profile: ${profile.id}`); ids.add(profile.id); } write(normalized); return Object.freeze(normalized); },
   });
 }
 
