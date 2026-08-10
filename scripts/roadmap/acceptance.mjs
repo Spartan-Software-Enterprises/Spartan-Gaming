@@ -15,8 +15,9 @@ function productionGate(report) {
   const required = Array.isArray(report?.required) ? report.required : [];
   const brokerReady = report?.primary?.broker?.status === 'ready' && report.primary.broker.backend === 'redis';
   const turnReady = report?.turn?.status === 'ready' && report?.turn?.network?.status === 'reachable';
-  const ready = report?.status === 'healthy' && report?.primary?.status === 'healthy' && brokerReady && required.includes('broker') && report?.includeTurn === true && turnReady && required.includes('turn-credential-service');
-  return Object.freeze({id: 'production-services', status: ready ? 'verified' : 'missing', evidence: ready ? {broker: 'ready', brokerBackend: 'redis', turnCredentials: 'ready', turnNetwork: 'reachable'} : null});
+  const securityReady = report?.security?.credentials === 'external-secret-files' && report?.security?.tls === 'configured';
+  const ready = report?.status === 'healthy' && report?.primary?.status === 'healthy' && brokerReady && required.includes('broker') && report?.includeTurn === true && turnReady && required.includes('turn-credential-service') && securityReady;
+  return Object.freeze({id: 'production-services', status: ready ? 'verified' : 'missing', evidence: ready ? {broker: 'ready', brokerBackend: 'redis', turnCredentials: 'ready', turnNetwork: 'reachable', tls: 'configured', credentials: 'external-secret-files'} : null});
 }
 
 function hardwareGate(reports) {

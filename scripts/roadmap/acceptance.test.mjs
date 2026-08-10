@@ -8,7 +8,7 @@ import {assessRoadmapAcceptance, assessRoadmapAcceptanceWithSignedManifests} fro
 const repositoryRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const acceptanceWorkflow = fs.readFileSync(path.join(repositoryRoot, '.github/workflows/roadmap-acceptance.yml'), 'utf8');
 
-const production = {status: 'healthy', includeTurn: true, required: ['service', 'broker', 'turn-credential-service'], primary: {status: 'healthy', broker: {status: 'ready', backend: 'redis'}}, turn: {status: 'ready', network: {status: 'reachable', total: 1, reachable: 1}}};
+const production = {status: 'healthy', includeTurn: true, required: ['service', 'broker', 'turn-credential-service'], security: {credentials: 'external-secret-files', tls: 'configured'}, primary: {status: 'healthy', broker: {status: 'ready', backend: 'redis'}}, turn: {status: 'ready', network: {status: 'reachable', total: 1, reachable: 1}}};
 const hardware = platform => ({platform, status: 'ready', package: {state: 'ready'}, hardware: {state: 'ready'}, execution: {state: 'ready', capture: 'verified', audio: 'verified', input: 'verified', haptics: 'verified'}});
 const virtual = platform => ({platform, status: 'ready', capabilities: {execute: true}, exercise: {state: 'verified'}});
 const signed = platform => ({platform, status: 'verified'});
@@ -20,6 +20,12 @@ test('roadmap acceptance stays incomplete and names every missing external gate'
 
 test('roadmap acceptance does not accept an in-memory broker or unprobed TURN relay', () => {
   const report = {...production, primary: {status: 'healthy', broker: {status: 'ready', backend: 'memory'}}, turn: {status: 'ready'}};
+  const result = assessRoadmapAcceptance({productionReport: report});
+  assert.equal(result.gates.find(gate => gate.id === 'production-services').status, 'missing');
+});
+
+test('roadmap acceptance requires explicit TLS and external-secret evidence', () => {
+  const report = {...production, security: {credentials: 'inline', tls: 'loopback-development'}};
   const result = assessRoadmapAcceptance({productionReport: report});
   assert.equal(result.gates.find(gate => gate.id === 'production-services').status, 'missing');
 });

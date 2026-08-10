@@ -18,7 +18,7 @@ test('production rollout can verify live service health through injected boundar
   const result = await executeProductionRollout(plan, {runner: async command => { commands.push(command); }, fetchImpl: async endpoint => { assert.equal(endpoint, 'http://127.0.0.1:8790/health'); return {ok: true, status: 200, async json() { return {status: 'ok', service: 'spartan-signaling'}; }}; }});
   assert.equal(commands.length, 2); assert.equal(result.status, 'healthy'); assert.equal(result.primary.service, 'spartan-signaling');
   const report = createProductionRolloutReport(plan, result, {now: '2026-08-10T12:00:00.000Z'});
-  assert.deepEqual(report, {version: 1, kind: 'production-rollout', status: 'healthy', recordedAt: '2026-08-10T12:00:00.000Z', includeTurn: true, required: ['service'], primary: {status: 'healthy', service: 'spartan-signaling', health: 'ok'}, admin: null, turn: null});
+  assert.deepEqual(report, {version: 1, kind: 'production-rollout', status: 'healthy', recordedAt: '2026-08-10T12:00:00.000Z', includeTurn: true, required: ['service'], security: {credentials: 'external-secret-files', tls: 'loopback-development'}, primary: {status: 'healthy', service: 'spartan-signaling', health: 'ok'}, admin: null, turn: null});
   assert.equal(JSON.stringify(report).includes('SPARTAN_'), false);
 });
 
