@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createMessageRateLimiter, createSignalingServer, isOriginAllowed, loadBrokerAdapter, normalizeServiceOptions, resolveSignalingSecrets} from './agent.mjs';
+import {createMessageRateLimiter, createSignalingServer, isOriginAllowed, loadBrokerAdapter, normalizeServiceOptions, readBrokerHealth, resolveSignalingSecrets} from './agent.mjs';
 
 test('signaling service defaults are bounded and origins are opt-in', () => {
   const config = normalizeServiceOptions({secret: 'test'});
@@ -38,10 +38,13 @@ test('signaling health endpoint exposes bounded operational state', async () => 
     assert.equal(body.rejectedConnections, 0);
     assert.equal(body.sessions, 0);
     assert.equal(body.secure, false);
+    assert.deepEqual(body.broker, {status: 'not-reported'});
   } finally {
     await service.close();
   }
 });
+
+test('broker health projection is safe, bounded, and fail-closed', async () => { assert.deepEqual(await readBrokerHealth({health: async () => ({status: 'ready', backend: 'redis', secret: 'must-not-appear', details: {token: 'hidden'}})}), {status: 'ready', backend: 'redis'}); assert.deepEqual(await readBrokerHealth({health: async () => { throw new Error('offline'); }}), {status: 'unavailable'}); assert.deepEqual(await readBrokerHealth({}), {status: 'not-reported'}); });
 
 test('opt-in admin API protects health and mints scoped tickets without exposing admin secret', async () => {
   const adminSecret = 'admin-secret-for-test';

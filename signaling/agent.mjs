@@ -56,6 +56,17 @@ function closeFrame() { return Buffer.from([0x88, 0x00]); }
 function acceptKey(key) { return createHash('sha1').update(`${key}258EAFA5-E914-47DA-95CA-C5AB0DC85B11`).digest('base64'); }
 function reject(socket, status = '400 Bad Request') { socket.end(`HTTP/1.1 ${status}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`); }
 function json(response, status, body) { response.writeHead(status, {'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store'}); response.end(JSON.stringify(body)); }
+export async function readBrokerHealth(broker) {
+  if (typeof broker?.health !== 'function') return Object.freeze({status: 'not-reported'});
+  try {
+    const result = await broker.health();
+    const status = ['ready', 'degraded', 'unavailable'].includes(result?.status) ? result.status : 'unknown';
+    const backend = text(result?.backend).slice(0, 80) || null;
+    return Object.freeze({status, ...(backend ? {backend} : {})});
+  } catch {
+    return Object.freeze({status: 'unavailable'});
+  }
+}
 function adminAuthorized(request, secret) {
   if (!secret) return false;
   const value = request.headers.authorization || '';
@@ -96,10 +107,10 @@ export function createSignalingServer(options = {}) {
   if (!broker || typeof broker.attach !== 'function' || typeof broker.issueTicket !== 'function' || typeof broker.stats !== 'function') throw new TypeError('broker must implement attach, issueTicket, and stats');
   const sockets = new Set(); let rejectedConnections = 0;
   const requestHandler = async (request, response) => {
-    if (request.url === '/health') return json(response, 200, {service: 'spartan-signaling-reference', version: 1, ...broker.stats(), secure: config.tls.enabled, limits: {maxConnections: config.maxConnections, maxMessagesPerSecond: config.maxMessagesPerSecond}, connections: sockets.size, rejectedConnections});
+    if (request.url === '/health') return json(response, 200, {service: 'spartan-signaling-reference', version: 1, ...broker.stats(), broker: await readBrokerHealth(broker), secure: config.tls.enabled, limits: {maxConnections: config.maxConnections, maxMessagesPerSecond: config.maxMessagesPerSecond}, connections: sockets.size, rejectedConnections});
     if (!request.url?.startsWith('/admin/')) return json(response, 404, {error: 'not found'});
     if (!config.adminSecret || !adminAuthorized(request, config.adminSecret)) return json(response, 401, {error: 'admin authorization required'});
-    if (request.url === '/admin/health' && request.method === 'GET') return json(response, 200, {service: 'spartan-signaling-reference', version: 1, ...broker.stats(), secure: config.tls.enabled, limits: {maxConnections: config.maxConnections, maxMessagesPerSecond: config.maxMessagesPerSecond}, connections: sockets.size, rejectedConnections});
+    if (request.url === '/admin/health' && request.method === 'GET') return json(response, 200, {service: 'spartan-signaling-reference', version: 1, ...broker.stats(), broker: await readBrokerHealth(broker), secure: config.tls.enabled, limits: {maxConnections: config.maxConnections, maxMessagesPerSecond: config.maxMessagesPerSecond}, connections: sockets.size, rejectedConnections});
     if (request.url === '/admin/tickets' && request.method === 'POST') {
       try {
         const body = JSON.parse(await readBody(request));

@@ -104,6 +104,10 @@ The in-memory broker is a reference boundary and is not a media relay.
 `issueTicket`, and `stats`. A production adapter can therefore provide
 clustered session routing and ticket custody behind the same authenticated
 WebSocket surface; the default in-memory broker remains development-only.
+Adapters may also implement `health()`; when present, `/health` and
+`/admin/health` expose only bounded `status` and `backend` fields. Missing or
+failing health checks are reported as `not-reported` or `unavailable` and
+never make secret-bearing adapter details visible.
 The executable can load such an operator-installed adapter with
 `SPARTAN_SIGNALING_BROKER_PACKAGE` or `--broker-package`; the package must
 export `createBroker()` and return the validated broker contract.
