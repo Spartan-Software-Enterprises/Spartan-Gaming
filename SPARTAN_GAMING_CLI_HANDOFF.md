@@ -116,6 +116,11 @@ review; stay within the AWS credit limit.
   protected CI path for an externally managed keystore, `apksigner` verification,
   digest capture, and temporary-keystore cleanup. It has not been run because
   the required protected signing environment is not configured.
+- GitHub Actions Android debug run `31440843444` succeeded on `7994538`,
+  including SDK setup, Android shell tests, Gradle APK build, and artifact
+  upload. Cross-platform contracts run `31440843482` also succeeded; the
+  repository-checks run for the same commit succeeded before this handoff
+  update.
 - The AWS full suite on `01ced66` passed 632 of 634 tests with 2 environment-
   gated skips and 0 failures; repository checks passed 431/431.
 - AWS Playwright 1.55.0 completed 22/22 navigations across 11 maintained
