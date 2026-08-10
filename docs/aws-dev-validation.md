@@ -56,12 +56,20 @@ lacking a kernel or device path capable of force feedback.
 ## Current development evidence
 
 The configured Amazon Linux 2023 development host has been synchronized with
-the current `main` branch and has successfully run the repository dependency
-install and the Linux native package build/contract path. Its secret-free
+the current `main` branch (`a4f93a0`) and has successfully run the repository
+dependency install, Linux native package build, and executable `/dev/uinput`
+input sequence. The resulting verifier reported `status: ready`,
+`input: verified`, and `forceFeedback: not-requested`. Its secret-free
 development rollout report records healthy reference signaling, a ready Redis
 broker, a ready TURN credential service, and reachable TURN network probing.
 The report is retained outside Git at
 `~/.config/spartan-dev/evidence/production/rollout.json`.
+
+Running `scripts/roadmap/acceptance.mjs` with that rollout report verifies only
+the `production-services` contract in this development environment. The full
+acceptance result remains `incomplete` because no real Windows/macOS/Linux
+hardware reports, desktop virtual-gamepad driver exercises, or signed package
+reports were supplied.
 
 This is deliberately not production acceptance evidence: the host uses
 operator-local development secrets and a development TLS setup, has no public
