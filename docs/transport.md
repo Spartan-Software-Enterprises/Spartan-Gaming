@@ -115,3 +115,7 @@ Auto-detect mode, the profile resolver matches the browser-reported device name
 against the selected profile's portable `deviceMatch` pattern; user profiles
 are considered before built-ins, with Generic HID as the safe fallback. An
 explicit profile selection always wins over device matching.
+When multiple controller slots are negotiated, the player polls the bounded
+configured slot count, resolves each device independently, and carries its
+bounded `gamepadIndex` through the input envelope so a native or external
+virtual-gamepad adapter can preserve player assignment.

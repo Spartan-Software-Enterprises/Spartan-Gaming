@@ -44,7 +44,6 @@ const recoveryHandoff = sessionPreferences.preferences.restoreSession && !pendin
 let inputPolicy = createInputPermissionPolicy(sessionPreferences.capabilities);
 let haptics = createHapticsController({enabled: inputPolicy.allows('rumble')});
 const controllerProfiles = createControllerProfileStore({storage: profileStorage}).list();
-let activeControllerProfileId = sessionPreferences.preferences.controllerProfile;
 let mapper = createInputMapper({bindings: sessionPreferences.preferences.controllerBindings, deadzone: sessionPreferences.preferences.controllerDeadzone});
 const immersive = createImmersiveController({target: document.querySelector('[data-stage]')});
 let runtime = null;
@@ -67,14 +66,21 @@ let negotiationAdjustments = [];
 let displayNegotiation = resolveDisplayNegotiation();
 const telemetryLog = createSessionTelemetryLog({enabled: false});
 const previousGamepad = new Map();
+const gamepadMappers = new Map();
+const gamepadProfileIds = new Map();
 
-function applyGamepadProfile(gamepad) {
-  if (sessionPreferences.preferences.controllerProfileSelection.toLowerCase() !== 'auto' && sessionPreferences.preferences.controllerProfileSelection.toLowerCase() !== 'auto-detect') return;
+function mapperForGamepad(gamepad) {
+  const selection = sessionPreferences.preferences.controllerProfileSelection.toLowerCase();
+  if (selection !== 'auto' && selection !== 'auto-detect') return mapper;
   const profile = resolveControllerProfile({profileId: 'auto', deviceName: gamepad.id, profiles: controllerProfiles});
-  if (!profile || profile.id === activeControllerProfileId) return;
-  activeControllerProfileId = profile.id;
-  mapper = createInputMapper({bindings: profile.bindings, deadzone: profile.deadzone});
-  elements.message.textContent = `Controller profile: ${profile.name}.`;
+  if (!profile) return mapper;
+  const profileId = profile.id;
+  if (gamepadProfileIds.get(gamepad.index) !== profileId) {
+    gamepadProfileIds.set(gamepad.index, profileId);
+    gamepadMappers.set(gamepad.index, createInputMapper({bindings: profile.bindings, deadzone: profile.deadzone}));
+    elements.message.textContent = `Controller ${gamepad.index + 1}: ${profile.name}.`;
+  }
+  return gamepadMappers.get(gamepad.index) || mapper;
 }
 
 elements.connectionEndpoint.value = resolveSignalingEndpoint({queryEndpoint: query.get('signal'), pendingEndpoint: pendingHostPair?.endpoint, recoveryEndpoint: recoveryHandoff?.endpoint, customEndpoint: sessionPreferences.preferences.customSignalingUrl});
@@ -258,7 +264,7 @@ elements.screenshot = document.querySelector('[data-action="screenshot"]'); elem
 document.querySelector('[data-action="export-session"]')?.addEventListener('click', exportSessionDiagnostics);
 document.querySelector('[data-action="overlay"]').addEventListener('click', () => apply({type: 'toggle.overlay'}));
 document.querySelector('[data-action="diagnostics"]').addEventListener('click', () => apply({type: 'toggle.diagnostics'}));
-document.querySelector('[data-action="end"]').addEventListener('click', () => { instantReplay?.stop?.(); instantReplay = null; clearInterval(gamepadPollTimer); previousGamepad.clear(); if (runtime) runtime.close(); else if (manager.state === 'connected' || manager.state === 'reconnecting') manager.close(); clearSessionRecoveryHandoff(sessionStorage); if (sessionPreferences.preferences.clearOnExit) clearTransientSessionData(sessionStorage); mediaSession.dispose(); apply({type: 'session.state', status: 'ended'}); });
+document.querySelector('[data-action="end"]').addEventListener('click', () => { instantReplay?.stop?.(); instantReplay = null; clearInterval(gamepadPollTimer); previousGamepad.clear(); gamepadMappers.clear(); gamepadProfileIds.clear(); if (runtime) runtime.close(); else if (manager.state === 'connected' || manager.state === 'reconnecting') manager.close(); clearSessionRecoveryHandoff(sessionStorage); if (sessionPreferences.preferences.clearOnExit) clearTransientSessionData(sessionStorage); mediaSession.dispose(); apply({type: 'session.state', status: 'ended'}); });
 elements.demo.addEventListener('click', acceptHostAnswer);
 window.addEventListener('spartan:telemetry', event => { const sample = event.detail || {}; try { const telemetry = createSessionEnvelope({sessionId: manager.session.id, type: 'telemetry.health', payload: sample}); if (runtime) runtime.receive(telemetry); else manager.receive(telemetry); apply({type: 'telemetry.health', rttMs: sample.rttMs, packetLossPct: sample.packetLossPct, decodeFps: sample.decodeFps, framesDropped: sample.framesDropped, jitterMs: sample.jitterMs, bitrateKbps: sample.bitrateKbps}); apply({type: 'quality.changed', profile: manager.quality.id}); } catch { apply({type: 'error', message: 'Invalid session telemetry received'}); } });
 window.addEventListener('keydown', event => keyboardInput(event, true)); window.addEventListener('keyup', event => keyboardInput(event, false));
@@ -266,6 +272,21 @@ window.addEventListener('blur', () => applyFocusPolicy(true)); window.addEventLi
 ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(type => elements.stage.addEventListener(type, pointerInput, {passive: false}));
 elements.stage.addEventListener('wheel', wheelInput, {passive: false});
 window.addEventListener('gamepadconnected', () => apply({type: 'gamepad.connection', connected: true})); window.addEventListener('gamepaddisconnected', () => apply({type: 'gamepad.connection', connected: false}));
-const gamepadPollTimer = setInterval(() => { if (!inputPolicy.allows('gamepad')) { if (state.gamepadConnected !== false) apply({type: 'gamepad.connection', connected: false}); previousGamepad.clear(); return; } const gamepads = navigator.getGamepads?.() || []; const activeIndices = new Set([...gamepads].filter(Boolean).map(gamepad => gamepad.index)); for (const index of previousGamepad.keys()) { if (!activeIndices.has(index)) previousGamepad.delete(index); } const connected = [...gamepads].some(Boolean); if (connected !== state.gamepadConnected) apply({type: 'gamepad.connection', connected}); const pad = [...gamepads].find(Boolean); if (!pad) return; applyGamepadProfile(pad); const normalized = mapper.normalize(pad); const previous = previousGamepad.get(normalized.index); normalized.buttons.forEach((button, index) => { if (!previous || button.pressed !== previous.buttons[index]?.pressed || button.value !== previous.buttons[index]?.value) { const event = mapper.mapButton(index, button.pressed, button.value) || mapper.mapNativeButton(index, button.pressed, button.value); if (event) emitInput({...event, source: 'gamepad', control: `button-${index}`}); } });   normalized.axes.forEach((value, index) => { const previousValue = previous?.axes[index] || 0; if (!previous || Math.abs(value - previousValue) > 0.001) { mapper.mapAxisTransition(index, value, previousValue).forEach(event => emitInput({...event, source: 'gamepad', control: `axis-${index}`})); mapper.mapNativeAxis(index, value, previousValue).forEach(event => emitInput({...event, source: 'gamepad', control: `axis-${index}`})); } }); previousGamepad.set(normalized.index, normalized); }, 100);
+const gamepadPollTimer = setInterval(() => {
+  if (!inputPolicy.allows('gamepad')) { if (state.gamepadConnected !== false) apply({type: 'gamepad.connection', connected: false}); previousGamepad.clear(); gamepadMappers.clear(); gamepadProfileIds.clear(); return; }
+  const allGamepads = [...(navigator.getGamepads?.() || [])].filter(Boolean);
+  const limit = sessionPreferences.preferences.controllerSettings.multipleControllers ? sessionPreferences.preferences.controllerSettings.playerSlots : 1;
+  const gamepads = allGamepads.slice(0, limit);
+  const activeIndices = new Set(gamepads.map(gamepad => gamepad.index));
+  for (const index of previousGamepad.keys()) { if (!activeIndices.has(index)) { previousGamepad.delete(index); gamepadMappers.delete(index); gamepadProfileIds.delete(index); } }
+  const connected = gamepads.length > 0; if (connected !== state.gamepadConnected) apply({type: 'gamepad.connection', connected});
+  for (const pad of gamepads) {
+    const padMapper = mapperForGamepad(pad);
+    const normalized = padMapper.normalize(pad); const previous = previousGamepad.get(normalized.index);
+    normalized.buttons.forEach((button, index) => { if (!previous || button.pressed !== previous.buttons[index]?.pressed || button.value !== previous.buttons[index]?.value) { const event = padMapper.mapButton(index, button.pressed, button.value) || padMapper.mapNativeButton(index, button.pressed, button.value); if (event) emitInput({...event, source: 'gamepad', control: `button-${index}`, gamepadIndex: normalized.index}); } });
+    normalized.axes.forEach((value, index) => { const previousValue = previous?.axes[index] || 0; if (!previous || Math.abs(value - previousValue) > 0.001) { padMapper.mapAxisTransition(index, value, previousValue).forEach(event => emitInput({...event, source: 'gamepad', control: `axis-${index}`, gamepadIndex: normalized.index})); padMapper.mapNativeAxis(index, value, previousValue).forEach(event => emitInput({...event, source: 'gamepad', control: `axis-${index}`, gamepadIndex: normalized.index})); } });
+    previousGamepad.set(normalized.index, normalized);
+  }
+}, 100);
 const suppliedStream = window.__SPARTAN_MEDIA_STREAM__; if (suppliedStream && typeof MediaStream !== 'undefined' && suppliedStream instanceof MediaStream) { const mediaState = attachMediaStreamTarget({video: elements.video, stream: suppliedStream, audioEnabled}); elements.audio.textContent = mediaState.hasAudio ? 'Active' : 'No track'; elements.video.play().catch(() => {}); }
 start(); apply({type: 'session.state', status: 'negotiating'});

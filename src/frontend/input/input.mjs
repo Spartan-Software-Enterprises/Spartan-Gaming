@@ -73,6 +73,7 @@ export function normalizeRemoteInputEvent(event) {
     control: String(event.control || event.action).slice(0, 64),
   };
   if (event.kind || kind !== 'button') normalized.kind = kind;
+  if (source === 'gamepad' || kind === 'rumble') normalized.gamepadIndex = boundedInteger(event.gamepadIndex, 0, 15, 0);
   if (['pointer', 'touch'].includes(kind)) {
     normalized.x = clamp(Number(event.x) || 0, 0, 1);
     normalized.y = clamp(Number(event.y) || 0, 0, 1);
