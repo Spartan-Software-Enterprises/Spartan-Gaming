@@ -83,9 +83,12 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- `npm run check`: passed.
-- `npm test`: 614 tests, 610 passed, 0 failed, 4 skipped.
-- Frontend resolver tests: 2 passed, 0 failed.
+- `npm run check`: 418 tests passed, 0 failed locally and on the AWS dev
+  server for commit `30aec84`.
+- PWA install tests: 2 passed locally; the AWS focused distribution/server/
+  install run passed 7 tests.
+- The latest PWA distribution tests also verify the SVG app mark, manifest
+  metadata, service-worker cache policy, and packaged frontend serving.
 - Remote Playwright: 14 route/viewport checks, all HTTP 200, meaningful pages,
   no framework overlay; dashboard search, provider navigation, Android settings,
   diagnostics, and mobile overflow checks completed successfully.
@@ -100,16 +103,17 @@ review; stay within the AWS credit limit.
 
 ## Current change
 
-The frontend server now serves `.mjs` with the JavaScript MIME type, resolves
-frontend modules such as `/catalog.mjs` and `/session/*.mjs`, safely falls back
-to repository modules such as `/host/launch-request.mjs`, and preserves JSON
-catalog mounts under `/providers`, `/emulators`, and `/games`. Regression
-coverage is in `scripts/frontend/serve.test.mjs`.
+The PWA surface now includes a Spartan SVG app mark, manifest icon metadata,
+explicit offline precaching, and a deferred `beforeinstallprompt` controller.
+The shared register adds an accessible install button only when the browser
+offers installation, publishes `spartanPwaInstall` for shell integrations,
+and removes its listeners cleanly. Regression coverage is in
+`src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
+`scripts/frontend/serve.test.mjs`.
 
 Before pushing, run `git diff --check`, `npm run check`, `npm test`, and the
-remote Playwright matrix again. Commit the resolver and test changes together,
-push `main`, then run `git pull --ff-only origin main` on the dev server and
-record the new commit here.
+remote Playwright matrix again. Commit the feature and test changes together,
+push `main`, then synchronize the dev server and record the new commit here.
 
 ## Handoff discipline
 
