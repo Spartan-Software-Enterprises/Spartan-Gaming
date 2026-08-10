@@ -185,6 +185,14 @@ installation and firewall review. The unit is not enabled by the repository
 and still requires an operator to install coturn, provide certificates and the
 shared-secret file, and verify NAT/relay-port routing.
 
+The production Compose file also contains an explicit `turn` profile for a
+Linux coturn container. Start it only with `docker compose --profile turn up`
+after supplying `SPARTAN_TURN_IMAGE`, the generated config, and certificate
+secret files. The profile uses host networking because coturn allocates a
+bounded UDP relay range; operators must still review the generated port range,
+firewall, NAT, and image provenance. The profile is disabled by default and
+does not replace external certificate or secret management.
+
 Native package rollout artifacts are built by
 `.github/workflows/native-package-rollout.yml` on a manual dispatch or a
 version tag. Each target runner uploads an isolated package artifact and marks

@@ -55,6 +55,16 @@ test('production Compose mounts secrets and provisions the Redis broker dependen
   assert.match(productionCompose, /no-new-privileges:true/);
 });
 
+test('production Compose exposes coturn only as an explicit operator profile', () => {
+  assert.match(productionCompose, /profiles: \["turn"\]/);
+  assert.match(productionCompose, /SPARTAN_TURN_IMAGE:\?Set an operator-approved coturn image/);
+  assert.match(productionCompose, /network_mode: host/);
+  assert.match(productionCompose, /SPARTAN_TURN_CONFIG_FILE:\?Mount the generated coturn config file/);
+  assert.match(productionCompose, /SPARTAN_TURN_CERT_FILE:\?Mount the TURN certificate file/);
+  assert.match(productionCompose, /SPARTAN_TURN_KEY_FILE:\?Mount the TURN private key file/);
+  assert.match(productionCompose, /--no-cli/);
+});
+
 test('native package rollout builds isolated target artifacts without bypassing signing', () => {
   assert.match(nativeRollout, /workflow_dispatch/); assert.match(nativeRollout, /tags:\s*\n\s*- 'v\*'/); assert.match(nativeRollout, /native:plan/); assert.match(nativeRollout, /release-manifest\.mjs/); assert.match(nativeRollout, /package-manifest\.unsigned\.json/); assert.match(nativeRollout, /sign-release\.mjs/); assert.match(nativeRollout, /SPARTAN_RELEASE_SIGNING_TOKEN/); assert.match(nativeRollout, /upload-artifact@v7/); assert.match(nativeRollout, /UNSIGNED-OPERATOR-SIGNATURE-REQUIRED/); assert.match(nativeRollout, /retention-days: 14/);
 });

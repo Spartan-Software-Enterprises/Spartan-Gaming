@@ -56,6 +56,25 @@ services:
       - no-new-privileges:true
     restart: unless-stopped
 
+  turn:
+    profiles: ["turn"]
+    image: ${SPARTAN_TURN_IMAGE:?Set an operator-approved coturn image}
+    command: ["turnserver", "--config", "/run/secrets/turn_config", "--no-cli"]
+    network_mode: host
+    secrets:
+      - turn_config
+      - turn_cert
+      - turn_key
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    init: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
 secrets:
   signaling_secret:
     file: ${SPARTAN_SIGNALING_SECRET_FILE:?Mount a strong signaling secret file}
@@ -67,6 +86,12 @@ secrets:
     file: ${SPARTAN_SIGNALING_TLS_KEY_FILE:?Mount the TLS private key file}
   tls_cert:
     file: ${SPARTAN_SIGNALING_TLS_CERT_FILE:?Mount the TLS certificate file}
+  turn_config:
+    file: ${SPARTAN_TURN_CONFIG_FILE:?Mount the generated coturn config file}
+  turn_cert:
+    file: ${SPARTAN_TURN_CERT_FILE:?Mount the TURN certificate file}
+  turn_key:
+    file: ${SPARTAN_TURN_KEY_FILE:?Mount the TURN private key file}
 
 volumes:
   signaling-redis:
