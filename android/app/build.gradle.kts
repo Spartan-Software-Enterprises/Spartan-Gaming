@@ -3,6 +3,23 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+val releaseKeystore = System.getenv("SPARTAN_ANDROID_KEYSTORE")
+val releaseKeyAlias = System.getenv("SPARTAN_ANDROID_KEY_ALIAS")
+val releaseStorePassword = System.getenv("SPARTAN_ANDROID_STORE_PASSWORD")
+val releaseKeyPassword = System.getenv("SPARTAN_ANDROID_KEY_PASSWORD")
+val releaseSigningValues = listOf(
+    releaseKeystore,
+    releaseKeyAlias,
+    releaseStorePassword,
+    releaseKeyPassword,
+)
+val releaseSigningConfigured = releaseSigningValues.all { !it.isNullOrBlank() }
+val releaseSigningPartial = releaseSigningValues.any { !it.isNullOrBlank() } && !releaseSigningConfigured
+
+if (releaseSigningPartial) {
+    error("Android release signing requires SPARTAN_ANDROID_KEYSTORE, SPARTAN_ANDROID_KEY_ALIAS, SPARTAN_ANDROID_STORE_PASSWORD, and SPARTAN_ANDROID_KEY_PASSWORD together")
+}
+
 android {
     namespace = "com.spartan.gaming.app"
     compileSdk = 35
@@ -28,6 +45,26 @@ android {
         buildConfig = false
     }
 
+    signingConfigs {
+        if (releaseSigningConfigured) {
+            create("operatorRelease") {
+                storeFile = file(releaseKeystore!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
+    buildTypes {
+        getByName("release") {
+            isMinifyEnabled = false
+            if (releaseSigningConfigured) {
+                signingConfig = signingConfigs.getByName("operatorRelease")
+            }
+        }
+    }
+
     sourceSets["main"].kotlin.setSrcDirs(
         listOf(
             rootProject.file("bridge/src/main/kotlin"),
@@ -48,6 +85,14 @@ val packageFrontendAssets = tasks.register<Sync>("packageFrontendAssets") {
 
 tasks.named("preBuild") {
     dependsOn(packageFrontendAssets)
+}
+
+tasks.named("assembleRelease") {
+    doFirst {
+        check(releaseSigningConfigured) {
+            "assembleRelease requires operator-managed Android signing environment variables"
+        }
+    }
 }
 
 dependencies {

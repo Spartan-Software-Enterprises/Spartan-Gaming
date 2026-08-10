@@ -29,9 +29,17 @@ Android API 35/build-tools 35.0.0), and `:app:assembleDebug` passed at commit
 `386b910893b8a2ab884d2ea7f17f7869910e00d60da49020cfbce5b93d3024ab`.
 The same wrapper build is enforced by `.github/workflows/android-debug.yml`,
 which uploads the debug APK as a short-retention CI artifact.
-Release signing, permissions, WebView lifecycle, and physical device behavior
-remain lab gates. Android Studio is not required on the headless build server;
-the committed wrapper provides the reproducible CLI build.
+
+Release signing is deliberately environment-only and fails closed unless all
+four operator-managed values are present together:
+`SPARTAN_ANDROID_KEYSTORE`, `SPARTAN_ANDROID_KEY_ALIAS`,
+`SPARTAN_ANDROID_STORE_PASSWORD`, and `SPARTAN_ANDROID_KEY_PASSWORD`. The
+keystore and passwords never belong in GitHub or this repository. Run
+`./gradlew :app:assembleRelease` only from the signing workstation/service;
+the resulting signature still requires external custody and release evidence.
+Permissions, WebView lifecycle, and physical device behavior remain lab gates.
+Android Studio is not required on the headless build server; the committed
+wrapper provides the reproducible CLI build.
 
 ## GameNative
 

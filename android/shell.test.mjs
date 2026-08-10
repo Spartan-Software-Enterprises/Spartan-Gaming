@@ -39,6 +39,20 @@ test('Android shell exposes a reproducible wrapper build in CI', () => {
   assert.match(workflow, /app\/build\/outputs\/apk\/debug\/app-debug\.apk/);
 });
 
+test('Android release signing fails closed and never stores credentials in source', () => {
+  const build = read('app/build.gradle.kts');
+  const readme = read('README.md');
+  assert.match(build, /SPARTAN_ANDROID_KEYSTORE/);
+  assert.match(build, /SPARTAN_ANDROID_KEY_ALIAS/);
+  assert.match(build, /SPARTAN_ANDROID_STORE_PASSWORD/);
+  assert.match(build, /SPARTAN_ANDROID_KEY_PASSWORD/);
+  assert.match(build, /releaseSigningPartial/);
+  assert.match(build, /assembleRelease/);
+  assert.match(readme, /Release signing is deliberately environment-only/);
+  assert.doesNotMatch(build, /storePassword\s*=\s*"/);
+  assert.doesNotMatch(build, /keyPassword\s*=\s*"/);
+});
+
 test('Android shell keeps native actions bounded and lifecycle-scoped', () => {
   const activity = read('app/src/main/kotlin/com/spartan/gaming/app/MainActivity.kt');
   assert.match(activity, /removeJavascriptInterface\("SpartanAndroid"\)/);
