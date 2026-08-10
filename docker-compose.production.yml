@@ -1,0 +1,47 @@
+services:
+  signaling:
+    build:
+      context: .
+      dockerfile: docker/signaling.Dockerfile
+    command: ["node", "signaling/agent.mjs", "--bind", "0.0.0.0"]
+    environment:
+      NODE_ENV: production
+      SPARTAN_SIGNALING_SECRET_FILE: /run/secrets/signaling_secret
+      SPARTAN_SIGNALING_ADMIN_SECRET_FILE: /run/secrets/signaling_admin_secret
+      SPARTAN_SIGNALING_TLS_KEY: /run/secrets/tls_key
+      SPARTAN_SIGNALING_TLS_CERT: /run/secrets/tls_cert
+      SPARTAN_SIGNALING_ALLOWED_ORIGINS: ${SPARTAN_SIGNALING_ALLOWED_ORIGINS:?Set an exact HTTPS origin allowlist}
+      SPARTAN_SIGNALING_SESSION_STORE: ${SPARTAN_SIGNALING_SESSION_STORE:?Set redis, database, or external}
+      SPARTAN_SIGNALING_BROKER_PACKAGE: ${SPARTAN_SIGNALING_BROKER_PACKAGE:-/opt/spartan/broker/index.mjs}
+      SPARTAN_SIGNALING_TURN_URLS: ${SPARTAN_SIGNALING_TURN_URLS:?Set turn: or turns: endpoints}
+    volumes:
+      - type: bind
+        source: ${SPARTAN_SIGNALING_BROKER_PATH:?Mount the signed broker package directory}
+        target: /opt/spartan/broker
+        read_only: true
+    secrets:
+      - signaling_secret
+      - signaling_admin_secret
+      - tls_key
+      - tls_cert
+    ports:
+      - "${SPARTAN_SIGNALING_BIND_PORT:-8790}:8790"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    init: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+secrets:
+  signaling_secret:
+    file: ${SPARTAN_SIGNALING_SECRET_FILE:?Mount a strong signaling secret file}
+  signaling_admin_secret:
+    file: ${SPARTAN_SIGNALING_ADMIN_SECRET_FILE:?Mount a distinct admin secret file}
+  tls_key:
+    file: ${SPARTAN_SIGNALING_TLS_KEY_FILE:?Mount the TLS private key file}
+  tls_cert:
+    file: ${SPARTAN_SIGNALING_TLS_CERT_FILE:?Mount the TLS certificate file}

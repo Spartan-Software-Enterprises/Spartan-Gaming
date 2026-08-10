@@ -14,6 +14,27 @@ export SPARTAN_SIGNALING_SECRET="$(openssl rand -base64 32)"
 docker compose up --build signaling
 ```
 
+For the production-shaped template, provide the signed external broker package,
+secret files, TLS files, exact HTTPS origins, session-store kind, and TURN
+endpoints, then run:
+
+```bash
+export SPARTAN_SIGNALING_BROKER_PATH=/opt/spartan/broker
+export SPARTAN_SIGNALING_SECRET_FILE=/run/secrets/spartan-signaling-secret
+export SPARTAN_SIGNALING_ADMIN_SECRET_FILE=/run/secrets/spartan-signaling-admin
+export SPARTAN_SIGNALING_TLS_KEY_FILE=/run/secrets/signaling.key
+export SPARTAN_SIGNALING_TLS_CERT_FILE=/run/secrets/signaling.crt
+export SPARTAN_SIGNALING_ALLOWED_ORIGINS=https://play.example.com
+export SPARTAN_SIGNALING_SESSION_STORE=redis
+export SPARTAN_SIGNALING_TURN_URLS=turns:turn.example.com:5349
+docker compose -f docker-compose.production.yml up --build signaling
+```
+
+`docker-compose.production.yml` mounts the broker read-only at
+`/opt/spartan/broker` and passes secret-file paths to the agent. It does not
+provision Redis, TURN, certificate issuance, or the signed broker package;
+those remain operator-owned production dependencies.
+
 The default Compose mapping binds `127.0.0.1:8790` on the host. The service
 health endpoint is:
 

@@ -4,6 +4,7 @@ import test from 'node:test';
 
 const dockerfile = fs.readFileSync('docker/signaling.Dockerfile', 'utf8');
 const compose = fs.readFileSync('docker-compose.yml', 'utf8');
+const productionCompose = fs.readFileSync('docker-compose.production.yml', 'utf8');
 
 test('signaling image is minimal, non-root, and health checked', () => {
   assert.match(dockerfile, /^FROM node:22-bookworm-slim/m);
@@ -32,4 +33,13 @@ test('production preflight is part of the published deployment surface', () => {
   assert.match(fs.readFileSync('signaling/production-config.mjs', 'utf8'), /resolveConfiguredSecret/);
   assert.match(fs.readFileSync('signaling/agent.mjs', 'utf8'), /resolveSignalingSecrets/);
   assert.match(fs.readFileSync('signaling/production-config.mjs', 'utf8'), /production broker package/);
+});
+
+test('production Compose mounts secrets and an external broker package', () => {
+  assert.match(productionCompose, /SPARTAN_SIGNALING_SECRET_FILE: \/run\/secrets\/signaling_secret/);
+  assert.match(productionCompose, /SPARTAN_SIGNALING_BROKER_PACKAGE/);
+  assert.match(productionCompose, /SPARTAN_SIGNALING_BROKER_PATH/);
+  assert.match(productionCompose, /SPARTAN_SIGNALING_TLS_KEY_FILE/);
+  assert.match(productionCompose, /read_only: true/);
+  assert.match(productionCompose, /no-new-privileges:true/);
 });
