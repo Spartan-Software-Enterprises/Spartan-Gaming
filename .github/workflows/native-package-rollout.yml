@@ -2,6 +2,11 @@ name: Native package rollout artifacts
 
 on:
   workflow_dispatch:
+    inputs:
+      signing_service_url:
+        description: 'Optional HTTPS release signing endpoint'
+        required: false
+        type: string
   push:
     tags:
       - 'v*'
@@ -37,6 +42,19 @@ jobs:
         run: |
           node scripts/native/release-manifest.mjs --platform ${{ matrix.platform }} --install-root out/rollout-${{ matrix.platform }}/install --version build-${{ github.sha }} --output out/rollout-${{ matrix.platform }}/package-manifest.unsigned.json
           node -e "const fs=require('fs'); fs.writeFileSync('out/rollout-${{ matrix.platform }}/install/UNSIGNED-OPERATOR-SIGNATURE-REQUIRED.txt','This native package is a CI build artifact. Sign its adapter manifest through the external release signing service before installation.\n')"
+      - name: Sign native package manifest through external custody service
+        if: ${{ inputs.signing_service_url != '' || vars.RELEASE_SIGNING_SERVICE_URL != '' }}
+        env:
+          RELEASE_SIGNING_SERVICE_URL: ${{ inputs.signing_service_url || vars.RELEASE_SIGNING_SERVICE_URL }}
+          SPARTAN_RELEASE_SIGNING_TOKEN: ${{ secrets.SPARTAN_RELEASE_SIGNING_TOKEN }}
+        shell: bash
+        run: |
+          test -n "$SPARTAN_RELEASE_SIGNING_TOKEN"
+          node scripts/native/sign-release.mjs \
+            --manifest out/rollout-${{ matrix.platform }}/package-manifest.unsigned.json \
+            --output out/rollout-${{ matrix.platform }}/package-manifest.signed.json \
+            --service-url "$RELEASE_SIGNING_SERVICE_URL"
+          rm -f out/rollout-${{ matrix.platform }}/install/UNSIGNED-OPERATOR-SIGNATURE-REQUIRED.txt
       - name: Upload native rollout artifact
         uses: actions/upload-artifact@v7
         with:
@@ -44,5 +62,6 @@ jobs:
           path: |
             out/rollout-${{ matrix.platform }}/install
             out/rollout-${{ matrix.platform }}/package-manifest.unsigned.json
+            out/rollout-${{ matrix.platform }}/package-manifest.signed.json
           if-no-files-found: error
           retention-days: 14

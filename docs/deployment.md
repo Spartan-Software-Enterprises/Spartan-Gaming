@@ -193,6 +193,14 @@ with per-file SHA-256 digests. An operator must pass the artifact through the ex
 package-signing service and install it through the verified adapter installer;
 the rollout workflow never treats a CI artifact as trusted code.
 
+When `RELEASE_SIGNING_SERVICE_URL` is configured as a repository variable, or
+`signing_service_url` is supplied to a manual rollout, the workflow can call
+that external HTTPS service with the `SPARTAN_RELEASE_SIGNING_TOKEN` secret.
+`npm run native:sign-release` validates that the service returns the exact
+unsigned manifest plus a signature, writes a separate signed manifest, and
+never accepts a token on the command line or prints it. Without both operator
+inputs, the workflow intentionally remains unsigned.
+
 Host deployment templates are under `deploy/host/`. The systemd and macOS
 launchd templates keep the reference host bound to localhost by default, run
 as an unprivileged user, and do not enable remote input or native media

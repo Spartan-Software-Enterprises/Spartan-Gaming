@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import test from 'node:test';
+import './sign-release.test.mjs';
 import {createNativePackageMatrix, createNativePackagePlan, parseNativePackageArguments} from './package.mjs';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');

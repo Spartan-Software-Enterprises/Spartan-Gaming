@@ -56,7 +56,7 @@ test('production Compose mounts secrets and provisions the Redis broker dependen
 });
 
 test('native package rollout builds isolated target artifacts without bypassing signing', () => {
-  assert.match(nativeRollout, /workflow_dispatch/); assert.match(nativeRollout, /tags:\s*\n\s*- 'v\*'/); assert.match(nativeRollout, /native:plan/); assert.match(nativeRollout, /release-manifest\.mjs/); assert.match(nativeRollout, /package-manifest\.unsigned\.json/); assert.match(nativeRollout, /upload-artifact@v7/); assert.match(nativeRollout, /UNSIGNED-OPERATOR-SIGNATURE-REQUIRED/); assert.match(nativeRollout, /retention-days: 14/);
+  assert.match(nativeRollout, /workflow_dispatch/); assert.match(nativeRollout, /tags:\s*\n\s*- 'v\*'/); assert.match(nativeRollout, /native:plan/); assert.match(nativeRollout, /release-manifest\.mjs/); assert.match(nativeRollout, /package-manifest\.unsigned\.json/); assert.match(nativeRollout, /sign-release\.mjs/); assert.match(nativeRollout, /SPARTAN_RELEASE_SIGNING_TOKEN/); assert.match(nativeRollout, /upload-artifact@v7/); assert.match(nativeRollout, /UNSIGNED-OPERATOR-SIGNATURE-REQUIRED/); assert.match(nativeRollout, /retention-days: 14/);
 });
 
 test('host deployment templates preserve shell-free, opt-in host startup', () => {
