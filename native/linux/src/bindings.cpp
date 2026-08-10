@@ -46,14 +46,15 @@ std::string locate_event_node() {
   for (int attempt = 0; attempt < 50; ++attempt) {
     DIR* entries = opendir(directory.c_str());
     if (entries) {
+      std::string candidate;
       while (dirent* entry = readdir(entries)) {
         if (std::strncmp(entry->d_name, "event", 5) == 0) {
-          const std::string candidate = std::string("/dev/input/") + entry->d_name;
-          closedir(entries);
-          if (access(candidate.c_str(), R_OK | W_OK) == 0) return candidate;
+          candidate = std::string("/dev/input/") + entry->d_name;
+          break;
         }
       }
       closedir(entries);
+      if (!candidate.empty() && access(candidate.c_str(), R_OK | W_OK) == 0) return candidate;
     }
     usleep(10'000);
   }
