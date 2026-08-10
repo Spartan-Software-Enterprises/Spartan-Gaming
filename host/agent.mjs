@@ -38,7 +38,8 @@ if (!Number.isInteger(maxConnections) || maxConnections < 1 || maxConnections > 
 if (!Number.isInteger(maxMessagesPerSecond) || maxMessagesPerSecond < 1 || maxMessagesPerSecond > 10000) throw new TypeError('max-messages-per-second must be an integer between 1 and 10000');
 const pairingCode = args.get('pairing-code') || createPairingCode();
 const pairing = createPairingAuthority({code: pairingCode});
-const hostRuntime = await detectHostRuntime({bindingOptions: {environment: process.env}});
+const nativePackage = String(args.get('native-package') || process.env.SPARTAN_NATIVE_PACKAGE || '').trim() || undefined;
+const hostRuntime = await detectHostRuntime({packageName: nativePackage, bindingOptions: {environment: process.env}});
 const environment = hostRuntime.environment;
 const inputEnabled = args.get('enable-input') === true || args.get('enable-input') === 'true';
 const nativeMediaEnabled = args.get('enable-native-media') === true || args.get('enable-native-media') === 'true';

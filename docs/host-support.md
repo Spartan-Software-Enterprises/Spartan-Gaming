@@ -21,6 +21,8 @@ The host manager at `src/frontend/host/index.html` stores only non-secret host p
 
 The repository includes `host/agent.mjs` as a dependency-free Node.js reference control plane. Run `npm run host -- --pairing-code ABCD23` to expose a local `ws://127.0.0.1:8787/session` endpoint and `/health`. It validates the pairing code once, answers protocol-v1 offers, records quality requests and input-event counts, and handles reconnect messages. SIGINT, SIGTERM, and SIGHUP trigger a graceful shutdown: the agent closes every session (stopping any managed game launch and native bindings), drains connections, and exits cleanly. In its default mode it intentionally reports `media.state: not-configured`: capture, encode, OS input injection, and TURN are separate host deployment work. For a directly TLS-terminated remote host, provide both `--tls-key /run/secrets/host.key --tls-cert /run/secrets/host.crt` (or `SPARTAN_HOST_TLS_KEY` and `SPARTAN_HOST_TLS_CERT`) to advertise `wss://` and protect `/health`; supplying only one path fails closed.
 
+Native package discovery uses the platform default package name. A packaged deployment may override it with `--native-package <package-name>` or `SPARTAN_NATIVE_PACKAGE`; the selected package must match the host platform and export the verified `createBindings` contract. Missing or malformed packages fail closed and leave the corresponding capability unconfigured.
+
 An operator with the optional `werift` package and an installed platform binding
 can run the executable media path with `--enable-native-media`. This mode keeps
 the same one-time pairing and launch-request checks, then bridges the accepted
