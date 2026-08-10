@@ -106,6 +106,14 @@ and returns an ephemeral TURN REST username, HMAC credential, TTL, and the
 configured TURN URLs. It requires the same admin bearer secret and a distinct
 mounted TURN shared secret.
 
+`POST /admin/host-enrollment` accepts
+`{"endpoint":"wss://signal.example/signal","sessionId":"...","subject":"host-01","ttlMs":60000}`
+and returns the endpoint plus one role-scoped host ticket. The endpoint must
+be credential-free and remote endpoints must use `wss://`. This is the audited
+operator enrollment handoff consumed by `host/enrollment.mjs`; the returned
+ticket must be passed to the host only in memory or through a short-lived
+supervisor environment and must never be persisted in a profile or log.
+
 The container runs as the unprivileged `node` user, with a read-only root
 filesystem, dropped Linux capabilities, a small no-exec temporary filesystem,
 and `no-new-privileges`. The secret is supplied at runtime and is never baked

@@ -14,6 +14,7 @@ const DEFAULT_MAX_MESSAGES_PER_SECOND = 120;
 const SHUTDOWN_TIMEOUT_MS = 2000;
 
 function text(value) { return typeof value === 'string' ? value.trim() : ''; }
+function enrollmentEndpoint(value) { const raw = text(value); let url; try { url = new URL(raw); } catch { throw new TypeError('host enrollment endpoint must be a valid URL'); } if (!['ws:', 'wss:'].includes(url.protocol) || url.username || url.password || url.hash) throw new TypeError('host enrollment endpoint must be credential-free ws/wss URL'); if (url.protocol === 'ws:' && !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) && !url.hostname.endsWith('.local')) throw new TypeError('remote host enrollment endpoint must use wss'); return url.toString(); }
 function positiveInteger(value, fallback, maximum) { const number = Number(value); return Number.isInteger(number) && number > 0 ? Math.min(number, maximum) : fallback; }
 function portNumber(value, fallback = 8790) { const number = Number(value); return Number.isInteger(number) && number >= 0 && number <= 65535 ? number : fallback; }
 
@@ -127,6 +128,10 @@ export function createSignalingServer(options = {}) {
         const ticket = broker.issueTicket({sessionId, role, subject, ...(ttlMs === undefined ? {} : {ttlMs})});
         return json(response, 201, {version: 1, sessionId, role, subject, ttlMs: ttlMs ?? 10 * 60 * 1000, ticket});
       } catch (error) { return json(response, 400, {error: error instanceof Error ? error.message : String(error)}); }
+    }
+    if (request.url === '/admin/host-enrollment' && request.method === 'POST') {
+      try { const body = JSON.parse(await readBody(request)); const endpoint = enrollmentEndpoint(body.endpoint); const sessionId = text(body.sessionId); const subject = text(body.subject || 'spartan-host'); const ttlMs = body.ttlMs === undefined ? undefined : Number(body.ttlMs); const ticket = broker.issueTicket({sessionId, role: 'host', subject, ...(ttlMs === undefined ? {} : {ttlMs})}); return json(response, 201, {version: 1, endpoint, sessionId, role: 'host', subject, ttlMs: ttlMs ?? 10 * 60 * 1000, ticket}); }
+      catch (error) { return json(response, 400, {error: error instanceof Error ? error.message : String(error)}); }
     }
     if (request.url === '/admin/turn-credentials' && request.method === 'POST') {
       if (!config.turnSecret) return json(response, 503, {error: 'TURN credential service is not configured'});
