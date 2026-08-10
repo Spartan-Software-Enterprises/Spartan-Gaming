@@ -25,7 +25,7 @@ npm run android:build
 
 AWS now has the pinned command-line toolchain (Java 17, Gradle 8.11.1,
 Android API 35/build-tools 35.0.0), and `:app:assembleDebug` passed at commit
-`62785ff`. The verified debug APK is 1,628,083 bytes with SHA-256
+`01ced66`. The verified debug APK is 1,628,083 bytes with SHA-256
 `386b910893b8a2ab884d2ea7f17f7869910e00d60da49020cfbce5b93d3024ab`.
 The same wrapper build is enforced by `.github/workflows/android-debug.yml`,
 which uploads the debug APK as a short-retention CI artifact.
