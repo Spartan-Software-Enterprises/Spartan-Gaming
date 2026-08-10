@@ -32,6 +32,7 @@ test('Android shell packages the shared frontend through a safe asset origin', (
 test('Android shell exposes a reproducible wrapper build in CI', () => {
   const workflow = fs.readFileSync(path.join(root, '..', '.github/workflows/android-debug.yml'), 'utf8');
   assert.match(workflow, /android-actions\/setup-android@v3/);
+  assert.match(workflow, /actions\/setup-java@v5/);
   assert.match(workflow, /platforms;android-35/);
   assert.match(workflow, /build-tools;35\.0\.0/);
   assert.match(workflow, /\.\/gradlew --no-daemon :app:assembleDebug/);
@@ -57,6 +58,7 @@ test('Android signed release workflow keeps keystore material external', () => {
   const workflow = fs.readFileSync(path.join(root, '..', '.github/workflows/android-release.yml'), 'utf8');
   assert.match(workflow, /workflow_dispatch/);
   assert.match(workflow, /environment: android-release/);
+  assert.match(workflow, /actions\/setup-java@v5/);
   assert.match(workflow, /SPARTAN_ANDROID_KEYSTORE_B64/);
   assert.match(workflow, /base64 --decode/);
   assert.match(workflow, /SPARTAN_ANDROID_STORE_PASSWORD/);
