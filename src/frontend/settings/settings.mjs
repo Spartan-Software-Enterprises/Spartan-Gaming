@@ -4,6 +4,7 @@ import {createSettingsStore} from './profile.mjs';
 import {resolveSettingsAction} from './actions.mjs';
 import {applyRuntimeUiSettings} from './runtime-ui.mjs';
 import {clearProviderSessionState} from '../providers/session-cleanup.mjs';
+import {createHostConfigFromSettings} from '../host/config.mjs';
 
 const settingsStore = createSettingsStore();
 const state = {...settingsStore.read()};
@@ -105,6 +106,7 @@ function bindControls() {
     if (action.kind === 'external') { window.open(action.href, '_blank', 'noopener,noreferrer'); return; }
     if (action.kind === 'category') { activeCategory = action.category; query = ''; document.querySelector('[data-search]').value = ''; render(); return; }
     if (action.kind === 'export-settings') { downloadSettings(); return; }
+    if (action.kind === 'export-host-config') { downloadHostConfig(); return; }
     if (action.kind === 'import-settings') { document.querySelector('[data-import-file]').click(); return; }
     if (action.kind === 'export-privacy') { downloadPrivacyData(); return; }
     if (action.kind === 'clear-provider-sessions') { const result = clearProviderSessionState(); const status = document.querySelector('[data-save-status]'); if (status) status.textContent = result.removed.length ? `Cleared ${result.removed.length} Spartan handoff${result.removed.length === 1 ? '' : 's'}; sign out on official services separately.` : 'No Spartan provider handoffs were present; sign out on official services separately.'; return; }
@@ -127,6 +129,11 @@ document.querySelector('[data-search]').addEventListener('input', (event) => {
 
 function downloadSettings() {
   downloadJson('spartan-gaming-settings.json', settingsStore.export());
+}
+
+function downloadHostConfig() {
+  const platform = globalThis.navigator?.userAgentData?.platform?.toLowerCase().includes('mac') ? 'darwin' : globalThis.navigator?.userAgent?.toLowerCase().includes('windows') ? 'win32' : 'linux';
+  downloadJson('spartan-host.json', JSON.stringify(createHostConfigFromSettings({platform, settings: state}), null, 2));
 }
 
 function downloadPrivacyData() {
