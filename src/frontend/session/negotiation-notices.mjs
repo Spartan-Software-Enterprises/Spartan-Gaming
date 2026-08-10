@@ -4,6 +4,7 @@ export function describeNegotiationAdjustments({requested = {}, negotiated = {}}
   const items = [];
   const requestedVideo = requested.video || {}; const negotiatedVideo = negotiated.video || {};
   const requestedAudio = requested.audio || {}; const negotiatedAudio = negotiated.audio || {};
+  const requestedInput = requested.input || {}; const negotiatedInput = negotiated.input || {};
   if (requested.transports?.[0] && negotiated.transports?.[0] && requested.transports[0] !== negotiated.transports[0]) items.push(`transport ${negotiated.transports[0]}`);
   const requestedCodec = requestedVideo.codecs?.[0] || requestedVideo.codec;
   if (requestedCodec && negotiatedVideo.codec && requestedCodec !== negotiatedVideo.codec) items.push(`codec ${negotiatedVideo.codec.toUpperCase()}`);
@@ -14,6 +15,8 @@ export function describeNegotiationAdjustments({requested = {}, negotiated = {}}
   if (requestedVideo.hdr === true && negotiatedVideo.hdr === false) items.push('HDR disabled');
   const requestedChannels = positive(requestedAudio.channels); const negotiatedChannels = positive(negotiatedAudio.channels);
   if (requestedChannels && negotiatedChannels && negotiatedChannels < requestedChannels) items.push(`${negotiatedChannels}-channel audio`);
+  if (requestedInput.virtualGamepadBackend && requestedInput.virtualGamepadBackend !== 'Automatic' && negotiatedInput.virtualGamepadBackend === 'Automatic') items.push('virtual gamepad driver unavailable');
+  if (requestedInput.hapticsBackend && requestedInput.hapticsBackend !== 'Automatic' && negotiatedInput.hapticsBackend === 'Automatic') items.push('haptics backend unavailable');
   return Object.freeze(items);
 }
 
