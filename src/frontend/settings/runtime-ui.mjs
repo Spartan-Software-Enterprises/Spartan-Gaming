@@ -42,6 +42,7 @@ export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
     screenReaderHints: settings['accessibility.screenReaderHints'] === true,
     colorVision: typeof settings['accessibility.colorVision'] === 'string' ? settings['accessibility.colorVision'] : 'None',
     showOverlay: settings['gaming.showOverlay'] !== false,
+    hideBrowserChrome: settings['gaming.hideBrowserChrome'] !== false,
     overlayPosition: settings['gaming.overlayPosition'] || 'Top right',
     overlayOpacity: Number.isFinite(opacity) ? Math.max(20, Math.min(100, opacity)) : 92,
   });
@@ -65,6 +66,8 @@ html[data-spartan-overlay-position="Top left"] .overlay-top{right:auto}
 html[data-spartan-overlay-position="Top right"] .overlay-top{left:auto}
 html[data-spartan-overlay-position="Bottom left"] .overlay-top{right:auto;top:auto;bottom:22px}
 html[data-spartan-overlay-position="Bottom right"] .overlay-top{left:auto;top:auto;bottom:22px}
+html[data-spartan-hide-browser-chrome] .player-topbar{display:none!important}
+html[data-spartan-hide-browser-chrome] .stage{min-height:calc(100vh - 45px)}
 html[data-spartan-density="compact"] .card,html[data-spartan-density="compact"] .panel,html[data-spartan-density="compact"] .setting-row{padding-top:12px;padding-bottom:12px}
 html[data-spartan-density="controller"] button,html[data-spartan-density="controller"] select,html[data-spartan-density="controller"] input{min-height:44px}
 html[data-spartan-tab-layout="vertical"] .sidebar{width:270px}
@@ -99,6 +102,7 @@ export function applyRuntimeUiSettings(documentRef, settings = {}) {
   root.dataset.spartanColorVision = resolved.colorVision;
   if (resolved.screenReaderHints) root.dataset.spartanScreenReaderHints = ''; else delete root.dataset.spartanScreenReaderHints;
   root.dataset.spartanOverlay = resolved.showOverlay ? 'visible' : 'hidden';
+  if (resolved.hideBrowserChrome) root.dataset.spartanHideBrowserChrome = ''; else delete root.dataset.spartanHideBrowserChrome;
   root.dataset.spartanOverlayPosition = resolved.overlayPosition;
   if (resolved.reduceMotion) root.dataset.spartanReduceMotion = ''; else delete root.dataset.spartanReduceMotion;
   if (resolved.highContrast) root.dataset.spartanHighContrast = ''; else delete root.dataset.spartanHighContrast;
