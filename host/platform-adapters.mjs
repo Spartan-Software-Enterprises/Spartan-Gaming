@@ -9,16 +9,23 @@ const DEFAULT_ADAPTERS = Object.freeze([
 ]);
 
 function required(value, name) { if (typeof value !== 'string' || !value.trim()) throw new TypeError(`${name} must be a non-empty string`); return value.trim(); }
-function normalize(record) {
+function capabilityReady(kind, capabilities = {}) {
+  if (kind === 'capture') return Boolean(capabilities.capture);
+  if (kind === 'audio') return Boolean(capabilities.audio);
+  if (kind === 'input') return Boolean(capabilities.input || capabilities.keyboard || capabilities.pointer || capabilities.gamepad || capabilities.rumble);
+  return false;
+}
+
+function normalize(record, capabilities) {
   const id = required(record?.id, 'platform adapter.id'); const platform = required(record?.platform, 'platform adapter.platform');
   if (!PLATFORMS.has(platform)) throw new TypeError(`unsupported platform adapter platform: ${platform}`);
-  const adapters = Object.fromEntries([...KINDS].map(kind => { const value = record.adapters?.[kind] || {}; const state = STATES.has(value.state) ? value.state : 'unavailable'; return [kind, Object.freeze({technology: required(value.technology || 'platform API', `platform adapter.${kind}.technology`), state})]; }));
+  const adapters = Object.fromEntries([...KINDS].map(kind => { const value = record.adapters?.[kind] || {}; const declaredState = STATES.has(value.state) ? value.state : 'unavailable'; const state = capabilityReady(kind, capabilities) ? 'ready' : declaredState; return [kind, Object.freeze({technology: required(value.technology || 'platform API', `platform adapter.${kind}.technology`), state})]; }));
   return Object.freeze({id, platform, adapters: Object.freeze(adapters)});
 }
 
 /** Describe platform capabilities and expose only matching native boundaries. */
-export function createPlatformAdapterRegistry({platform, adapters = DEFAULT_ADAPTERS} = {}) {
-  const normalized = adapters.map(normalize).filter(adapter => !platform || adapter.platform === platform);
+export function createPlatformAdapterRegistry({platform, adapters = DEFAULT_ADAPTERS, capabilities} = {}) {
+  const normalized = adapters.map(adapter => normalize(adapter, capabilities)).filter(adapter => !platform || adapter.platform === platform);
   const byKind = kind => { if (!KINDS.has(kind)) throw new TypeError(`unsupported platform adapter kind: ${kind}`); return normalized.map(adapter => Object.freeze({id: adapter.id, platform: adapter.platform, kind, ...adapter.adapters[kind]})); };
   return Object.freeze({platform: platform || null, list: () => Object.freeze([...normalized]), forKind: byKind, get(kind) { return byKind(kind)[0]; }, describe() { return Object.freeze({platform: platform || null, adapters: Object.freeze(Object.fromEntries([...KINDS].map(kind => [kind, byKind(kind)[0] || null])))}); }});
 }
@@ -37,4 +44,4 @@ export function createPlatformAdapterBoundary({platform, registry = createPlatfo
   });
 }
 
-export const PLATFORM_ADAPTERS = DEFAULT_ADAPTERS.map(normalize);
+export const PLATFORM_ADAPTERS = DEFAULT_ADAPTERS.map(adapter => normalize(adapter));
