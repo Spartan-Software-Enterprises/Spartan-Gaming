@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import {readFile, writeFile} from 'node:fs/promises';
 import path from 'node:path';
+import {verifyReleaseManifest} from '../native/verify-release.mjs';
 
 const PLATFORMS = Object.freeze(['win32', 'darwin', 'linux']);
 const ALIASES = Object.freeze({windows: 'win32', win: 'win32', macos: 'darwin', mac: 'darwin', osx: 'darwin', linux: 'linux'});
@@ -44,6 +45,13 @@ export function assessRoadmapAcceptance({productionReport, hardwareReports = [],
   return Object.freeze({version: 1, kind: 'roadmap-acceptance', status: gates.every(gate => gate.status === 'verified') ? 'complete' : 'incomplete', gates, blockers: Object.freeze(gates.filter(gate => gate.status !== 'verified').map(gate => gate.id))});
 }
 
+/** Verify signed manifest files before feeding their reports into acceptance. */
+export async function assessRoadmapAcceptanceWithSignedManifests({productionReport, hardwareReports = [], virtualGamepadReports = [], signedPackageReports = [], signedManifestPaths = [], publicKeyJwk, verifyManifest = verifyReleaseManifest} = {}) {
+  if (signedManifestPaths.length && (!publicKeyJwk || typeof publicKeyJwk !== 'object')) throw new TypeError('publicKeyJwk is required when signed manifests are supplied');
+  const verifiedManifests = await Promise.all(signedManifestPaths.map(manifestPath => verifyManifest({manifestPath: path.resolve(manifestPath), publicKeyJwk})));
+  return assessRoadmapAcceptance({productionReport, hardwareReports, virtualGamepadReports, signedPackageReports: [...signedPackageReports, ...verifiedManifests]});
+}
+
 function argumentValues(argv, name) { const values = []; for (let index = 0; index < argv.length; index += 1) if (argv[index] === name && argv[index + 1]) values.push(argv[index + 1]); return values; }
 async function loadReports(paths, name) { return Promise.all(paths.map(async value => readJson(JSON.parse(await readFile(path.resolve(value), 'utf8')), name))); }
 async function writeReport(file, report) { if (!text(file)) return; const target = path.resolve(file); if (target === path.parse(target).root) throw new TypeError('report file cannot be the filesystem root'); await writeFile(target, `${JSON.stringify(report, null, 2)}\n`, {encoding: 'utf8', mode: 0o600}); }
@@ -51,7 +59,8 @@ async function writeReport(file, report) { if (!text(file)) return; const target
 if (path.resolve(process.argv[1] || '') === path.resolve(new URL(import.meta.url).pathname)) {
   try {
     const argv = process.argv.slice(2); const productionPath = argumentValues(argv, '--production-report')[0]; if (!productionPath) throw new Error('--production-report is required');
-    const result = assessRoadmapAcceptance({productionReport: JSON.parse(await readFile(path.resolve(productionPath), 'utf8')), hardwareReports: await loadReports(argumentValues(argv, '--hardware-report'), 'hardware report'), virtualGamepadReports: await loadReports(argumentValues(argv, '--virtual-gamepad-report'), 'virtual-gamepad report'), signedPackageReports: await loadReports(argumentValues(argv, '--signed-package-report'), 'signed-package report')});
+    const publicKeyPath = argumentValues(argv, '--public-key-file')[0]; const signedManifestPaths = argumentValues(argv, '--signed-manifest'); const publicKeyJwk = publicKeyPath ? JSON.parse(await readFile(path.resolve(publicKeyPath), 'utf8')) : undefined;
+    const result = await assessRoadmapAcceptanceWithSignedManifests({productionReport: JSON.parse(await readFile(path.resolve(productionPath), 'utf8')), hardwareReports: await loadReports(argumentValues(argv, '--hardware-report'), 'hardware report'), virtualGamepadReports: await loadReports(argumentValues(argv, '--virtual-gamepad-report'), 'virtual-gamepad report'), signedPackageReports: await loadReports(argumentValues(argv, '--signed-package-report'), 'signed-package report'), signedManifestPaths, publicKeyJwk});
     await writeReport(argumentValues(argv, '--report-file')[0], result); console.log(JSON.stringify(result, null, 2)); if (result.status !== 'complete') process.exitCode = 2;
   } catch (error) { console.error(`roadmap acceptance failed: ${error.message}`); process.exitCode = 1; }
 }

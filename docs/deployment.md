@@ -206,6 +206,9 @@ reports, and the three signed-package verification reports, run
 produces a bounded acceptance ledger and exits non-zero until every external
 gate is represented by verified evidence. It never treats hosted contract CI,
 an unsigned package, or a configuration-only report as completion.
+For stronger signing evidence, pass each actual signed manifest with repeated
+`--signed-manifest` options and provide `--public-key-file`; the ledger then
+performs WebCrypto verification itself instead of trusting a summary report.
 The workflow requires a ready broker health signal by default; this proves the
 running signaling service can reach its configured Redis/production broker,
 not merely that a Redis URL exists in an environment file. Operators using a

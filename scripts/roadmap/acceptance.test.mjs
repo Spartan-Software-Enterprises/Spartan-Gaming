@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {assessRoadmapAcceptance} from './acceptance.mjs';
+import {assessRoadmapAcceptance, assessRoadmapAcceptanceWithSignedManifests} from './acceptance.mjs';
 
 const production = {status: 'healthy', required: ['service', 'broker', 'turn-credential-service'], primary: {status: 'healthy', broker: {status: 'ready'}}, turn: {status: 'ready'}};
 const hardware = platform => ({platform, status: 'ready', package: {state: 'ready'}, hardware: {state: 'ready'}, execution: {state: 'ready', capture: 'verified', audio: 'verified', input: 'verified', haptics: 'verified'}});
@@ -21,4 +21,13 @@ test('roadmap acceptance requires Linux hardware readiness and desktop injection
   const linux = hardware('linux'); linux.hardware = {state: 'unavailable'};
   const result = assessRoadmapAcceptance({productionReport: production, hardwareReports: [linux, hardware('win32'), hardware('darwin')], virtualGamepadReports: [virtual('win32'), virtual('darwin')], signedPackageReports: [signed('linux'), signed('win32'), signed('darwin')]});
   assert.equal(result.status, 'incomplete'); assert.deepEqual(result.gates.find(gate => gate.id === 'native-hardware').missing, ['linux']);
+});
+
+test('roadmap acceptance verifies supplied signed manifests before accepting package custody', async () => {
+  const calls = []; const result = await assessRoadmapAcceptanceWithSignedManifests({productionReport: production, hardwareReports: [hardware('linux'), hardware('win32'), hardware('darwin')], virtualGamepadReports: [virtual('win32'), virtual('darwin')], signedManifestPaths: ['/release/linux.json', '/release/windows.json', '/release/macos.json'], publicKeyJwk: {kty: 'EC'}, verifyManifest: async input => { calls.push(input); return signed(input.manifestPath.includes('linux') ? 'linux' : input.manifestPath.includes('windows') ? 'win32' : 'darwin'); }});
+  assert.equal(result.status, 'complete'); assert.equal(calls.length, 3); assert.equal(calls[0].publicKeyJwk.kty, 'EC');
+});
+
+test('roadmap acceptance rejects signed manifests without a public key', async () => {
+  await assert.rejects(() => assessRoadmapAcceptanceWithSignedManifests({productionReport: production, signedManifestPaths: ['/release/linux.json']}), /publicKeyJwk is required/);
 });
