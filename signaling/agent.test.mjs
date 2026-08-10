@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createMessageRateLimiter, createSignalingServer, isOriginAllowed, loadBrokerAdapter, normalizeServiceOptions} from './agent.mjs';
+import {createMessageRateLimiter, createSignalingServer, isOriginAllowed, loadBrokerAdapter, normalizeServiceOptions, resolveSignalingSecrets} from './agent.mjs';
 
 test('signaling service defaults are bounded and origins are opt-in', () => {
   const config = normalizeServiceOptions({secret: 'test'});
@@ -69,3 +69,5 @@ test('broker adapter loader requires a validated external broker package', async
   assert.equal(loaded, broker);
   await assert.rejects(() => loadBrokerAdapter({packageName: '@test/invalid', loader: async () => ({})}), /must export createBroker/);
 });
+
+test('signaling executable resolves mounted secrets through its startup options', () => { const secrets = resolveSignalingSecrets({env: {SPARTAN_SIGNALING_SECRET_FILE: '/secret', SPARTAN_SIGNALING_ADMIN_SECRET_FILE: '/admin'}, readFile: path => path === '/secret' ? 's'.repeat(32) : 'a'.repeat(32)}); assert.equal(secrets.secret, 's'.repeat(32)); assert.equal(secrets.adminSecret, 'a'.repeat(32)); });
