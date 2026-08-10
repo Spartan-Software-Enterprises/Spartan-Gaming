@@ -56,12 +56,16 @@ lacking a kernel or device path capable of force feedback.
 ## Current development evidence
 
 The configured Amazon Linux 2023 development host has been synchronized with
-the current `main` branch (`2b5cfd3`) and has successfully run the repository
+the current `main` branch (`61e4013`) and has successfully run the repository
 dependency install, Linux native package build, and executable `/dev/uinput`
-input sequence. The resulting verifier reported `status: ready`,
-`input: verified`, and `forceFeedback: not-requested`. Its secret-free
-development rollout report records healthy reference signaling, a ready Redis
-broker, a ready TURN credential service, and reachable TURN network probing.
+button/axis sequence. The resulting verifier reported `status: ready` and
+`input: verified`. A separate force-feedback exercise returned `EINVAL` while
+uploading the kernel effect, so haptics are not accepted as verified on this
+headless host. The full desktop exercise also remains unavailable because the
+host has no FFmpeg runtime and its native audio capability is unavailable.
+Its secret-free development rollout report records healthy reference
+signaling, a ready Redis broker, a ready TURN credential service, and
+reachable TURN network probing.
 The report is retained outside Git at
 `~/.config/spartan-dev/evidence/production/rollout.json`.
 
