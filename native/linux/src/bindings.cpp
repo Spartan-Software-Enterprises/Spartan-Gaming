@@ -171,6 +171,12 @@ void ff_worker_loop() {
   }
 }
 
+void start_ff_worker() {
+  if (ff_worker_running) return;
+  ff_worker_running = true;
+  ff_worker = std::thread(ff_worker_loop);
+}
+
 bool ensure_device() {
   if (device_fd >= 0) return true;
   device_fd = open("/dev/uinput", O_RDWR | O_NONBLOCK);
@@ -202,8 +208,6 @@ bool ensure_device() {
   usleep(20'000);
   const std::string event_node = locate_event_node();
   if (!event_node.empty()) ff_device_fd = open(event_node.c_str(), O_RDWR | O_NONBLOCK);
-  ff_worker_running = true;
-  ff_worker = std::thread(ff_worker_loop);
   return true;
 }
 
@@ -229,6 +233,7 @@ napi_value execute(napi_env env, napi_callback_info info) {
     effect.replay.length = static_cast<__u16>(duration < 0.0 ? 0.0 : duration > 5000.0 ? 5000.0 : duration);
     effect.replay.delay = static_cast<__u16>(delay < 0.0 ? 0.0 : delay > 5000.0 ? 5000.0 : delay);
     if (ff_device_fd < 0) return fail(env, "Linux virtual gamepad force-feedback event device is unavailable");
+    start_ff_worker();
     if (ioctl(ff_device_fd, EVIOCSFF, &effect) < 0) return fail_errno(env, "failed to upload Linux force-feedback effect");
     rumble_effect_id = effect.id;
     input_event event{};
