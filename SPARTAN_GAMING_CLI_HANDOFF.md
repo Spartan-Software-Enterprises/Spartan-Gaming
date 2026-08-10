@@ -158,10 +158,11 @@ review; stay within the AWS credit limit.
   and repository checks `31442847610`.
 - Local verification on 2026-08-10 passed repository checks `431/431`, Android
   shell checks `5/5`, and the isolated Werift H.264/Opus loopback test. The
-  broader `npm test` pretest currently has a Termux/ARM timing-sensitive
-  failure in that same loopback test (`timed out waiting for client media
-  packets`); the test passes when isolated and was not weakened. This remains
-  an open local verification issue, while the corresponding CI matrix is green.
+  complete serial suite (`npm run test:serial`) passed `630/634` with 4
+  environment-gated skips and 0 failures. The concurrent `npm test` pretest
+  can starve that real Werift loopback on constrained Termux/ARM scheduling;
+  its packet assertions remain strict and the media wait now allows bounded
+  scheduling pressure. CI remains green.
 - The AWS full suite on `01ced66` passed 632 of 634 tests with 2 environment-
   gated skips and 0 failures; repository checks passed 431/431.
 - AWS Playwright 1.55.0 completed 22/22 navigations across 11 maintained
