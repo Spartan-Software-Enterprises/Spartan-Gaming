@@ -15,6 +15,7 @@ Build a fast, privacy-respecting gaming browser that works across desktop, mobil
 - Linux
 - ChromeOS
 - Android
+- SteamOS / Steam Deck
 - Amazon Fire TV / Fire Stick
 - Roku TV / Roku streaming devices
 - Additional Chromium-supported platforms where the product experience is practical

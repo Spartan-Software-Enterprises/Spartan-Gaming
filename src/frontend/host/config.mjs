@@ -26,6 +26,7 @@ function text(value, maximum = 256) { return typeof value === 'string' && value.
 function number(value, fallback, minimum, maximum) { const result = Number(value); return Number.isInteger(result) ? Math.max(minimum, Math.min(maximum, result)) : fallback; }
 function deviceIds(value) { if (typeof value !== 'string') return []; return [...new Set(value.split(',').map(item => item.trim()).filter(Boolean))].slice(0, 8).filter(item => item.length <= 128); }
 function option(value, allowed, fallback) { return allowed.has(value) ? value : fallback; }
+function jsonObject(value) { if (typeof value !== 'string' || !value.trim()) return undefined; try { const parsed = JSON.parse(value); return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : undefined; } catch { return undefined; } }
 
 /** Convert browser settings into a portable, secret-free host/agent config. */
 export function createHostConfigFromSettings({platform, settings = {}, host = {}} = {}) {
@@ -36,6 +37,12 @@ export function createHostConfigFromSettings({platform, settings = {}, host = {}
     ...(text(host.name, 128) ? {hostName: text(host.name, 128)} : {}),
     port: number(settings['host.sessionPort'], 8787, 0, 65535),
     ...(text(settings['host.nativePackage'], 160) ? {nativePackage: text(settings['host.nativePackage'], 160)} : {}),
+    protonEnabled: settings['host.protonEnabled'] === true,
+    ...(text(settings['host.protonPath'], 1024) ? {protonPath: text(settings['host.protonPath'], 1024)} : {}),
+    ...(text(settings['host.protonVersion'], 80) ? {protonVersion: text(settings['host.protonVersion'], 80)} : {}),
+    ...(text(settings['host.protonCompatDataPath'], 1024) ? {protonCompatDataPath: text(settings['host.protonCompatDataPath'], 1024)} : {}),
+    ...(text(settings['host.protonSteamClientPath'], 1024) ? {protonSteamClientPath: text(settings['host.protonSteamClientPath'], 1024)} : {}),
+    ...(jsonObject(settings['host.protonEnvironment']) ? {protonOptions: jsonObject(settings['host.protonEnvironment'])} : {}),
     captureSource: option(settings['host.captureSource'], CAPTURE_SOURCES, 'Automatic'),
     videoCodec: option(settings['host.videoCodec'], VIDEO_CODECS, 'Automatic'),
     maxResolution: option(settings['host.maxResolution'], RESOLUTIONS, '1080p'),

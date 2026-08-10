@@ -83,8 +83,9 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- `npm run check`: 420 tests passed, 0 failed locally and on the AWS dev
-  server for commit `fc12cd0`.
+- `npm run check`: 421 tests passed, 0 failed locally after the Proton/SteamOS
+  increment; the AWS server previously passed 420 tests on the tray baseline
+  and must be synchronized and rerun for the new commit.
 - `npm test`: 616 tests, 612 passed, 0 failed, and 4 skipped locally after
   `fc12cd0`; the AWS run also completed with 616 tests, 614 passed, 0 failed,
   and 2 skipped. The difference is environment-gated integration coverage,
@@ -121,6 +122,20 @@ actions, while disabling it destroys the tray. The existing session quit guard
 still applies to tray quit. Tray policy is covered by
 `desktop/electron/tray-policy.test.mjs`, and Electron syntax/tests are now part
 of `npm run check`.
+
+The current Proton/SteamOS increment adds a user-owned Linux/SteamOS Proton
+launch boundary. `host/proton.mjs` detects a selected installation, validates
+compatibility-prefix and allow-listed runtime options, and creates a shell-free
+`proton run` plan. Host config and frontend Settings export the bounded Proton
+fields without arbitrary environment variables. SteamOS is now a roadmap and
+platform target, but physical Deck execution, Steam Input, Gamescope/Game Mode,
+power behavior, packaging, and real Proton/native game validation remain open.
+Proton is never bundled or downloaded and no DRM, anti-cheat, or
+authentication bypass is supported. Focused Proton/launch/settings validation
+passed 23/23. The local `npm test` pretest integration phase passed 46, skipped
+1, and failed twice on the existing Werift loopback media timeout; it did not
+reach the main suite. Treat that local media timeout as an open environment
+blocker until reproduced or cleared on the AWS host.
 
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and

@@ -12,7 +12,7 @@ import {createInputInjectionPlan, createNativeInputExecutor, virtualGamepadPermi
 import {createRumbleBroadcastController} from './rumble-passthrough.mjs';
 import {createHostSignalingClient} from './signaling.mjs';
 import {negotiateHostOffer} from './session.mjs';
-import {createReferenceGameLaunch} from './reference-launch.mjs';
+import {createReferenceGameLaunch, createReferenceProtonLaunch} from './reference-launch.mjs';
 import {loadWerift} from './werift-adapter.mjs';
 import {createNativeWeriftConnection} from './native-agent.mjs';
 import {createHostMediaPolicy, createHostRuntimePolicy, readHostConfig} from './config.mjs';
@@ -82,8 +82,15 @@ rumbleBroadcast?.attach();
 const gameLaunchEnabled = args.get('enable-game-launch') === true || args.get('enable-game-launch') === 'true';
 let configuredGameArgs = args.get('game-args-json') ? JSON.parse(String(args.get('game-args-json'))) : (args.get('game-arg') ? [String(args.get('game-arg'))] : []);
 if (!Array.isArray(configuredGameArgs)) throw new TypeError('game-args-json must contain an array');
-const gameLaunch = gameLaunchEnabled ? createReferenceGameLaunch({platform: environment.platform, runtimeId: args.get('runtime-id'), runtimeKind: args.get('runtime-kind') || 'native-emulator', runtimeVersion: args.get('runtime-version') || 'unversioned', runtimePath: args.get('runtime-path'), gamePath: args.get('game-path'), hostContentId: args.get('host-content-id'), args: configuredGameArgs, cwd: args.get('game-cwd'), spawnImpl: undefined, maxOutputBytes: 64 * 1024, stopTimeoutMs: 2_000}) : null;
-const nativeRuntimeProfile = gameLaunch ? {id: String(args.get('runtime-id')), kind: String(args.get('runtime-kind') || 'native-emulator'), version: String(args.get('runtime-version') || 'unversioned'), trust: 'signed', enabled: true, executablePath: String(args.get('runtime-path'))} : null;
+const configuredProtonOptions = args.get('proton-env-json') ? JSON.parse(String(args.get('proton-env-json'))) : {};
+if (!configuredProtonOptions || typeof configuredProtonOptions !== 'object' || Array.isArray(configuredProtonOptions)) throw new TypeError('proton-env-json must contain an object');
+const runtimeKind = String(args.get('runtime-kind') || 'native-emulator');
+const protonPath = args.get('proton-path') || hostConfig.protonPath || process.env.SPARTAN_PROTON_PATH;
+const protonOptions = args.get('proton-env-json') ? configuredProtonOptions : hostConfig.protonOptions;
+const protonEnabled = args.has('proton-enabled') ? args.get('proton-enabled') === true || args.get('proton-enabled') === 'true' : hostConfig.protonEnabled === true;
+if (runtimeKind === 'proton' && gameLaunchEnabled && !protonEnabled && !args.get('proton-path')) throw new Error('Proton launch requires explicit proton-enabled configuration or --proton-path');
+const gameLaunch = gameLaunchEnabled ? (runtimeKind === 'proton' ? createReferenceProtonLaunch({platform: environment.platform, runtimeId: args.get('runtime-id') || 'proton-local', runtimeVersion: args.get('runtime-version') || hostConfig.protonVersion || 'unversioned', protonPath, gamePath: args.get('game-path'), hostContentId: args.get('host-content-id'), args: configuredGameArgs, cwd: args.get('game-cwd'), compatDataPath: args.get('proton-compat-data-path') || hostConfig.protonCompatDataPath, steamClientPath: args.get('proton-steam-client-path') || hostConfig.protonSteamClientPath, options: protonOptions, spawnImpl: undefined, maxOutputBytes: 64 * 1024, stopTimeoutMs: 2_000}) : createReferenceGameLaunch({platform: environment.platform, runtimeId: args.get('runtime-id'), runtimeKind, runtimeVersion: args.get('runtime-version') || 'unversioned', runtimePath: args.get('runtime-path'), gamePath: args.get('game-path'), hostContentId: args.get('host-content-id'), args: configuredGameArgs, cwd: args.get('game-cwd'), spawnImpl: undefined, maxOutputBytes: 64 * 1024, stopTimeoutMs: 2_000})) : null;
+const nativeRuntimeProfile = gameLaunch?.runtimeProfile || null;
 const hostCapabilities = normalizeHostCapabilities({media: {state: nativeMediaEnabled ? 'ready' : 'not-configured', capture: nativeMediaEnabled, encode: nativeMediaEnabled, audio: nativeAudioActive, transports: nativeMediaEnabled ? ['webrtc'] : ['webrtc']}, process: {mode: gameLaunch ? 'managed' : 'none', launch: Boolean(gameLaunch), emulator: Boolean(gameLaunch)}, publisher: nativeMediaEnabled ? {state: 'ready', transports: ['webrtc'], video: capabilities.video, audio: capabilities.audio} : environment.publisher, audioPublisher: nativeAudioActive ? {state: 'ready', codecs: [mediaPolicy.audioCodec], channels: 2} : environment.audioPublisher, inputAdapter: environment.inputAdapter, webrtc: nativeMediaEnabled ? {adapters: [{id: 'werift', state: 'available'}]} : environment.webrtc, input: capabilities.input});
 const sessions = new Set(); const connections = new Set(); let rejectedConnections = 0; let inputEvents = 0; let droppedInputEvents = 0; let lastQuality = null; let lastInputPlan = null; let lastInputExecution = {state: inputExecutor ? 'ready' : 'disabled', reason: inputEnabled && !inputExecutor ? 'native input adapter is unavailable or not ready' : null};
 

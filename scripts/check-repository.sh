@@ -130,6 +130,8 @@ required_files=(
   host/media.test.mjs
   host/game-launcher.mjs
   host/game-launcher.test.mjs
+  host/proton.mjs
+  host/proton.test.mjs
   host/launch-request.mjs
   host/launch-request.test.mjs
   host/publisher.mjs
@@ -495,6 +497,7 @@ node --check native/macos/index.mjs
 node --check native/linux/index.mjs
 node --check native/desktop/reference-adapter.mjs
 node --check host/game-launcher.mjs
+node --check host/proton.mjs
 node --check host/launch-request.mjs
 node --test src/frontend/settings/control.test.mjs
 node --test src/frontend/adapters/manifest-registry.test.mjs

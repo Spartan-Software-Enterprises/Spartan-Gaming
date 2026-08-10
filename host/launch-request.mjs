@@ -1,5 +1,5 @@
 const ID = /^[A-Za-z0-9._:-]{1,128}$/;
-const RUNTIME_KINDS = new Set(['native-adapter', 'native-emulator', 'libretro-core']);
+const RUNTIME_KINDS = new Set(['native-adapter', 'native-emulator', 'libretro-core', 'proton']);
 const SHA256 = /^[a-f0-9]{64}$/i;
 
 function text(value, name, max = 128) { if (typeof value !== 'string' || !value.trim() || value.length > max || /[\u0000\r\n]/.test(value)) throw new TypeError(`${name} must be a bounded string`); return value.trim(); }

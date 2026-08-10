@@ -1,5 +1,6 @@
 import {createGameLaunchPlan, createGameLauncher} from './game-launcher.mjs';
 import {matchesHostLaunchRequest} from './launch-request.mjs';
+import {createProtonRuntimeProfile} from './proton.mjs';
 
 const ID = /^[A-Za-z0-9._:-]{1,128}$/;
 const KINDS = new Set(['native-adapter', 'native-emulator', 'libretro-core']);
@@ -21,9 +22,19 @@ export function createReferenceGameLaunch({platform, runtimeId, runtimeKind = 'n
   const gameName = plan.gamePath.split(/[\\/]/).pop();
   return Object.freeze({
     launcher,
+    runtimeProfile,
     descriptor: Object.freeze({runtimeId: id, runtimeKind, hostContentId: contentId, gameName}),
     matches(request) {
       try { return matchesHostLaunchRequest(request, {runtimeId: id, hostContentId: contentId, gameName}); } catch { return false; }
     },
   });
+}
+
+/** Configure a user-owned Proton launch while retaining the same consented host handoff. */
+export function createReferenceProtonLaunch({platform = 'linux', runtimeId = 'proton-local', runtimeVersion = 'unversioned', protonPath, gamePath, hostContentId, args = [], cwd, compatDataPath, steamClientPath, options = {}, spawnImpl, maxOutputBytes, stopTimeoutMs} = {}) {
+  const id = text(runtimeId, 'runtimeId', 64); const contentId = text(hostContentId, 'hostContentId'); if (!ID.test(contentId)) throw new TypeError('hostContentId contains unsupported characters');
+  const runtimeProfile = createProtonRuntimeProfile({id, protonPath: text(protonPath, 'protonPath', 2048), version: text(runtimeVersion, 'runtimeVersion', 80), compatDataPath, steamClientPath, options, trust: 'user-approved'});
+  const plan = createGameLaunchPlan({platform, runtimeProfile, gamePath: text(gamePath, 'gamePath', 1024), args, cwd});
+  const launcher = createGameLauncher({plan, spawnImpl, maxOutputBytes, stopTimeoutMs}); const gameName = plan.gamePath.split(/[\\/]/).pop();
+  return Object.freeze({launcher, runtimeProfile, descriptor: Object.freeze({runtimeId: id, runtimeKind: 'proton', hostContentId: contentId, gameName, protonVersion: runtimeProfile.version}), matches(request) { try { return matchesHostLaunchRequest(request, {runtimeId: id, hostContentId: contentId, gameName}); } catch { return false; } }});
 }

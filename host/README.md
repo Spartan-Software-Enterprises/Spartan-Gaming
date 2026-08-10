@@ -138,3 +138,14 @@ shell-free process plan. Pass the resulting launcher to
 before capture, roll it back when media/audio setup fails, and stop it after
 stream teardown. The host never packages or downloads ROMs, BIOS files, keys,
 or firmware.
+
+For Linux and SteamOS, a user-owned Proton installation can be selected for a
+Windows game without giving the host a shell command. The launch plan is
+created with `host/proton.mjs` and uses Proton's `run` subcommand, an explicit
+game path, an optional compatibility prefix, and a small allow-list of runtime
+options. A deployment may expose equivalent settings through the host config.
+
+The reference agent does not bundle, download, or modify Proton and does not
+provide DRM, anti-cheat, or authentication bypasses. Real Proton execution,
+Steam Input, Gamescope, Game Mode, and Deck power/controller behavior require a
+physical Linux/SteamOS validation host.

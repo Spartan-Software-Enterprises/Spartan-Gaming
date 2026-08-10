@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {createNativeHostLaunchRequest} from '../src/frontend/emulation/host-launch.mjs';
-import {createReferenceGameLaunch} from './reference-launch.mjs';
+import {createReferenceGameLaunch, createReferenceProtonLaunch} from './reference-launch.mjs';
 
 function spawnImpl() {
   const listeners = new Map();
@@ -27,4 +27,11 @@ test('reference game launch config rejects a mismatched content request', () => 
   const mismatched = {...request(), hostContentId: 'other'};
   assert.equal(configured.matches(mismatched), false);
   assert.throws(() => createReferenceGameLaunch({platform: 'linux', runtimeId: 'dolphin', runtimePath: '/usr/bin/dolphin', gamePath: '/games/game.iso', hostContentId: 'bad id', spawnImpl}), /unsupported/);
+});
+
+test('reference Proton launch config keeps the runtime path host-local and matches consent metadata', async () => {
+  const configured = createReferenceProtonLaunch({runtimeId: 'proton', protonPath: '/opt/Proton/proton', runtimeVersion: '9.0', gamePath: '/games/game.exe', hostContentId: 'proton-main', args: ['-novid'], spawnImpl});
+  assert.equal(configured.descriptor.runtimeKind, 'proton'); assert.equal(configured.runtimeProfile.kind, 'proton'); assert.deepEqual(configured.launcher.plan.process.args, ['run', '/games/game.exe', '-novid']);
+  const launch = request(); const protonRequest = {...launch, runtime: {...launch.runtime, id: 'proton', kind: 'proton', version: '9.0'}, hostContentId: 'proton-main', content: {...launch.content, game: {...launch.content.game, name: 'game.exe'}}};
+  assert.equal(configured.matches(protonRequest), true); await configured.launcher.start(); await configured.launcher.stop();
 });

@@ -295,6 +295,14 @@ Paths are metadata and process arguments only; Spartan never downloads ROMs,
 BIOS files, keys, or executes a browser-provided path without the native host
 operator's explicit launch decision.
 
+On Linux and SteamOS, the same boundary now supports a user-owned Proton
+installation for Windows games. `host/proton.mjs` validates the selected Proton
+executable, optional `STEAM_COMPAT_DATA_PATH` and Steam client paths, and an
+allow-list of Proton options before producing a shell-free `proton run` plan.
+Proton is not bundled or downloaded, and this integration does not bypass DRM,
+anti-cheat, or authentication. Steam Input, Gamescope, Game Mode, and physical
+Deck execution remain local-lab validation gates.
+
 The same launcher can be supplied to `createNativeWeriftHost`; it is started
 only after the remote offer has passed capability negotiation, before video or
 audio publishers start, and is stopped during session teardown.

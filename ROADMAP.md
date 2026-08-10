@@ -101,6 +101,14 @@
 ## Later exploration
 
 - [x] Android and handheld-focused shell foundation (touch controller overlay, layout preference, and GameNative handoff contract; native packaging remains pending).
+- [ ] SteamOS and Steam Deck target profile (explicit SteamOS/Deck capability signal, handheld presentation defaults, Gamescope-aware fullscreen/session behavior, and SteamOS-specific validation; generic Linux user-agent detection must not claim SteamOS).
+- [ ] Steam Input integration boundary (official action/glyph metadata or an installed Steam bridge when available, with the existing Gamepad/HID/controller-profile fallback retained; no undocumented Steam client control).
+- [ ] Steam Deck controller coverage (trackpads, gyro, rear buttons, touchscreen, on-screen text entry, haptics, and controller-only navigation) through the shared action vocabulary and capability negotiation.
+- [x] User-owned Proton host launch boundary (Linux/SteamOS path selection, compatibility-prefix settings, allow-listed runtime options, shell-free `proton run` planning, and explicit no-bypass policy; physical execution remains gated).
+- [ ] SteamOS launch and compatibility metadata (user-owned Steam/Proton/native Linux choices, non-Steam launch handoff, Proton runtime options, and clear readiness/diagnostic output without DRM, anti-cheat, or authentication bypasses).
+- [ ] SteamOS session/power integration (Gamescope nested-session test path, Game Mode fullscreen, sleep/wake recovery, 30/40/60-FPS and 1280×800 profile ceilings, battery-aware quality policy, and overlay-safe input focus).
+- [ ] SteamOS packaging and filesystem contract (Flatpak/user-scope installation guidance for immutable systems, signed adapter updates, rollback, and Steam/non-Steam launch registration; package custody remains operator-controlled).
+- [ ] Validate SteamOS on a physical Steam Deck and a supported SteamOS desktop/Steam Machine profile, including Game Mode/Desktop Mode, Steam Input remapping, glyphs, text entry, touch/trackpad/gyro/rear controls, Gamescope, Proton/native Linux paths, suspend/resume, battery, and external display behavior.
 - [x] ChromeOS and television presentation modes across shared frontend surfaces (native packaging and certification remain platform work).
 - [x] Amazon Fire TV/Fire Stick and Roku television/browser compatibility profile (user-agent detection, remote navigation, and capability-gated shared web surface; native vendor packaging remains pending).
 - [x] WebTransport experimental datagram transport contract (server deployment and production fallback policy pending).

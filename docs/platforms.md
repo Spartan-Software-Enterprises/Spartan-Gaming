@@ -9,6 +9,7 @@ Spartan Gaming is intended to be universal across practical Chromium-supported e
 | Linux | Primary desktop target | Ozone/Wayland/X11, VA-API/Vulkan paths, packages, controller/device permissions |
 | ChromeOS | Large-screen and lightweight target | ChromeOS integration, kiosk/fullscreen, device and power behavior |
 | Android | Mobile and handheld target | Touch controls, Android media codecs, lifecycle, controller UX, Play distribution |
+| SteamOS / Steam Deck | Linux handheld target | SteamOS capability signal, Steam Input action/glyph boundary, Gamescope/Game Mode behavior, Proton/native launch, handheld power and physical validation |
 | Amazon Fire TV / Fire Stick | Television/browser target | Silk/Chromium-compatible web surface, remote navigation, controller and media capability gates |
 | Roku | Television/browser target | Roku browser-capable surface where available, remote navigation, HTTPS provider handoffs |
 
@@ -32,6 +33,19 @@ optional native window-segment evidence. Settings expose orientation, wake
 lock, PiP, edge-to-edge, mobile-data, and Android Game Mode intent. These are
 safe intents for the Android shell; they do not claim that a browser can grant
 the corresponding OS permission or lifecycle behavior by itself.
+
+SteamOS is a distinct Linux handheld target, not a user-agent alias for generic
+Linux. The host boundary supports an explicitly selected, user-owned Proton
+installation on Linux through a shell-free launch plan; Proton is not bundled,
+downloaded, or used to bypass DRM, anti-cheat, or authentication. Remaining
+SteamOS gates cover Steam Input action/glyph integration, Gamescope/Game Mode,
+Deck controls and power behavior, immutable-system packaging, and physical
+Steam Deck validation. See Valve's [Steam Deck compatibility
+recommendations](https://partner.steamgames.com/doc/steamhardware/compat),
+[developer recommendations](https://partner.steamgames.com/doc/steamhardware/recommendations),
+[Steam Input guidance](https://partner.steamgames.com/doc/features/steam_controller/getting_started_for_devs),
+[Gamescope](https://github.com/ValveSoftware/gamescope), and
+[Proton](https://github.com/ValveSoftware/Proton).
 
 ## Shared layers
 
