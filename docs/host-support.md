@@ -44,7 +44,12 @@ user-owned host deployment plan. `controllers.virtualGamepadDevices` and
 slot IDs, preserving per-player device selection while keeping the legacy
 single-device field compatible.
 
-The exported host configuration also carries the complete controller policy
+The exported host configuration also carries the complete host media policy:
+capture source, preferred video and audio codecs, maximum resolution and
+framerate, system-audio and microphone consent, explicit-pairing and
+Wake-on-LAN choices, and diagnostic log level. These values are bounded by the
+same settings registry on import; unsupported native capabilities still fail
+closed. It also carries the complete controller policy
 from the Electron Settings screen: profile and input mode, player-slot limits,
 gamepad/HID and rumble permissions, haptics features, trigger and steering
 options, split-input, deadzone, and polling preference. The host normalizes
