@@ -24,6 +24,13 @@ test('frontend server redirects the origin to the dashboard and serves catalogs'
   const catalog = await fetch(`${origin}/providers/catalog.json`);
   assert.equal(catalog.status, 200);
   assert.equal((await catalog.json()).catalogVersion, 1);
+  const manifest = await fetch(`${origin}/pwa/manifest.webmanifest`);
+  assert.equal(manifest.status, 200);
+  assert.equal(manifest.headers.get('content-type'), 'application/manifest+json; charset=utf-8');
+  const manifestJson = await manifest.json();
+  assert.deepEqual(manifestJson.display_override, ['window-controls-overlay', 'standalone', 'fullscreen']);
+  assert.equal(manifestJson.launch_handler.client_mode, 'navigate-existing');
+  assert.deepEqual(manifestJson.shortcuts.map(shortcut => shortcut.url), ['../dashboard/', '../player/', '../input/profiles.html', '../diagnostics/']);
   const emulation = await fetch(`${origin}/emulation/emulation-page.mjs`);
   assert.equal(emulation.status, 200);
   assert.equal(emulation.headers.get('content-type'), 'text/javascript; charset=utf-8');
