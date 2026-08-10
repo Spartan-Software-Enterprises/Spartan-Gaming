@@ -150,7 +150,14 @@ test('remote session encodes real FFmpeg testsrc into RTP H.264 over a Werift lo
   const hostSignaling = inMemorySignaling();
   const hostErrors = [];
   const clientErrors = [];
-  const capturePlan = {process: createProcessLaunchPlan({executable: 'ffmpeg', args: ['-hide_banner', '-loglevel', 'error', '-f', 'lavfi', '-i', 'testsrc=duration=2:size=320x180:rate=24', '-pix_fmt', 'yuv420p', '-f', 'matroska', 'pipe:1']}), output: {target: 'stdout', requiresPublisher: true}};
+  // `-re` paces frame generation to the real wall-clock framerate, matching how a genuine
+  // capture source (x11grab, pipewire, avfoundation) behaves. Without it, ffmpeg free-runs
+  // and can emit and encode the whole clip in a fraction of a second, which lets every RTP
+  // packet reach the transport before ICE/DTLS negotiation finishes (real capture never
+  // stops, so this race is invisible there). `duration=30` gives negotiation a generous
+  // window to complete even on slow hosts; the test tears the pipeline down via host.close()
+  // as soon as it has observed real packets, well before the nominal duration elapses.
+  const capturePlan = {process: createProcessLaunchPlan({executable: 'ffmpeg', args: ['-hide_banner', '-loglevel', 'error', '-re', '-f', 'lavfi', '-i', 'testsrc=duration=30:size=320x180:rate=24', '-pix_fmt', 'yuv420p', '-f', 'matroska', 'pipe:1']}), output: {target: 'stdout', requiresPublisher: true}};
   const encoderPlan = createEncoderPlan({codec: 'h264', width: 320, height: 180, framerate: 24, bitrateKbps: 400, preferHardware: false});
   const pipeline = createNativeMediaPipeline({capturePlan, encoderPlan});
   const host = createNativeWeriftHost({
@@ -194,7 +201,7 @@ test('remote session encodes real FFmpeg testsrc into RTP H.264 over a Werift lo
   }, 20_000, 'client WebRTC connection');
   assert.equal(clientPeer.connectionState, 'connected', `host errors: ${hostErrors.map(error => error.message).join('; ')}; client errors: ${clientErrors.map(error => error.message).join('; ')}`);
 
-  await waitFor(() => receivedVideo.length > 0 && host.mediaPublisher?.packetsSent > 0, 20_000, 'client RTP packets from the real FFmpeg pipeline');
+  await waitFor(() => receivedVideo.length > 0 && host.mediaPublisher?.packetsSent > 0, 30_000, 'client RTP packets from the real FFmpeg pipeline');
   assert.ok(receivedVideo.length > 0, 'client received no RTP packets from the FFmpeg pipeline');
   assert.ok(host.mediaPublisher.packetsSent > 0, 'host publisher sent no packets');
 
