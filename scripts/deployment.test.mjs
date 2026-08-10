@@ -24,3 +24,9 @@ test('Compose keeps the reference signaling service local and requires a secret'
   assert.match(compose, /cap_drop:\s*\n\s*- ALL/);
   assert.match(compose, /no-new-privileges:true/);
 });
+
+test('production preflight is part of the published deployment surface', () => {
+  const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+  assert.equal(packageJson.scripts['deployment:check'], 'node scripts/validate-production-config.mjs');
+  assert.match(fs.readFileSync('scripts/validate-production-config.mjs', 'utf8'), /normalizeProductionConfig/);
+});

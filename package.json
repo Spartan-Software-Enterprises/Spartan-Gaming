@@ -28,6 +28,7 @@
     "native:plan": "node scripts/native/package.mjs",
     "host": "node host/agent.mjs",
     "signaling": "node signaling/agent.mjs",
+    "deployment:check": "node scripts/validate-production-config.mjs",
     "check": "./scripts/check-repository.sh",
     "chromium:environment": "node scripts/chromium/check-environment.mjs",
     "chromium:bootstrap": "node scripts/chromium/bootstrap.mjs",

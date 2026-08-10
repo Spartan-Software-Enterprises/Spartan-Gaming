@@ -79,6 +79,16 @@ Production deployments also need a clustered session registry, durable
 operational monitoring, and separately provisioned STUN/TURN credentials.
 The in-memory broker is a reference boundary and is not a media relay.
 
+Before promoting a deployment, run `npm run deployment:check` with
+`SPARTAN_SIGNALING_SECRET`, `SPARTAN_SIGNALING_ADMIN_SECRET`,
+`SPARTAN_SIGNALING_TLS_KEY`, `SPARTAN_SIGNALING_TLS_CERT`,
+`SPARTAN_SIGNALING_ALLOWED_ORIGINS`, `SPARTAN_SIGNALING_SESSION_STORE`, and
+`SPARTAN_SIGNALING_TURN_URLS` set. The preflight requires strong distinct
+secrets, HTTPS origins, a non-memory session store (`redis`, `database`, or
+`external`), and `turn:`/`turns:` endpoints; it prints only a redacted
+configuration summary and never emits secret values. This validates operator
+prerequisites but does not provision those external services.
+
 ## Native reference service
 
 Docker is optional. On a machine with Node.js 20 or newer:
