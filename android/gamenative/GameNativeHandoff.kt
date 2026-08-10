@@ -7,6 +7,7 @@ package com.spartan.gaming.android.gamenative
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import java.util.Locale
 
 /** Safe handoff boundary for the separately distributed GameNative Android app. */
 object GameNativeHandoff {
@@ -18,7 +19,7 @@ object GameNativeHandoff {
 
     fun createLaunchIntent(appId: Int, store: String): Intent {
         require(appId > 0) { "GameNative app ID must be positive" }
-        val normalizedStore = store.trim().uppercase()
+        val normalizedStore = store.trim().uppercase(Locale.ROOT)
         require(normalizedStore in supportedStores) { "Unsupported GameNative store" }
         return Intent(ACTION_LAUNCH_GAME).apply {
             `package` = PACKAGE_NAME
