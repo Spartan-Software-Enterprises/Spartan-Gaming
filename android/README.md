@@ -7,7 +7,10 @@ the same catalog and protocol, with device-specific handoffs kept here.
 ## GameNative
 
 `GameNativeHandoff.kt` is a small Apache-2.0 Spartan bridge for the separately
-distributed GPLv3 GameNative application. It launches only the documented
+distributed GPLv3 GameNative application. The upstream project is maintained
+as the `CKissinger1988/GameNative` fork of `utkarshdalal/GameNative`; Spartan
+tracks the official package/action contract but does not vendor that source.
+It launches only the documented
 `app.gamenative.LAUNCH_GAME` action, validates the numeric store app ID and
 supported store before creating the intent, and targets the official
 `app.gamenative` package. It does not copy GameNative code, install an APK,
