@@ -7,6 +7,7 @@ const compose = fs.readFileSync('docker-compose.yml', 'utf8');
 const productionCompose = fs.readFileSync('docker-compose.production.yml', 'utf8');
 const nativeRollout = fs.readFileSync('.github/workflows/native-package-rollout.yml', 'utf8');
 const hostService = fs.readFileSync('deploy/host/spartan-host.service', 'utf8');
+const turnService = fs.readFileSync('deploy/turn/coturn.service', 'utf8');
 
 test('signaling image is minimal, non-root, and health checked', () => {
   assert.match(dockerfile, /^FROM node:22-bookworm-slim/m);
@@ -58,4 +59,17 @@ test('native package rollout builds isolated target artifacts without bypassing 
 
 test('host deployment templates preserve shell-free, opt-in host startup', () => {
   const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8')); assert.equal(packageJson.scripts['host:deployment-plan'], 'node scripts/deployment/host-plan.mjs'); assert.match(hostService, /NoNewPrivileges=true/); assert.match(hostService, /ProtectSystem=strict/); assert.match(hostService, /EnvironmentFile=-\/etc\/spartan-gaming\/host\.env/); assert.match(hostService, /host\/agent\.mjs/); assert.doesNotMatch(hostService, /enable-input/);
+});
+
+test('TURN deployment template keeps relay startup hardened and credential-free', () => {
+  const turnReadme = fs.readFileSync('deploy/turn/README.md', 'utf8');
+  assert.match(turnReadme, /deployment:turn-config/);
+  assert.match(turnReadme, /does not\n+provision a public relay/);
+  assert.match(turnService, /User=turnserver/);
+  assert.match(turnService, /--config \/etc\/spartan-gaming\/turnserver\.conf/);
+  assert.match(turnService, /--no-cli/);
+  assert.match(turnService, /NoNewPrivileges=true/);
+  assert.match(turnService, /ProtectSystem=strict/);
+  assert.match(turnService, /RestrictAddressFamilies=AF_INET AF_INET6/);
+  assert.doesNotMatch(turnService, /SECRET|password|static-auth-secret/i);
 });

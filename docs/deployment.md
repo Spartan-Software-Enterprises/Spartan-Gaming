@@ -178,7 +178,12 @@ The generator validates the relay and TLS settings, writes the result with
 mode `0600`, and never prints the shared secret. Run coturn using the generated
 file and expose only the required UDP/TCP listener and relay-port range. The
 relay remains operator-owned; the repository does not silently provision a
-public TURN service.
+public TURN service. For Linux systemd deployments,
+`deploy/turn/coturn.service` provides a hardened, credential-free service
+template for the generated configuration. `deploy/turn/README.md` documents
+installation and firewall review. The unit is not enabled by the repository
+and still requires an operator to install coturn, provide certificates and the
+shared-secret file, and verify NAT/relay-port routing.
 
 Native package rollout artifacts are built by
 `.github/workflows/native-package-rollout.yml` on a manual dispatch or a
