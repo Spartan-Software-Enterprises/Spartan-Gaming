@@ -120,6 +120,22 @@ export const settingsCategories = [
     ],
   },
   {
+    id: 'host', label: 'Self-hosted play', icon: '⌂', description: 'Capture, encoding, pairing, wake, and input settings for user-owned hosts.', settings: [
+      select('host.captureSource', 'Capture source', 'Display or window source exposed by a user-owned host.', ['Automatic', 'Primary display', 'Selected display', 'Selected window'], 'Automatic'),
+      select('host.videoCodec', 'Host video codec', 'Preferred host encoder codec; actual availability is negotiated from the host hardware.', ['Automatic', 'H.264', 'VP9', 'AV1', 'HEVC'], 'Automatic'),
+      select('host.maxResolution', 'Host maximum resolution', 'Upper bound for host capture and encoded output.', ['720p', '1080p', '1440p', '4K', 'Source'], '1080p'),
+      select('host.maxFramerate', 'Host maximum framerate', 'Upper bound for host capture and encoded output.', ['30 FPS', '60 FPS', '90 FPS', '120 FPS', '144 FPS'], '60 FPS'),
+      toggle('host.captureSystemAudio', 'Capture system audio', 'Return game audio from the user-owned host when the platform grants capture access.', true),
+      toggle('host.captureMicrophone', 'Capture host microphone', 'Allow an explicitly selected host microphone to be shared with a session.', false),
+      select('host.audioCodec', 'Host audio codec', 'Audio codec requested for host-to-player return audio.', ['Automatic', 'Opus', 'AAC'], 'Automatic'),
+      toggle('host.allowInputInjection', 'Allow input injection', 'Permit the paired session to send controller, keyboard, pointer, and haptic events to the host.', true),
+      toggle('host.requireExplicitPairing', 'Require explicit pairing', 'Require an expiring pairing approval for every new device, even for a saved host.', true),
+      toggle('host.wakeOnLan', 'Wake host on launch', 'Send a configured Wake-on-LAN request before attempting a host session.', false),
+      range('host.sessionPort', 'Host session port', 'Local or forwarded port used by the host agent; TLS and signaling policy still apply.', 1024, 65535, 1, 8787, ''),
+      select('host.logLevel', 'Host diagnostic detail', 'Amount of host lifecycle information included in local diagnostics.', ['Errors only', 'Connection events', 'Verbose'], 'Connection events'),
+    ],
+  },
+  {
     id: 'performance', label: 'Performance', icon: '↯', description: 'CPU, GPU, memory, power, and diagnostics.', settings: [
       toggle('performance.hardwareAcceleration', 'Use hardware acceleration', 'Use the GPU for rendering, compositing, WebGPU, and video.', true),
       select('performance.gpuPreference', 'GPU preference', 'Choose which GPU to use on multi-GPU systems.', ['Automatic', 'Power saving GPU', 'High performance GPU'], 'Automatic'),
