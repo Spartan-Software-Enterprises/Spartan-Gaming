@@ -16,6 +16,7 @@ test('frontend distribution build packages pages, catalogs, service worker, and 
     assert.match(await readFile(path.join(result.output, 'dashboard/index.html'), 'utf8'), /Spartan Gaming/);
     assert.match(await readFile(path.join(result.output, 'providers/catalog.json'), 'utf8'), /GeForce NOW/);
     assert.match(await readFile(path.join(result.output, 'games/catalog.json'), 'utf8'), /HexGL/);
+    assert.match(await readFile(path.join(result.output, 'pwa/spartan-mark.svg'), 'utf8'), /Spartan Gaming/);
     assert.match(await readFile(path.join(result.output, 'service-worker.mjs'), 'utf8'), /pwa\/service-worker/);
   } finally { await rm(root, {recursive: true, force: true, maxRetries: 8, retryDelay: 100}); }
 });

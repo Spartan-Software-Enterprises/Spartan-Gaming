@@ -20,5 +20,7 @@
     {"name": "Diagnostics", "short_name": "Diagnostics", "description": "Check browser, media, display, and input capabilities.", "url": "../diagnostics/"}
   ],
   "prefer_related_applications": false,
-  "icons": []
+  "icons": [
+    {"src": "./spartan-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}
+  ]
 }

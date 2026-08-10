@@ -31,6 +31,7 @@ test('frontend server redirects the origin to the dashboard and serves catalogs'
   assert.deepEqual(manifestJson.display_override, ['window-controls-overlay', 'standalone', 'fullscreen']);
   assert.equal(manifestJson.launch_handler.client_mode, 'navigate-existing');
   assert.deepEqual(manifestJson.shortcuts.map(shortcut => shortcut.url), ['../dashboard/', '../player/', '../input/profiles.html', '../diagnostics/']);
+  assert.deepEqual(manifestJson.icons, [{src: './spartan-mark.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable'}]);
   const emulation = await fetch(`${origin}/emulation/emulation-page.mjs`);
   assert.equal(emulation.status, 200);
   assert.equal(emulation.headers.get('content-type'), 'text/javascript; charset=utf-8');
