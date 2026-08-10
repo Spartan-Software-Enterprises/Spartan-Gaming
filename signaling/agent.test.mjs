@@ -55,3 +55,10 @@ test('opt-in admin API protects health and mints scoped tickets without exposing
     const ticket = await ticketResponse.json(); assert.equal(ticketResponse.status, 201); assert.equal(ticket.sessionId, 'ses-admin-01'); assert.equal(ticket.role, 'host'); assert.equal(typeof ticket.ticket, 'string');
   } finally { await service.close(); }
 });
+
+test('signaling server accepts an injected broker for clustered production adapters', async () => {
+  const broker = {issueTicket: () => 'injected-ticket', attach() { throw new Error('not used'); }, stats: () => ({sessions: 0, participants: 0})};
+  const service = createSignalingServer({broker, bind: '127.0.0.1', port: 0});
+  try { const address = await service.start(); const response = await fetch(`http://127.0.0.1:${address.port}/health`); assert.equal(response.status, 200); assert.equal((await response.json()).sessions, 0); }
+  finally { await service.close(); }
+});

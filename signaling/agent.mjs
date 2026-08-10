@@ -86,8 +86,10 @@ export function parseFrames(buffer, onMessage, socket, maxFrameBytes = DEFAULT_M
 }
 
 export function createSignalingServer(options = {}) {
-  const config = normalizeServiceOptions(options); if (!config.secret) throw new TypeError('secret is required');
-  const broker = createSignalingBroker({secret: config.secret, ...(options.brokerOptions || {})}); const sockets = new Set(); let rejectedConnections = 0;
+  const config = normalizeServiceOptions(options); if (!config.secret && !options.broker) throw new TypeError('secret is required when no broker is supplied');
+  const broker = options.broker || createSignalingBroker({secret: config.secret, ...(options.brokerOptions || {})});
+  if (!broker || typeof broker.attach !== 'function' || typeof broker.issueTicket !== 'function' || typeof broker.stats !== 'function') throw new TypeError('broker must implement attach, issueTicket, and stats');
+  const sockets = new Set(); let rejectedConnections = 0;
   const requestHandler = async (request, response) => {
     if (request.url === '/health') return json(response, 200, {service: 'spartan-signaling-reference', version: 1, ...broker.stats(), secure: config.tls.enabled, limits: {maxConnections: config.maxConnections, maxMessagesPerSecond: config.maxMessagesPerSecond}, connections: sockets.size, rejectedConnections});
     if (!request.url?.startsWith('/admin/')) return json(response, 404, {error: 'not found'});

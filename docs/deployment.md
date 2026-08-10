@@ -79,6 +79,11 @@ Production deployments also need a clustered session registry, durable
 operational monitoring, and separately provisioned STUN/TURN credentials.
 The in-memory broker is a reference boundary and is not a media relay.
 
+`createSignalingServer()` accepts an injected broker implementing `attach`,
+`issueTicket`, and `stats`. A production adapter can therefore provide
+clustered session routing and ticket custody behind the same authenticated
+WebSocket surface; the default in-memory broker remains development-only.
+
 Before promoting a deployment, run `npm run deployment:check` with
 `SPARTAN_SIGNALING_SECRET`, `SPARTAN_SIGNALING_ADMIN_SECRET`,
 `SPARTAN_SIGNALING_TLS_KEY`, `SPARTAN_SIGNALING_TLS_CERT`,
