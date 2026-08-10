@@ -41,7 +41,7 @@ behavior must be exercised on the target device or operating system.
 | Feature/function | Remote status | Local-lab work |
 | --- | --- | --- |
 | Electron Provider Player isolation, permission prompts, navigation limits, and IPC sender validation | Contract-tested | Launch packaged builds on every desktop OS and test real remote-provider handoffs |
-| Electron fullscreen, quit guard, background behavior, power mode, and privacy controls | Contract-tested | Verify native window behavior, suspend/resume, GPU use, permissions, and shutdown on Windows/macOS/Linux |
+| Electron fullscreen, quit guard, background behavior, tray restore/quit actions, power mode, and privacy controls | Contract-tested, including tray policy and runtime synchronization | Verify native window behavior, tray icon/menu behavior, suspend/resume, GPU use, permissions, and shutdown on Windows/macOS/Linux |
 | Hardware display capture and system/microphone audio | Linux wrapper verified | Verify OS permission prompts, physical displays, audio devices, source selection, and teardown on every desktop OS |
 | WebGPU, hardware decode, AV1, HDR, high refresh, multi-display, and display targeting | Browser capability/policy contracts | Test real GPUs, monitors, HDR modes, refresh rates, fullscreen targets, and power/thermal behavior |
 | PWA install surface, install prompt, launch display fallbacks, launcher shortcuts, and offline shell caching | Manifest/icon/service-worker contracts and deferred install-prompt controller tested; manifest is explicitly precached | Install from supported desktop/mobile browsers and verify prompt availability, icons, shortcut launch targets, display-mode fallbacks, update recovery, and offline startup |

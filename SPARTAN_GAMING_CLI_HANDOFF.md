@@ -115,6 +115,13 @@ implementations fail closed. Regression coverage is in
 `src/frontend/player/wake-lock.test.mjs`; the local validation register now
 records the required physical-device and WebView checks.
 
+The latest Electron increment completes the background-app workflow: enabling
+`general.backgroundApps` now creates a native tray entry with restore and quit
+actions, while disabling it destroys the tray. The existing session quit guard
+still applies to tray quit. Tray policy is covered by
+`desktop/electron/tray-policy.test.mjs`, and Electron syntax/tests are now part
+of `npm run check`.
+
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
 `scripts/frontend/serve.test.mjs`. Before pushing future work, run

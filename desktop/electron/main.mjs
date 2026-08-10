@@ -1,14 +1,16 @@
-import {app, BrowserWindow, Menu, dialog, ipcMain, shell, WebContentsView} from 'electron';
+import {app, BrowserWindow, Menu, Tray, nativeImage, dialog, ipcMain, shell, WebContentsView} from 'electron';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createFrontendServer} from '../../scripts/frontend/serve.mjs';
 import {isAllowedExternalUrl, isAllowedNavigation, isAllowedProviderUrl} from './security.mjs';
 import {applyElectronPrivacyHeaders, normalizeElectronRuntimePolicy, resolvePermissionDecision, shouldQuitWhenWindowsClose} from './runtime-policy.mjs';
+import {createTrayMenuTemplate, shouldCreateTray} from './tray-policy.mjs';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 let frontend;
 let windowRef;
 let providerView;
+let trayRef;
 let quitGuardEnabled = true;
 let sessionActive = false;
 let quitting = false;
@@ -60,6 +62,23 @@ function createProviderView(url, title = 'Provider Player') {
 
 function resizeProvider() { if (!providerView || !windowRef) return; const {width, height} = windowRef.getContentBounds(); providerView.setBounds({x: 0, y: 0, width, height}); }
 
+function showMainWindow() { if (!windowRef) return; windowRef.show(); windowRef.focus(); }
+
+function createTrayIcon() {
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#10151b"/><path d="M8 24 16 7l8 17-8-4-8 4Z" fill="#50e1d1"/></svg>';
+  return nativeImage.createFromDataURL(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
+}
+
+function destroyTray() { trayRef?.destroy(); trayRef = null; }
+
+function syncTray() {
+  if (!shouldCreateTray(runtimePolicy) || trayRef) return;
+  trayRef = new Tray(createTrayIcon());
+  trayRef.setToolTip('Spartan Gaming');
+  trayRef.setContextMenu(Menu.buildFromTemplate(createTrayMenuTemplate({onShow: showMainWindow, onQuit: () => app.quit()})));
+  trayRef.on('click', showMainWindow);
+}
+
 async function createMainWindow() {
   frontend = createFrontendServer({host: '127.0.0.1', port: 0, root: path.join(repositoryRoot, 'src/frontend'), publicRoot: repositoryRoot});
   const address = await frontend.listen();
@@ -80,7 +99,7 @@ app.whenReady().then(async () => {
   ipcMain.handle('spartan:close-provider', closeProviderView);
   ipcMain.handle('spartan:set-quit-guard', (_event, enabled) => { if (typeof enabled !== 'boolean') throw new TypeError('quit guard must be boolean'); quitGuardEnabled = enabled; return quitGuardEnabled; });
   ipcMain.handle('spartan:set-session-active', (_event, active) => { if (typeof active !== 'boolean') throw new TypeError('session state must be boolean'); sessionActive = active; return sessionActive; });
-  ipcMain.handle('spartan:apply-runtime-settings', (event, settings) => { if (event.sender !== windowRef.webContents) throw new Error('runtime settings may only be applied by the primary window'); runtimePolicy = normalizeElectronRuntimePolicy(settings); event.sender.setBackgroundThrottling(runtimePolicy.backgroundThrottling); return runtimePolicy; });
+  ipcMain.handle('spartan:apply-runtime-settings', (event, settings) => { if (event.sender !== windowRef.webContents) throw new Error('runtime settings may only be applied by the primary window'); runtimePolicy = normalizeElectronRuntimePolicy(settings); event.sender.setBackgroundThrottling(runtimePolicy.backgroundThrottling); if (runtimePolicy.backgroundApps) syncTray(); else destroyTray(); return runtimePolicy; });
   ipcMain.handle('spartan:toggle-fullscreen', () => { windowRef.setFullScreen(!windowRef.isFullScreen()); return windowRef.isFullScreen(); });
   await createMainWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) void createMainWindow(); });
@@ -95,3 +114,5 @@ app.on('before-quit', event => {
   }
   void frontend?.close().catch(() => {});
 });
+
+app.on('will-quit', destroyTray);
