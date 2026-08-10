@@ -110,4 +110,8 @@ Session preferences now carry the selected built-in controller layout and a
 bounded analog dead-zone value from the Controllers settings. The player
 constructs its mapper from those preferences before polling gamepads, so Xbox,
 PlayStation, Nintendo, and keyboard/mouse confirmation semantics and drift
-filtering apply consistently to remote, provider, and emulator sessions.
+filtering apply consistently to remote, provider, and emulator sessions. In
+Auto-detect mode, the profile resolver matches the browser-reported device name
+against the selected profile's portable `deviceMatch` pattern; user profiles
+are considered before built-ins, with Generic HID as the safe fallback. An
+explicit profile selection always wins over device matching.

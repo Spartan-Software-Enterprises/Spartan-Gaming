@@ -65,8 +65,18 @@ export const BUILTIN_CONTROLLER_PROFILES = Object.freeze([
   createControllerProfile({id: 'keyboard-mouse', name: 'Keyboard and mouse', bindings: {confirm: 'key-Enter', cancel: 'key-Escape', menu: 'key-Tab', pause: 'key-P'}}),
 ]);
 
-export function resolveControllerProfile({profileId = 'auto', profiles = [], fallback = null} = {}) {
+function matchesDevice(profile, deviceName) {
+  const match = String(profile.deviceMatch || '').trim();
+  if (!match || ['any', 'any hid'].includes(match.toLowerCase())) return false;
+  if (typeof deviceName !== 'string' || !deviceName.trim()) return false;
+  try { return new RegExp(match, 'i').test(deviceName); } catch { return deviceName.toLowerCase().includes(match.toLowerCase()); }
+}
+
+export function resolveControllerProfile({profileId = 'auto', deviceName = '', profiles = [], fallback = null} = {}) {
   const requested = String(profileId || '').trim().toLowerCase();
-  if (!requested || requested === 'auto') return fallback;
-  return [...profiles, ...BUILTIN_CONTROLLER_PROFILES].find(profile => profile.id === requested || profile.name.toLowerCase() === requested) || fallback;
+  const available = [...profiles, ...BUILTIN_CONTROLLER_PROFILES];
+  if (!requested || requested === 'auto' || requested === 'auto-detect') {
+    return available.find(profile => matchesDevice(profile, deviceName)) || available.find(profile => profile.deviceMatch.toLowerCase() === 'any hid') || available.find(profile => profile.deviceMatch.toLowerCase() === 'any') || fallback;
+  }
+  return available.find(profile => profile.id === requested || profile.name.toLowerCase() === requested) || fallback;
 }
