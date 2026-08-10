@@ -13,3 +13,15 @@ test('Electron package configuration targets every desktop operating system', as
   assert.match(config, /desktop\/electron/);
   assert.match(config, /src\/frontend/);
 });
+
+test('Electron shell keeps quit confirmation tied to the active session setting', async () => {
+  const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+  const main = await readFile(path.join(root, 'desktop/electron/main.mjs'), 'utf8');
+  const preload = await readFile(path.join(root, 'desktop/electron/preload.mjs'), 'utf8');
+  assert.match(main, /spartan:set-quit-guard/);
+  assert.match(main, /spartan:set-session-active/);
+  assert.match(main, /A gaming session is active/);
+  assert.match(main, /event\.preventDefault\(\)/);
+  assert.match(preload, /setQuitGuard\(enabled\)/);
+  assert.match(preload, /setSessionActive\(active\)/);
+});

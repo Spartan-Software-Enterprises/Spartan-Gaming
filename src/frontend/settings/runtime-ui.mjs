@@ -84,6 +84,7 @@ html[data-spartan-device-mode="mobile"] .content,html[data-spartan-device-mode="
 
 export function applyRuntimeUiSettings(documentRef, settings = {}) {
   if (!documentRef?.documentElement) return resolveRuntimeUiSettings(settings);
+  globalThis.spartanElectron?.setQuitGuard?.(settings['general.askBeforeQuit'] !== false);
   const resolved = resolveRuntimeUiSettings(settings, {navigatorRef: documentRef.defaultView?.navigator || globalThis.navigator, viewport: {width: documentRef.defaultView?.innerWidth}});
   const root = documentRef.documentElement;
   root.dataset.spartanTheme = resolved.theme;

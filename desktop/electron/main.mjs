@@ -1,4 +1,4 @@
-import {app, BrowserWindow, Menu, ipcMain, shell, WebContentsView} from 'electron';
+import {app, BrowserWindow, Menu, dialog, ipcMain, shell, WebContentsView} from 'electron';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createFrontendServer} from '../../scripts/frontend/serve.mjs';
@@ -8,6 +8,9 @@ const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url))
 let frontend;
 let windowRef;
 let providerView;
+let quitGuardEnabled = true;
+let sessionActive = false;
+let quitting = false;
 
 function closeProviderView() {
   if (!providerView) return false;
@@ -51,10 +54,19 @@ app.whenReady().then(async () => {
   ipcMain.handle('spartan:open-external', (_event, url) => { if (!isAllowedExternalUrl(url)) throw new Error('External links require HTTPS or a loopback HTTP URL.'); return shell.openExternal(new URL(url).href); });
   ipcMain.handle('spartan:open-provider', (_event, {url, title}) => createProviderView(url, title));
   ipcMain.handle('spartan:close-provider', closeProviderView);
+  ipcMain.handle('spartan:set-quit-guard', (_event, enabled) => { if (typeof enabled !== 'boolean') throw new TypeError('quit guard must be boolean'); quitGuardEnabled = enabled; return quitGuardEnabled; });
+  ipcMain.handle('spartan:set-session-active', (_event, active) => { if (typeof active !== 'boolean') throw new TypeError('session state must be boolean'); sessionActive = active; return sessionActive; });
   ipcMain.handle('spartan:toggle-fullscreen', () => { windowRef.setFullScreen(!windowRef.isFullScreen()); return windowRef.isFullScreen(); });
   await createMainWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) void createMainWindow(); });
 });
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
-app.on('before-quit', async () => { await frontend?.close().catch(() => {}); });
+app.on('before-quit', event => {
+  if (!quitting && quitGuardEnabled && (sessionActive || Boolean(providerView))) {
+    event.preventDefault();
+    void dialog.showMessageBox(windowRef, {type: 'question', buttons: ['Cancel', 'Quit'], defaultId: 0, cancelId: 0, title: 'Quit Spartan Gaming', message: 'A gaming session is active. Quit anyway?'}).then(result => { if (result.response === 1) { quitting = true; app.quit(); } });
+    return;
+  }
+  void frontend?.close().catch(() => {});
+});
