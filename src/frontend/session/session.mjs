@@ -6,7 +6,7 @@ const DEFAULT_CAPABILITIES = Object.freeze({
   transports: ['webrtc', 'websocket'],
   video: {codecs: ['av1', 'vp9', 'h264'], maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false},
   audio: {codecs: ['opus', 'aac'], channels: 2},
-  input: {gamepad: true, keyboard: true, pointer: true, rumble: true, hid: false, adaptiveTriggers: false, gyro: false},
+  input: {gamepad: true, keyboard: true, pointer: true, rumble: true, hid: false, adaptiveTriggers: false, gyro: false, multipleControllers: true, playerSlots: 4, inputMode: 'Auto-detect', virtualGamepadBackend: 'Automatic', hapticsBackend: 'Automatic', touchpad: false, backButtons: false, triggerMode: 'Analog and digital', steeringRange: 900, splitInput: false},
 });
 
 const transitions = Object.freeze({
@@ -20,6 +20,7 @@ function intersect(preferred, offered) { return preferred.filter(item => offered
 function requiredString(value, name) { if (typeof value !== 'string' || !value) throw new TypeError(`${name} must be a non-empty string`); }
 function boundedInteger(value, fallback, maximum, name) { const result = value === undefined ? fallback : value; if (!Number.isInteger(result) || result < 1 || result > maximum) throw new TypeError(`${name} must be an integer between 1 and ${maximum}`); return result; }
 function stringList(value, fallback, name) { const result = value === undefined ? fallback : value; if (!Array.isArray(result) || !result.length || result.some(item => typeof item !== 'string' || !item)) throw new TypeError(`${name} must contain non-empty strings`); return [...new Set(result)]; }
+function option(value, choices, fallback, name) { const result = value === undefined ? fallback : value; if (!choices.includes(result)) throw new TypeError(`${name} must be one of ${choices.join(', ')}`); return result; }
 
 export function normalizeCapabilities(capabilities = {}) {
   const merged = {
@@ -36,7 +37,7 @@ export function normalizeCapabilities(capabilities = {}) {
   merged.audio.codecs = stringList(merged.audio.codecs, DEFAULT_CAPABILITIES.audio.codecs, 'audio.codecs');
   merged.audio.channels = boundedInteger(merged.audio.channels, DEFAULT_CAPABILITIES.audio.channels, 8, 'audio.channels');
   merged.video.hdr = Boolean(merged.video.hdr);
-  for (const key of Object.keys(DEFAULT_CAPABILITIES.input)) merged.input[key] = Boolean(merged.input[key]);
+  merged.input.gamepad = Boolean(merged.input.gamepad); merged.input.keyboard = Boolean(merged.input.keyboard); merged.input.pointer = Boolean(merged.input.pointer); merged.input.rumble = Boolean(merged.input.rumble); merged.input.hid = Boolean(merged.input.hid); merged.input.adaptiveTriggers = Boolean(merged.input.adaptiveTriggers); merged.input.gyro = Boolean(merged.input.gyro); merged.input.multipleControllers = Boolean(merged.input.multipleControllers); merged.input.playerSlots = boundedInteger(merged.input.playerSlots, DEFAULT_CAPABILITIES.input.playerSlots, 8, 'input.playerSlots'); merged.input.inputMode = option(merged.input.inputMode, ['Auto-detect', 'XInput', 'DirectInput', 'Standard Gamepad', 'HID passthrough'], DEFAULT_CAPABILITIES.input.inputMode, 'input.inputMode'); merged.input.virtualGamepadBackend = option(merged.input.virtualGamepadBackend, ['Automatic', 'Browser Gamepad', 'Linux uinput', 'Windows XInput', 'macOS GameController', 'Disabled'], DEFAULT_CAPABILITIES.input.virtualGamepadBackend, 'input.virtualGamepadBackend'); merged.input.hapticsBackend = option(merged.input.hapticsBackend, ['Automatic', 'Browser vibration', 'Native rumble', 'Disabled'], DEFAULT_CAPABILITIES.input.hapticsBackend, 'input.hapticsBackend'); merged.input.touchpad = Boolean(merged.input.touchpad); merged.input.backButtons = Boolean(merged.input.backButtons); merged.input.triggerMode = option(merged.input.triggerMode, ['Analog and digital', 'Analog only', 'Digital only'], DEFAULT_CAPABILITIES.input.triggerMode, 'input.triggerMode'); merged.input.steeringRange = Math.max(90, Math.min(1080, Number(merged.input.steeringRange) || DEFAULT_CAPABILITIES.input.steeringRange)); merged.input.splitInput = Boolean(merged.input.splitInput);
   return merged;
 }
 
@@ -53,7 +54,7 @@ export function negotiateCapabilities(local, remote) {
     transports: [transports[0]],
     video: {codec: videoCodecs[0], maxWidth: Math.min(preferred.video.maxWidth, offered.video.maxWidth), maxHeight: Math.min(preferred.video.maxHeight, offered.video.maxHeight), maxFramerate: Math.min(preferred.video.maxFramerate, offered.video.maxFramerate), hdr: Boolean(preferred.video.hdr && offered.video.hdr)},
     audio: {codec: audioCodecs[0], channels: Math.min(preferred.audio.channels, offered.audio.channels)},
-    input: Object.fromEntries(Object.keys(preferred.input).map(key => [key, Boolean(preferred.input[key] && offered.input[key])])),
+    input: {gamepad: Boolean(preferred.input.gamepad && offered.input.gamepad), keyboard: Boolean(preferred.input.keyboard && offered.input.keyboard), pointer: Boolean(preferred.input.pointer && offered.input.pointer), rumble: Boolean(preferred.input.rumble && offered.input.rumble), hid: Boolean(preferred.input.hid && offered.input.hid), adaptiveTriggers: Boolean(preferred.input.adaptiveTriggers && offered.input.adaptiveTriggers), gyro: Boolean(preferred.input.gyro && offered.input.gyro), multipleControllers: Boolean(preferred.input.multipleControllers && offered.input.multipleControllers), playerSlots: Math.min(preferred.input.playerSlots, offered.input.playerSlots), inputMode: preferred.input.inputMode === offered.input.inputMode ? preferred.input.inputMode : 'Auto-detect', virtualGamepadBackend: preferred.input.virtualGamepadBackend === offered.input.virtualGamepadBackend ? preferred.input.virtualGamepadBackend : 'Automatic', hapticsBackend: preferred.input.hapticsBackend === offered.input.hapticsBackend ? preferred.input.hapticsBackend : 'Automatic', touchpad: Boolean(preferred.input.touchpad && offered.input.touchpad), backButtons: Boolean(preferred.input.backButtons && offered.input.backButtons), triggerMode: preferred.input.triggerMode === offered.input.triggerMode ? preferred.input.triggerMode : 'Analog and digital', steeringRange: Math.min(preferred.input.steeringRange, offered.input.steeringRange), splitInput: Boolean(preferred.input.splitInput && offered.input.splitInput)},
   };
 }
 

@@ -12,6 +12,11 @@ test('capability negotiation rejects incompatible sessions', () => {
   assert.throws(() => negotiateCapabilities({transports: ['webrtc'], video: {codecs: ['av1']}, audio: {codecs: ['opus']}}, {transports: ['websocket'], video: {codecs: ['h264']}, audio: {codecs: ['aac']}}), /transport/);
 });
 
+test('controller capability negotiation preserves numeric and enum semantics', () => {
+  const result = negotiateCapabilities({input: {playerSlots: 8, inputMode: 'XInput', virtualGamepadBackend: 'Windows XInput', hapticsBackend: 'Native rumble', steeringRange: 1080, splitInput: true}}, {input: {playerSlots: 2, inputMode: 'DirectInput', virtualGamepadBackend: 'Automatic', hapticsBackend: 'Automatic', steeringRange: 540, splitInput: false}});
+  assert.equal(result.input.playerSlots, 2); assert.equal(result.input.steeringRange, 540); assert.equal(result.input.inputMode, 'Auto-detect'); assert.equal(result.input.virtualGamepadBackend, 'Automatic'); assert.equal(result.input.hapticsBackend, 'Automatic'); assert.equal(result.input.splitInput, false);
+});
+
 test('capability normalization rejects malformed remote limits', () => {
   assert.throws(() => normalizeCapabilities({video: {maxWidth: Number.NaN}}), /video.maxWidth/);
   assert.throws(() => normalizeCapabilities({video: {maxFramerate: 241}}), /video.maxFramerate/);
