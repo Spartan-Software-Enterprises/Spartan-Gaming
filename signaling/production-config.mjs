@@ -1,3 +1,5 @@
+import {readFileSync} from 'node:fs';
+
 const SESSION_STORES = new Set(['redis', 'database', 'external']);
 
 function text(value) { return typeof value === 'string' ? value.trim() : ''; }
@@ -18,4 +20,27 @@ export function normalizeProductionConfig(options = {}) {
   const turnUrls = [...new Set(urls(options.turnUrls))];
   if (!turnUrls.length || turnUrls.some(url => !/^turns?:/i.test(url))) throw new TypeError('production TURN URLs must contain turn: or turns: endpoints');
   return Object.freeze({environment: 'production', tls: Object.freeze({keyPath: tlsKey, certPath: tlsCert}), allowedOrigins: Object.freeze(allowedOrigins), sessionStore, turnUrls: Object.freeze(turnUrls), secrets: Object.freeze({configured: true, adminConfigured: true})});
+}
+
+export function resolveConfiguredSecret({env = process.env, name, readFile = readFileSync} = {}) {
+  if (typeof name !== 'string' || !name.trim()) throw new TypeError('secret environment name is required');
+  const direct = text(env[name]);
+  const filePath = text(env[`${name}_FILE`]);
+  if (direct && filePath) throw new TypeError(`${name} and ${name}_FILE cannot both be set`);
+  if (!filePath) return direct;
+  try { return text(readFile(filePath, 'utf8')); } catch { throw new Error(`${name}_FILE could not be read`); }
+}
+
+/** Resolve mounted production secrets without returning their values. */
+export function resolveProductionConfig({env = process.env, readFile = readFileSync} = {}) {
+  const source = {
+    secret: resolveConfiguredSecret({env, name: 'SPARTAN_SIGNALING_SECRET', readFile}),
+    adminSecret: resolveConfiguredSecret({env, name: 'SPARTAN_SIGNALING_ADMIN_SECRET', readFile}),
+    tlsKey: text(env.SPARTAN_SIGNALING_TLS_KEY),
+    tlsCert: text(env.SPARTAN_SIGNALING_TLS_CERT),
+    allowedOrigins: env.SPARTAN_SIGNALING_ALLOWED_ORIGINS,
+    sessionStore: env.SPARTAN_SIGNALING_SESSION_STORE,
+    turnUrls: env.SPARTAN_SIGNALING_TURN_URLS,
+  };
+  return normalizeProductionConfig(source);
 }

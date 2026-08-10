@@ -28,5 +28,7 @@ test('Compose keeps the reference signaling service local and requires a secret'
 test('production preflight is part of the published deployment surface', () => {
   const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
   assert.equal(packageJson.scripts['deployment:check'], 'node scripts/validate-production-config.mjs');
-  assert.match(fs.readFileSync('scripts/validate-production-config.mjs', 'utf8'), /normalizeProductionConfig/);
+  assert.match(fs.readFileSync('scripts/validate-production-config.mjs', 'utf8'), /resolveProductionConfig/);
+  assert.match(fs.readFileSync('signaling/production-config.mjs', 'utf8'), /resolveConfiguredSecret/);
+  assert.match(fs.readFileSync('signaling/agent.mjs', 'utf8'), /resolveConfiguredSecret\(\{name: 'SPARTAN_SIGNALING_SECRET'/);
 });

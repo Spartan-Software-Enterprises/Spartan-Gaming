@@ -88,13 +88,17 @@ The executable can load such an operator-installed adapter with
 export `createBroker()` and return the validated broker contract.
 
 Before promoting a deployment, run `npm run deployment:check` with
-`SPARTAN_SIGNALING_SECRET`, `SPARTAN_SIGNALING_ADMIN_SECRET`,
+`SPARTAN_SIGNALING_SECRET` (or `SPARTAN_SIGNALING_SECRET_FILE`),
+`SPARTAN_SIGNALING_ADMIN_SECRET` (or `SPARTAN_SIGNALING_ADMIN_SECRET_FILE`),
 `SPARTAN_SIGNALING_TLS_KEY`, `SPARTAN_SIGNALING_TLS_CERT`,
 `SPARTAN_SIGNALING_ALLOWED_ORIGINS`, `SPARTAN_SIGNALING_SESSION_STORE`, and
 `SPARTAN_SIGNALING_TURN_URLS` set. The preflight requires strong distinct
 secrets, HTTPS origins, a non-memory session store (`redis`, `database`, or
 `external`), and `turn:`/`turns:` endpoints; it prints only a redacted
-configuration summary and never emits secret values. This validates operator
+configuration summary and never emits secret values. Inline and file forms
+cannot be supplied together. Mounted secret files are read by both the
+preflight and signaling process at startup; their contents are never returned.
+This validates operator
 prerequisites but does not provision those external services.
 
 ## Native reference service
