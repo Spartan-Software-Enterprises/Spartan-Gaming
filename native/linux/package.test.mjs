@@ -41,7 +41,7 @@ test('Linux native package contract covers standard and extended Gamepad button 
 
 test('Linux native package observes host-local force feedback through the uinput FF handshake', async () => {
   const source = await (await import('node:fs/promises')).readFile(new URL('./src/bindings.cpp', import.meta.url), 'utf8');
-  assert.match(source, /device\.ff_effects_max = 16/);
+  assert.match(source, /(?:device|setup)\.ff_effects_max = 16/);
   assert.match(source, /O_RDWR \| O_NONBLOCK/);
   assert.match(source, /UI_SET_FFBIT, FF_RUMBLE/);
   assert.match(source, /UI_SET_FFBIT, FF_GAIN/);
