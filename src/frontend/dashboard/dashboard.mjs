@@ -16,6 +16,7 @@ import { createCommunityProviderCatalogStore, mergeCommunityProviders } from '..
 import { createSettingsStore } from '../settings/profile.mjs';
 import { launchExternalSurface } from '../launch/behavior.mjs';
 import { checkProviderCatalog } from '../providers/catalog-health.mjs';
+import { resolveProviderStartupPolicy } from '../providers/startup-policy.mjs';
 import { clearSessionRecoveryHandoff, readSessionRecoveryHandoff } from '../session/recovery-handoff.mjs';
 import { resolveStartupRoute } from '../startup/route.mjs';
 import { createActiveProfileStorage } from '../profiles/storage.mjs';
@@ -29,6 +30,7 @@ const communityCatalogStore = createCommunityProviderCatalogStore();
 const settings = createSettingsStore().read();
 const settingsStore = createSettingsStore();
 globalThis.spartanElectron?.applyRuntimeSettings?.({backgroundThrottling: settings['performance.backgroundThrottling'] !== false, powerMode: settings['performance.powerMode'], doNotTrack: settings['privacy.doNotTrack'] === true, blockThirdPartyCookies: settings['privacy.blockThirdPartyCookies'] === true, permissionPrompts: settings['privacy.permissionPrompts']});
+const providerStartupPolicy = resolveProviderStartupPolicy(settings);
 const recoveryHandoff = settings['general.restoreSession'] !== false ? readSessionRecoveryHandoff(sessionStorage) : null;
 const startupRoute = new URLSearchParams(globalThis.location?.search || '').get('startup') === '1' ? resolveStartupRoute(settings, {recovery: recoveryHandoff, lastLaunch: launchHistory.latest()}) : null;
 if (startupRoute && typeof globalThis.location?.replace === 'function') globalThis.location.replace(startupRoute);
@@ -150,7 +152,7 @@ async function loadCatalog() {
     rebuildAdapters();
     updateReadinessStatus();
     render();
-    if (settings['providers.healthChecks'] === true) { const providers = state.catalog.filter(entry => entry.backendType === 'provider'); providers.forEach(entry => state.providerHealth.set(entry.id, {status: 'checking'})); render(); checkProviderCatalog(providers).then(results => { results.forEach(item => state.providerHealth.set(item.providerId, item.result)); render(); }).catch(() => {}); }
+    if (providerStartupPolicy.shouldProbe) { const providers = state.catalog.filter(entry => entry.backendType === 'provider'); providers.forEach(entry => state.providerHealth.set(entry.id, {status: 'checking'})); render(); checkProviderCatalog(providers).then(results => { results.forEach(item => state.providerHealth.set(item.providerId, item.result)); render(); }).catch(() => {}); }
     collectCapabilities().then(report => { state.report = report; state.compatibility = evaluateCatalog(state.catalog, report); updateReadinessStatus(); render(); }).catch(() => { state.report = {}; state.compatibility = evaluateCatalog(state.catalog, state.report); updateReadinessStatus(); render(); });
   } catch (error) { cards.innerHTML = '<div class="empty">The library could not load. Check the catalog files and try again.</div>'; console.error(error); }
 }
