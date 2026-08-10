@@ -15,6 +15,7 @@ let query = '';
 function saveState() {
   Object.assign(state, settingsStore.save(state));
   applyRuntimeUiSettings(document, state);
+  globalThis.spartanElectron?.applyRuntimeSettings?.({backgroundThrottling: state['performance.backgroundThrottling'] !== false});
   const status = document.querySelector('[data-save-status]');
   if (status) {
     status.textContent = 'Saved locally';
@@ -166,3 +167,4 @@ document.querySelector('[data-import-file]').addEventListener('change', async (e
 });
 
 render();
+globalThis.spartanElectron?.applyRuntimeSettings?.({backgroundThrottling: state['performance.backgroundThrottling'] !== false});

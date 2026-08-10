@@ -3,6 +3,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createFrontendServer} from '../../scripts/frontend/serve.mjs';
 import {isAllowedExternalUrl, isAllowedNavigation, isAllowedProviderUrl} from './security.mjs';
+import {normalizeElectronRuntimePolicy} from './runtime-policy.mjs';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 let frontend;
@@ -56,6 +57,7 @@ app.whenReady().then(async () => {
   ipcMain.handle('spartan:close-provider', closeProviderView);
   ipcMain.handle('spartan:set-quit-guard', (_event, enabled) => { if (typeof enabled !== 'boolean') throw new TypeError('quit guard must be boolean'); quitGuardEnabled = enabled; return quitGuardEnabled; });
   ipcMain.handle('spartan:set-session-active', (_event, active) => { if (typeof active !== 'boolean') throw new TypeError('session state must be boolean'); sessionActive = active; return sessionActive; });
+  ipcMain.handle('spartan:apply-runtime-settings', (event, settings) => { if (event.sender !== windowRef.webContents) throw new Error('runtime settings may only be applied by the primary window'); const policy = normalizeElectronRuntimePolicy(settings); event.sender.setBackgroundThrottling(policy.backgroundThrottling); return policy; });
   ipcMain.handle('spartan:toggle-fullscreen', () => { windowRef.setFullScreen(!windowRef.isFullScreen()); return windowRef.isFullScreen(); });
   await createMainWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) void createMainWindow(); });
