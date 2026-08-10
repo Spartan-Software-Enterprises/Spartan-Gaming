@@ -83,7 +83,7 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- The published code state is `2a4343e` on `main`; local and AWS worktrees are
+- The published code state is `01ced66` on `main`; local and AWS worktrees are
   clean and synchronized with `origin/main`.
 - `npm run check`: repository checks pass on the current code state locally
   and on the AWS dev server.
@@ -93,7 +93,8 @@ review; stay within the AWS credit limit.
   coverage, not a failure.
 - The Android shell contract passed 3/3 locally and on AWS. AWS now has Java
   17, Gradle 8.11.1, and Android API 35/build-tools 35.0.0; the debug APK build
-  passed at `62785ff` and produced a 1,628,083-byte APK with SHA-256
+  passed at `01ced66` with `ANDROID_HOME=$HOME/.local/android-sdk` and produced
+  a 1,628,083-byte APK with SHA-256
   `386b910893b8a2ab884d2ea7f17f7869910e00d60da49020cfbce5b93d3024ab`.
   The Android wrapper build is now also enforced by the checked-in
   `.github/workflows/android-debug.yml`; no GitHub Actions run is claimed until
@@ -101,6 +102,8 @@ review; stay within the AWS credit limit.
   Release signing, permissions, WebView lifecycle, and physical device
   behavior remain open lab gates; Termux host checks run locally, but `adb`
   reports no separately authorized target device.
+- The AWS full suite on `01ced66` passed 632 of 634 tests with 2 environment-
+  gated skips and 0 failures; repository checks passed 431/431.
 - AWS Playwright 1.55.0 completed 22/22 navigations across 11 maintained
   routes at desktop and mobile viewports on code commit `7c996e1`; all routes
   returned 200 with meaningful bodies and no horizontal overflow. The

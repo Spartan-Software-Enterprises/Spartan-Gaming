@@ -17,6 +17,8 @@ are disabled.
 From a machine with an Android SDK and Java 17 available:
 
 ```bash
+export ANDROID_HOME="${ANDROID_HOME:-$HOME/.local/android-sdk}"
+export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
 npm run test:android-shell
 npm run android:build
 ```
