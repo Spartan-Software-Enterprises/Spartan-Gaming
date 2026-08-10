@@ -59,7 +59,10 @@ features remain unavailable rather than silently falling back.
 The `/health` response exposes the normalized `controllerPolicy` without
 pairing material or driver secrets, allowing an Electron host preflight or
 operator to confirm the effective profile, slots, permissions, and haptics
-policy before accepting a session.
+policy before accepting a session. It also exposes a bounded `runtimePolicy`
+summary for capture source, media limits, audio consent, input enablement,
+pairing, wake, and diagnostic settings, so the Electron health panel can
+confirm that the exported host configuration arrived intact.
 
 For repeatable supervisor configuration, pass `--config /path/to/host.json`
 to `host/agent.mjs` or include the same path in the shell-free deployment plan.

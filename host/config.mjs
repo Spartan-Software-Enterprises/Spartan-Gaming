@@ -33,3 +33,9 @@ export function readHostConfig(path, {platform = process.platform, readFile = re
   let parsed; try { parsed = JSON.parse(readFile(location, 'utf8')); } catch { throw new Error('host configuration file is not valid JSON'); }
   return normalizeHostConfig(parsed, {platform});
 }
+
+/** Project non-secret host settings into the health/preflight diagnostic. */
+export function createHostRuntimePolicy(config = {}) {
+  if (!config || typeof config !== 'object') throw new TypeError('normalized host configuration is required');
+  return Object.freeze({captureSource: config.captureSource || 'Automatic', videoCodec: config.videoCodec || 'Automatic', maxResolution: config.maxResolution || '1080p', maxFramerate: config.maxFramerate || '60 FPS', captureSystemAudio: config.captureSystemAudio !== false, captureMicrophone: config.captureMicrophone === true, audioCodec: config.audioCodec || 'Automatic', enableNativeMedia: config.enableNativeMedia === true, enableNativeAudio: config.enableNativeAudio === true, enableInput: config.enableInput !== false, requireExplicitPairing: config.requireExplicitPairing !== false, wakeOnLan: config.wakeOnLan === true, logLevel: config.logLevel || 'Connection events'});
+}

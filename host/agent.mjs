@@ -15,12 +15,13 @@ import {negotiateHostOffer} from './session.mjs';
 import {createReferenceGameLaunch} from './reference-launch.mjs';
 import {loadWerift} from './werift-adapter.mjs';
 import {createNativeWeriftConnection} from './native-agent.mjs';
-import {readHostConfig} from './config.mjs';
+import {createHostRuntimePolicy, readHostConfig} from './config.mjs';
 import {platform as osPlatform} from 'node:os';
 
 const args = new Map();
 for (let index = 2; index < process.argv.length; index += 1) { const value = process.argv[index]; if (value.startsWith('--')) args.set(value.slice(2), process.argv[index + 1]?.startsWith('--') ? true : process.argv[++index]); }
 const hostConfig = readHostConfig(args.get('config'), {platform: osPlatform()});
+const runtimePolicy = createHostRuntimePolicy(hostConfig);
 const configured = (cliName, configName, fallback) => args.has(cliName) ? args.get(cliName) : (hostConfig[configName] ?? fallback);
 const hostId = String(configured('id', 'hostId', `host-${randomUUID().slice(0, 8)}`));
 const hostName = String(configured('name', 'hostName', 'Spartan Host'));
@@ -141,7 +142,7 @@ async function handleMessage(connection, text, session) {
 const requestHandler = (request, response) => {
   if (!originAllowed(request.headers.origin)) return json(response, 403, {error: 'origin is not allowed'});
   if (request.headers.origin && allowedOrigins.includes(request.headers.origin)) { response.setHeader('access-control-allow-origin', request.headers.origin); response.setHeader('vary', 'Origin'); }
-  if (request.url === '/health') return json(response, 200, {service: 'spartan-host-reference', version: 1, secure, hostId, hostName, pairingExpiresAt: pairing.expiresAt, pairingUsed: pairing.used, activeSessions: sessions.size, connections: connections.size, rejectedConnections, limits: {maxConnections, maxMessagesPerSecond}, allowedOrigins, inputEvents, droppedInputEvents, lastInputPlan, lastInputExecution, lastQuality, controllerPolicy, gameLaunch: gameLaunch ? {enabled: true, ...gameLaunch.descriptor, state: gameLaunch.launcher.state, pid: gameLaunch.launcher.pid} : {enabled: false}, capabilities, hostCapabilities, environment});
+  if (request.url === '/health') return json(response, 200, {service: 'spartan-host-reference', version: 1, secure, hostId, hostName, pairingExpiresAt: pairing.expiresAt, pairingUsed: pairing.used, activeSessions: sessions.size, connections: connections.size, rejectedConnections, limits: {maxConnections, maxMessagesPerSecond}, allowedOrigins, inputEvents, droppedInputEvents, lastInputPlan, lastInputExecution, lastQuality, controllerPolicy, runtimePolicy, gameLaunch: gameLaunch ? {enabled: true, ...gameLaunch.descriptor, state: gameLaunch.launcher.state, pid: gameLaunch.launcher.pid} : {enabled: false}, capabilities, hostCapabilities, environment});
   json(response, 404, {error: 'not found'});
 };
 const server = secure ? createHttpsServer({key: readFileSync(tlsKey), cert: readFileSync(tlsCert)}, requestHandler) : createHttpServer(requestHandler);

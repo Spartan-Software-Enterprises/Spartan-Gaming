@@ -23,7 +23,7 @@ function controllerPolicySummary(policy) {
   return Object.freeze({version: normalized.version, profile: normalized.defaultProfile, inputMode: normalized.inputMode, slots: normalized.playerSlots, gamepad: normalized.allowGamepad, hid: normalized.allowHid, rumble: normalized.rumble && normalized.hapticsBackend !== 'Disabled', haptics: normalized.hapticsBackend, virtualBackend: normalized.virtualGamepadBackend});
 }
 
-export function createHostPreflight({capabilities = {}, environment = {}, controllerPolicy, clientTransports = TRANSPORTS} = {}) {
+export function createHostPreflight({capabilities = {}, environment = {}, controllerPolicy, runtimePolicy = null, clientTransports = TRANSPORTS} = {}) {
   const media = capabilities.media || {};
   const publisher = capabilities.publisher || {};
   const audioPublisher = capabilities.audioPublisher || {};
@@ -39,5 +39,5 @@ export function createHostPreflight({capabilities = {}, environment = {}, contro
     {id: 'input', label: 'Host input', status: input.gamepad || input.keyboard || input.pointer ? 'ready' : 'warning', detail: input.gamepad || input.keyboard || input.pointer ? 'Input adapter advertised' : 'Host input adapter is not configured'},
   ]);
   const blocking = checks.filter(check => check.status === 'missing');
-  return Object.freeze({status: blocking.length ? 'configuration-required' : 'ready', transport: transport || null, checks, blocking: Object.freeze(blocking.map(check => check.id)), hostName: environment.hostName || null, nativeBinding: nativeBindingSummary(environment), virtualGamepadBinding: virtualGamepadBindingSummary(environment), controllerPolicy: controllerPolicySummary(controllerPolicy), tools: Object.freeze(environment.tools && typeof environment.tools === 'object' ? {ffmpeg: Boolean(environment.tools.ffmpeg), gstreamer: Boolean(environment.tools.gstreamer)} : {})});
+  return Object.freeze({status: blocking.length ? 'configuration-required' : 'ready', transport: transport || null, checks, blocking: Object.freeze(blocking.map(check => check.id)), hostName: environment.hostName || null, nativeBinding: nativeBindingSummary(environment), virtualGamepadBinding: virtualGamepadBindingSummary(environment), controllerPolicy: controllerPolicySummary(controllerPolicy), runtimePolicy: runtimePolicy && typeof runtimePolicy === 'object' ? Object.freeze({...runtimePolicy}) : null, tools: Object.freeze(environment.tools && typeof environment.tools === 'object' ? {ffmpeg: Boolean(environment.tools.ffmpeg), gstreamer: Boolean(environment.tools.gstreamer)} : {})});
 }
