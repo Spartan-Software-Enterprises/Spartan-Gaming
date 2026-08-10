@@ -211,6 +211,15 @@ with per-file SHA-256 digests. An operator must pass the artifact through the ex
 package-signing service and install it through the verified adapter installer;
 the rollout workflow never treats a CI artifact as trusted code.
 
+On a desktop host, `npm run native:verify-desktop` performs an observation-only
+capability check against the selected native package. It does not inject input,
+start capture, or start audio. Use `--platform windows|macos|linux` and
+`--install-root <path>` when the package is outside its default location. The
+report distinguishes package readiness, Linux `/dev/uinput` access, and the
+separate Windows/macOS virtual-driver requirement. Operators may add
+`--require-hardware` or `--require-virtual-gamepad` to turn those reported
+requirements into a non-zero exit status for deployment validation.
+
 When `RELEASE_SIGNING_SERVICE_URL` is configured as a repository variable, or
 `signing_service_url` is supplied to a manual rollout, the workflow can call
 that external HTTPS service with the `SPARTAN_RELEASE_SIGNING_TOKEN` secret.
