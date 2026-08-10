@@ -83,8 +83,12 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- `npm run check`: 418 tests passed, 0 failed locally and on the AWS dev
-  server for commit `30aec84`.
+- `npm run check`: 420 tests passed, 0 failed locally and on the AWS dev
+  server for commit `fc12cd0`.
+- `npm test`: 616 tests, 612 passed, 0 failed, and 4 skipped locally after
+  `fc12cd0`; the AWS run also completed with 616 tests, 614 passed, 0 failed,
+  and 2 skipped. The difference is environment-gated integration coverage,
+  not a failure.
 - PWA install tests: 2 passed locally; the AWS focused distribution/server/
   install run passed 7 tests.
 - The latest PWA distribution tests also verify the SVG app mark, manifest
@@ -103,17 +107,20 @@ review; stay within the AWS credit limit.
 
 ## Current change
 
-The PWA surface now includes a Spartan SVG app mark, manifest icon metadata,
-explicit offline precaching, and a deferred `beforeinstallprompt` controller.
-The shared register adds an accessible install button only when the browser
-offers installation, publishes `spartanPwaInstall` for shell integrations,
-and removes its listeners cleanly. Regression coverage is in
-`src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
-`scripts/frontend/serve.test.mjs`.
+The current player increment adds a capability-safe Screen Wake Lock
+controller. It starts only for connected/reconnecting sessions when the
+existing mobile keep-awake setting is enabled, reacquires after visibility
+recovery, and releases on session end/pagehide. Unsupported or denied browser
+implementations fail closed. Regression coverage is in
+`src/frontend/player/wake-lock.test.mjs`; the local validation register now
+records the required physical-device and WebView checks.
 
-Before pushing, run `git diff --check`, `npm run check`, `npm test`, and the
-remote Playwright matrix again. Commit the feature and test changes together,
-push `main`, then synchronize the dev server and record the new commit here.
+The preceding PWA increment remains covered by
+`src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
+`scripts/frontend/serve.test.mjs`. Before pushing future work, run
+`git diff --check`, `npm run check`, `npm test`, and the remote Playwright
+matrix again. Commit feature and test changes together, push `main`, then
+synchronize the dev server and record the new commit here.
 
 ## Handoff discipline
 
