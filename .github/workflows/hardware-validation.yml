@@ -63,6 +63,12 @@ jobs:
           TARGET_PLATFORM: ${{ inputs.platform }}
           INSTALL_ROOT: ${{ inputs.install_root }}
         run: npm run native:verify-desktop -- --platform "$TARGET_PLATFORM" --install-root "$INSTALL_ROOT" --report-file "$RUNNER_TEMP/spartan-native-$TARGET_PLATFORM.json" --require-hardware --require-input --require-audio --require-haptics
+      - name: Require external virtual-driver evidence on Windows and macOS
+        if: ${{ inputs.platform != 'linux' }}
+        shell: bash
+        env:
+          VERIFY_VIRTUAL_GAMEPAD: ${{ inputs.verify_virtual_gamepad }}
+        run: test "$VERIFY_VIRTUAL_GAMEPAD" = "true"
       - name: Exercise Linux uinput and force feedback
         if: ${{ inputs.platform == 'linux' && inputs.verify_linux_device }}
         shell: bash
