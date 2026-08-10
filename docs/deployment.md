@@ -297,7 +297,9 @@ controller. `SPARTAN_HARDWARE_CAPTURE_SOURCE` and
 `SPARTAN_HARDWARE_AUDIO_SOURCE` may be supplied by the runner for non-default
 devices. A report marked ready proves that the adapter accepted the operations;
 it does not replace an operator confirming the captured media and felt haptic
-response.
+response. Exercise reports are marked `kind: native-hardware-report` with
+`verification: runtime-exercise`; capability-only observations are deliberately
+not eligible for the final acceptance gate.
 
 The manual `Hardware validation gate` GitHub Actions workflow provides that
 operator-run surface on a labeled self-hosted Windows, macOS, or Linux runner.
@@ -330,7 +332,9 @@ driver/hardware exercise remains an operator-run final gate. To run the
 bounded injection exercise after signature verification, add
 `--execute --confirm --require-execution`; it sends button 0 press/release and
 axis 0 neutral through the installed adapter and records only the operation
-count. Keep the target game or other input-sensitive application closed while
+count. The resulting report is marked `kind: virtual-gamepad-exercise` with
+`verification: signed-runtime-exercise`. Keep the target game or other
+input-sensitive application closed while
 performing this test.
 
 When `RELEASE_SIGNING_SERVICE_URL` is configured as a repository variable, or

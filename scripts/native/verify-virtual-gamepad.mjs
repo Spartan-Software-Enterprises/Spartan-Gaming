@@ -19,7 +19,7 @@ export async function verifyInstalledVirtualGamepad({platform: targetPlatform, i
   try {
     loaded = await runtime.load();
     const adapter = loaded.adapter;
-    const report = {status: 'ready', platform: selectedPlatform, installRoot: root, adapterId: loaded.manifest.id, version: loaded.manifest.version, kind: loaded.manifest.kind, entrypoint: loaded.manifest.entrypoint, capabilities: Object.freeze({virtualGamepad: true, execute: typeof adapter.execute === 'function'})};
+    const report = {kind: 'virtual-gamepad-exercise', verification: execute ? 'signed-runtime-exercise' : 'signed-runtime-observation', status: 'ready', platform: selectedPlatform, installRoot: root, adapterId: loaded.manifest.id, version: loaded.manifest.version, adapterKind: loaded.manifest.kind, entrypoint: loaded.manifest.entrypoint, capabilities: Object.freeze({virtualGamepad: true, execute: typeof adapter.execute === 'function'})};
     if (execute) {
       if (typeof adapter.execute !== 'function') throw new Error('virtual-gamepad adapter does not provide execute()');
       await adapter.execute({kind: 'button', control: 'button-0', pressed: true});
@@ -29,7 +29,7 @@ export async function verifyInstalledVirtualGamepad({platform: targetPlatform, i
     }
     return Object.freeze(report);
   } catch (error) {
-    return Object.freeze({status: 'unavailable', platform: selectedPlatform, installRoot: root, adapterId, reason: error?.message || 'virtual-gamepad package verification failed', ...(execute ? {exercise: Object.freeze({state: 'unavailable'})} : {})});
+    return Object.freeze({kind: 'virtual-gamepad-exercise', verification: execute ? 'signed-runtime-exercise' : 'signed-runtime-observation', status: 'unavailable', platform: selectedPlatform, installRoot: root, adapterId, reason: error?.message || 'virtual-gamepad package verification failed', ...(execute ? {exercise: Object.freeze({state: 'unavailable'})} : {})});
   } finally { await loaded?.adapter?.close?.();
   }
 }

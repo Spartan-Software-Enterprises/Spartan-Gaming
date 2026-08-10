@@ -36,7 +36,7 @@ async function exerciseBindings(bindings, {durationMs = 250, delay = ms => new P
 /** Inspect a native package without injecting input, opening capture, or starting audio. */
 export async function verifyDesktopCapabilities({platform = process.platform, installRoot, loadModule = specifier => import(specifier), access = fs.access, environment = process.env, execute = false, durationMs = 250, delay} = {}) {
   const selectedPlatform = requiredPlatform(platform); const root = path.resolve(text(installRoot) || defaultInstallRoot(selectedPlatform));
-  const report = {platform: selectedPlatform, installRoot: root, package: {state: 'unavailable'}, capabilities: {input: {state: 'not-checked'}, audio: {state: 'not-checked'}, haptics: {state: 'not-checked'}}, hardware: {state: 'not-checked'}, virtualGamepad: {state: selectedPlatform === 'linux' ? 'not-checked' : 'external-driver-required'}};
+  const report = {kind: 'native-hardware-report', verification: execute ? 'runtime-exercise' : 'capability-observation', platform: selectedPlatform, installRoot: root, package: {state: 'unavailable'}, capabilities: {input: {state: 'not-checked'}, audio: {state: 'not-checked'}, haptics: {state: 'not-checked'}}, hardware: {state: 'not-checked'}, virtualGamepad: {state: selectedPlatform === 'linux' ? 'not-checked' : 'external-driver-required'}};
   if (selectedPlatform === 'linux') {
     try { await access('/dev/uinput', fsConstants.R_OK | fsConstants.W_OK); report.hardware = {state: 'ready', device: '/dev/uinput'}; }
     catch { report.hardware = {state: 'unavailable', reason: 'readable and writable /dev/uinput is required'}; }

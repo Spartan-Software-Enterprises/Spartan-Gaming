@@ -22,13 +22,13 @@ function productionGate(report) {
 
 function hardwareGate(reports) {
   const byPlatform = new Map(reports.map(report => [reportPlatform(report), report]));
-  const missing = PLATFORMS.filter(target => { const report = byPlatform.get(target); return !report || report.status !== 'ready' || report.package?.state !== 'ready' || report.execution?.state !== 'ready' || report.execution?.capture !== 'verified' || report.execution?.audio !== 'verified' || report.execution?.input !== 'verified' || report.execution?.haptics !== 'verified' || (target === 'linux' && report.hardware?.state !== 'ready'); });
+  const missing = PLATFORMS.filter(target => { const report = byPlatform.get(target); return !report || report.kind !== 'native-hardware-report' || report.verification !== 'runtime-exercise' || report.status !== 'ready' || report.package?.state !== 'ready' || report.execution?.state !== 'ready' || report.execution?.capture !== 'verified' || report.execution?.audio !== 'verified' || report.execution?.input !== 'verified' || report.execution?.haptics !== 'verified' || (target === 'linux' && report.hardware?.state !== 'ready'); });
   return Object.freeze({id: 'native-hardware', status: missing.length ? 'missing' : 'verified', missing: Object.freeze(missing)});
 }
 
 function virtualDriverGate(reports) {
   const byPlatform = new Map(reports.map(report => [reportPlatform(report), report]));
-  const missing = ['win32', 'darwin'].filter(target => { const report = byPlatform.get(target); return !report || report.status !== 'ready' || report.exercise?.state !== 'verified' || report.capabilities?.execute !== true; });
+  const missing = ['win32', 'darwin'].filter(target => { const report = byPlatform.get(target); return !report || report.kind !== 'virtual-gamepad-exercise' || report.verification !== 'signed-runtime-exercise' || report.status !== 'ready' || report.exercise?.state !== 'verified' || report.capabilities?.execute !== true; });
   return Object.freeze({id: 'desktop-virtual-gamepads', status: missing.length ? 'missing' : 'verified', missing: Object.freeze(missing)});
 }
 
