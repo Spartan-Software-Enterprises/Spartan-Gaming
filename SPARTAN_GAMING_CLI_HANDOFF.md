@@ -163,6 +163,9 @@ The current Android controller increment adds the native
 `normalizeAndroidControllerInventory()` helper. It preserves bounded device
 metadata and approved capability labels while leaving raw Android input events
 and hardware behavior to the native shell/lab.
+The combined Android/controller suite passed 6/6 locally and on AWS at
+`d39b66f`; repository checks and the full package suite also exited
+successfully.
 
 The current Proton/SteamOS increment adds a user-owned Linux/SteamOS Proton
 launch boundary. `host/proton.mjs` detects a selected installation, validates
