@@ -6,11 +6,14 @@
 #include <sys/ioctl.h>
 
 #include <cerrno>
+#include <atomic>
 #include <cstring>
 #include <cstdlib>
 #include <map>
+#include <mutex>
 #include <set>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace {
@@ -21,6 +24,14 @@ bool device_readable = false;
 unsigned int ff_gain = 0xffff;
 std::map<int, ff_effect> rumble_effects;
 std::set<int> active_effects;
+std::thread ff_worker;
+std::atomic<bool> ff_worker_running{false};
+std::mutex ff_mutex;
+std::vector<double> pending_strong;
+std::vector<double> pending_weak;
+
+void queue_rumble_state();
+void handle_ff_event(const input_event& event);
 
 napi_value fail(napi_env env, const char* message) {
   napi_throw_error(env, nullptr, message);
@@ -119,6 +130,20 @@ bool write_event(unsigned short type, unsigned short code, int value) {
   return write(device_fd, &event, sizeof(event)) == static_cast<ssize_t>(sizeof(event));
 }
 
+void ff_worker_loop() {
+  while (ff_worker_running) {
+    input_event event{};
+    const ssize_t count = read(device_fd, &event, sizeof(event));
+    if (count == static_cast<ssize_t>(sizeof(event))) {
+      handle_ff_event(event);
+    } else if (count < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) {
+      usleep(1000);
+    } else {
+      break;
+    }
+  }
+}
+
 bool ensure_device() {
   if (device_fd >= 0) return true;
   device_fd = open("/dev/uinput", O_RDWR | O_NONBLOCK);
@@ -148,6 +173,8 @@ bool ensure_device() {
   }
   if (ioctl(device_fd, UI_DEV_CREATE) < 0) { close(device_fd); device_fd = -1; return false; }
   usleep(20'000);
+  ff_worker_running = true;
+  ff_worker = std::thread(ff_worker_loop);
   return true;
 }
 
@@ -196,15 +223,21 @@ napi_value execute(napi_env env, napi_callback_info info) {
 }
 
 napi_value close(napi_env env, napi_callback_info) {
-  if (device_fd >= 0) { if (rumble_effect_id >= 0) ioctl(device_fd, EVIOCRMFF, rumble_effect_id); ioctl(device_fd, UI_DEV_DESTROY); ::close(device_fd); device_fd = -1; rumble_effect_id = -1; }
+  ff_worker_running = false;
+  if (device_fd >= 0) { if (rumble_effect_id >= 0) ioctl(device_fd, EVIOCRMFF, rumble_effect_id); ioctl(device_fd, UI_DEV_DESTROY); }
+  if (ff_worker.joinable()) ff_worker.join();
+  if (device_fd >= 0) { ::close(device_fd); device_fd = -1; rumble_effect_id = -1; }
   device_readable = false;
   ff_gain = 0xffff;
   rumble_effects.clear();
   active_effects.clear();
+  std::lock_guard<std::mutex> lock(ff_mutex);
+  pending_strong.clear();
+  pending_weak.clear();
   napi_value result; napi_get_undefined(env, &result); return result;
 }
 
-void push_rumble_state(std::vector<double>& strong, std::vector<double>& weak) {
+void queue_rumble_state() {
   double combined_strong = 0.0;
   double combined_weak = 0.0;
   if (!active_effects.empty()) {
@@ -216,59 +249,18 @@ void push_rumble_state(std::vector<double>& strong, std::vector<double>& weak) {
       combined_weak += static_cast<double>(entry->second.u.rumble.weak_magnitude) / 65535.0 * gain_scale;
     }
   }
-  strong.push_back(combined_strong > 1.0 ? 1.0 : combined_strong);
-  weak.push_back(combined_weak > 1.0 ? 1.0 : combined_weak);
+  std::lock_guard<std::mutex> lock(ff_mutex);
+  pending_strong.push_back(combined_strong > 1.0 ? 1.0 : combined_strong);
+  pending_weak.push_back(combined_weak > 1.0 ? 1.0 : combined_weak);
 }
 
 napi_value read_ff_events(napi_env env, napi_callback_info) {
   std::vector<double> strong;
   std::vector<double> weak;
-  if (device_fd >= 0 && device_readable) {
-    for (;;) {
-      input_event ev{};
-      const ssize_t count = ::read(device_fd, &ev, sizeof(ev));
-      if (count == static_cast<ssize_t>(sizeof(ev))) {
-        if (ev.type == EV_UINPUT && ev.code == UI_FF_UPLOAD) {
-          uinput_ff_upload request{};
-          request.request_id = static_cast<__u32>(ev.value);
-          if (ioctl(device_fd, UI_BEGIN_FF_UPLOAD, &request) == 0) {
-            if (request.effect.type == FF_RUMBLE) rumble_effects[request.effect.id] = request.effect;
-            request.retval = 0;
-            ioctl(device_fd, UI_END_FF_UPLOAD, &request);
-          }
-        } else if (ev.type == EV_UINPUT && ev.code == UI_FF_ERASE) {
-          uinput_ff_erase request{};
-          request.request_id = static_cast<__u32>(ev.value);
-          if (ioctl(device_fd, UI_BEGIN_FF_ERASE, &request) == 0) {
-            const auto entry = rumble_effects.find(static_cast<int>(request.effect_id));
-            if (entry != rumble_effects.end()) {
-              rumble_effects.erase(entry);
-              if (active_effects.erase(static_cast<int>(request.effect_id))) push_rumble_state(strong, weak);
-            }
-            request.retval = 0;
-            ioctl(device_fd, UI_END_FF_ERASE, &request);
-          }
-        } else if (ev.type == EV_FF) {
-          if (ev.code == FF_GAIN) {
-            ff_gain = ev.value < 0 ? 0 : ev.value > 0xffff ? 0xffff : static_cast<unsigned int>(ev.value);
-            if (!active_effects.empty()) push_rumble_state(strong, weak);
-          } else if (ev.code != FF_AUTOCENTER) {
-            const int effect_id = static_cast<int>(ev.code);
-            if (ev.value != 0) {
-              if (rumble_effects.find(effect_id) != rumble_effects.end()) {
-                if (active_effects.insert(effect_id).second) push_rumble_state(strong, weak);
-              }
-            } else {
-              if (active_effects.erase(effect_id)) push_rumble_state(strong, weak);
-            }
-          }
-        }
-      } else if (count < 0 && errno == EINTR) {
-        continue;
-      } else {
-        break;
-      }
-    }
+  {
+    std::lock_guard<std::mutex> lock(ff_mutex);
+    strong.swap(pending_strong);
+    weak.swap(pending_weak);
   }
   napi_value result;
   napi_create_array_with_length(env, strong.size(), &result);
@@ -279,6 +271,40 @@ napi_value read_ff_events(napi_env env, napi_callback_info) {
     napi_set_element(env, result, index, item);
   }
   return result;
+}
+
+void handle_ff_event(const input_event& event) {
+  if (event.type == EV_UINPUT && event.code == UI_FF_UPLOAD) {
+    uinput_ff_upload request{};
+    request.request_id = static_cast<__u32>(event.value);
+    if (ioctl(device_fd, UI_BEGIN_FF_UPLOAD, &request) == 0) {
+      if (request.effect.type == FF_RUMBLE) rumble_effects[request.effect.id] = request.effect;
+      request.retval = 0;
+      ioctl(device_fd, UI_END_FF_UPLOAD, &request);
+    }
+  } else if (event.type == EV_UINPUT && event.code == UI_FF_ERASE) {
+    uinput_ff_erase request{};
+    request.request_id = static_cast<__u32>(event.value);
+    if (ioctl(device_fd, UI_BEGIN_FF_ERASE, &request) == 0) {
+      const auto entry = rumble_effects.find(static_cast<int>(request.effect_id));
+      if (entry != rumble_effects.end()) {
+        rumble_effects.erase(entry);
+        if (active_effects.erase(static_cast<int>(request.effect_id))) queue_rumble_state();
+      }
+      request.retval = 0;
+      ioctl(device_fd, UI_END_FF_ERASE, &request);
+    }
+  } else if (event.type == EV_FF) {
+    if (event.code == FF_GAIN) {
+      ff_gain = event.value < 0 ? 0 : event.value > 0xffff ? 0xffff : static_cast<unsigned int>(event.value);
+      if (!active_effects.empty()) queue_rumble_state();
+    } else if (event.code != FF_AUTOCENTER) {
+      const int effect_id = static_cast<int>(event.code);
+      if (event.value != 0) {
+        if (rumble_effects.find(effect_id) != rumble_effects.end() && active_effects.insert(effect_id).second) queue_rumble_state();
+      } else if (active_effects.erase(effect_id)) queue_rumble_state();
+    }
+  }
 }
 
 napi_value create_bindings(napi_env env, napi_callback_info) {
