@@ -12,14 +12,21 @@ function argument(argv, name) { const index = argv.indexOf(name); return index <
 async function writeReport(file, report) { if (!text(file)) return; const target = path.resolve(file); if (target === path.parse(target).root) throw new TypeError('report file cannot be the filesystem root'); await fs.writeFile(target, `${JSON.stringify(report, null, 2)}\n`, {encoding: 'utf8', mode: 0o600}); }
 
 /** Verify an installed signed virtual-gamepad package; exercise is opt-in and bounded. */
-export async function verifyInstalledVirtualGamepad({platform: targetPlatform, installRoot, id, publicKeyJwk, fsImpl = fs, loadModule = specifier => import(specifier), verifyManifest, execute = false} = {}) {
+export async function verifyInstalledVirtualGamepad({platform: targetPlatform, installRoot, id, publicKeyJwk, fsImpl = fs, loadModule = specifier => import(specifier), verifyManifest, execute = false, requireDriver = false} = {}) {
   const selectedPlatform = platform(targetPlatform); const root = path.resolve(required(installRoot, 'installRoot')); const adapterId = required(id, 'adapterId');
   const runtime = createInstalledAdapterRuntime({installRoot: root, id: adapterId, platform: selectedPlatform, expectedKind: 'virtual-gamepad', fsImpl, loadModule, verifyManifest: verifyManifest || createInstalledAdapterManifestVerifier({publicKeyJwk, fsImpl})});
   let loaded;
   try {
     loaded = await runtime.load();
     const adapter = loaded.adapter;
-    const report = {kind: 'virtual-gamepad-exercise', verification: execute ? 'signed-runtime-exercise' : 'signed-runtime-observation', status: 'ready', platform: selectedPlatform, installRoot: root, adapterId: loaded.manifest.id, version: loaded.manifest.version, adapterKind: loaded.manifest.kind, entrypoint: loaded.manifest.entrypoint, capabilities: Object.freeze({virtualGamepad: true, execute: typeof adapter.execute === 'function'})};
+    let driver;
+    if (requireDriver) {
+      if (typeof adapter.verifyDriver !== 'function') throw new Error('virtual-gamepad adapter must expose verifyDriver() for driver acceptance');
+      const result = await adapter.verifyDriver();
+      if (!result || result.state !== 'ready') throw new Error('virtual-gamepad driver is not ready');
+      driver = Object.freeze({state: 'ready', ...(text(result.name) ? {name: text(result.name)} : {}), ...(text(result.version) ? {version: text(result.version)} : {})});
+    }
+    const report = {kind: 'virtual-gamepad-exercise', verification: execute ? 'signed-runtime-exercise' : 'signed-runtime-observation', status: 'ready', platform: selectedPlatform, installRoot: root, adapterId: loaded.manifest.id, version: loaded.manifest.version, adapterKind: loaded.manifest.kind, entrypoint: loaded.manifest.entrypoint, capabilities: Object.freeze({virtualGamepad: true, execute: typeof adapter.execute === 'function'}), ...(driver ? {driver} : {})};
     if (execute) {
       if (typeof adapter.execute !== 'function') throw new Error('virtual-gamepad adapter does not provide execute()');
       await adapter.execute({kind: 'button', control: 'button-0', pressed: true});
@@ -39,7 +46,7 @@ if (path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1
     const argv = process.argv.slice(2); if (argv.includes('--help') || argv.includes('-h')) { console.log('Usage: npm run native:verify-virtual-gamepad -- --platform windows|macos|linux --install-root PATH --adapter-id ID [--public-key-file PATH]'); process.exit(0); }
     const publicKeyText = text(process.env.SPARTAN_VIRTUAL_GAMEPAD_PUBLIC_KEY_JWK) || (argument(argv, '--public-key-file') ? await fs.readFile(path.resolve(argument(argv, '--public-key-file')), 'utf8') : '');
     const publicKeyJwk = JSON.parse(required(publicKeyText, 'public key JWK')); const execute = argv.includes('--execute'); if (execute && !argv.includes('--confirm')) throw new Error('virtual-gamepad execution requires --confirm');
-    const report = await verifyInstalledVirtualGamepad({platform: argument(argv, '--platform') || process.platform, installRoot: argument(argv, '--install-root'), id: argument(argv, '--adapter-id'), publicKeyJwk, execute}); await writeReport(argument(argv, '--report-file'), report);
+    const report = await verifyInstalledVirtualGamepad({platform: argument(argv, '--platform') || process.platform, installRoot: argument(argv, '--install-root'), id: argument(argv, '--adapter-id'), publicKeyJwk, execute, requireDriver: argv.includes('--require-driver')}); await writeReport(argument(argv, '--report-file'), report);
     console.log(JSON.stringify(report, null, 2)); if (report.status !== 'ready') process.exitCode = 2; if (argv.includes('--require-execution') && report.exercise?.state !== 'verified') process.exitCode = 3;
   } catch (error) { console.error(`virtual-gamepad verification failed: ${error.message}`); process.exitCode = 1; }
 }

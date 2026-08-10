@@ -10,7 +10,7 @@ const acceptanceWorkflow = fs.readFileSync(path.join(repositoryRoot, '.github/wo
 
 const production = {status: 'healthy', includeTurn: true, required: ['service', 'broker', 'turn-credential-service'], security: {credentials: 'external-secret-files', tls: 'configured'}, primary: {status: 'healthy', broker: {status: 'ready', backend: 'redis'}}, turn: {status: 'ready', network: {status: 'reachable', total: 1, reachable: 1}}};
 const hardware = platform => ({kind: 'native-hardware-report', verification: 'runtime-exercise', platform, status: 'ready', package: {state: 'ready'}, hardware: {state: 'ready'}, execution: {state: 'ready', capture: 'verified', audio: 'verified', input: 'verified', haptics: 'verified'}});
-const virtual = platform => ({kind: 'virtual-gamepad-exercise', verification: 'signed-runtime-exercise', platform, status: 'ready', capabilities: {execute: true}, exercise: {state: 'verified'}});
+const virtual = platform => ({kind: 'virtual-gamepad-exercise', verification: 'signed-runtime-exercise', platform, status: 'ready', driver: {state: 'ready'}, capabilities: {execute: true}, exercise: {state: 'verified'}});
 const signed = platform => ({kind: 'signed-release-manifest', verification: 'webcrypto', platform, status: 'verified', signer: 'operator-key'});
 
 test('roadmap acceptance stays incomplete and names every missing external gate', () => {

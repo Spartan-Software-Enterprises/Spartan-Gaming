@@ -28,7 +28,7 @@ function hardwareGate(reports) {
 
 function virtualDriverGate(reports) {
   const byPlatform = new Map(reports.map(report => [reportPlatform(report), report]));
-  const missing = ['win32', 'darwin'].filter(target => { const report = byPlatform.get(target); return !report || report.kind !== 'virtual-gamepad-exercise' || report.verification !== 'signed-runtime-exercise' || report.status !== 'ready' || report.exercise?.state !== 'verified' || report.capabilities?.execute !== true; });
+  const missing = ['win32', 'darwin'].filter(target => { const report = byPlatform.get(target); return !report || report.kind !== 'virtual-gamepad-exercise' || report.verification !== 'signed-runtime-exercise' || report.status !== 'ready' || report.driver?.state !== 'ready' || report.exercise?.state !== 'verified' || report.capabilities?.execute !== true; });
   return Object.freeze({id: 'desktop-virtual-gamepads', status: missing.length ? 'missing' : 'verified', missing: Object.freeze(missing)});
 }
 

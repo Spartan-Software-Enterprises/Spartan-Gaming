@@ -322,14 +322,19 @@ npm run native:verify-virtual-gamepad -- \
   --platform windows \
   --install-root 'C:/Spartan/adapters' \
   --adapter-id windows-virtual-gamepad \
-  --public-key-file /run/secrets/virtual-gamepad-public-key.json
+  --public-key-file /run/secrets/virtual-gamepad-public-key.json \
+  --require-driver
 ```
 
 The command verifies the current pointer, manifest identity, platform and
-package kind, every declared file digest, the release signature, and the
-factory contract. It never executes a controller operation; the actual
-driver/hardware exercise remains an operator-run final gate. To run the
-bounded injection exercise after signature verification, add
+package kind, every declared file digest, the release signature, the factory
+contract, and (with `--require-driver`) an adapter-provided `verifyDriver()`
+probe that confirms the separately installed OS driver is ready. The probe may
+return only bounded identity metadata such as driver name and version; it must
+not return device paths, credentials, or controller input. It never executes a
+controller operation; the actual driver/hardware exercise remains an
+operator-run final gate. To run the bounded injection exercise after signature
+and driver verification, add
 `--execute --confirm --require-execution`; it sends button 0 press/release and
 axis 0 neutral through the installed adapter and records only the operation
 count. The resulting report is marked `kind: virtual-gamepad-exercise` with

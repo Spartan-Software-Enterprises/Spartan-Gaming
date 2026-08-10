@@ -104,7 +104,7 @@ jobs:
           test -n "$VIRTUAL_INSTALL_ROOT"
           test -n "$VIRTUAL_ADAPTER_ID"
           test -f "$PUBLIC_KEY_FILE"
-          npm run native:verify-virtual-gamepad -- --platform "$TARGET_PLATFORM" --install-root "$VIRTUAL_INSTALL_ROOT" --adapter-id "$VIRTUAL_ADAPTER_ID" --public-key-file "$PUBLIC_KEY_FILE" --report-file "$RUNNER_TEMP/spartan-virtual-gamepad-$TARGET_PLATFORM.json" --execute --confirm --require-execution
+          npm run native:verify-virtual-gamepad -- --platform "$TARGET_PLATFORM" --install-root "$VIRTUAL_INSTALL_ROOT" --adapter-id "$VIRTUAL_ADAPTER_ID" --public-key-file "$PUBLIC_KEY_FILE" --report-file "$RUNNER_TEMP/spartan-virtual-gamepad-$TARGET_PLATFORM.json" --require-driver --execute --confirm --require-execution
       - name: Retain capability reports
         if: ${{ always() }}
         uses: actions/upload-artifact@v7
