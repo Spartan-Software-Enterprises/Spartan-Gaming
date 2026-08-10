@@ -83,7 +83,7 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- The published code state is `7df0ec4` on `main`; local and AWS worktrees are
+- The published code state is `fa385d6` on `main`; local and AWS worktrees are
   clean and synchronized with `origin/main`.
 - `npm run check`: repository checks pass on the current code state locally
   and on the AWS dev server.
@@ -184,8 +184,9 @@ and `android/SpartanAndroidBridge.kt`. Android WebView policy requests now use a
 versioned, 16-KiB-bounded message protocol through the optional `SpartanAndroid`
 interface; native handlers may separately query Game Mode, controller inventory,
 or text input. The bridge fails closed for missing, oversized, malformed, or
-unknown requests and never exposes raw Android objects or arbitrary command/URL
-execution. Focused bridge/runtime validation passed 13/13, and the full local
+unknown actions or non-object payloads and never exposes raw Android objects or
+arbitrary command/URL execution. Focused bridge/runtime validation passed 14/14,
+and the full local
 suite passed 632 tests with 628 passed, 4 skipped, and 0 failed. Android SDK
 compilation, WebView lifecycle, permissions, callbacks, and device behavior
 remain physical Android lab gates.
