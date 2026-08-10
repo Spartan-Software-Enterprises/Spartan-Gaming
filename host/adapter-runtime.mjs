@@ -1,7 +1,8 @@
 import {promises as defaultFs} from 'node:fs';
 import {isAbsolute, join, relative, resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {normalizeAdapterPackageManifest} from './adapter-package.mjs';
+import {normalizeAdapterPackageManifest, verifyPackageEntries} from './adapter-package.mjs';
+import {verifyPackageManifestSignature} from './package-signing.mjs';
 import {createPlatformAdapterBoundary} from './platform-adapters.mjs';
 
 const PLATFORMS = new Set(['win32', 'darwin', 'linux']);
@@ -10,6 +11,17 @@ function required(value, name) { if (typeof value !== 'string' || !value.trim())
 function segment(value, name) { const result = required(value, name); if (!SAFE_SEGMENT.test(result) || result === '.' || result === '..') throw new TypeError(`${name} contains an unsafe path segment`); return result; }
 function inside(root, target) { const tail = relative(root, target); if (!tail || tail.startsWith('..') || isAbsolute(tail)) throw new Error('adapter path escapes the install root'); return target; }
 async function readJson(fsImpl, path, name) { try { return JSON.parse(await fsImpl.readFile(path, 'utf8')); } catch (error) { throw new Error(`unable to read ${name}: ${error.message}`); } }
+
+/** Verify both the signed manifest and every installed file before activation. */
+export function createInstalledAdapterManifestVerifier({publicKeyJwk, subtle = globalThis.crypto?.subtle, fsImpl = defaultFs} = {}) {
+  if (!publicKeyJwk || typeof publicKeyJwk !== 'object' || Array.isArray(publicKeyJwk)) throw new TypeError('public key JWK must be an object');
+  if (!fsImpl || typeof fsImpl.readFile !== 'function') throw new TypeError('filesystem adapter must implement readFile');
+  return async ({manifest, target} = {}) => {
+    if (!await verifyPackageManifestSignature({manifest, publicKeyJwk, subtle})) return false;
+    try { await verifyPackageEntries({manifest, readEntry: entry => fsImpl.readFile(join(target, ...entry.split('/')))}); return true; }
+    catch { return false; }
+  };
+}
 
 /** Activate only a verified, platform-matched adapter package from an install root. */
 export function createInstalledAdapterRuntime({installRoot, id, platform, expectedKind = 'input', fsImpl = defaultFs, loadModule = specifier => import(specifier), verifyManifest} = {}) {

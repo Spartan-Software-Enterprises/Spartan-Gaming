@@ -34,6 +34,15 @@ factory is activated; an unverified direct module is unavailable by default and
 can only be enabled through an explicit development/test option. The host muxes only button/axis operations to that package and keeps
 keyboard, pointer, and haptic operations on the native adapter.
 
+For a separately installed adapter, set `--virtual-gamepad-install-root` and
+`--virtual-gamepad-adapter-id` (or `SPARTAN_VIRTUAL_GAMEPAD_INSTALL_ROOT` and
+`SPARTAN_VIRTUAL_GAMEPAD_ADAPTER_ID`) to identify its verified package. Set
+`SPARTAN_VIRTUAL_GAMEPAD_PUBLIC_KEY_JWK` to the operator-managed public trust
+anchor; the private signing key never belongs in host configuration. The
+install root and adapter ID are also accepted in non-secret host JSON. Without
+all three values, the installed runtime remains unavailable and the host
+reports the capability as not ready.
+
 Use `--virtual-gamepad-backend` with `Automatic`, `Linux uinput`, `Windows
 external driver`, `macOS external driver`, `Browser Gamepad`, or `Disabled` to
 make the intended controller path explicit. `--virtual-gamepad-device` carries

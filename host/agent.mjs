@@ -16,6 +16,7 @@ import {createReferenceGameLaunch} from './reference-launch.mjs';
 import {loadWerift} from './werift-adapter.mjs';
 import {createNativeWeriftConnection} from './native-agent.mjs';
 import {createHostMediaPolicy, createHostRuntimePolicy, readHostConfig} from './config.mjs';
+import {createInstalledAdapterManifestVerifier, createInstalledAdapterRuntime} from './adapter-runtime.mjs';
 import {platform as osPlatform} from 'node:os';
 
 const args = new Map();
@@ -46,10 +47,16 @@ const pairingCode = args.get('pairing-code') || createPairingCode();
 const pairing = createPairingAuthority({code: pairingCode});
 const nativePackage = String(configured('native-package', 'nativePackage', process.env.SPARTAN_NATIVE_PACKAGE || '')).trim() || undefined;
 const virtualGamepadPackage = String(configured('virtual-gamepad-package', 'virtualGamepadPackage', process.env.SPARTAN_VIRTUAL_GAMEPAD_PACKAGE || '')).trim() || undefined;
+const virtualGamepadInstallRoot = String(configured('virtual-gamepad-install-root', 'virtualGamepadInstallRoot', process.env.SPARTAN_VIRTUAL_GAMEPAD_INSTALL_ROOT || '')).trim() || undefined;
+const virtualGamepadAdapterId = String(configured('virtual-gamepad-adapter-id', 'virtualGamepadAdapterId', process.env.SPARTAN_VIRTUAL_GAMEPAD_ADAPTER_ID || '')).trim() || undefined;
 const virtualGamepadBackend = String(configured('virtual-gamepad-backend', 'virtualGamepadBackend', process.env.SPARTAN_VIRTUAL_GAMEPAD_BACKEND || 'Automatic')).trim();
 const virtualGamepadDevice = String(configured('virtual-gamepad-device', 'virtualGamepadDevice', process.env.SPARTAN_VIRTUAL_GAMEPAD_DEVICE || '')).trim() || undefined;
 const virtualGamepadDevices = args.get('virtual-gamepad-devices') ? String(args.get('virtual-gamepad-devices')).split(',').map(value => value.trim()).filter(Boolean).slice(0, 8) : (hostConfig.virtualGamepadDevices.length ? hostConfig.virtualGamepadDevices : String(process.env.SPARTAN_VIRTUAL_GAMEPAD_DEVICES || '').split(',').map(value => value.trim()).filter(Boolean).slice(0, 8));
-const hostRuntime = await detectHostRuntime({packageName: nativePackage, bindingOptions: {environment: process.env}, virtualGamepadPackageName: virtualGamepadPackage, virtualGamepadBackend, virtualGamepadDevice, virtualGamepadDevices, virtualGamepadOptions: {environment: process.env}});
+let virtualGamepadRuntime;
+if (virtualGamepadInstallRoot && virtualGamepadAdapterId && process.env.SPARTAN_VIRTUAL_GAMEPAD_PUBLIC_KEY_JWK) {
+  try { virtualGamepadRuntime = createInstalledAdapterRuntime({installRoot: virtualGamepadInstallRoot, id: virtualGamepadAdapterId, platform: osPlatform(), expectedKind: 'virtual-gamepad', verifyManifest: createInstalledAdapterManifestVerifier({publicKeyJwk: JSON.parse(process.env.SPARTAN_VIRTUAL_GAMEPAD_PUBLIC_KEY_JWK)})}); } catch {}
+}
+const hostRuntime = await detectHostRuntime({packageName: nativePackage, bindingOptions: {environment: process.env}, virtualGamepadPackageName: virtualGamepadPackage, virtualGamepadBackend, virtualGamepadDevice, virtualGamepadDevices, virtualGamepadRuntime, virtualGamepadOptions: {environment: process.env}});
 const environment = hostRuntime.environment;
 const inputEnabled = args.has('enable-input') ? args.get('enable-input') === true || args.get('enable-input') === 'true' : hostConfig.enableInput;
 const controllerPolicy = hostConfig.controllerPolicy;
