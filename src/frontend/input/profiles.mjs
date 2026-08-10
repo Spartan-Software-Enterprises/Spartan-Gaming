@@ -4,6 +4,7 @@ export const CONTROLLER_PROFILES_KEY = 'spartan-gaming.controller-profiles.v1';
 export const CONTROLLER_PROFILE_VERSION = 1;
 const PROFILE_ID = /^[a-z0-9][a-z0-9._-]{1,63}$/;
 const PROFILE_CAPABILITIES = new Set(['adaptiveTriggers', 'backButtons', 'battery', 'capture', 'gyro', 'haptics', 'motion', 'paddles', 'pedals', 'splitInput', 'throttle', 'touchpad', 'trackpads', 'wheel']);
+export const CONTROLLER_PROFILE_CAPABILITIES = Object.freeze([...PROFILE_CAPABILITIES]);
 
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 function required(value, name) { if (typeof value !== 'string' || !value.trim()) throw new TypeError(`${name} must be a non-empty string`); return value.trim(); }
