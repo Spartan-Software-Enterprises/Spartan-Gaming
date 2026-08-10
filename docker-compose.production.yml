@@ -62,7 +62,7 @@ services:
   turn:
     profiles: ["turn"]
     image: "${SPARTAN_TURN_IMAGE:?Set an operator-approved coturn image}"
-    command: ["turnserver", "--config", "/run/secrets/turn_config", "--no-cli"]
+    command: ["turnserver", "-c", "/run/secrets/turn_config", "--no-cli"]
     network_mode: host
     secrets:
       - turn_config
