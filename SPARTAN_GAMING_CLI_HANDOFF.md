@@ -83,14 +83,16 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- `npm run check`: 421 tests passed, 0 failed locally and on the AWS dev server
-  for the Proton/SteamOS commit `56558f8`.
+- `npm run check`: 422 tests passed, 0 failed locally and on the AWS dev server
+  for the explicit SteamOS profile commit `c6d2533`.
 - `npm test`: 616 tests, 612 passed, 0 failed, and 4 skipped locally after
   `fc12cd0`; the AWS run also completed with 616 tests, 614 passed, 0 failed,
   and 2 skipped. The difference is environment-gated integration coverage,
   not a failure.
 - On `56558f8`, the AWS full suite completed with 48 pretest cases (47 passed,
   1 skipped) and 617 main-suite tests (615 passed, 0 failed, 2 skipped).
+- On `c6d2533`, the AWS full suite completed with 48 pretest cases (47 passed,
+  1 skipped) and 618 main-suite tests (616 passed, 0 failed, 2 skipped).
 - PWA install tests: 2 passed locally; the AWS focused distribution/server/
   install run passed 7 tests.
 - The latest PWA distribution tests also verify the SVG app mark, manifest
@@ -137,6 +139,15 @@ passed 23/23. The local `npm test` pretest integration phase passed 46, skipped
 1, and failed twice on the existing Werift loopback media timeout; it did not
 reach the main suite. Treat that local media timeout as an open environment
 blocker until reproduced or cleared on the AWS host.
+
+The latest SteamOS increment adds `host/steam-os.mjs`: explicit `os-release`
+identity detection, a 1280×800 handheld ceiling, 30/40/60-FPS policy,
+controller-only navigation metadata, and a shell-free Gamescope wrapper plan.
+SteamOS, Gamescope, and Steam Input settings now export through the frontend
+host configuration. Focused AWS validation passed 41/41 and repository checks
+passed 422/422. Physical Steam Deck/Game Mode/Desktop Mode, real Gamescope,
+Steam Input actions/glyphs, power behavior, and real Proton/native game
+execution remain local-lab gates.
 
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
