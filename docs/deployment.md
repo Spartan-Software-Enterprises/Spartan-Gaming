@@ -209,6 +209,12 @@ an unsigned package, or a configuration-only report as completion.
 For stronger signing evidence, pass each actual signed manifest with repeated
 `--signed-manifest` options and provide `--public-key-file`; the ledger then
 performs WebCrypto verification itself instead of trusting a summary report.
+The manual `Roadmap acceptance` workflow automates this final check on a
+self-hosted runner. Its evidence root must contain `production/rollout.json`,
+one native exercise report per desktop platform, one exercised virtual-driver
+report for Windows and macOS, and three signed manifests. The workflow only
+uploads the bounded acceptance ledger; it does not upload the evidence root or
+the public key file.
 The workflow requires a ready broker health signal by default; this proves the
 running signaling service can reach its configured Redis/production broker,
 not merely that a Redis URL exists in an environment file. Operators using a

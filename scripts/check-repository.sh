@@ -14,6 +14,7 @@ required_files=(
   .github/workflows/repository-checks.yml
   .github/workflows/cross-platform-contracts.yml
   .github/workflows/frontend-distribution.yml
+  .github/workflows/roadmap-acceptance.yml
   docs/architecture.md
   docs/decisions/0002-chromium-and-repository-boundaries.md
   docs/platforms.md

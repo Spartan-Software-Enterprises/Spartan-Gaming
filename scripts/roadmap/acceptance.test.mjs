@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
 import {assessRoadmapAcceptance, assessRoadmapAcceptanceWithSignedManifests} from './acceptance.mjs';
+
+const repositoryRoot = path.resolve(new URL('../..', import.meta.url).pathname);
+const acceptanceWorkflow = fs.readFileSync(path.join(repositoryRoot, '.github/workflows/roadmap-acceptance.yml'), 'utf8');
 
 const production = {status: 'healthy', required: ['service', 'broker', 'turn-credential-service'], primary: {status: 'healthy', broker: {status: 'ready'}}, turn: {status: 'ready'}};
 const hardware = platform => ({platform, status: 'ready', package: {state: 'ready'}, hardware: {state: 'ready'}, execution: {state: 'ready', capture: 'verified', audio: 'verified', input: 'verified', haptics: 'verified'}});
@@ -30,4 +35,11 @@ test('roadmap acceptance verifies supplied signed manifests before accepting pac
 
 test('roadmap acceptance rejects signed manifests without a public key', async () => {
   await assert.rejects(() => assessRoadmapAcceptanceWithSignedManifests({productionReport: production, signedManifestPaths: ['/release/linux.json']}), /publicKeyJwk is required/);
+});
+
+test('roadmap acceptance workflow requires the complete runner-local evidence layout', () => {
+  assert.match(acceptanceWorkflow, /workflow_dispatch:/); assert.match(acceptanceWorkflow, /runs-on: \$\{\{ inputs\.runner_label \}\}/);
+  assert.match(acceptanceWorkflow, /production\/rollout\.json/); assert.match(acceptanceWorkflow, /hardware\/linux\.json/); assert.match(acceptanceWorkflow, /hardware\/win32\.json/); assert.match(acceptanceWorkflow, /hardware\/darwin\.json/);
+  assert.match(acceptanceWorkflow, /virtual-gamepad\/win32\.json/); assert.match(acceptanceWorkflow, /virtual-gamepad\/darwin\.json/); assert.match(acceptanceWorkflow, /--signed-manifest/); assert.match(acceptanceWorkflow, /--public-key-file/); assert.match(acceptanceWorkflow, /actions\/upload-artifact@v7/);
+  assert.doesNotMatch(acceptanceWorkflow, /SPARTAN_.*SECRET\s*:/);
 });
