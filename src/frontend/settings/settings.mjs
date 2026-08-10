@@ -5,6 +5,7 @@ import {resolveSettingsAction} from './actions.mjs';
 import {applyRuntimeUiSettings} from './runtime-ui.mjs';
 import {clearProviderSessionState} from '../providers/session-cleanup.mjs';
 import {createHostConfigFromSettings} from '../host/config.mjs';
+import {renderSettingControl} from './control.mjs';
 
 const settingsStore = createSettingsStore();
 const state = {...settingsStore.read()};
@@ -50,21 +51,6 @@ function renderNav() {
   }));
 }
 
-function renderControl(setting) {
-  const value = state[setting.key];
-  if (setting.type === 'toggle') {
-    return `<button class="toggle ${value ? 'is-on' : ''}" role="switch" aria-checked="${Boolean(value)}" data-key="${setting.key}"><span></span><b>${value ? 'On' : 'Off'}</b></button>`;
-  }
-  if (setting.type === 'select') {
-    return `<select data-key="${setting.key}">${setting.options.map((option) => `<option ${option === value ? 'selected' : ''}>${option}</option>`).join('')}</select>`;
-  }
-  if (setting.type === 'range') {
-    return `<div class="range-control"><input type="range" min="${setting.min}" max="${setting.max}" step="${setting.step}" value="${value}" data-key="${setting.key}"><output>${value}${setting.unit}</output></div>`;
-  }
-  if (setting.type === 'text') return `<input class="text-input" type="text" value="${value ?? ''}" placeholder="Not configured" data-key="${setting.key}">`;
-  return `<button class="action-button" data-action="${setting.key}">${setting.actionLabel}</button>`;
-}
-
 function renderContent() {
   const category = settingsCategories.find((item) => item.id === activeCategory) ?? settingsCategories[0];
   const shown = query ? visibleCategories().find((item) => item.id === activeCategory) : category;
@@ -78,7 +64,7 @@ function renderContent() {
       ${content.settings.length ? content.settings.map((setting) => `
         <section class="setting-row">
           <div class="setting-copy"><h2>${setting.label}</h2><p>${setting.description}</p></div>
-          <div class="setting-control">${renderControl(setting)}</div>
+          <div class="setting-control">${renderSettingControl(setting, state[setting.key])}</div>
         </section>
       `).join('') : '<div class="empty-state"><strong>No matching settings</strong><p>Try another search term or clear the filter.</p></div>'}
     </div>
