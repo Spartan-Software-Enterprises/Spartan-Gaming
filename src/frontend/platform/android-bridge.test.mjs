@@ -40,11 +40,17 @@ test('Android bridge rejects oversized or malformed native bridge payloads', () 
 test('Android bridge correlates only valid native result events', () => {
   const listeners = new Map();
   const target = {addEventListener(type, listener) { listeners.set(type, listener); }, removeEventListener(type) { listeners.delete(type); }};
-  const bridge = createAndroidBridge({bridge: null, target});
+  const sent = [];
+  const bridge = createAndroidBridge({idFactory: () => 'and-1', bridge: {postMessage(value) { sent.push(JSON.parse(value)); return true; }}, target});
+  assert.equal(bridge.queryGameMode().requestId, 'and-1');
+  assert.equal(bridge.pendingCount, 1);
   const results = []; const stop = bridge.listen(result => results.push(result));
+  listeners.get(RESULT_EVENT)?.({detail: {version: 1, requestId: 'and-unknown', action: ACTIONS.gameMode, status: 'accepted'}});
+  listeners.get(RESULT_EVENT)?.({detail: {version: 1, requestId: 'and-1', action: ACTIONS.policy, status: 'accepted'}});
   listeners.get(RESULT_EVENT)?.({detail: {version: 1, requestId: 'and-1', action: ACTIONS.gameMode, status: 'accepted', payload: {mode: 'Performance'}}});
   listeners.get(RESULT_EVENT)?.({detail: {version: 1, requestId: 'bad id', action: ACTIONS.gameMode, status: 'accepted'}});
   assert.deepEqual(results, [{version: 1, requestId: 'and-1', action: ACTIONS.gameMode, status: 'accepted', payload: {mode: 'Performance'}}]);
+  assert.equal(bridge.pendingCount, 0);
   stop(); assert.equal(listeners.size, 0);
   assert.equal(normalizeAndroidResult({version: 1, requestId: 'and-1', action: ACTIONS.gameMode, status: 'pending'}), null);
 });

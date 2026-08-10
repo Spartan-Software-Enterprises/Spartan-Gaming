@@ -35,6 +35,7 @@ export function normalizeAndroidResult(value) {
  */
 export function createAndroidBridge({bridge = globalThis.SpartanAndroid, target = globalThis, idFactory} = {}) {
   const postMessage = typeof bridge?.postMessage === 'function' ? bridge.postMessage.bind(bridge) : null;
+  const pending = new Map();
   let sequence = 0;
   const nextRequestId = () => {
     const candidate = typeof idFactory === 'function' ? idFactory() : `and-${Date.now().toString(36)}-${(++sequence).toString(36)}`;
@@ -46,6 +47,7 @@ export function createAndroidBridge({bridge = globalThis.SpartanAndroid, target 
     try {
       const message = encode(requestId, action, payload);
       const result = postMessage(message);
+      if (result !== false) pending.set(requestId, action);
       return Object.freeze({status: 'requested', action, requestId, ...(typeof result === 'boolean' ? {accepted: result} : {})});
     } catch (error) {
       return Object.freeze({status: 'rejected', action, requestId, reason: boundedText(error?.message, 'bridge rejected message')});
@@ -53,12 +55,18 @@ export function createAndroidBridge({bridge = globalThis.SpartanAndroid, target 
   };
   const listen = onResult => {
     if (typeof onResult !== 'function' || typeof target?.addEventListener !== 'function') return () => {};
-    const listener = event => { const result = normalizeAndroidResult(event?.detail); if (result) onResult(result); };
+    const listener = event => {
+      const result = normalizeAndroidResult(event?.detail);
+      if (!result || pending.get(result.requestId) !== result.action) return;
+      pending.delete(result.requestId);
+      onResult(result);
+    };
     target.addEventListener(RESULT_EVENT, listener);
     return () => target.removeEventListener?.(RESULT_EVENT, listener);
   };
   return Object.freeze({
     available: postMessage !== null,
+    get pendingCount() { return pending.size; },
     send,
     listen,
     applyPolicy(policy) { return send(ACTIONS.policy, policy); },
