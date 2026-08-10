@@ -68,6 +68,8 @@ That runbook includes the complete connection metadata, setup commands,
 service boundaries, evidence locations, and platform limitations. The current
 agent continuation state is maintained in
 [SPARTAN_GAMING_CLI_HANDOFF.md](SPARTAN_GAMING_CLI_HANDOFF.md).
+The future physical-device and signing requirements are listed in the
+[local validation lab runbook](docs/future-local-validation.md).
 
 ## Project principles
 

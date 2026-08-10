@@ -123,4 +123,5 @@ At the end of every agent session:
 
 References: [README.md](README.md), [ROADMAP.md](ROADMAP.md),
 [docs/aws-dev-validation.md](docs/aws-dev-validation.md),
+[docs/future-local-validation.md](docs/future-local-validation.md),
 [docs/development.md](docs/development.md), and [docs/platforms.md](docs/platforms.md).

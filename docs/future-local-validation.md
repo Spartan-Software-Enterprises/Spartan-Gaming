@@ -1,0 +1,169 @@
+# Future local validation lab
+
+This runbook defines the future operator-controlled lab required to close the
+acceptance gates that the current AWS Amazon Linux development server cannot
+prove. It is intentionally separate from the remote Linux contract-validation
+host. Do not mark a gate complete from a plan, capability description, VM
+claim, or browser-only test.
+
+## What the AWS dev server cannot prove
+
+The current server is useful for Linux package builds, Linux uinput exercise,
+service contracts, headless Chromium, Playwright, and remote CI reproduction.
+It cannot provide reliable evidence for:
+
+- real Windows and macOS capture, audio, display, input, haptics, and packaged
+  Electron behavior;
+- the final Linux gate on a representative physical Linux desktop with a real
+  display, audio device, GPU, and controller;
+- Windows virtual gamepad drivers or macOS virtual gamepad drivers installed
+  and exercised on their target operating systems;
+- physical Xbox, PlayStation, Nintendo, handheld, wheel, HOTAS, adaptive
+  trigger, gyro, touchpad, and multi-controller combinations;
+- Android APK installation, lifecycle, PiP, orientation, touch, Game Mode,
+  GameNative handoff, or Android permission behavior on real devices;
+- Fire TV / Fire Stick and Roku remote navigation, packaging, certification,
+  display safe areas, and vendor runtime behavior;
+- real GPU WebGPU, HDR, AV1 decode/encode, high-refresh, multi-display,
+  fullscreen, capture, and end-to-end input-to-photon behavior;
+- production activation, public DNS, operator-managed production secrets,
+  external package-signing custody, or release artifact notarization.
+
+Apple mobile/iOS validation remains out of product scope.
+
+## Researched feature and function register
+
+This register is the standing backlog for features that are already represented
+by shared contracts or have been identified during platform research. “Local
+lab” means the feature can be designed and contract-tested remotely, but final
+behavior must be exercised on the target device or operating system.
+
+| Feature/function | Remote status | Local-lab work |
+| --- | --- | --- |
+| Electron Provider Player isolation, permission prompts, navigation limits, and IPC sender validation | Contract-tested | Launch packaged builds on every desktop OS and test real remote-provider handoffs |
+| Electron fullscreen, quit guard, background behavior, power mode, and privacy controls | Contract-tested | Verify native window behavior, suspend/resume, GPU use, permissions, and shutdown on Windows/macOS/Linux |
+| Hardware display capture and system/microphone audio | Linux wrapper verified | Verify OS permission prompts, physical displays, audio devices, source selection, and teardown on every desktop OS |
+| WebGPU, hardware decode, AV1, HDR, high refresh, multi-display, and display targeting | Browser capability/policy contracts | Test real GPUs, monitors, HDR modes, refresh rates, fullscreen targets, and power/thermal behavior |
+| Universal controller profiles, HID, rumble, gyro, touchpad, adaptive triggers, wheels, HOTAS, and multiple players | Shared normalization and negotiation tested | Exercise the controller bench and native driver paths with real devices |
+| Windows/macOS virtual gamepad injection | Package boundary tested only | Install, verify, exercise, uninstall, and recover the signed target driver |
+| Android touch layout, lifecycle, orientation, PiP, edge-to-edge, Game Mode, large-screen and foldable behavior | Shared Android policy tested | Build/install APKs and test phones, tablets, foldables, permissions, rotation, PiP, and resume flows |
+| GameNative handoff | Kotlin contract tested | Test installed/missing GameNative, supported stores, intent resolution, release fallback, and Android lifecycle |
+| Fire TV remote/gamepad focus navigation and lean-back playback | Shared television profile tested | Test D-pad focus, Back/Home/microphone interruption, Bluetooth controllers, safe areas, and vendor packaging |
+| Roku remote navigation and playback surface | Shared television profile tested | Verify the actual Roku runtime, packaging/certification feasibility, focus model, playback, and controller limits |
+| WebRTC/WebTransport/WebSocket transport fallback and session recovery | Protocol and fake-transport tests passed | Exercise real WAN/LAN loss, NAT/TURN paths, reconnects, datagrams, media continuity, and device sleep/wake |
+| Screenshots, local recording, instant replay, Media Session, and Picture-in-Picture | Browser contracts tested | Verify codecs, storage permissions, sustained recording, battery/thermal impact, and OS media controls |
+| Signed adapters, native packages, updates, rollback, and external signing custody | Verification and rollback contracts tested | Use the signing service/HSM boundary and install signed artifacts on every target OS |
+| Production Redis, TURN, TLS, DNS, rollout, and secret rotation | Dev services and preflight verified | Run operator-controlled production activation, external monitoring, rotation, rollback, and incident recovery |
+
+The Android and large-screen items follow the platform guidance for PiP,
+large-screen continuity, and controller support; Fire TV remote input is based
+on Android key/input-device behavior. Electron validation follows the current
+security requirements for context isolation, sandboxing, permission handlers,
+restricted navigation, and current Electron releases.
+
+Research references: [Electron security](https://www.electronjs.org/docs/latest/tutorial/security),
+[Android PiP](https://developer.android.com/develop/ui/views/picture-in-picture),
+[Android large-screen quality](https://developer.android.com/docs/quality-guidelines/archive/adaptive/large-screen-app-quality),
+[Fire TV remote input](https://developer.amazon.com/docs/fire-tv/remote-input.html), and
+[Fire TV controller identification](https://developer.amazon.com/docs/fire-tv/identify-controllers.html).
+
+## Required lab matrix
+
+At minimum, provide these operator-controlled targets:
+
+| Target | Required evidence |
+| --- | --- |
+| Windows 11 desktop | Electron package launch, display/audio capture, controller input, rumble, signed virtual-gamepad driver exercise |
+| macOS supported release | Electron package launch, Screen Recording/Microphone/Input Monitoring permissions, capture/audio, controller/haptics, signed virtual-gamepad driver exercise |
+| Physical Linux desktop | X11 or Wayland capture, PipeWire/Pulse audio, `/dev/uinput`, physical controller, force feedback, GPU codecs |
+| Android phone/tablet/foldable | APK install, lifecycle, orientation, PiP, touch layout, Game Mode, GameNative handoff, permissions |
+| Fire TV / Fire Stick | Remote focus navigation, safe area, playback, app/browser packaging feasibility |
+| Roku target | Remote navigation, web surface feasibility, playback, packaging/certification feasibility |
+| Controller bench | Xbox/XInput, DualSense/DInput, Nintendo layout, generic HID, wheel/HOTAS, gyro/touchpad/adaptive trigger where available |
+| Signing workstation/service | Per-platform signed manifests, public-key verification, custody audit, installer/package verification |
+
+The lab may use separate physical machines. A VM is acceptable for contract
+tests, but it does not substitute for a physical hardware or driver gate.
+
+## Evidence collection
+
+Each target must produce a secret-free report with:
+
+- platform, OS version, hardware class, and test-run timestamp;
+- exact Spartan commit and native package version;
+- capture, audio, input, haptics, display, codec, and driver results;
+- executed test names and explicit pass/fail reasons;
+- package digest and signature metadata without private key material;
+- redacted logs and screenshots where useful;
+- operator identity/custody reference stored outside Git.
+
+Store reports in a protected evidence directory, for example:
+
+```text
+evidence/
+  hardware/{win32,darwin,linux}.json
+  native/{win32,darwin}-virtual-gamepad.json
+  signing/{win32,darwin,linux}.json
+  production/rollout.json
+```
+
+Use mode `0700` for the directory and mode `0600` for reports. Never commit
+private keys, signing tokens, AWS credentials, provider credentials, TLS keys,
+or raw authentication callbacks.
+
+## Gate commands
+
+On each physical desktop target, build the matching native package and run:
+
+```bash
+npm ci --ignore-scripts --no-audit --no-fund
+npm run native:build-linux                 # Linux target only
+npm run native:verify-desktop -- --platform <linux|win32|darwin> \
+  --execute --confirm --require-hardware --require-execution \
+  --report-file "$EVIDENCE/hardware/<platform>.json"
+```
+
+On Windows and macOS, run the signed virtual-gamepad verifier only after the
+driver has been installed through its documented, user-consented installer:
+
+```bash
+npm run native:verify-virtual-gamepad -- --platform <windows|macos> \
+  --execute --confirm --require-driver \
+  --report-file "$EVIDENCE/native/<platform>-virtual-gamepad.json"
+```
+
+After signed package reports and the production report are present, run:
+
+```bash
+npm run roadmap:acceptance -- \
+  --production-report "$EVIDENCE/production/rollout.json" \
+  --hardware-report "$EVIDENCE/hardware/win32.json" \
+  --hardware-report "$EVIDENCE/hardware/darwin.json" \
+  --hardware-report "$EVIDENCE/hardware/linux.json" \
+  --virtual-gamepad-report "$EVIDENCE/native/win32-virtual-gamepad.json" \
+  --virtual-gamepad-report "$EVIDENCE/native/darwin-virtual-gamepad.json" \
+  --signed-package-report "$EVIDENCE/signing/win32.json" \
+  --signed-package-report "$EVIDENCE/signing/darwin.json" \
+  --signed-package-report "$EVIDENCE/signing/linux.json" \
+  --report-file "$EVIDENCE/acceptance.json"
+```
+
+The final status is accepted only when every gate reports `verified` and the
+result is `complete`. Missing hardware, missing drivers, missing custody, or
+missing production evidence must remain visible as blockers.
+
+## Local GUI and device QA
+
+Use Playwright for browser surfaces on each available desktop browser, but
+also launch the packaged Electron app on each desktop OS and capture evidence
+for startup, navigation, provider handoff, fullscreen, quit guard, permission
+prompts, controller focus, and clean shutdown. Use real Android and television
+devices for their device-specific flows. Browser emulation alone is not device
+acceptance evidence.
+
+## Handoff requirement
+
+When this lab becomes available, update
+`SPARTAN_GAMING_CLI_HANDOFF.md` with report paths, commit IDs, exact commands,
+and gate results. Keep credentials in the protected operator environment and
+record only their locations and custody references.
