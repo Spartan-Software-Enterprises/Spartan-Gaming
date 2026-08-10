@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
+import path from 'node:path';
 import test from 'node:test';
 import {createProductionRolloutPlan, executeProductionRollout} from './production-rollout.mjs';
 
 test('production rollout plan is shell-free, explicit, and secret-free', () => {
   const plan = createProductionRolloutPlan({composeFile: '/srv/spartan/docker-compose.production.yml', envFile: '/run/secrets/spartan.env', project: 'spartan-prod', healthEndpoint: 'https://play.example/health', adminHealthEndpoint: 'https://play.example/admin/health'});
   assert.equal(plan.status, 'planned');
-  assert.deepEqual(plan.compose.preflight.args.slice(0, 6), ['compose', '--project-name', 'spartan-prod', '--file', '/srv/spartan/docker-compose.production.yml', '--env-file']);
+  assert.deepEqual(plan.compose.preflight.args.slice(0, 6), ['compose', '--project-name', 'spartan-prod', '--file', path.resolve('/srv/spartan/docker-compose.production.yml'), '--env-file']);
   assert.deepEqual(plan.compose.up.args.slice(-3), ['signaling', 'redis', 'turn']);
   assert.equal(plan.security.shell, false);
   assert.equal(JSON.stringify(plan).includes('SPARTAN_'), false);
