@@ -53,6 +53,22 @@ The report must say `status: ready` and `input: verified`. Run the optional
 `--rumble` check separately; a headless cloud VM may expose uinput while still
 lacking a kernel or device path capable of force feedback.
 
+## Current development evidence
+
+The configured Amazon Linux 2023 development host has been synchronized with
+the current `main` branch and has successfully run the repository dependency
+install and the Linux native package build/contract path. Its secret-free
+development rollout report records healthy reference signaling, a ready Redis
+broker, a ready TURN credential service, and reachable TURN network probing.
+The report is retained outside Git at
+`~/.config/spartan-dev/evidence/production/rollout.json`.
+
+This is deliberately not production acceptance evidence: the host uses
+operator-local development secrets and a development TLS setup, has no public
+game ports, and cannot prove physical Windows/macOS devices, desktop virtual
+gamepad drivers, or external signing custody. The Linux force-feedback probe
+also remains a separate capability result from basic uinput input readiness.
+
 ## Evidence boundary
 
 This host can provide Linux package-build and uinput-input evidence. It does
