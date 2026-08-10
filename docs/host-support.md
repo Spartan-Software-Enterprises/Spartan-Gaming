@@ -309,6 +309,14 @@ the handheld profile to 1280×800 and 30/40/60 FPS, and can produce a shell-free
 Gamescope wrapper plan using operator-selected game and Gamescope paths.
 Generic Linux is never labeled SteamOS from a browser user-agent.
 
+SteamOS launch diagnostics distinguish `native-linux`, `proton`, `steam`, and
+`non-steam` choices. Native Linux is ready only after a user-owned game path is
+selected; Proton additionally requires the configured Proton installation;
+Steam-owned mode reports `official-handoff-required`; and non-Steam mode reports
+`bridge-required` until an operator-approved native or Proton handoff exists.
+Steam app IDs are bounded metadata only. No Steam credentials, client control,
+DRM bypass, anti-cheat bypass, or authentication bypass is implemented.
+
 The same launcher can be supplied to `createNativeWeriftHost`; it is started
 only after the remote offer has passed capability negotiation, before video or
 audio publishers start, and is stopped during session teardown.

@@ -48,6 +48,8 @@ export function createHostConfigFromSettings({platform, settings = {}, host = {}
     gamescopeEnabled: settings['host.gamescopeEnabled'] === true,
     steamOsFramerate: Number.parseInt(String(settings['host.steamOsFramerate'] || '60'), 10) || 60,
     steamInputMode: settings['host.steamInputMode'] === 'Official action metadata' ? 'official-actions' : 'fallback',
+    steamOsLaunchMode: ({'Native Linux': 'native-linux', Proton: 'proton', 'Steam-owned': 'steam', 'Non-Steam': 'non-steam'})[settings['host.steamOsLaunchMode']] || 'native-linux',
+    ...(text(settings['host.steamAppId'], 9) ? {steamAppId: text(settings['host.steamAppId'], 9)} : {}),
     captureSource: option(settings['host.captureSource'], CAPTURE_SOURCES, 'Automatic'),
     videoCodec: option(settings['host.videoCodec'], VIDEO_CODECS, 'Automatic'),
     maxResolution: option(settings['host.maxResolution'], RESOLUTIONS, '1080p'),

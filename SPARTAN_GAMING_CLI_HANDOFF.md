@@ -157,6 +157,11 @@ Xbox/PlayStation/Nintendo/Steam glyph fallbacks. The bridge is metadata-only;
 Gamepad/HID input remains the fallback and no Steam client control or
 credentials are handled. AWS focused validation passed 70/70.
 
+The current SteamOS increment adds launch-mode readiness metadata for native
+Linux, Proton, Steam-owned, and non-Steam choices, including bounded Steam app
+IDs and explicit `official-handoff-required`/`bridge-required` states. It does
+not execute Steam client control or claim real handoff readiness.
+
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
 `scripts/frontend/serve.test.mjs`. Before pushing future work, run

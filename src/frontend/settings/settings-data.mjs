@@ -170,6 +170,8 @@ export const settingsCategories = [
       toggle('host.gamescopeEnabled', 'Use Gamescope launch wrapper', 'Plan a user-selected Gamescope wrapper with the bounded 1280×800 handheld profile; physical host validation is required.', false),
       select('host.steamOsFramerate', 'SteamOS handheld framerate', 'Bound the SteamOS handheld profile to the documented 30, 40, or 60 FPS choices.', ['30 FPS', '40 FPS', '60 FPS'], '60 FPS'),
       select('host.steamInputMode', 'Steam Input integration', 'Use official Steam action metadata when a bridge supplies it, otherwise retain the shared Gamepad/HID fallback.', ['Fallback Gamepad/HID', 'Official action metadata'], 'Fallback Gamepad/HID'),
+      select('host.steamOsLaunchMode', 'SteamOS launch mode', 'Choose native Linux, Proton, Steam-owned, or non-Steam launch metadata; readiness remains explicit until a host bridge is installed.', ['Native Linux', 'Proton', 'Steam-owned', 'Non-Steam'], 'Native Linux'),
+      text('host.steamAppId', 'Steam app ID', 'Optional numeric Steam app ID for a future user-approved Steam handoff; no Steam credentials are stored.', ''),
       text('host.virtualGamepadInstallRoot', 'Virtual gamepad install root', 'Host-local directory containing verified virtual-gamepad adapter packages. This path is used only when exporting host configuration.', ''),
       text('host.virtualGamepadAdapterId', 'Virtual gamepad adapter ID', 'Stable ID of the verified virtual-gamepad adapter package installed on the host.', ''),
       toggle('host.enableNativeMedia', 'Enable native host media', 'Allow a configured native host package and WebRTC adapter to publish display video.', false),
