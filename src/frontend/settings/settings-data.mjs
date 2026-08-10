@@ -13,7 +13,7 @@ export const settingsCategories = [
       select('general.startupPage', 'Startup page', 'Choose what Spartan Gaming opens when the browser launches.', ['Gaming home', 'Continue playing', 'New tab', 'Last session'], 'Gaming home'),
       select('general.defaultSearch', 'Search provider', 'Search used by the address bar and the gaming dashboard.', ['DuckDuckGo', 'Google', 'Bing', 'Brave Search', 'Custom'], 'DuckDuckGo'),
       toggle('general.askBeforeQuit', 'Confirm before quitting', 'Prevent accidental shutdown while an active session is running.', true),
-      toggle('general.backgroundApps', 'Continue background apps', 'Allow provider notifications and sync tasks after the window closes.'),
+      toggle('general.backgroundApps', 'Continue background apps', 'Keep the Electron process available after the window closes for configured background tasks.'),
       select('general.language', 'Language', 'Interface language. Provider content remains controlled by the provider.', ['English', 'Spanish', 'French', 'German', 'Japanese', 'Korean'], 'English'),
       action('general.reset', 'Reset all settings', 'Restore Spartan Gaming defaults. Browser profiles and saved games are not removed.', 'Reset settings'),
     ],

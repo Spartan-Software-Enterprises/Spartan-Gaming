@@ -3,7 +3,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createFrontendServer} from '../../scripts/frontend/serve.mjs';
 import {isAllowedExternalUrl, isAllowedNavigation, isAllowedProviderUrl} from './security.mjs';
-import {applyElectronPrivacyHeaders, normalizeElectronRuntimePolicy, resolvePermissionDecision} from './runtime-policy.mjs';
+import {applyElectronPrivacyHeaders, normalizeElectronRuntimePolicy, resolvePermissionDecision, shouldQuitWhenWindowsClose} from './runtime-policy.mjs';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 let frontend;
@@ -86,7 +86,7 @@ app.whenReady().then(async () => {
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) void createMainWindow(); });
 });
 
-app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+app.on('window-all-closed', () => { if (shouldQuitWhenWindowsClose({platform: process.platform, backgroundApps: runtimePolicy.backgroundApps})) app.quit(); });
 app.on('before-quit', event => {
   if (!quitting && quitGuardEnabled && (sessionActive || Boolean(providerView))) {
     event.preventDefault();

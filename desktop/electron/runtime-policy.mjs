@@ -5,8 +5,10 @@ const PERMISSION_PROMPT_MODES = Object.freeze(['Ask every time', 'Ask per site',
 export function normalizeElectronRuntimePolicy(settings = {}) {
   const powerMode = ['Balanced', 'Performance', 'Battery saver'].includes(settings?.powerMode) ? settings.powerMode : 'Balanced';
   const permissionPrompts = PERMISSION_PROMPT_MODES.includes(settings?.permissionPrompts) ? settings.permissionPrompts : 'Ask per site';
-  return Object.freeze({backgroundThrottling: settings?.backgroundThrottling !== false || powerMode === 'Battery saver', powerMode, doNotTrack: settings?.doNotTrack === true, blockThirdPartyCookies: settings?.blockThirdPartyCookies === true, permissionPrompts});
+  return Object.freeze({backgroundApps: settings?.backgroundApps === true, backgroundThrottling: settings?.backgroundThrottling !== false || powerMode === 'Battery saver', powerMode, doNotTrack: settings?.doNotTrack === true, blockThirdPartyCookies: settings?.blockThirdPartyCookies === true, permissionPrompts});
 }
+
+export function shouldQuitWhenWindowsClose({platform = process.platform, backgroundApps = false} = {}) { return platform !== 'darwin' && backgroundApps !== true; }
 
 /** Return a stored permission decision, or null when the UI must ask the user. */
 export function resolvePermissionDecision(policy = normalizeElectronRuntimePolicy(), {storedDecision} = {}) {
