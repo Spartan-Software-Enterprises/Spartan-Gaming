@@ -206,8 +206,8 @@ validation then passed 618 of 620 tests with 2 skips and 0 failures.
 The packaging contract also exposes consent-gated desktop-entry and Steam
 non-Steam registration metadata; actual registration remains operator-run on a
 physical SteamOS host. The current SteamOS/Proton/packaging targeted suite
-passed 11/11 locally; AWS verification is required after this documentation
-commit is published.
+passed 11/11 locally and on AWS at `f35d6ef`; AWS repository checks and the
+full package suite also exited successfully.
 
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
