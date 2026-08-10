@@ -209,6 +209,12 @@ physical SteamOS host. The current SteamOS/Proton/packaging targeted suite
 passed 11/11 locally and on AWS at `f35d6ef`; AWS repository checks and the
 full package suite also exited successfully.
 
+The roadmap audit now leaves only operator-owned production relay/signing
+infrastructure, physical Windows/macOS/Linux input and media hardware, signed
+virtual-device drivers, and physical SteamOS/Steam Deck validation open. Those
+gates cannot be truthfully closed on the current AWS Linux server and remain
+documented in `docs/future-local-validation.md`.
+
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
 `scripts/frontend/serve.test.mjs`. Before pushing future work, run

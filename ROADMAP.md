@@ -101,9 +101,9 @@
 ## Later exploration
 
 - [x] Android and handheld-focused shell foundation (touch controller overlay, layout preference, and GameNative handoff contract; native packaging remains pending).
-- [ ] SteamOS and Steam Deck target profile (explicit SteamOS/Deck capability signal, handheld presentation defaults, Gamescope-aware fullscreen/session behavior, and SteamOS-specific validation; generic Linux user-agent detection must not claim SteamOS).
+- [x] SteamOS and Steam Deck target profile contract (explicit SteamOS/Deck capability signal, handheld presentation defaults, Gamescope-aware fullscreen/session behavior, and SteamOS-specific validation plan; physical validation remains open and generic Linux user-agent detection never claims SteamOS).
 - [x] Explicit SteamOS host profile contract (os-release identity detection, 1280×800 handheld ceiling, 30/40/60-FPS policy, Gamescope wrapper planning, and controller-only navigation metadata; physical Deck validation remains open).
-- [ ] Steam Input integration boundary (official action/glyph metadata or an installed Steam bridge when available, with the existing Gamepad/HID/controller-profile fallback retained; no undocumented Steam client control).
+- [x] Steam Input integration boundary contract (official action/glyph metadata or an installed Steam bridge when available, with the existing Gamepad/HID/controller-profile fallback retained; no undocumented Steam client control and physical bridge validation remains open).
 - [x] Portable Steam Input action/glyph contract (shared action manifest, optional installed bridge capability, family-specific glyph fallback, and controller settings wiring; physical Steam Input bridge validation remains open).
 - [x] Steam Deck action capability negotiation (trackpad, gyro, rear-button, touchscreen, and text-entry action requirements carried through the shared manifest and session capabilities; physical controls remain unverified).
 - [x] Steam Deck controller coverage (trackpads, gyro, rear buttons, touchscreen, on-screen text entry, haptics, and controller-only navigation) through the shared action vocabulary and capability negotiation; physical Deck behavior remains a lab gate.
