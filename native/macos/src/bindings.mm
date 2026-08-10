@@ -3,26 +3,13 @@
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreHaptics/CoreHaptics.h>
 #include <GameController/GameController.h>
-#include <IOKit/hid/IOHIDUserDevice.h>
 #include <dispatch/dispatch.h>
 
 #include <algorithm>
 #include <cmath>
-#include <cstdint>
-#include <cstdlib>
 #include <string>
 
 namespace {
-
-IOHIDUserDeviceRef virtual_device = nullptr;
-uint8_t virtual_report[6] = {0, 0, 128, 128, 128, 128};
-const uint8_t virtual_report_descriptor[] = {
-  0x05, 0x01, 0x09, 0x05, 0xA1, 0x01, 0x15, 0x00, 0x25, 0x01,
-  0x75, 0x01, 0x95, 0x10, 0x05, 0x09, 0x19, 0x01, 0x29, 0x10,
-  0x81, 0x02, 0x05, 0x01, 0x15, 0x00, 0x26, 0xFF, 0x00, 0x75,
-  0x08, 0x95, 0x04, 0x09, 0x30, 0x09, 0x31, 0x09, 0x32, 0x09,
-  0x35, 0x81, 0x02, 0xC0,
-};
 
 napi_value fail(napi_env env, const char* message) {
   napi_throw_error(env, nullptr, message);
@@ -101,78 +88,11 @@ CGMouseButton mouse_button(const std::string& control) {
   return static_cast<CGMouseButton>(UINT8_MAX);
 }
 
-int virtual_button_index(const std::string& control) {
-  if (control.rfind("button-", 0) == 0) {
-    char* end = nullptr; const long index = std::strtol(control.c_str() + 7, &end, 10);
-    return end != control.c_str() + 7 && *end == '\0' && index >= 0 && index < 16 ? static_cast<int>(index) : -1;
-  }
-  const char* aliases[] = {"a", "b", "x", "y", "lb", "rb", "lt", "rt", "back", "start", "l3", "r3", "dpad-up", "dpad-down", "dpad-left", "dpad-right"};
-  for (int index = 0; index < 16; index += 1) if (control == aliases[index]) return index;
-  return -1;
-}
-
-int virtual_axis_index(const std::string& control) {
-  if (control.rfind("axis-", 0) != 0) return -1;
-  char* end = nullptr; const long index = std::strtol(control.c_str() + 5, &end, 10);
-  return end != control.c_str() + 5 && *end == '\0' && index >= 0 && index < 4 ? static_cast<int>(index) : -1;
-}
-
-bool send_virtual_report() {
-  return virtual_device && IOHIDUserDeviceHandleReport(virtual_device, virtual_report, sizeof(virtual_report)) == kIOReturnSuccess;
-}
-
-void close_virtual_gamepad() {
-  if (!virtual_device) return;
-  IOHIDUserDeviceUnscheduleFromRunLoop(virtual_device, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-  CFRelease(virtual_device); virtual_device = nullptr;
-}
-
-bool create_virtual_gamepad() {
-  CFMutableDictionaryRef properties = CFDictionaryCreateMutable(kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
-  if (!properties) return false;
-  CFDataRef descriptor = CFDataCreate(kCFAllocatorDefault, virtual_report_descriptor, sizeof(virtual_report_descriptor));
-  int32_t vendor = 0x5350; int32_t product = 0x0001; int32_t usage_page = 0x01; int32_t usage = 0x05;
-  CFNumberRef vendor_value = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &vendor);
-  CFNumberRef product_value = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &product);
-  CFNumberRef usage_page_value = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &usage_page);
-  CFNumberRef usage_value = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &usage);
-  if (!descriptor || !vendor_value || !product_value || !usage_page_value || !usage_value) {
-    if (descriptor) CFRelease(descriptor); if (vendor_value) CFRelease(vendor_value); if (product_value) CFRelease(product_value); if (usage_page_value) CFRelease(usage_page_value); if (usage_value) CFRelease(usage_value); CFRelease(properties); return false;
-  }
-  CFDictionarySetValue(properties, kIOHIDReportDescriptorKey, descriptor);
-  CFDictionarySetValue(properties, kIOHIDVendorIDKey, vendor_value);
-  CFDictionarySetValue(properties, kIOHIDProductIDKey, product_value);
-  CFDictionarySetValue(properties, kIOHIDPrimaryUsagePageKey, usage_page_value);
-  CFDictionarySetValue(properties, kIOHIDPrimaryUsageKey, usage_value);
-  CFDictionarySetValue(properties, kIOHIDManufacturerKey, CFSTR("Spartan Gaming"));
-  CFDictionarySetValue(properties, kIOHIDProductKey, CFSTR("Spartan Virtual Gamepad"));
-  virtual_device = IOHIDUserDeviceCreate(kCFAllocatorDefault, properties);
-  CFRelease(descriptor); CFRelease(vendor_value); CFRelease(product_value); CFRelease(usage_page_value); CFRelease(usage_value); CFRelease(properties);
-  if (!virtual_device) return false;
-  IOHIDUserDeviceScheduleWithRunLoop(virtual_device, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
-  if (!send_virtual_report()) { close_virtual_gamepad(); return false; }
-  return true;
-}
-
 napi_value execute(napi_env env, napi_callback_info info) {
   napi_value argv[1]; size_t argc = 1;
   if (napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr) != napi_ok || argc < 1) return fail(env, "input operation is required");
   const std::string kind = string_property(env, argv[0], "kind");
-  if (kind == "button" || kind == "axis") {
-    if (!virtual_device) return unsupported(env, "macOS virtual HID gamepad is unavailable; grant the required device entitlement");
-    if (kind == "button") {
-      const int index = virtual_button_index(string_property(env, argv[0], "control"));
-      if (index < 0) return unsupported(env, "unsupported macOS virtual-gamepad button");
-      if (bool_property(env, argv[0], "pressed", false)) virtual_report[index / 8] |= static_cast<uint8_t>(1u << (index % 8));
-      else virtual_report[index / 8] &= static_cast<uint8_t>(~(1u << (index % 8)));
-    } else {
-      const int index = virtual_axis_index(string_property(env, argv[0], "control"));
-      if (index < 0) return unsupported(env, "unsupported macOS virtual-gamepad axis");
-      const double value = std::max(-1.0, std::min(1.0, number_property(env, argv[0], "value", 0)));
-      virtual_report[2 + index] = static_cast<uint8_t>((value + 1.0) * 127.5);
-    }
-    if (!send_virtual_report()) return fail(env, "macOS could not publish the virtual HID gamepad report");
-  } else if (kind == "rumble") {
+  if (kind == "rumble") {
     const double requested_index = number_property(env, argv[0], "gamepadIndex", 0);
     if (requested_index < 0 || requested_index > 15 || requested_index != std::floor(requested_index)) return fail(env, "macOS GameController indexes must be integers between 0 and 15");
     NSArray<GCController *> *controllers = [GCController controllers];
@@ -231,22 +151,20 @@ napi_value execute(napi_env env, napi_callback_info info) {
     if (!event) return fail(env, "macOS could not create pointer event; grant Accessibility permission");
     CGEventPost(kCGHIDEventTap, event); CFRelease(event);
   } else {
-    return unsupported(env, "macOS native input supports virtual-gamepad, keyboard, pointer, and GameController haptics events only");
+    return unsupported(env, "macOS native input supports keyboard, pointer, and GameController haptics events only");
   }
   napi_value result; napi_get_boolean(env, true, &result); return result;
 }
 
 napi_value close(napi_env env, napi_callback_info) {
-  close_virtual_gamepad();
   napi_value result; napi_get_undefined(env, &result); return result;
 }
 
 napi_value create_bindings(napi_env env, napi_callback_info) {
-  close_virtual_gamepad(); create_virtual_gamepad();
   napi_value result; napi_create_object(env, &result);
   napi_value platform; napi_create_string_utf8(env, "darwin", NAPI_AUTO_LENGTH, &platform); napi_set_named_property(env, result, "platform", platform);
   napi_value capabilities; napi_create_object(env, &capabilities); napi_value true_value; napi_get_boolean(env, true, &true_value); napi_value false_value; napi_get_boolean(env, false, &false_value);
-  napi_set_named_property(env, capabilities, "input", true_value); napi_set_named_property(env, capabilities, "keyboard", true_value); napi_set_named_property(env, capabilities, "pointer", true_value); napi_get_boolean(env, virtual_device != nullptr, &true_value); napi_set_named_property(env, capabilities, "gamepad", true_value); napi_set_named_property(env, capabilities, "virtualGamepad", true_value); napi_get_boolean(env, true, &true_value); napi_set_named_property(env, capabilities, "rumble", true_value); napi_set_named_property(env, result, "capabilities", capabilities);
+  napi_set_named_property(env, capabilities, "input", true_value); napi_set_named_property(env, capabilities, "keyboard", true_value); napi_set_named_property(env, capabilities, "pointer", true_value); napi_set_named_property(env, capabilities, "gamepad", false_value); napi_set_named_property(env, capabilities, "virtualGamepad", false_value); napi_set_named_property(env, capabilities, "rumble", true_value); napi_set_named_property(env, result, "capabilities", capabilities);
   napi_value input; napi_create_object(env, &input); napi_value execute_fn; napi_create_function(env, "execute", NAPI_AUTO_LENGTH, execute, nullptr, &execute_fn); napi_set_named_property(env, input, "execute", execute_fn); napi_value close_fn; napi_create_function(env, "close", NAPI_AUTO_LENGTH, close, nullptr, &close_fn); napi_set_named_property(env, input, "close", close_fn); napi_set_named_property(env, result, "input", input);
   return result;
 }
