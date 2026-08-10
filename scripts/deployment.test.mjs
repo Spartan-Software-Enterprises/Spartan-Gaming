@@ -31,6 +31,7 @@ test('production preflight is part of the published deployment surface', () => {
   const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
   assert.equal(packageJson.scripts['deployment:check'], 'node scripts/validate-production-config.mjs');
   assert.equal(packageJson.scripts['deployment:tls-check'], 'node scripts/deployment/tls-rotation.mjs');
+  assert.equal(packageJson.scripts['deployment:turn-config'], 'node scripts/deployment/turn-relay.mjs');
   assert.match(fs.readFileSync('scripts/deployment/tls-rotation.mjs', 'utf8'), /rotateTlsCertificatePair/);
   assert.match(fs.readFileSync('scripts/validate-production-config.mjs', 'utf8'), /resolveProductionConfig/);
   assert.match(fs.readFileSync('signaling/production-config.mjs', 'utf8'), /resolveConfiguredSecret/);

@@ -153,6 +153,25 @@ preflight and signaling process at startup; their contents are never returned.
 This validates operator
 prerequisites but does not provision those external services.
 
+For an operator-managed coturn relay, generate a bounded configuration from
+the same shared secret used by the signaling TURN credential endpoint:
+
+```bash
+npm run deployment:turn-config -- \
+  --secret-file /run/secrets/spartan-turn-shared-secret \
+  --output /run/secrets/turnserver.conf \
+  --realm turn.example.com \
+  --external-ip 203.0.113.10 \
+  --tls-cert /run/secrets/turn.crt \
+  --tls-key /run/secrets/turn.key
+```
+
+The generator validates the relay and TLS settings, writes the result with
+mode `0600`, and never prints the shared secret. Run coturn using the generated
+file and expose only the required UDP/TCP listener and relay-port range. The
+relay remains operator-owned; the repository does not silently provision a
+public TURN service.
+
 Native package rollout artifacts are built by
 `.github/workflows/native-package-rollout.yml` on a manual dispatch or a
 version tag. Each target runner uploads an isolated package artifact and marks
