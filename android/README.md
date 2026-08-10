@@ -14,18 +14,20 @@ text-input, and GameNative requests. External HTTPS destinations leave the
 WebView; cleartext traffic, arbitrary file access, and arbitrary native URLs
 are disabled.
 
-From a machine with the Android SDK and Gradle/Android Studio available:
+From a machine with an Android SDK and Java 17 available:
 
 ```bash
 cd android
 ./gradlew :app:assembleDebug
 ```
 
-This Termux/AWS validation environment does not contain the Android SDK or
-Gradle, so APK compilation, signing, permissions, WebView lifecycle, and
-physical device behavior remain explicitly unverified lab gates. The
-repository-owned `android/shell.test.mjs` only verifies the shell contract and
-security wiring; it is not an APK build result.
+AWS now has the pinned command-line toolchain (Java 17, Gradle 8.11.1,
+Android API 35/build-tools 35.0.0), and `:app:assembleDebug` passed at commit
+`8be92d1`. The verified debug APK is 1,628,083 bytes with SHA-256
+`386b910893b8a2ab884d2ea7f17f7869910e00d60da49020cfbce5b93d3024ab`.
+Release signing, permissions, WebView lifecycle, and physical device behavior
+remain lab gates. Android Studio is not required on the headless build server;
+the committed wrapper provides the reproducible CLI build.
 
 ## GameNative
 

@@ -102,8 +102,8 @@
 ## Later exploration
 
 - [x] Android and handheld-focused shell foundation (touch controller overlay, layout preference, and GameNative handoff contract; native packaging remains pending).
-- [x] Android WebView native bridge contract (bounded versioned policy, Game Mode, controller inventory, and text-input requests; Android shell compilation, callbacks, permissions, and device validation remain pending).
-- [x] Android WebView application shell source with local frontend asset packaging, safe asset origin, lifecycle bridge installation, and bounded GameNative/controller/Game Mode boundaries (Android SDK compilation, signing, and device validation remain pending).
+- [x] Android WebView native bridge contract (bounded versioned policy, Game Mode, controller inventory, and text-input requests; debug shell compilation is verified, while callbacks, permissions, and device validation remain pending).
+- [x] Android WebView application shell source with local frontend asset packaging, safe asset origin, lifecycle bridge installation, and bounded GameNative/controller/Game Mode boundaries (AWS debug APK compilation is verified; release signing and device validation remain pending).
 - [x] SteamOS and Steam Deck target profile contract (explicit SteamOS/Deck capability signal, handheld presentation defaults, Gamescope-aware fullscreen/session behavior, and SteamOS-specific validation plan; physical validation remains open and generic Linux user-agent detection never claims SteamOS).
 - [x] Explicit SteamOS host profile contract (os-release identity detection, 1280×800 handheld ceiling, 30/40/60-FPS policy, Gamescope wrapper planning, and controller-only navigation metadata; physical Deck validation remains open).
 - [x] Steam Input integration boundary contract (official action/glyph metadata or an installed Steam bridge when available, with the existing Gamepad/HID/controller-profile fallback retained; no undocumented Steam client control and physical bridge validation remains open).
