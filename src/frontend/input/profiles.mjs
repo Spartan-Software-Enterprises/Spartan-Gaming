@@ -3,7 +3,7 @@ import {DEFAULT_BINDINGS} from './input.mjs';
 export const CONTROLLER_PROFILES_KEY = 'spartan-gaming.controller-profiles.v1';
 export const CONTROLLER_PROFILE_VERSION = 1;
 const PROFILE_ID = /^[a-z0-9][a-z0-9._-]{1,63}$/;
-const PROFILE_CAPABILITIES = new Set(['adaptiveTriggers', 'backButtons', 'battery', 'capture', 'gyro', 'haptics', 'motion', 'paddles', 'pedals', 'splitInput', 'throttle', 'touchpad', 'trackpads', 'wheel']);
+const PROFILE_CAPABILITIES = new Set(['adaptiveTriggers', 'backButtons', 'battery', 'capture', 'gyro', 'haptics', 'motion', 'paddles', 'pedals', 'splitInput', 'textEntry', 'throttle', 'touchpad', 'trackpads', 'touchscreen', 'wheel']);
 export const CONTROLLER_PROFILE_CAPABILITIES = Object.freeze([...PROFILE_CAPABILITIES]);
 
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
@@ -57,7 +57,7 @@ export const BUILTIN_CONTROLLER_PROFILES = Object.freeze([
   createControllerProfile({id: 'joy-con-layout', name: 'Joy-Con pair', deviceMatch: 'Joy-Con', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0', capture: 'button-13', home: 'button-12'}, capabilities: ['gyro', 'motion', 'haptics', 'battery', 'splitInput']}),
   createControllerProfile({id: 'switch-pro-layout', name: 'Switch Pro Controller', deviceMatch: 'Nintendo Switch Pro', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0', capture: 'button-13'}, capabilities: ['gyro', 'motion', 'haptics', 'battery']}),
   createControllerProfile({id: 'wii-u-pro-layout', name: 'Nintendo Wii U Pro Controller', deviceMatch: 'Wii U Pro|WUP', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0'}, capabilities: ['haptics', 'battery']}),
-  createControllerProfile({id: 'steam-deck-layout', name: 'Steam Deck', deviceMatch: 'Steam Deck', bindings: {...DEFAULT_BINDINGS, menu: 'button-9', view: 'button-10', leftPaddle: 'button-13', rightPaddle: 'button-14', touchpadLeft: 'button-15'}, capabilities: ['touchpad', 'trackpads', 'gyro', 'motion', 'backButtons', 'haptics', 'battery']}),
+  createControllerProfile({id: 'steam-deck-layout', name: 'Steam Deck', deviceMatch: 'Steam Deck', bindings: {...DEFAULT_BINDINGS, menu: 'button-9', view: 'button-10', leftPaddle: 'button-13', rightPaddle: 'button-14', touchpadLeft: 'button-15'}, capabilities: ['touchpad', 'trackpads', 'gyro', 'motion', 'backButtons', 'touchscreen', 'textEntry', 'haptics', 'battery']}),
   createControllerProfile({id: 'steam-controller-layout', name: 'Steam Controller', deviceMatch: 'Steam Controller', bindings: {...DEFAULT_BINDINGS, leftPadClick: 'button-10', rightPadClick: 'button-11', gripLeft: 'button-12', gripRight: 'button-13', menu: 'button-14'}, capabilities: ['trackpads', 'gyro', 'haptics', 'battery']}),
   createControllerProfile({id: 'stadia-layout', name: 'Stadia controller', deviceMatch: 'Stadia', bindings: {...DEFAULT_BINDINGS, assistant: 'button-10', capture: 'button-11'}}),
   createControllerProfile({id: 'eightbitdo-layout', name: '8BitDo / XInput', deviceMatch: '8BitDo', bindings: {...DEFAULT_BINDINGS}}),

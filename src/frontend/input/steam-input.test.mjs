@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createSteamInputActionManifest, resolveSteamInputCapability, resolveSteamInputGlyph} from './steam-input.mjs';
+import {createSteamInputActionManifest, negotiateSteamInputActions, resolveSteamInputCapability, resolveSteamInputGlyph} from './steam-input.mjs';
 
 test('Steam Input action manifest is portable and preserves the Gamepad/HID fallback', () => {
   const manifest = createSteamInputActionManifest();
@@ -20,4 +20,15 @@ test('portable glyph fallbacks cover Xbox, PlayStation, Nintendo, and Steam fami
   assert.equal(resolveSteamInputGlyph({action: 'confirm', family: 'playstation'}).glyph, 'Cross');
   assert.equal(resolveSteamInputGlyph({action: 'confirm', family: 'nintendo'}).glyph, 'B');
   assert.equal(resolveSteamInputGlyph({action: 'cancel', family: 'steam'}).glyph, 'B');
+});
+
+test('Steam Deck action negotiation exposes supported controls and explicit missing capabilities', () => {
+  const manifest = createSteamInputActionManifest();
+  const partial = negotiateSteamInputActions({manifest, capabilities: ['gyro', 'back-buttons']});
+  assert.ok(partial.supportedActions.includes('gyro'));
+  assert.ok(partial.unavailableActions.some(action => action.id === 'trackpad-left' && action.missing.includes('trackpads')));
+  assert.ok(partial.unavailableActions.some(action => action.id === 'text-entry' && action.missing.includes('text-entry')));
+  const deck = negotiateSteamInputActions({manifest, capabilities: ['trackpads', 'gyro', 'back-buttons', 'touchscreen', 'text-entry']});
+  assert.ok(deck.supportedActions.includes('trackpad-right'));
+  assert.ok(deck.supportedActions.includes('text-entry'));
 });

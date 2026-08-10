@@ -6,6 +6,13 @@ const ACTIONS = Object.freeze([
   Object.freeze({id: 'pause', label: 'Pause', type: 'button'}),
   Object.freeze({id: 'move', label: 'Move', type: 'joystick'}),
   Object.freeze({id: 'look', label: 'Look', type: 'joystick'}),
+  Object.freeze({id: 'trackpad-left', label: 'Left trackpad', type: 'trackpad', requires: ['trackpads']}),
+  Object.freeze({id: 'trackpad-right', label: 'Right trackpad', type: 'trackpad', requires: ['trackpads']}),
+  Object.freeze({id: 'gyro', label: 'Gyroscope', type: 'motion', requires: ['gyro']}),
+  Object.freeze({id: 'rear-left', label: 'Left rear button', type: 'button', requires: ['back-buttons']}),
+  Object.freeze({id: 'rear-right', label: 'Right rear button', type: 'button', requires: ['back-buttons']}),
+  Object.freeze({id: 'touchscreen', label: 'Touchscreen', type: 'touch', requires: ['touchscreen']}),
+  Object.freeze({id: 'text-entry', label: 'On-screen text entry', type: 'text', requires: ['text-entry']}),
   Object.freeze({id: 'south', label: 'South face button', type: 'button'}),
   Object.freeze({id: 'east', label: 'East face button', type: 'button'}),
   Object.freeze({id: 'west', label: 'West face button', type: 'button'}),
@@ -30,9 +37,19 @@ function bounded(value, name, maximum = 128) {
 export function createSteamInputActionManifest({title = 'Spartan Gaming', actions = ACTIONS} = {}) {
   const name = bounded(title, 'title', 160);
   if (!Array.isArray(actions) || actions.length < 1 || actions.length > 64) throw new TypeError('Steam Input actions must be a bounded array');
-  const normalized = actions.map(action => Object.freeze({id: bounded(action?.id, 'action.id', 64), label: bounded(action?.label, 'action.label', 128), type: bounded(action?.type, 'action.type', 32)}));
+  const normalized = actions.map(action => { const requires = Array.isArray(action?.requires) ? [...new Set(action.requires.map(value => bounded(value, 'action.requires', 64)))] : []; return Object.freeze({id: bounded(action?.id, 'action.id', 64), label: bounded(action?.label, 'action.label', 128), type: bounded(action?.type, 'action.type', 32), requires: Object.freeze(requires)}); });
   const ids = new Set(); for (const action of normalized) { if (ids.has(action.id)) throw new Error(`duplicate Steam Input action: ${action.id}`); ids.add(action.id); }
   return Object.freeze({version: 1, kind: 'steam-input-action-manifest', title: name, actions: Object.freeze(normalized), bridge: 'optional', fallback: 'gamepad-hid'});
+}
+
+/** Negotiate action-level controller capabilities without claiming hardware support. */
+export function negotiateSteamInputActions({manifest = createSteamInputActionManifest(), capabilities = []} = {}) {
+  if (!manifest || manifest.kind !== 'steam-input-action-manifest' || !Array.isArray(manifest.actions)) throw new TypeError('a valid Steam Input action manifest is required');
+  if (!Array.isArray(capabilities)) throw new TypeError('Steam Input capabilities must be an array');
+  const available = new Set(capabilities.filter(value => typeof value === 'string'));
+  const supported = manifest.actions.filter(action => action.requires.every(requirement => available.has(requirement)));
+  const unavailable = manifest.actions.filter(action => !action.requires.every(requirement => available.has(requirement))).map(action => Object.freeze({id: action.id, missing: Object.freeze(action.requires.filter(requirement => !available.has(requirement)))}));
+  return Object.freeze({manifestVersion: manifest.version, supportedActions: Object.freeze(supported.map(action => action.id)), unavailableActions: Object.freeze(unavailable), fallback: manifest.fallback, capabilities: Object.freeze([...available])});
 }
 
 /** Normalize the optional, installed bridge without granting undocumented Steam-client control. */

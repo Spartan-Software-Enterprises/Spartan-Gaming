@@ -176,6 +176,12 @@ closed to a normal policy; physical suspend, thermal, battery, and SteamOS power
 behavior remain unverified lab gates. Focused session/power validation passed
 59/59 locally.
 
+The current controller increment extends the Steam Input manifest with explicit
+trackpad, gyro, rear-button, touchscreen, and text-entry requirements. Action
+negotiation and session capability negotiation now report missing hardware
+without claiming readiness, while the Gamepad/HID fallback remains available.
+The expanded controller/session suite passed 150/150 locally.
+
 The current SteamOS packaging increment adds a user-scope Flatpak filesystem
 contract and shell-free install, update, uninstall, and commit-pinned rollback
 plans. They require operator consent, a bounded SHA-256 artifact digest, and
