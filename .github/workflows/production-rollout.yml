@@ -40,6 +40,11 @@ on:
         required: true
         default: true
         type: boolean
+      check_turn:
+        description: 'Verify the authenticated TURN credential service and configured relay URLs'
+        required: true
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -79,13 +84,15 @@ jobs:
           ADMIN_HEALTH_ENDPOINT: ${{ inputs.admin_health_endpoint }}
           CHECK_ADMIN: ${{ inputs.check_admin }}
           REQUIRE_BROKER: ${{ inputs.require_broker }}
+          CHECK_TURN: ${{ inputs.check_turn }}
         run: |
           set -euo pipefail
           args=(--compose-file "$COMPOSE_FILE" --env-file "$ENV_FILE" --project "$PROJECT_NAME" --health "$HEALTH_ENDPOINT" --execute --confirm)
           if [[ -n "$ADMIN_HEALTH_ENDPOINT" ]]; then args+=(--admin-health "$ADMIN_HEALTH_ENDPOINT"); fi
           if [[ "$CHECK_ADMIN" == "true" ]]; then args+=(--check-admin); fi
           if [[ "$REQUIRE_BROKER" == "true" ]]; then args+=(--require-broker); fi
-          npm run deployment:rollout -- "${args[@]}" --report-file "$RUNNER_TEMP/spartan-production-rollout.json"
+          if [[ "$CHECK_TURN" == "true" ]]; then args+=(--check-turn); fi
+          node --env-file="$ENV_FILE" scripts/deployment/production-rollout.mjs "${args[@]}" --report-file "$RUNNER_TEMP/spartan-production-rollout.json"
       - name: Retain secret-free rollout evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@v7

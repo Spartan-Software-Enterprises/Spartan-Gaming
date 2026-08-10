@@ -202,6 +202,11 @@ running signaling service can reach its configured Redis/production broker,
 not merely that a Redis URL exists in an environment file. Operators using a
 separately managed session backend may explicitly disable that requirement
 only after reviewing the backend's independent health evidence.
+It also checks the authenticated TURN credential service by default. That
+check proves the signaling service can mint short-lived credentials for the
+configured `turn:`/`turns:` URLs; it does not claim that a client has completed
+a media relay transaction. A real relay connectivity test remains part of the
+hardware/network acceptance run.
 
 For an operator-managed coturn relay, generate a bounded configuration from
 the same shared secret used by the signaling TURN credential endpoint:
