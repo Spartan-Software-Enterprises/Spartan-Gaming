@@ -205,7 +205,7 @@ export async function createBindings({environment = DEFAULT_ENVIRONMENT, spawnIm
     },
     close() {},
   };
-  return Object.freeze({platform: PLATFORM, consent, display, capabilities: Object.freeze({capture: captureReady, audio: audioReady, input: inputReady, keyboard: inputReady, pointer: inputReady, gamepad: false, rumble: false, portal: consent.available, encoders: Object.freeze({hardware: encoders}), technologies: Object.freeze({capture: 'FFmpeg x11grab/PipeWire', audio: 'FFmpeg Pulse/PipeWire', input: 'X11 XTest via xdotool'}), requires: Object.freeze(['screen-capture-permission', 'audio-session-permission', 'remote-input-permission'])}), capture, audio, input, async close() { await Promise.allSettled([capture.stop(), audio.stop()]); input.close(); }});
+  return Object.freeze({platform: PLATFORM, consent, display, capabilities: Object.freeze({capture: captureReady, audio: audioReady, input: inputReady, keyboard: inputReady, pointer: inputReady, gamepad: false, virtualGamepad: false, rumble: false, portal: consent.available, encoders: Object.freeze({hardware: encoders}), technologies: Object.freeze({capture: 'FFmpeg x11grab/PipeWire', audio: 'FFmpeg Pulse/PipeWire', input: 'X11 XTest via xdotool'}), requires: Object.freeze(['screen-capture-permission', 'audio-session-permission', 'remote-input-permission'])}), capture, audio, input, async close() { await Promise.allSettled([capture.stop(), audio.stop()]); input.close(); }});
 }
 
 export {inputCommand, keyName};

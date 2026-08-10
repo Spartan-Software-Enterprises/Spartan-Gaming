@@ -53,7 +53,7 @@ if (nativeMediaEnabled) {
   if (!hostRuntime.bindings?.capture?.plan) throw new Error('native media requires an installed platform binding with capture.plan()');
 }
 const hostVideo = resolveHostVideoCapabilities({encoders: environment.nativeBinding?.capabilities?.encoders?.hardware, display: hostRuntime.bindings?.display || null, maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false});
-const capabilities = {transports: nativeMediaEnabled ? ['webrtc'] : ['websocket'], video: hostVideo, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: environment.inputAdapter.gamepad, keyboard: environment.inputAdapter.keyboard, pointer: environment.inputAdapter.pointer, rumble: environment.inputAdapter.rumble}};
+const capabilities = {transports: nativeMediaEnabled ? ['webrtc'] : ['websocket'], video: hostVideo, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: environment.inputAdapter.gamepad, virtualGamepad: environment.inputAdapter.virtualGamepad, keyboard: environment.inputAdapter.keyboard, pointer: environment.inputAdapter.pointer, rumble: environment.inputAdapter.rumble}};
 const virtualGamepadPermission = virtualGamepadPermissionGranted({inputEnabled, inputAdapter: environment.inputAdapter});
 const inputExecutor = inputEnabled && hostRuntime.bindings?.input && environment.readiness.osInput ? createNativeInputExecutor({platform: environment.platform, adapter: hostRuntime.bindings.input, permissions: {'remote-input': true, 'virtual-gamepad': virtualGamepadPermission}}) : null;
 const rumbleBroadcast = inputExecutor ? createRumbleBroadcastController({adapter: inputExecutor.adapter}) : null;

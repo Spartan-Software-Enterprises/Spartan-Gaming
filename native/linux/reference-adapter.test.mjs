@@ -12,7 +12,7 @@ test('Linux reference bindings report capability readiness without hiding missin
   assert.equal(bindings.audio.plan({permissionGranted: true}).platform, 'linux');
   assert.equal(bindings.capabilities.encoders.hardware[0].encoder, 'h264_vaapi');
   assert.deepEqual(bindings.capabilities.encoders.hardware.map(entry => entry.codec), ['h264', 'vp9', 'av1']);
-  assert.deepEqual(bindings.capabilities, {capture: true, audio: true, input: true, keyboard: true, pointer: true, gamepad: false, rumble: false, portal: false, encoders: {hardware: [{codec: 'h264', encoder: 'h264_vaapi', device: '/dev/dri/renderD128'}, {codec: 'vp9', encoder: 'vp9_vaapi', device: '/dev/dri/renderD128'}, {codec: 'av1', encoder: 'av1_vaapi', device: '/dev/dri/renderD128'}]}, technologies: {capture: 'FFmpeg x11grab/PipeWire', audio: 'FFmpeg Pulse/PipeWire', input: 'X11 XTest via xdotool'}, requires: ['screen-capture-permission', 'audio-session-permission', 'remote-input-permission']});
+  assert.deepEqual(bindings.capabilities, {capture: true, audio: true, input: true, keyboard: true, pointer: true, gamepad: false, virtualGamepad: false, rumble: false, portal: false, encoders: {hardware: [{codec: 'h264', encoder: 'h264_vaapi', device: '/dev/dri/renderD128'}, {codec: 'vp9', encoder: 'vp9_vaapi', device: '/dev/dri/renderD128'}, {codec: 'av1', encoder: 'av1_vaapi', device: '/dev/dri/renderD128'}]}, technologies: {capture: 'FFmpeg x11grab/PipeWire', audio: 'FFmpeg Pulse/PipeWire', input: 'X11 XTest via xdotool'}, requires: ['screen-capture-permission', 'audio-session-permission', 'remote-input-permission']});
 });
 
 test('Linux portal consent gates capture and audio plans until granted', async () => {

@@ -23,6 +23,7 @@ export function normalizeInputAdapterCapabilities(capabilities = {}) {
     keyboard: Boolean(capabilities.keyboard),
     pointer: Boolean(capabilities.pointer),
     gamepad: Boolean(capabilities.gamepad),
+    virtualGamepad: Boolean(capabilities.virtualGamepad ?? capabilities.gamepad),
     rumble: Boolean(capabilities.rumble),
     requires: Object.freeze(Array.isArray(capabilities.requires) && capabilities.requires.length ? [...new Set(capabilities.requires.map(String))] : ['native-input-adapter', 'permission-grant']),
   });
@@ -51,7 +52,7 @@ export function createInputInjectionPlan({platform, event, permissions = {}} = {
 
 export function inputAdapterIsReady(capabilities) { return ['ready', 'active'].includes(normalizeInputAdapterCapabilities(capabilities).state); }
 
-export function virtualGamepadPermissionGranted({inputEnabled = false, inputAdapter = {}} = {}) { return Boolean(inputEnabled) && inputAdapter?.gamepad === true; }
+export function virtualGamepadPermissionGranted({inputEnabled = false, inputAdapter = {}} = {}) { return Boolean(inputEnabled) && inputAdapter?.virtualGamepad === true; }
 
 /**
  * Execute only normalized input operations through an explicitly supplied OS

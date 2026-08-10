@@ -42,7 +42,7 @@ export async function createBindings(options = {}) {
   if (!nativeInput || typeof nativeInput.execute !== 'function') return reference;
   return Object.freeze({
     ...reference,
-    capabilities: Object.freeze({...reference.capabilities, input: Boolean(reference.capabilities.input || native.capabilities?.gamepad), keyboard: Boolean(reference.capabilities.keyboard), pointer: Boolean(reference.capabilities.pointer), gamepad: Boolean(native.capabilities?.gamepad), rumble: Boolean(native.capabilities?.rumble || reference.capabilities.rumble), technologies: Object.freeze({...reference.capabilities.technologies, input: 'Linux uinput virtual gamepad + reference keyboard/pointer', haptics: native.capabilities?.rumble ? 'Linux uinput force feedback' : reference.capabilities.technologies?.haptics})}),
+    capabilities: Object.freeze({...reference.capabilities, input: Boolean(reference.capabilities.input || native.capabilities?.gamepad), keyboard: Boolean(reference.capabilities.keyboard), pointer: Boolean(reference.capabilities.pointer), gamepad: Boolean(native.capabilities?.gamepad), virtualGamepad: Boolean(native.capabilities?.virtualGamepad ?? native.capabilities?.gamepad), rumble: Boolean(native.capabilities?.rumble || reference.capabilities.rumble), technologies: Object.freeze({...reference.capabilities.technologies, input: 'Linux uinput virtual gamepad + reference keyboard/pointer', haptics: native.capabilities?.rumble ? 'Linux uinput force feedback' : reference.capabilities.technologies?.haptics})}),
     input: composeLinuxInput({reference, native}),
     async close() { nativeInput.close?.(); await reference.close?.(); },
   });

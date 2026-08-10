@@ -44,7 +44,7 @@ export function normalizeHostCapabilities(capabilities = {}) {
     webrtc: Object.freeze({adapters: normalizeWebRtcAdapters(capabilities.webrtc?.adapters), ready: normalizeWebRtcAdapters(capabilities.webrtc?.adapters).some(adapter => adapter.state === 'available')}),
     audioPublisher: normalizeAudioCapabilities(capabilities.audioPublisher),
     inputAdapter: normalizeInputAdapterCapabilities(capabilities.inputAdapter),
-    input: Object.freeze({gamepad: capabilities.input?.gamepad !== false, keyboard: capabilities.input?.keyboard !== false, pointer: capabilities.input?.pointer !== false, rumble: Boolean(capabilities.input?.rumble), hid: Boolean(capabilities.input?.hid)}),
+    input: Object.freeze({gamepad: capabilities.input?.gamepad !== false, virtualGamepad: Boolean(capabilities.input?.virtualGamepad ?? capabilities.input?.gamepad), keyboard: capabilities.input?.keyboard !== false, pointer: capabilities.input?.pointer !== false, rumble: Boolean(capabilities.input?.rumble), hid: Boolean(capabilities.input?.hid)}),
   });
 }
 

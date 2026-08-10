@@ -9,7 +9,8 @@ test('keyboard-only adapters never negotiate virtual-gamepad permission', () => 
 });
 
 test('virtual-gamepad permission requires both input enablement and a gamepad adapter', () => {
-  assert.equal(virtualGamepadPermissionGranted({inputEnabled: true, inputAdapter: {gamepad: true}}), true);
+  assert.equal(virtualGamepadPermissionGranted({inputEnabled: true, inputAdapter: {gamepad: true}}), false);
+  assert.equal(virtualGamepadPermissionGranted({inputEnabled: true, inputAdapter: {gamepad: true, virtualGamepad: true}}), true);
   assert.equal(virtualGamepadPermissionGranted({inputEnabled: false, inputAdapter: {gamepad: true}}), false);
   assert.equal(virtualGamepadPermissionGranted({inputEnabled: true}), false);
 });

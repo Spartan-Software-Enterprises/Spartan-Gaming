@@ -247,7 +247,7 @@ napi_value create_bindings(napi_env env, napi_callback_info) {
   napi_value capabilities; napi_create_object(env, &capabilities);
   napi_value true_value; napi_get_boolean(env, true, &true_value);
   napi_value false_value; napi_get_boolean(env, false, &false_value);
-  napi_set_named_property(env, capabilities, "input", true_value); napi_set_named_property(env, capabilities, "keyboard", true_value); napi_set_named_property(env, capabilities, "pointer", true_value); napi_set_named_property(env, capabilities, "gamepad", false_value); napi_set_named_property(env, capabilities, "rumble", true_value);
+  napi_set_named_property(env, capabilities, "input", true_value); napi_set_named_property(env, capabilities, "keyboard", true_value); napi_set_named_property(env, capabilities, "pointer", true_value); napi_set_named_property(env, capabilities, "gamepad", false_value); napi_set_named_property(env, capabilities, "virtualGamepad", false_value); napi_set_named_property(env, capabilities, "rumble", true_value);
   napi_set_named_property(env, result, "capabilities", capabilities);
   napi_value input; napi_create_object(env, &input); napi_value execute_fn; napi_create_function(env, "execute", NAPI_AUTO_LENGTH, execute, nullptr, &execute_fn); napi_set_named_property(env, input, "execute", execute_fn); napi_value close_fn; napi_create_function(env, "close", NAPI_AUTO_LENGTH, close, nullptr, &close_fn); napi_set_named_property(env, input, "close", close_fn); napi_set_named_property(env, result, "input", input);
   return result;
