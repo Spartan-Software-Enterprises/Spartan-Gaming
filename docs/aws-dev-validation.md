@@ -73,7 +73,7 @@ not prove Windows, macOS, Android hardware, Fire TV, Roku, or production
 package signing.
 
 The latest remote Chromium/Playwright pass used Playwright 1.55.0 and headless
-Chromium on commit `40f9f65`, using the repository-owned
+Chromium on commit `c462151`, using the repository-owned
 `scripts/playwright/smoke.mjs` with `SPARTAN_PLAYWRIGHT_MODULE` pointed at the
 temporary AWS installation. It covered 11 maintained routes at 1280x800 and
 390x844, including dashboard, settings, player, diagnostics, adapters,
