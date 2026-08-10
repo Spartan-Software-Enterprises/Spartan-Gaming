@@ -254,7 +254,6 @@ napi_value execute(napi_env env, napi_callback_info info) {
 
 napi_value close(napi_env env, napi_callback_info) {
   ff_worker_running = false;
-  if (ff_device_fd >= 0 && rumble_effect_id >= 0) ioctl(ff_device_fd, EVIOCRMFF, rumble_effect_id);
   if (ff_device_fd >= 0) { ::close(ff_device_fd); ff_device_fd = -1; }
   if (device_fd >= 0) { ioctl(device_fd, UI_DEV_DESTROY); }
   if (ff_worker.joinable()) ff_worker.join();
