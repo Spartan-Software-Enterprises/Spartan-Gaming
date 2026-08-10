@@ -31,6 +31,7 @@ import {createActiveProfileStorage} from '../profiles/storage.mjs';
 import {resolveSessionPauseAction} from './session-controls.mjs';
 import {formatDisplayNegotiation, resolveDisplayNegotiation} from '../display/negotiation.mjs';
 import {formatSessionVolume, setSessionVolume} from './volume.mjs';
+import {createStickyKeysController} from '../input/sticky-keys.mjs';
 
 const query = new URLSearchParams(location.search);
 const pendingHostPair = readPendingHostPair(sessionStorage); clearPendingHostPair(sessionStorage);
@@ -46,6 +47,7 @@ let inputPolicy = createInputPermissionPolicy(sessionPreferences.capabilities);
 let haptics = createHapticsController({enabled: inputPolicy.allows('rumble')});
 const controllerProfiles = createControllerProfileStore({storage: profileStorage}).list();
 let mapper = createInputMapper({bindings: sessionPreferences.preferences.controllerBindings, deadzone: sessionPreferences.preferences.controllerDeadzone});
+const stickyKeys = createStickyKeysController({enabled: sessionPreferences.preferences.stickyKeys});
 const immersive = createImmersiveController({target: document.querySelector('[data-stage]')});
 let runtime = null;
 const elements = {
@@ -237,7 +239,9 @@ function installTouchControls() {
   root.addEventListener('pointercancel', event => { if (!active.has(event.pointerId)) return; event.preventDefault(); event.stopPropagation(); release(event.pointerId, event); });
   elements.stage.append(root);
 }
-function keyboardInput(event, pressed) { if (event.target instanceof HTMLElement && ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(event.target.tagName)) return; if (event.repeat && pressed) return; emitInput({type: 'input.event', action: `key:${event.code}`, pressed, value: pressed ? 1 : 0, source: 'keyboard', control: event.code}); }
+function emitKeyboardEvents(events) { events.forEach(({code, pressed}) => emitInput({type: 'input.event', action: `key:${code}`, pressed, value: pressed ? 1 : 0, source: 'keyboard', control: code})); }
+function releaseStickyKeys() { emitKeyboardEvents(stickyKeys.flush()); }
+function keyboardInput(event, pressed) { if (event.target instanceof HTMLElement && ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(event.target.tagName)) return; if (event.repeat && pressed) return; emitKeyboardEvents(stickyKeys.process(event.code, pressed)); }
 function pointerInput(event) { const source = event.pointerType === 'touch' ? 'touch' : 'pointer'; if (!inputPolicy.allows(source)) return; event.preventDefault(); if (event.type === 'pointerdown') elements.stage.setPointerCapture?.(event.pointerId); emitInput(createPointerInputEvent({event, rect: elements.stage.getBoundingClientRect()})); }
 function wheelInput(event) { if (!inputPolicy.allows('pointer')) return; event.preventDefault(); emitInput(createWheelInputEvent({event, rect: elements.stage.getBoundingClientRect()})); }
 
@@ -266,11 +270,11 @@ elements.screenshot = document.querySelector('[data-action="screenshot"]'); elem
 document.querySelector('[data-action="export-session"]')?.addEventListener('click', exportSessionDiagnostics);
 document.querySelector('[data-action="overlay"]').addEventListener('click', () => apply({type: 'toggle.overlay'}));
 document.querySelector('[data-action="diagnostics"]').addEventListener('click', () => apply({type: 'toggle.diagnostics'}));
-document.querySelector('[data-action="end"]').addEventListener('click', () => { instantReplay?.stop?.(); instantReplay = null; clearInterval(gamepadPollTimer); previousGamepad.clear(); gamepadMappers.clear(); gamepadProfileIds.clear(); if (runtime) runtime.close(); else if (manager.state === 'connected' || manager.state === 'reconnecting') manager.close(); clearSessionRecoveryHandoff(sessionStorage); if (sessionPreferences.preferences.clearOnExit) clearTransientSessionData(sessionStorage); mediaSession.dispose(); apply({type: 'session.state', status: 'ended'}); });
+document.querySelector('[data-action="end"]').addEventListener('click', () => { releaseStickyKeys(); instantReplay?.stop?.(); instantReplay = null; clearInterval(gamepadPollTimer); previousGamepad.clear(); gamepadMappers.clear(); gamepadProfileIds.clear(); if (runtime) runtime.close(); else if (manager.state === 'connected' || manager.state === 'reconnecting') manager.close(); clearSessionRecoveryHandoff(sessionStorage); if (sessionPreferences.preferences.clearOnExit) clearTransientSessionData(sessionStorage); mediaSession.dispose(); apply({type: 'session.state', status: 'ended'}); });
 elements.demo.addEventListener('click', acceptHostAnswer);
 window.addEventListener('spartan:telemetry', event => { const sample = event.detail || {}; try { const telemetry = createSessionEnvelope({sessionId: manager.session.id, type: 'telemetry.health', payload: sample}); if (runtime) runtime.receive(telemetry); else manager.receive(telemetry); apply({type: 'telemetry.health', rttMs: sample.rttMs, packetLossPct: sample.packetLossPct, decodeFps: sample.decodeFps, framesDropped: sample.framesDropped, jitterMs: sample.jitterMs, bitrateKbps: sample.bitrateKbps}); apply({type: 'quality.changed', profile: manager.quality.id}); } catch { apply({type: 'error', message: 'Invalid session telemetry received'}); } });
 window.addEventListener('keydown', event => keyboardInput(event, true)); window.addEventListener('keyup', event => keyboardInput(event, false));
-window.addEventListener('blur', () => applyFocusPolicy(true)); window.addEventListener('focus', () => applyFocusPolicy(false)); window.addEventListener('pagehide', () => { if (sessionPreferences.preferences.clearOnExit) { runtime?.close?.(); clearSessionRecoveryHandoff(sessionStorage); clearTransientSessionData(sessionStorage); } }); document.addEventListener('visibilitychange', () => applyFocusPolicy(document.visibilityState !== 'visible'));
+window.addEventListener('blur', () => { releaseStickyKeys(); applyFocusPolicy(true); }); window.addEventListener('focus', () => applyFocusPolicy(false)); window.addEventListener('pagehide', () => { releaseStickyKeys(); if (sessionPreferences.preferences.clearOnExit) { runtime?.close?.(); clearSessionRecoveryHandoff(sessionStorage); clearTransientSessionData(sessionStorage); } }); document.addEventListener('visibilitychange', () => applyFocusPolicy(document.visibilityState !== 'visible'));
 ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(type => elements.stage.addEventListener(type, pointerInput, {passive: false}));
 elements.stage.addEventListener('wheel', wheelInput, {passive: false});
 window.addEventListener('gamepadconnected', () => apply({type: 'gamepad.connection', connected: true})); window.addEventListener('gamepaddisconnected', () => apply({type: 'gamepad.connection', connected: false}));
