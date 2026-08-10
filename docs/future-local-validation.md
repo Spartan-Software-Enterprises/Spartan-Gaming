@@ -97,7 +97,9 @@ Each target must produce a secret-free report with:
 - redacted logs and screenshots where useful;
 - operator identity/custody reference stored outside Git.
 
-Store reports in a protected evidence directory, for example:
+Store reports in a protected evidence directory, for example. Use canonical
+report platform IDs (`win32`, `darwin`, `linux`) even when a CLI accepts the
+friendly aliases `windows` or `macos`:
 
 ```text
 evidence/
@@ -107,7 +109,16 @@ evidence/
   production/rollout.json
 ```
 
-Use mode `0700` for the directory and mode `0600` for reports. Never commit
+Initialize and validate the directory before running any report command:
+
+```bash
+: "${EVIDENCE:?Set EVIDENCE to a dedicated protected evidence directory}"
+case "$EVIDENCE" in /|/tmp|/home|/root) echo "unsafe EVIDENCE path" >&2; exit 1;; esac
+install -d -m 700 "$EVIDENCE"/{hardware,native,signing,production}
+chmod 700 "$EVIDENCE" "$EVIDENCE"/{hardware,native,signing,production}
+```
+
+Use mode `0700` for the directory tree and mode `0600` for reports. Never commit
 private keys, signing tokens, AWS credentials, provider credentials, TLS keys,
 or raw authentication callbacks.
 
@@ -127,7 +138,7 @@ On Windows and macOS, run the signed virtual-gamepad verifier only after the
 driver has been installed through its documented, user-consented installer:
 
 ```bash
-npm run native:verify-virtual-gamepad -- --platform <windows|macos> \
+npm run native:verify-virtual-gamepad -- --platform <win32|darwin> \
   --execute --confirm --require-driver \
   --report-file "$EVIDENCE/native/<platform>-virtual-gamepad.json"
 ```
