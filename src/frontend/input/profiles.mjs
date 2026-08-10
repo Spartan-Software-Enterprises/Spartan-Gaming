@@ -49,14 +49,11 @@ export function createControllerProfileStore({storage, key = CONTROLLER_PROFILES
 }
 
 export const BUILTIN_CONTROLLER_PROFILES = Object.freeze([
-  createControllerProfile({id: 'xbox-layout', name: 'Xbox layout'}),
   createControllerProfile({id: 'xbox-elite-layout', name: 'Xbox Elite / Elite 2', deviceMatch: 'Xbox.*Elite', bindings: {...DEFAULT_BINDINGS, share: 'button-10', leftPaddle: 'button-11', rightPaddle: 'button-12', leftPaddle2: 'button-13', rightPaddle2: 'button-14'}, capabilities: ['paddles', 'haptics', 'battery']}),
   createControllerProfile({id: 'xbox-adaptive-layout', name: 'Xbox Adaptive Controller', deviceMatch: 'Xbox Adaptive', bindings: {...DEFAULT_BINDINGS, profile: 'button-10', menu: 'button-11'}, capabilities: ['haptics', 'battery', 'splitInput']}),
-  createControllerProfile({id: 'playstation-layout', name: 'PlayStation layout', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0'}}),
   createControllerProfile({id: 'dualsense-layout', name: 'DualSense / DualShock', deviceMatch: 'Sony Wireless Controller', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0', touchpad: 'button-13', create: 'button-10', options: 'button-11', mic: 'button-14'}, capabilities: ['touchpad', 'gyro', 'adaptiveTriggers', 'haptics', 'battery']}),
   createControllerProfile({id: 'dualsense-edge-layout', name: 'DualSense Edge', deviceMatch: 'DualSense Edge', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0', touchpad: 'button-13', create: 'button-10', options: 'button-11', mic: 'button-14', leftPaddle: 'button-15', rightPaddle: 'button-16'}, capabilities: ['touchpad', 'gyro', 'adaptiveTriggers', 'haptics', 'battery', 'paddles']}),
   createControllerProfile({id: 'playstation-portal-layout', name: 'PlayStation Portal', deviceMatch: 'PlayStation Portal', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0', touchpad: 'button-13'}, capabilities: ['touchpad', 'haptics', 'battery']}),
-  createControllerProfile({id: 'nintendo-layout', name: 'Nintendo layout', deviceMatch: 'Nintendo', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0'}}),
   createControllerProfile({id: 'joy-con-layout', name: 'Joy-Con pair', deviceMatch: 'Joy-Con', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0', capture: 'button-13', home: 'button-12'}, capabilities: ['gyro', 'motion', 'haptics', 'battery', 'splitInput']}),
   createControllerProfile({id: 'switch-pro-layout', name: 'Switch Pro Controller', deviceMatch: 'Nintendo Switch Pro', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0', capture: 'button-13'}, capabilities: ['gyro', 'motion', 'haptics', 'battery']}),
   createControllerProfile({id: 'wii-u-pro-layout', name: 'Nintendo Wii U Pro Controller', deviceMatch: 'Wii U Pro|WUP', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0'}, capabilities: ['haptics', 'battery']}),
@@ -72,6 +69,9 @@ export const BUILTIN_CONTROLLER_PROFILES = Object.freeze([
   createControllerProfile({id: 'flight-stick-layout', name: 'Flight stick and throttle', deviceMatch: 'flight', bindings: {pitch: 'axis-1', roll: 'axis-0', yaw: 'axis-2', throttle: 'axis-3', fire: 'button-0', pause: 'button-9'}, capabilities: ['throttle', 'haptics']}),
   createControllerProfile({id: 'hotas-layout', name: 'HOTAS flight stick', deviceMatch: 'HOTAS|VKB|Winwing|Thrustmaster.*(T.Flight|HOTAS)', bindings: {pitch: 'axis-1', roll: 'axis-0', yaw: 'axis-2', throttle: 'axis-3', fire: 'button-0', pause: 'button-9'}, capabilities: ['throttle', 'haptics']}),
   createControllerProfile({id: 'generic-hid-layout', name: 'Generic HID controller', deviceMatch: 'any HID', bindings: {...DEFAULT_BINDINGS}}),
+  createControllerProfile({id: 'xbox-layout', name: 'Xbox layout', deviceMatch: 'Xbox|XInput|Xbox Wireless Controller'}),
+  createControllerProfile({id: 'playstation-layout', name: 'PlayStation layout', deviceMatch: 'PlayStation|Sony|Wireless Controller', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0'}}),
+  createControllerProfile({id: 'nintendo-layout', name: 'Nintendo layout', deviceMatch: 'Nintendo|Pro Controller|Joy-Con', bindings: {...DEFAULT_BINDINGS, confirm: 'button-1', cancel: 'button-0'}}),
   createControllerProfile({id: 'keyboard-mouse', name: 'Keyboard and mouse', bindings: {confirm: 'key-Enter', cancel: 'key-Escape', menu: 'key-Tab', pause: 'key-P'}}),
 ]);
 
