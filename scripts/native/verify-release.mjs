@@ -10,7 +10,7 @@ export async function verifyReleaseManifest({manifestPath, publicKeyJwk, subtle 
   if (!key || typeof key !== 'object' || Array.isArray(key)) throw new TypeError('public key JWK must be an object');
   const manifest = JSON.parse(await fsImpl.readFile(source, 'utf8'));
   if (!await verifyPackageManifestSignature({manifest, publicKeyJwk: key, subtle})) throw new Error('release manifest signature verification failed');
-  return Object.freeze({status: 'verified', manifestPath: source, id: manifest.id, version: manifest.version, platform: manifest.platform, signer: manifest.signature.signer});
+  return Object.freeze({kind: 'signed-release-manifest', verification: 'webcrypto', status: 'verified', manifestPath: source, id: manifest.id, version: manifest.version, platform: manifest.platform, signer: manifest.signature.signer});
 }
 
 function argument(argv, name) { const index = argv.indexOf(name); return index < 0 ? '' : argv[index + 1]; }

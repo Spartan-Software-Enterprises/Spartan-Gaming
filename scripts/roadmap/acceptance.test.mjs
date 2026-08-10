@@ -11,7 +11,7 @@ const acceptanceWorkflow = fs.readFileSync(path.join(repositoryRoot, '.github/wo
 const production = {status: 'healthy', includeTurn: true, required: ['service', 'broker', 'turn-credential-service'], security: {credentials: 'external-secret-files', tls: 'configured'}, primary: {status: 'healthy', broker: {status: 'ready', backend: 'redis'}}, turn: {status: 'ready', network: {status: 'reachable', total: 1, reachable: 1}}};
 const hardware = platform => ({platform, status: 'ready', package: {state: 'ready'}, hardware: {state: 'ready'}, execution: {state: 'ready', capture: 'verified', audio: 'verified', input: 'verified', haptics: 'verified'}});
 const virtual = platform => ({platform, status: 'ready', capabilities: {execute: true}, exercise: {state: 'verified'}});
-const signed = platform => ({platform, status: 'verified'});
+const signed = platform => ({kind: 'signed-release-manifest', verification: 'webcrypto', platform, status: 'verified', signer: 'operator-key'});
 
 test('roadmap acceptance stays incomplete and names every missing external gate', () => {
   const result = assessRoadmapAcceptance({productionReport: {status: 'healthy'}, hardwareReports: [], virtualGamepadReports: [], signedPackageReports: []});
@@ -28,6 +28,11 @@ test('roadmap acceptance requires explicit TLS and external-secret evidence', ()
   const report = {...production, security: {credentials: 'inline', tls: 'loopback-development'}};
   const result = assessRoadmapAcceptance({productionReport: report});
   assert.equal(result.gates.find(gate => gate.id === 'production-services').status, 'missing');
+});
+
+test('roadmap acceptance rejects an unverifiable signed-package summary', () => {
+  const result = assessRoadmapAcceptance({productionReport: production, signedPackageReports: [{platform: 'linux', status: 'verified'}]});
+  assert.deepEqual(result.gates.find(gate => gate.id === 'external-package-signing').missing, ['win32', 'darwin', 'linux']);
 });
 
 test('roadmap acceptance completes only with all production, hardware, driver, and signing evidence', () => {

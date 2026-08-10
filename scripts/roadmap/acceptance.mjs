@@ -33,7 +33,7 @@ function virtualDriverGate(reports) {
 }
 
 function signingGate(reports) {
-  const verified = new Set(reports.filter(report => report?.status === 'verified' && platform(report.platform)).map(report => platform(report.platform)));
+  const verified = new Set(reports.filter(report => report?.kind === 'signed-release-manifest' && report?.verification === 'webcrypto' && report?.status === 'verified' && text(report.signer) && platform(report.platform)).map(report => platform(report.platform)));
   const missing = PLATFORMS.filter(target => !verified.has(target));
   return Object.freeze({id: 'external-package-signing', status: missing.length ? 'missing' : 'verified', missing: Object.freeze(missing)});
 }

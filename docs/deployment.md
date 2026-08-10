@@ -205,7 +205,10 @@ reports, and the three signed-package verification reports, run
 `--virtual-gamepad-report`, and `--signed-package-report` options. The command
 produces a bounded acceptance ledger and exits non-zero until every external
 gate is represented by verified evidence. It never treats hosted contract CI,
-an unsigned package, or a configuration-only report as completion.
+an unsigned package, or a configuration-only report as completion. Signed
+package reports must be emitted by `native:verify-release`; they carry the
+`signed-release-manifest` kind and `webcrypto` verification marker, so a
+hand-written `{status: "verified"}` summary is rejected.
 For stronger signing evidence, pass each actual signed manifest with repeated
 `--signed-manifest` options and provide `--public-key-file`; the ledger then
 performs WebCrypto verification itself instead of trusting a summary report.
