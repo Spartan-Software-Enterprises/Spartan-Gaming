@@ -83,8 +83,9 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- `npm run check`: 427 tests passed, 0 failed on the AWS dev server at
-  `4198284`; the local check also passed without repository errors.
+- `npm run check`: repository checks passed on the AWS dev server at
+  `d44055c`; the local check also passed without repository errors. The
+  Steam Input and controller-policy additions are included in this check.
 - `npm test`: 616 tests, 612 passed, 0 failed, and 4 skipped locally after
   `fc12cd0`; the AWS run also completed with 616 tests, 614 passed, 0 failed,
   and 2 skipped. The difference is environment-gated integration coverage,
@@ -180,7 +181,10 @@ The current controller increment extends the Steam Input manifest with explicit
 trackpad, gyro, rear-button, touchscreen, and text-entry requirements. Action
 negotiation and session capability negotiation now report missing hardware
 without claiming readiness, while the Gamepad/HID fallback remains available.
-The expanded controller/session suite passed 150/150 locally.
+The expanded controller/session suite passed 151/151 locally and on AWS. The
+AWS full suite at `d44055c` completed with 621 tests: 619 passed, 2 skipped,
+and 0 failed. Physical Steam Deck controls, Steam Input bridge installation,
+and hardware-specific touchscreen/text-entry behavior remain lab gates.
 
 The current SteamOS packaging increment adds a user-scope Flatpak filesystem
 contract and shell-free install, update, uninstall, and commit-pinned rollback
