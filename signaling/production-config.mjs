@@ -11,6 +11,7 @@ function urls(value) { return (Array.isArray(value) ? value : text(value).split(
 export function normalizeProductionConfig(options = {}) {
   const secretValue = secret(options.secret, 'signaling secret');
   const adminSecret = secret(options.adminSecret, 'admin secret');
+  const turnSecret = secret(options.turnSecret, 'TURN shared secret');
   if (adminSecret === secretValue) throw new Error('admin secret must differ from the signaling secret');
   const tlsKey = required(options.tlsKey, 'TLS key path'); const tlsCert = required(options.tlsCert, 'TLS certificate path');
   const allowedOrigins = [...new Set(urls(options.allowedOrigins))];
@@ -20,7 +21,7 @@ export function normalizeProductionConfig(options = {}) {
   const brokerPackage = required(options.brokerPackage, 'production broker package');
   const turnUrls = [...new Set(urls(options.turnUrls))];
   if (!turnUrls.length || turnUrls.some(url => !/^turns?:/i.test(url))) throw new TypeError('production TURN URLs must contain turn: or turns: endpoints');
-  return Object.freeze({environment: 'production', tls: Object.freeze({keyPath: tlsKey, certPath: tlsCert}), allowedOrigins: Object.freeze(allowedOrigins), sessionStore, brokerPackage, turnUrls: Object.freeze(turnUrls), secrets: Object.freeze({configured: true, adminConfigured: true})});
+  return Object.freeze({environment: 'production', tls: Object.freeze({keyPath: tlsKey, certPath: tlsCert}), allowedOrigins: Object.freeze(allowedOrigins), sessionStore, brokerPackage, turnUrls: Object.freeze(turnUrls), secrets: Object.freeze({configured: true, adminConfigured: true, turnConfigured: true})});
 }
 
 export function resolveConfiguredSecret({env = process.env, name, readFile = readFileSync} = {}) {
@@ -37,6 +38,7 @@ export function resolveProductionConfig({env = process.env, readFile = readFileS
   const source = {
     secret: resolveConfiguredSecret({env, name: 'SPARTAN_SIGNALING_SECRET', readFile}),
     adminSecret: resolveConfiguredSecret({env, name: 'SPARTAN_SIGNALING_ADMIN_SECRET', readFile}),
+    turnSecret: resolveConfiguredSecret({env, name: 'SPARTAN_SIGNALING_TURN_SECRET', readFile}),
     tlsKey: text(env.SPARTAN_SIGNALING_TLS_KEY),
     tlsCert: text(env.SPARTAN_SIGNALING_TLS_CERT),
     allowedOrigins: env.SPARTAN_SIGNALING_ALLOWED_ORIGINS,

@@ -39,6 +39,7 @@ test('production Compose mounts secrets and provisions the Redis broker dependen
   assert.match(productionCompose, /SPARTAN_SIGNALING_SECRET_FILE: \/run\/secrets\/signaling_secret/);
   assert.match(productionCompose, /SPARTAN_SIGNALING_BROKER_PACKAGE/);
   assert.match(productionCompose, /SPARTAN_SIGNALING_REDIS_URL/);
+  assert.match(productionCompose, /SPARTAN_SIGNALING_TURN_SECRET_FILE/);
   assert.match(productionCompose, /image: redis:7\.4-alpine/);
   assert.match(productionCompose, /condition: service_healthy/);
   assert.match(productionCompose, /SPARTAN_SIGNALING_TLS_KEY_FILE/);

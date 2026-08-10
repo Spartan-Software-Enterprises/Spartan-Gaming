@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {createHash, timingSafeEqual} from 'node:crypto';
+import {createHash, createHmac, timingSafeEqual} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {createServer as createHttpServer} from 'node:http';
 import {createServer as createHttpsServer} from 'node:https';
@@ -26,6 +26,7 @@ export function normalizeServiceOptions(options = {}) {
     adminSecret: text(options.adminSecret),
     allowedOrigins: Object.freeze(allowedOrigins), maxConnections: positiveInteger(options.maxConnections, DEFAULT_MAX_CONNECTIONS, 10000),
     maxMessagesPerSecond: positiveInteger(options.maxMessagesPerSecond, DEFAULT_MAX_MESSAGES_PER_SECOND, 10000), maxFrameBytes: positiveInteger(options.maxFrameBytes, DEFAULT_MAX_FRAME_BYTES, DEFAULT_MAX_FRAME_BYTES),
+    turnSecret: text(options.turnSecret), turnUrls: Object.freeze(Array.isArray(options.turnUrls) ? [...new Set(options.turnUrls.map(text).filter(Boolean))] : []),
     tls: Object.freeze({enabled: Boolean(tlsKey), keyPath: tlsKey || null, certPath: tlsCert || null}),
   });
 }
@@ -35,6 +36,14 @@ export function isOriginAllowed(origin, allowedOrigins = []) { return !allowedOr
 export function createMessageRateLimiter({limit = DEFAULT_MAX_MESSAGES_PER_SECOND, windowMs = 1000, clock = () => Date.now()} = {}) {
   let startedAt = clock(); let count = 0;
   return Object.freeze({take() { const now = clock(); if (now - startedAt >= windowMs) { startedAt = now; count = 0; } count += 1; return count <= limit; }});
+}
+
+export function createTurnCredentials({secret, subject = 'spartan-client', ttlSeconds = 3600, clock = () => Date.now()} = {}) {
+  const signingSecret = text(secret); if (signingSecret.length < 32) throw new TypeError('TURN shared secret must contain at least 32 characters');
+  const safeSubject = text(subject).replace(/[^A-Za-z0-9._:-]/g, '-').slice(0, 64) || 'spartan-client';
+  const ttl = Number(ttlSeconds); if (!Number.isInteger(ttl) || ttl < 60 || ttl > 24 * 60 * 60) throw new RangeError('TURN credential TTL is out of bounds');
+  const expiresAt = Math.floor(clock() / 1000) + ttl; const username = `${expiresAt}:${safeSubject}`;
+  return Object.freeze({username, credential: createHmac('sha1', signingSecret).update(username).digest('base64'), ttlSeconds: ttl});
 }
 
 function parseArguments(argv) {
@@ -119,6 +128,11 @@ export function createSignalingServer(options = {}) {
         return json(response, 201, {version: 1, sessionId, role, subject, ttlMs: ttlMs ?? 10 * 60 * 1000, ticket});
       } catch (error) { return json(response, 400, {error: error instanceof Error ? error.message : String(error)}); }
     }
+    if (request.url === '/admin/turn-credentials' && request.method === 'POST') {
+      if (!config.turnSecret) return json(response, 503, {error: 'TURN credential service is not configured'});
+      try { const body = JSON.parse(await readBody(request)); const credentials = createTurnCredentials({secret: config.turnSecret, subject: body.subject, ttlSeconds: body.ttlSeconds}); return json(response, 201, {version: 1, ...credentials, urls: config.turnUrls}); }
+      catch (error) { return json(response, 400, {error: error instanceof Error ? error.message : String(error)}); }
+    }
     response.setHeader('allow', 'GET, POST'); return json(response, 405, {error: 'method or admin route not allowed'});
   };
   const server = config.tls.enabled ? createHttpsServer({key: readFileSync(config.tls.keyPath), cert: readFileSync(config.tls.certPath)}, requestHandler) : createHttpServer(requestHandler);
@@ -161,10 +175,10 @@ export async function loadBrokerAdapter({packageName, loader = name => import(na
 
 if (pathEqualsMain()) {
   try {
-    if (process.env.NODE_ENV === 'production') resolveProductionConfig();
+    const productionConfig = process.env.NODE_ENV === 'production' ? resolveProductionConfig() : null;
     const args = parseArguments(process.argv.slice(2)); const allowedOrigins = String(args.get('allowed-origins') || process.env.SPARTAN_SIGNALING_ALLOWED_ORIGINS || '').split(',').map(text).filter(Boolean); const brokerPackage = text(args.get('broker-package') || process.env.SPARTAN_SIGNALING_BROKER_PACKAGE);
-    const {secret, adminSecret} = resolveSignalingSecrets({args}); const broker = brokerPackage ? await loadBrokerAdapter({packageName: brokerPackage, options: {environment: process.env, secret}}) : undefined;
-    const service = createSignalingServer({...(broker ? {broker} : {}), secret, adminSecret, bind: args.get('bind') || process.env.SPARTAN_SIGNALING_BIND, port: args.get('port') || process.env.SPARTAN_SIGNALING_PORT, allowedOrigins, maxConnections: args.get('max-connections') || process.env.SPARTAN_SIGNALING_MAX_CONNECTIONS, maxMessagesPerSecond: args.get('max-messages-per-second') || process.env.SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND, tlsKey: args.get('tls-key') || process.env.SPARTAN_SIGNALING_TLS_KEY, tlsCert: args.get('tls-cert') || process.env.SPARTAN_SIGNALING_TLS_CERT});
+    const {secret, adminSecret} = resolveSignalingSecrets({args}); const turnSecret = resolveConfiguredSecret({env: process.env, name: 'SPARTAN_SIGNALING_TURN_SECRET'}); const broker = brokerPackage ? await loadBrokerAdapter({packageName: brokerPackage, options: {environment: process.env, secret}}) : undefined;
+    const service = createSignalingServer({...(broker ? {broker} : {}), secret, adminSecret, turnSecret, turnUrls: productionConfig?.turnUrls || String(process.env.SPARTAN_SIGNALING_TURN_URLS || '').split(',').map(text).filter(Boolean), bind: args.get('bind') || process.env.SPARTAN_SIGNALING_BIND, port: args.get('port') || process.env.SPARTAN_SIGNALING_PORT, allowedOrigins, maxConnections: args.get('max-connections') || process.env.SPARTAN_SIGNALING_MAX_CONNECTIONS, maxMessagesPerSecond: args.get('max-messages-per-second') || process.env.SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND, tlsKey: args.get('tls-key') || process.env.SPARTAN_SIGNALING_TLS_KEY, tlsCert: args.get('tls-cert') || process.env.SPARTAN_SIGNALING_TLS_CERT});
     service.start().then(address => { const host = address.address === '0.0.0.0' ? '127.0.0.1' : address.address; const protocol = service.config.tls.enabled ? 'wss' : 'ws'; const httpProtocol = service.config.tls.enabled ? 'https' : 'http'; console.log(JSON.stringify({service: 'spartan-signaling-reference', endpoint: `${protocol}://${host}:${address.port}/signal`, health: `${httpProtocol}://${host}:${address.port}/health`, secure: service.config.tls.enabled, allowedOrigins: service.config.allowedOrigins, limits: {maxConnections: service.config.maxConnections, maxMessagesPerSecond: service.config.maxMessagesPerSecond}, warning: 'Reference signaling only; use secret management, clustered session storage, and separately provisioned STUN/TURN in production.'})); }).catch(error => { console.error(error.message); process.exitCode = 1; });
   } catch (error) {
     console.error(error.message);

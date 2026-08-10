@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createMessageRateLimiter, createSignalingServer, isOriginAllowed, loadBrokerAdapter, normalizeServiceOptions, readBrokerHealth, resolveSignalingSecrets} from './agent.mjs';
+import {createMessageRateLimiter, createSignalingServer, createTurnCredentials, isOriginAllowed, loadBrokerAdapter, normalizeServiceOptions, readBrokerHealth, resolveSignalingSecrets} from './agent.mjs';
 
 test('signaling service defaults are bounded and origins are opt-in', () => {
   const config = normalizeServiceOptions({secret: 'test'});
@@ -24,6 +24,12 @@ test('signaling message rate limiter resets each window', () => {
   const limiter = createMessageRateLimiter({limit: 2, windowMs: 1000, clock: () => now});
   assert.equal(limiter.take(), true); assert.equal(limiter.take(), true); assert.equal(limiter.take(), false);
   now = 1000; assert.equal(limiter.take(), true);
+});
+
+test('TURN credentials are short-lived, bounded, and HMAC-derived without secret leakage', () => {
+  const result = createTurnCredentials({secret: 't'.repeat(32), subject: 'browser/01', ttlSeconds: 600, clock: () => 1700000000000});
+  assert.equal(result.username, '1700000600:browser-01'); assert.equal(result.ttlSeconds, 600); assert.match(result.credential, /^[A-Za-z0-9+/]+=*$/); assert.equal(JSON.stringify(result).includes('t'.repeat(32)), false);
+  assert.throws(() => createTurnCredentials({secret: 'short'}), /at least 32/); assert.throws(() => createTurnCredentials({secret: 't'.repeat(32), ttlSeconds: 30}), /out of bounds/);
 });
 
 test('signaling health endpoint exposes bounded operational state', async () => {
@@ -56,7 +62,15 @@ test('opt-in admin API protects health and mints scoped tickets without exposing
     assert.equal(health.status, 200); assert.equal('adminSecret' in healthBody, false);
     const ticketResponse = await fetch(`${endpoint}/admin/tickets`, {method: 'POST', headers: {'content-type': 'application/json', authorization: `Bearer ${adminSecret}`}, body: JSON.stringify({sessionId: 'ses-admin-01', role: 'host', subject: 'host-01', ttlMs: 60000})});
     const ticket = await ticketResponse.json(); assert.equal(ticketResponse.status, 201); assert.equal(ticket.sessionId, 'ses-admin-01'); assert.equal(ticket.role, 'host'); assert.equal(typeof ticket.ticket, 'string');
+    const turnResponse = await fetch(`${endpoint}/admin/turn-credentials`, {method: 'POST', headers: {'content-type': 'application/json', authorization: `Bearer ${adminSecret}`}, body: JSON.stringify({subject: 'browser/01', ttlSeconds: 600})});
+    const turn = await turnResponse.json(); assert.equal(turnResponse.status, 503); assert.equal(turn.error, 'TURN credential service is not configured');
   } finally { await service.close(); }
+});
+
+test('admin API issues ephemeral TURN credentials when configured', async () => {
+  const service = createSignalingServer({secret: 'test-secret', adminSecret: 'admin-secret', turnSecret: 't'.repeat(32), turnUrls: ['turns:turn.example:5349'], bind: '127.0.0.1', port: 0});
+  try { const address = await service.start(); const response = await fetch(`http://127.0.0.1:${address.port}/admin/turn-credentials`, {method: 'POST', headers: {'content-type': 'application/json', authorization: 'Bearer admin-secret'}, body: JSON.stringify({subject: 'browser-01', ttlSeconds: 600})}); const body = await response.json(); assert.equal(response.status, 201); assert.deepEqual(body.urls, ['turns:turn.example:5349']); assert.equal(body.ttlSeconds, 600); assert.equal('t'.repeat(32) in body, false); }
+  finally { await service.close(); }
 });
 
 test('signaling server accepts an injected broker for clustered production adapters', async () => {

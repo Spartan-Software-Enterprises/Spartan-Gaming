@@ -20,6 +20,7 @@ HTTPS origins, the TURN endpoints, and run:
 ```bash
 export SPARTAN_SIGNALING_SECRET_FILE=/run/secrets/spartan-signaling-secret
 export SPARTAN_SIGNALING_ADMIN_SECRET_FILE=/run/secrets/spartan-signaling-admin
+export SPARTAN_SIGNALING_TURN_SECRET_FILE=/run/secrets/spartan-turn-shared-secret
 export SPARTAN_SIGNALING_TLS_KEY_FILE=/run/secrets/signaling.key
 export SPARTAN_SIGNALING_TLS_CERT_FILE=/run/secrets/signaling.crt
 export SPARTAN_SIGNALING_ALLOWED_ORIGINS=https://play.example.com
@@ -33,8 +34,9 @@ provisions a private Redis service for short-lived role ownership and pub/sub.
 The broker never persists signaling payloads. Set
 `SPARTAN_SIGNALING_REDIS_URL` when using an operator-managed Redis cluster;
 use `rediss://` for a TLS Redis endpoint outside the Compose network. TURN
-credentials, certificate issuance/rotation, and the exact browser origin
-remain operator-owned production inputs.
+credentials are minted through the admin-only TURN credential route from the
+mounted shared secret. Certificate issuance/rotation and the exact browser
+origin remain operator-owned production inputs.
 
 The default Compose mapping binds `127.0.0.1:8790` on the host. The service
 health endpoint is:
@@ -83,6 +85,11 @@ bounded operational counters, and `POST /admin/tickets` accepts
 and returns a short-lived scoped ticket. The admin secret must be delivered by
 a secret manager and must never be placed in browser configuration, URLs, or
 logs. The admin API is disabled when the secret is empty.
+
+`POST /admin/turn-credentials` accepts `{"subject":"browser-01","ttlSeconds":600}`
+and returns an ephemeral TURN REST username, HMAC credential, TTL, and the
+configured TURN URLs. It requires the same admin bearer secret and a distinct
+mounted TURN shared secret.
 
 The container runs as the unprivileged `node` user, with a read-only root
 filesystem, dropped Linux capabilities, a small no-exec temporary filesystem,
