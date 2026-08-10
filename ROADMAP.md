@@ -100,9 +100,9 @@
 
 ## Later exploration
 
-- [x] Android and handheld-focused shell foundation (touch controller overlay and layout preference; native packaging remains pending).
+- [x] Android and handheld-focused shell foundation (touch controller overlay, layout preference, and GameNative handoff contract; native packaging remains pending).
 - [x] ChromeOS and television presentation modes across shared frontend surfaces (native packaging and certification remain platform work).
-- [x] iOS/iPadOS compatibility strategy (Web/PWA-first profile with an explicitly entitled alternative-engine path kept separate from default support).
+- [x] Amazon Fire TV/Fire Stick and Roku television/browser compatibility profile (user-agent detection, remote navigation, and capability-gated shared web surface; native vendor packaging remains pending).
 - [x] WebTransport experimental datagram transport contract (server deployment and production fallback policy pending).
 - [x] HDR, AV1, high-refresh, and multi-monitor support (host advertises AV1 only on confirmed hardware encoders and caps resolution/refresh to the real display probe; multi-display fullscreen targeting is implemented; end-to-end provider and HDR output validation remains pending).
 - [x] Community provider compatibility catalog foundation (Provider SDK and hosted database remain pending).
