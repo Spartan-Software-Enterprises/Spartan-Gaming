@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
+import {fileURLToPath} from 'node:url';
 import {assessRoadmapAcceptance, assessRoadmapAcceptanceWithSignedManifests} from './acceptance.mjs';
 
-const repositoryRoot = path.resolve(new URL('../..', import.meta.url).pathname);
+const repositoryRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const acceptanceWorkflow = fs.readFileSync(path.join(repositoryRoot, '.github/workflows/roadmap-acceptance.yml'), 'utf8');
 
 const production = {status: 'healthy', required: ['service', 'broker', 'turn-credential-service'], primary: {status: 'healthy', broker: {status: 'ready'}}, turn: {status: 'ready'}};
