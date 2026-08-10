@@ -8,11 +8,11 @@ const DEFAULT_ROOTS = Object.freeze({win32: 'SPARTAN_NATIVE_WINDOWS_INSTALL', da
 
 function requiredPlatform(value) { const aliases = {windows: 'win32', win: 'win32', macos: 'darwin', mac: 'darwin', osx: 'darwin', linux: 'linux'}; const result = aliases[String(value || '').toLowerCase()] || String(value || '').toLowerCase(); if (!PLATFORMS.has(result)) throw new TypeError(`unsupported desktop platform: ${value}`); return result; }
 function text(value) { return typeof value === 'string' ? value.trim() : ''; }
-function defaultInstallRoot(platform) { return text(process.env[DEFAULT_ROOTS[platform]]) || path.resolve(`out/native-${platform === 'win32' ? 'windows' : platform === 'darwin' ? 'macos' : 'linux'}/install`); }
+function defaultInstallRoot(platform) { const selectedPlatform = requiredPlatform(platform); return text(process.env[DEFAULT_ROOTS[selectedPlatform]]) || path.resolve(`out/native-${selectedPlatform === 'win32' ? 'windows' : selectedPlatform === 'darwin' ? 'macos' : 'linux'}/install`); }
 function modulePath(installRoot) { return pathToFileURL(path.resolve(installRoot, 'index.mjs')).href; }
 
 /** Inspect a native package without injecting input, opening capture, or starting audio. */
-export async function verifyDesktopCapabilities({platform = process.platform, installRoot = defaultInstallRoot(platform), loadModule = specifier => import(specifier), access = fs.access, environment = process.env} = {}) {
+export async function verifyDesktopCapabilities({platform = process.platform, installRoot, loadModule = specifier => import(specifier), access = fs.access, environment = process.env} = {}) {
   const selectedPlatform = requiredPlatform(platform); const root = path.resolve(text(installRoot) || defaultInstallRoot(selectedPlatform));
   const report = {platform: selectedPlatform, installRoot: root, package: {state: 'unavailable'}, hardware: {state: 'not-checked'}, virtualGamepad: {state: selectedPlatform === 'linux' ? 'not-checked' : 'external-driver-required'}};
   if (selectedPlatform === 'linux') {

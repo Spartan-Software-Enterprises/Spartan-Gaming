@@ -18,7 +18,8 @@ test('desktop capability verification rejects unsupported platforms', async () =
 });
 
 test('desktop capability verification accepts Windows and macOS aliases', async () => {
-  const loadModule = async () => ({createBindings: async () => ({capabilities: {}, input: {execute() {}}, capture: {start() {}}, audio: {start() {}}, close() {}})});
+  const paths = []; const loadModule = async specifier => { paths.push(specifier); return {createBindings: async () => ({capabilities: {}, input: {execute() {}}, capture: {start() {}}, audio: {start() {}}, close() {}})}; };
   assert.equal((await verifyDesktopCapabilities({platform: 'windows', loadModule})).platform, 'win32');
   assert.equal((await verifyDesktopCapabilities({platform: 'macos', loadModule})).platform, 'darwin');
+  assert.match(paths[0], /out\/native-windows\/install\/index\.mjs$/); assert.match(paths[1], /out\/native-macos\/install\/index\.mjs$/);
 });
