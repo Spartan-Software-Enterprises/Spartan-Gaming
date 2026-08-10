@@ -4,7 +4,18 @@ import {applyRuntimeUiSettings, resolveRuntimeUiSettings} from './runtime-ui.mjs
 
 test('runtime UI settings normalize appearance, accessibility, and overlay preferences', () => {
   const settings = resolveRuntimeUiSettings({'appearance.accent': 'Amber', 'appearance.theme': 'Spartan Light', 'appearance.density': 'Controller-first', 'appearance.uiScale': 200, 'accessibility.reduceMotion': true, 'accessibility.highContrast': true, 'gaming.showOverlay': false, 'gaming.hideBrowserChrome': false, 'gaming.overlayOpacity': 5, 'gaming.overlayPosition': 'Bottom left'}, {navigatorRef: {userAgent: '', platform: ''}});
-  assert.deepEqual(settings, {accent: '#f5c563', theme: 'light', density: 'controller', tabLayout: 'top', translucentChrome: true, showStatusBar: false, uiScale: 140, deviceMode: 'desktop', navigation: 'pointer-keyboard', touchControls: false, preferFullscreen: false, effectiveUiScale: 140, layoutColumns: 3, platform: 'unknown', enginePolicy: 'chromium-capable', supportLevel: 'platform-adapted', featureGates: {webFrontend: true, remoteStreaming: true, browserEmulation: false, nativeChromiumShell: true, nativeHostPackaging: true}, narrowViewport: false, reduceMotion: true, highContrast: true, largeText: false, focusRing: true, screenReaderHints: false, colorVision: 'None', showOverlay: false, hideBrowserChrome: false, overlayPosition: 'Bottom left', overlayOpacity: 20});
+  assert.deepEqual(settings, {accent: '#f5c563', theme: 'light', density: 'controller', tabLayout: 'top', locale: 'en', translucentChrome: true, showStatusBar: false, uiScale: 140, deviceMode: 'desktop', navigation: 'pointer-keyboard', touchControls: false, preferFullscreen: false, effectiveUiScale: 140, layoutColumns: 3, platform: 'unknown', enginePolicy: 'chromium-capable', supportLevel: 'platform-adapted', featureGates: {webFrontend: true, remoteStreaming: true, browserEmulation: false, nativeChromiumShell: true, nativeHostPackaging: true}, narrowViewport: false, reduceMotion: true, highContrast: true, largeText: false, focusRing: true, screenReaderHints: false, colorVision: 'None', showOverlay: false, hideBrowserChrome: false, overlayPosition: 'Bottom left', overlayOpacity: 20});
+});
+
+test('runtime UI applies the configured document locale with a safe fallback', () => {
+  const root = {dataset: {}, style: {setProperty() {}}};
+  const nodes = new Map();
+  const documentRef = {defaultView: {navigator: {userAgent: '', platform: ''}}, documentElement: root, head: {append(node) { nodes.set(node.id, node); }}, getElementById(id) { return nodes.get(id); }, createElement() { return {id: '', textContent: ''}; }};
+  assert.equal(resolveRuntimeUiSettings({'general.language': 'Japanese'}).locale, 'ja');
+  applyRuntimeUiSettings(documentRef, {'general.language': 'Japanese'});
+  assert.equal(root.lang, 'ja');
+  applyRuntimeUiSettings(documentRef, {'general.language': 'unsupported'});
+  assert.equal(root.lang, 'en');
 });
 
 test('runtime UI settings apply data attributes, CSS variables, and one shared style element', () => {

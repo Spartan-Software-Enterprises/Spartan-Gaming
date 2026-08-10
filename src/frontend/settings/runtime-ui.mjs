@@ -6,6 +6,7 @@ const ACCENTS = Object.freeze({Cyan: '#50e1d1', Violet: '#9a84ff', Lime: '#b8ef6
 const THEMES = Object.freeze({'Spartan Dark': 'dark', 'Spartan Light': 'light', System: 'system', 'OLED Black': 'oled'});
 const DENSITIES = Object.freeze({Comfortable: 'comfortable', Compact: 'compact', 'Controller-first': 'controller'});
 const TAB_LAYOUTS = Object.freeze({'Top tabs': 'top', 'Vertical tabs': 'vertical', 'Compact tabs': 'compact', 'Hidden in gaming mode': 'hidden-gaming'});
+const LOCALES = Object.freeze({English: 'en', Spanish: 'es', French: 'fr', German: 'de', Japanese: 'ja', Korean: 'ko'});
 
 export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
   const accent = ACCENTS[settings['appearance.accent']] || ACCENTS.Cyan;
@@ -21,6 +22,7 @@ export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
     theme,
     density,
     tabLayout: TAB_LAYOUTS[settings['appearance.tabLayout']] || 'top',
+    locale: LOCALES[settings['general.language']] || 'en',
     translucentChrome: settings['appearance.translucentChrome'] !== false,
     showStatusBar: settings['appearance.showStatusBar'] === true,
     uiScale: Math.max(80, Math.min(140, Number(settings['appearance.uiScale']) || 100)),
@@ -91,6 +93,7 @@ export function applyRuntimeUiSettings(documentRef, settings = {}) {
   const resolved = resolveRuntimeUiSettings(settings, {navigatorRef: documentRef.defaultView?.navigator || globalThis.navigator, viewport: {width: documentRef.defaultView?.innerWidth}});
   const root = documentRef.documentElement;
   root.dataset.spartanTheme = resolved.theme;
+  root.lang = resolved.locale;
   root.dataset.spartanDensity = resolved.density;
   root.dataset.spartanTabLayout = resolved.tabLayout;
   root.dataset.spartanStatusBar = resolved.showStatusBar ? 'visible' : 'hidden';
