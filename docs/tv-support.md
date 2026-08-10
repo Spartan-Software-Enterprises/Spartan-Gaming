@@ -9,6 +9,8 @@ Supported baseline:
 
 - dashboard, settings, provider catalog, and official HTTPS handoffs;
 - large-focus-target television navigation and fullscreen requests;
+- keyboard-style D-pad, Enter/confirm, and Back/Escape events plus gamepad
+  navigation through the shared focus controller;
 - configurable remote polling speed, analog dead zone, focus wrapping, pointer
   visibility, and overscan-safe content in the Television settings category;
 - capability-gated WebRTC playback, controller access, and browser emulation;

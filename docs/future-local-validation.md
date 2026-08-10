@@ -49,7 +49,7 @@ behavior must be exercised on the target device or operating system.
 | Windows/macOS virtual gamepad injection | Package boundary tested only | Install, verify, exercise, uninstall, and recover the signed target driver |
 | Android touch layout, lifecycle, orientation, PiP, edge-to-edge, Game Mode, large-screen and foldable behavior | Shared Android policy tested | Build/install APKs and test phones, tablets, foldables, permissions, rotation, PiP, and resume flows |
 | GameNative handoff | Kotlin contract tested | Test installed/missing GameNative, supported stores, intent resolution, release fallback, and Android lifecycle |
-| Fire TV remote/gamepad focus navigation and lean-back playback | Shared television profile tested | Test D-pad focus, Back/Home/microphone interruption, Bluetooth controllers, safe areas, and vendor packaging |
+| Fire TV remote/gamepad focus navigation and lean-back playback | Shared television profile plus keyboard-style D-pad/Back navigation tested | Test D-pad focus, Back/Home/microphone interruption, Bluetooth controllers, safe areas, and vendor packaging |
 | Roku remote navigation and playback surface | Shared television profile tested | Verify the actual Roku runtime, packaging/certification feasibility, focus model, playback, and controller limits |
 | WebRTC/WebTransport/WebSocket transport fallback and session recovery | Protocol and fake-transport tests passed | Exercise real WAN/LAN loss, NAT/TURN paths, reconnects, datagrams, media continuity, and device sleep/wake |
 | Screenshots, local recording, instant replay, Media Session, and Picture-in-Picture | Browser contracts tested | Verify codecs, storage permissions, sustained recording, battery/thermal impact, and OS media controls |
