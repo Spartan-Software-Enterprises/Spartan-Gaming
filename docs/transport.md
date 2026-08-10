@@ -115,6 +115,13 @@ Auto-detect mode, the profile resolver matches the browser-reported device name
 against the selected profile's portable `deviceMatch` pattern; user profiles
 are considered before built-ins, with Generic HID as the safe fallback. An
 explicit profile selection always wins over device matching.
+
+The shared controller action vocabulary also exposes a portable Steam Input
+manifest through `src/frontend/input/steam-input.mjs`. An installed bridge may
+provide official action state and glyph tokens; when it is absent or not
+approved, Spartan falls back to the same Gamepad/HID action events and selected
+Xbox, PlayStation, Nintendo, or Steam glyph family. The bridge boundary does
+not control the Steam client or store credentials.
 When multiple controller slots are negotiated, the player polls the bounded
 configured slot count, resolves each device independently, and carries its
 bounded `gamepadIndex` through the input envelope so a native or external

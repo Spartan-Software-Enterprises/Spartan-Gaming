@@ -211,6 +211,8 @@ required_files=(
   src/frontend/adapters/install.mjs
   src/frontend/host/host.mjs
   src/frontend/host/host.test.mjs
+  src/frontend/input/steam-input.mjs
+  src/frontend/input/steam-input.test.mjs
   src/frontend/host/index.html
   src/frontend/host/host.css
   src/frontend/host/host-page.mjs
@@ -387,6 +389,7 @@ node --check src/frontend/session/runtime.mjs
 node --check src/frontend/session/reconnect-controller.mjs
 node --check src/frontend/session/telemetry.mjs
 node --check src/frontend/input/input.mjs
+node --check src/frontend/input/steam-input.mjs
 node --check src/frontend/adapters/adapters.mjs
 node --check src/frontend/adapters/manager.mjs
 node --check src/frontend/adapters/manager-page.mjs
@@ -503,6 +506,7 @@ node --check host/proton.mjs
 node --check host/steam-os.mjs
 node --check host/launch-request.mjs
 node --test host/proton.test.mjs host/steam-os.test.mjs
+node --test src/frontend/input/steam-input.test.mjs
 node --test src/frontend/settings/control.test.mjs
 node --test src/frontend/adapters/manifest-registry.test.mjs
 node --test src/frontend/player/volume.test.mjs
