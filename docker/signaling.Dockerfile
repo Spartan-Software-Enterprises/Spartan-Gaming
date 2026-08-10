@@ -8,6 +8,7 @@ RUN npm ci --omit=dev --ignore-scripts
 # The signaling service imports shared protocol validators and the built-in
 # Redis broker from the frontend tree. Keep the image limited to those files.
 COPY signaling ./signaling
+COPY src/frontend/host ./src/frontend/host
 COPY src/frontend/session ./src/frontend/session
 COPY src/frontend/transport ./src/frontend/transport
 
