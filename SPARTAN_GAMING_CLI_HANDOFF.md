@@ -37,26 +37,26 @@ Inspect `AGENTS.md` or `CLAUDE.md` if either is added in a future checkout.
 
 | Field | Value |
 | --- | --- |
-| AWS instance | `i-0d3d5c3c1724d02f4` |
 | Type | `t3.small` |
 | OS | Amazon Linux 2023 |
-| Region/AZ | `us-east-1b` |
-| Public IP | `100.59.33.221` (not reserved) |
+| Region | `us-east-1` |
+| Address | Resolve from protected infrastructure configuration |
 | Disk | 30 GiB encrypted gp3 |
-| SSH allow-list | `173.80.1.14/32` |
-| Checkout | `/home/ec2-user/Spartan-Gaming` |
+| SSH access | Restricted operator access |
+| Checkout | `~/Spartan-Gaming` |
 | Frontend | `127.0.0.1:4173`, not publicly exposed |
 | Evidence | `~/.config/spartan-dev/evidence` |
 
-    ssh -i ~/.ssh/spartan-dev ec2-user@100.59.33.221
+    # Resolve the current host address from the private AWS inventory/runbook.
+    ssh -i ~/.ssh/spartan-dev ec2-user@<current-dev-host>
     cd ~/Spartan-Gaming
 
-The operator-managed private key is at
-`/data/data/com.termux/files/home/.ssh/spartan-dev`. Credentials are not
-stored in this handoff: this includes private SSH keys, passwords, Redis/TURN
+Connection details and the operator-managed private-key path are maintained in
+the protected AWS runbook/configuration, not this tracked handoff. Credentials
+are not stored here: this includes private SSH keys, passwords, Redis/TURN
 secrets, TLS private keys, provider credentials, and AWS access keys. Use the
 host's existing secret paths/environment configuration; do not print or commit
-their values. The IP is ephemeral and must be checked before connecting.
+their values.
 
 Remote tooling includes Git, Rust/Cargo, GCC, CMake, Node.js/npm, Python,
 Docker, Playwright 1.55.0, Chromium headless, and the Linux packages required

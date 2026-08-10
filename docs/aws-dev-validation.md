@@ -79,8 +79,19 @@ were meaningful and overlay-free, dashboard search and provider navigation
 worked, Android settings navigation worked, diagnostics reached “Ready for
 compatible sessions” with 21 capability cards, and mobile horizontal overflow
 was false. Headless Chromium may report a non-fatal WebGPU initialization
-warning. Screenshots and the JSON report are retained outside Git under
-`/tmp/spartan-playwright-results` and `/tmp/spartan-playwright.json`.
+warning. Retain artifacts only in the protected evidence directory:
+
+```bash
+evidence="$HOME/.config/spartan-dev/evidence/playwright"
+install -d -m 700 "$evidence"
+cp -a /tmp/spartan-playwright-results "$evidence/"
+cp /tmp/spartan-playwright.json "$evidence/"
+chmod -R go-rwx "$evidence"
+rm -rf /tmp/spartan-playwright-results /tmp/spartan-playwright.json
+```
+
+The protected copies are outside Git at
+`~/.config/spartan-dev/evidence/playwright/`.
 
 ### Connection and host inventory
 
@@ -93,17 +104,23 @@ secret material:
 | Instance type | `t3.small` |
 | OS | Amazon Linux 2023 |
 | Region/AZ | `us-east-1b` |
-| Public address | `100.59.33.221` (not reserved; may change) |
+| Public address | Resolve at connection time; not reserved and may change |
 | Disk | 30 GiB encrypted gp3 |
 | SSH source restriction | `173.80.1.14/32` |
 | Project checkout | `/home/ec2-user/Spartan-Gaming` |
 | Frontend test origin | `http://127.0.0.1:4173` (SSH-local only) |
 | Evidence directory | `/home/ec2-user/.config/spartan-dev/evidence` |
 
-Connect with:
+Resolve the current address from the instance ID and region, then connect:
 
 ```bash
-ssh -i ~/.ssh/spartan-dev ec2-user@100.59.33.221
+instance_id='i-0d3d5c3c1724d02f4'
+region='us-east-1'
+public_ip="$(aws ec2 describe-instances --region "$region" \
+  --instance-ids "$instance_id" \
+  --query 'Reservations[0].Instances[0].PublicIpAddress' \
+  --output text)"
+ssh -i ~/.ssh/spartan-dev "ec2-user@$public_ip"
 ```
 
 The private key is operator-managed at
