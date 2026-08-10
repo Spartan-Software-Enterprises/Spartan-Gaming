@@ -65,10 +65,10 @@ Every request carries a bounded correlation ID. An optional `ResultSink` can
 emit `{requestId, action, accepted}` results for the Activity to dispatch as a
 `spartan:android-result` event to the WebView.
 
-The GameNative action carries only a positive numeric library app ID and one of
-`STEAM`, `EPIC`, `GOG`, or `AMAZON`; the Activity handler should delegate to
-`GameNativeHandoff` so package resolution and the official release fallback
-remain user-mediated.
+The bridge itself enforces a positive numeric library app ID and one of
+`STEAM`, `EPIC`, `GOG`, or `AMAZON` before calling the handler. The Activity
+handler should then delegate to `GameNativeHandoff` so package resolution and
+the official release fallback remain user-mediated.
 
 The bridge never exposes a `Context`, raw `InputDevice`, `InputConnection`, or
 arbitrary command/URL surface to JavaScript. The Activity remains responsible
