@@ -197,6 +197,14 @@ Android controller metadata is normalized by `src/frontend/input/android-control
 
 The shared Android runtime now forwards a bounded `android.policy` message through the optional `SpartanAndroid` WebView interface whenever the detected platform is Android. `src/frontend/platform/android-bridge.mjs` also defines query requests for Game Mode, controller inventory, and text input. `android/SpartanAndroidBridge.kt` accepts only those versioned actions and delegates them to an Activity-owned handler; it never exposes raw Android objects or arbitrary command/URL execution. WebView installation, permission handling, callbacks, and device behavior remain native-shell and physical-lab work.
 
+The Android shell source in `android/app/` now packages the shared frontend as
+APK assets, serves it through AndroidX `WebViewAssetLoader`, installs the
+bridge for the Activity lifecycle, and dispatches bounded result events back
+to the renderer. GameNative handoffs remain official-app/user-mediated, while
+GameTextInput still fails closed until its official SDK binding is added.
+Android SDK/Gradle compilation, signing, permissions, and device behavior are
+not claimed by the repository contract test and remain local-lab gates.
+
 Controller text entry uses `src/frontend/input/text-entry.mjs` to carry bounded
 text plus selection/composition ranges. Keyboard display is fail-closed until
 the request is both focused and user-initiated. Android's corresponding

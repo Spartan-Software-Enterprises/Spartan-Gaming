@@ -4,6 +4,29 @@ This directory is the Android-side contract for the universal Spartan Gaming
 product. The Electron/Web UI remains the primary desktop surface; Android uses
 the same catalog and protocol, with device-specific handoffs kept here.
 
+## Android application shell
+
+`app/` is the native Android WebView shell. Its Gradle build copies the shared
+`src/frontend` tree into the APK assets, serves it through AndroidX
+`WebViewAssetLoader` on the app-only HTTPS asset origin, and installs the
+bounded `SpartanAndroid` bridge for policy, Game Mode, controller inventory,
+text-input, and GameNative requests. External HTTPS destinations leave the
+WebView; cleartext traffic, arbitrary file access, and arbitrary native URLs
+are disabled.
+
+From a machine with the Android SDK and Gradle/Android Studio available:
+
+```bash
+cd android
+./gradlew :app:assembleDebug
+```
+
+This Termux/AWS validation environment does not contain the Android SDK or
+Gradle, so APK compilation, signing, permissions, WebView lifecycle, and
+physical device behavior remain explicitly unverified lab gates. The
+repository-owned `android/shell.test.mjs` only verifies the shell contract and
+security wiring; it is not an APK build result.
+
 ## GameNative
 
 `GameNativeHandoff.kt` is a small Apache-2.0 Spartan bridge for the separately
