@@ -83,13 +83,19 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- `npm run check`: repository checks passed on the AWS dev server at
-  `d44055c`; the local check also passed without repository errors. The
-  Steam Input and controller-policy additions are included in this check.
-- `npm test`: 616 tests, 612 passed, 0 failed, and 4 skipped locally after
-  `fc12cd0`; the AWS run also completed with 616 tests, 614 passed, 0 failed,
-  and 2 skipped. The difference is environment-gated integration coverage,
-  not a failure.
+- The published code state is `9b8304d` on `main`; local and AWS worktrees are
+  clean and synchronized with `origin/main`.
+- `npm run check`: repository checks pass on the current code state locally
+  and on the AWS dev server.
+- `npm test`: the current local run completed with 628 tests, 624 passed,
+  4 skipped, and 0 failed. The AWS run completed with 628 tests, 626 passed,
+  2 skipped, and 0 failed; the difference is environment-gated integration
+  coverage, not a failure.
+- AWS Playwright 1.55.0 completed 22/22 navigations across 11 maintained
+  routes at desktop and mobile viewports on code commit `c462151`; all routes
+  returned 200 with meaningful bodies and no horizontal overflow. The
+  protected pure JSON report is
+  `~/.config/spartan-dev/evidence/playwright/spartan-playwright-runner.json`.
 - On `56558f8`, the AWS full suite completed with 48 pretest cases (47 passed,
   1 skipped) and 617 main-suite tests (615 passed, 0 failed, 2 skipped).
 - On `c6d2533`, the AWS full suite completed with 48 pretest cases (47 passed,
@@ -105,14 +111,11 @@ review; stay within the AWS credit limit.
   install run passed 7 tests.
 - The latest PWA distribution tests also verify the SVG app mark, manifest
   metadata, service-worker cache policy, and packaged frontend serving.
-- Remote Playwright: 14 route/viewport checks, all HTTP 200, meaningful pages,
-  no framework overlay; dashboard search, provider navigation, Android settings,
-  diagnostics, and mobile overflow checks completed successfully.
 - Linux native evidence on the dev server: ready with capture, audio, input,
   and haptics verified in the latest report.
-- Roadmap acceptance remains incomplete for real Windows/macOS hardware,
-  Windows/macOS virtual gamepad drivers, external package signing, and
-  production activation.
+- Roadmap acceptance remains incomplete for real Windows/macOS/Linux hardware,
+  Windows/macOS virtual gamepad drivers, external package signing, production
+  activation, and physical SteamOS Deck/desktop validation.
 - CodeRabbit review was not completed because the local `coderabbit` binary is
   unusable on the ARM64 Termux host. Install and authenticate the official CLI
   before claiming a CodeRabbit review.
@@ -197,10 +200,8 @@ platform target, but physical Deck execution, Steam Input, Gamescope/Game Mode,
 power behavior, packaging, and real Proton/native game validation remain open.
 Proton is never bundled or downloaded and no DRM, anti-cheat, or
 authentication bypass is supported. Focused Proton/launch/settings validation
-passed 23/23. The local `npm test` pretest integration phase passed 46, skipped
-1, and failed twice on the existing Werift loopback media timeout; it did not
-reach the main suite. Treat that local media timeout as an open environment
-blocker until reproduced or cleared on the AWS host.
+and the current full local/AWS suites pass; physical execution remains a
+hardware gate.
 
 The latest SteamOS increment adds `host/steam-os.mjs`: explicit `os-release`
 identity detection, a 1280×800 handheld ceiling, 30/40/60-FPS policy,
@@ -276,6 +277,11 @@ verification for Game Mode, Desktop Mode, Steam Input/glyphs, text entry,
 touch/trackpad/gyro/rear controls, Gamescope, Proton/native launch,
 suspend/resume, battery, and external display behavior. Missing reports keep
 the ledger incomplete.
+
+The latest AWS acceptance refresh records the verified production-services
+report plus missing native-hardware, Windows/macOS virtual-gamepad,
+external-signing, and both physical SteamOS reports. No secret values are
+stored in the report or this handoff.
 
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
