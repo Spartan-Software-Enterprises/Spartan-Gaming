@@ -12,3 +12,10 @@ export function isAllowedProviderUrl(rawUrl) {
   try { return new URL(rawUrl).protocol === 'https:'; } catch { return false; }
 }
 
+export function isAllowedExternalUrl(rawUrl) {
+  let url;
+  try { url = new URL(rawUrl); } catch { return false; }
+  if (url.username || url.password || url.hash) return false;
+  if (url.protocol === 'https:') return true;
+  return url.protocol === 'http:' && LOOPBACK_HOSTS.has(url.hostname);
+}

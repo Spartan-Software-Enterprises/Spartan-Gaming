@@ -2,7 +2,7 @@ import {app, BrowserWindow, Menu, ipcMain, shell, WebContentsView} from 'electro
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createFrontendServer} from '../../scripts/frontend/serve.mjs';
-import {isAllowedNavigation, isAllowedProviderUrl} from './security.mjs';
+import {isAllowedExternalUrl, isAllowedNavigation, isAllowedProviderUrl} from './security.mjs';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 let frontend;
@@ -48,7 +48,7 @@ async function createMainWindow() {
 
 app.whenReady().then(async () => {
   Menu.setApplicationMenu(Menu.buildFromTemplate([{label: 'Spartan Gaming', submenu: [{role: 'about'}, {type: 'separator'}, {role: 'quit'}]}, {label: 'View', submenu: [{role: 'togglefullscreen'}, {role: 'reload'}, {role: 'toggledevtools'}]}]));
-  ipcMain.handle('spartan:open-external', (_event, url) => shell.openExternal(new URL(url).href));
+  ipcMain.handle('spartan:open-external', (_event, url) => { if (!isAllowedExternalUrl(url)) throw new Error('External links require HTTPS or a loopback HTTP URL.'); return shell.openExternal(new URL(url).href); });
   ipcMain.handle('spartan:open-provider', (_event, {url, title}) => createProviderView(url, title));
   ipcMain.handle('spartan:close-provider', closeProviderView);
   ipcMain.handle('spartan:toggle-fullscreen', () => { windowRef.setFullScreen(!windowRef.isFullScreen()); return windowRef.isFullScreen(); });
@@ -58,4 +58,3 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('before-quit', async () => { await frontend?.close().catch(() => {}); });
-
