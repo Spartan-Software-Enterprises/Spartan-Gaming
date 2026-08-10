@@ -83,8 +83,8 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- `npm run check`: 422 tests passed, 0 failed locally and on the AWS dev server
-  for the portable Steam Input commit `ccc7ae5`.
+- `npm run check`: 423 tests passed, 0 failed on the AWS dev server; the local
+  check also passed without repository errors on `70a56b8`.
 - `npm test`: 616 tests, 612 passed, 0 failed, and 4 skipped locally after
   `fc12cd0`; the AWS run also completed with 616 tests, 614 passed, 0 failed,
   and 2 skipped. The difference is environment-gated integration coverage,
@@ -94,7 +94,9 @@ review; stay within the AWS credit limit.
 - On `c6d2533`, the AWS full suite completed with 48 pretest cases (47 passed,
   1 skipped) and 618 main-suite tests (616 passed, 0 failed, 2 skipped).
 - On `ccc7ae5`, the AWS focused controller/session/settings suite passed 70/70;
-  repository checks remained 422/422 with 0 failures.
+  on `70a56b8`, the focused SteamOS/Proton/settings suite passed 79/79.
+  The AWS pretest phase passed 47 with 1 skip; the main suite passed 619 with 2
+  skips and 0 failures.
 - PWA install tests: 2 passed locally; the AWS focused distribution/server/
   install run passed 7 tests.
 - The latest PWA distribution tests also verify the SVG app mark, manifest
@@ -147,7 +149,8 @@ identity detection, a 1280×800 handheld ceiling, 30/40/60-FPS policy,
 controller-only navigation metadata, and a shell-free Gamescope wrapper plan.
 SteamOS, Gamescope, and Steam Input settings now export through the frontend
 host configuration. Focused AWS validation passed 41/41 and repository checks
-passed 422/422. Physical Steam Deck/Game Mode/Desktop Mode, real Gamescope,
+passed 422/422 at that earlier commit. Physical Steam Deck/Game Mode/Desktop
+Mode, real Gamescope,
 Steam Input actions/glyphs, power behavior, and real Proton/native game
 execution remain local-lab gates.
 
