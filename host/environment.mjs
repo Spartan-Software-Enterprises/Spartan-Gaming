@@ -7,6 +7,8 @@ import {normalizeInputAdapterCapabilities} from './input.mjs';
 import {listAudioBackends, normalizeAudioCapabilities} from './audio.mjs';
 import {createPlatformAdapterRegistry} from './platform-adapters.mjs';
 import {loadPlatformNativeBindings} from './native-binding-loader.mjs';
+import {loadVirtualGamepadAdapter} from './virtual-gamepad-loader.mjs';
+import {createInputAdapterMux} from './input-adapter-mux.mjs';
 
 function commandAvailable(command) { try { return spawnSync(command, ['-version'], {stdio: 'ignore', windowsHide: true}).status === 0; } catch { return false; } }
 
@@ -23,16 +25,22 @@ export function detectHostEnvironment({platformName = platform(), releaseName = 
  * serializable capability descriptor into host health. The binding object is
  * returned separately for host composition and is never exposed in JSON.
  */
-export async function detectHostRuntime({platformName = platform(), releaseName = release(), commandProbe = commandAvailable, webrtcAdapters = [], packageName, loader, bindingOptions = {}} = {}) {
+export async function detectHostRuntime({platformName = platform(), releaseName = release(), commandProbe = commandAvailable, webrtcAdapters = [], packageName, loader, bindingOptions = {}, virtualGamepadPackageName, virtualGamepadLoader, virtualGamepadOptions = {}} = {}) {
   const base = detectHostEnvironment({platformName, releaseName, commandProbe, webrtcAdapters});
   let result;
   try { result = await loadPlatformNativeBindings({platform: platformName, packageName, loader, options: bindingOptions}); }
   catch (error) { result = Object.freeze({status: 'unavailable', platform: platformName, packageName: packageName || null, reason: error.message}); }
+  let virtualResult = Object.freeze({status: 'unconfigured', platform: platformName, packageName: null, reason: 'virtual gamepad package is not configured'});
+  if (virtualGamepadPackageName) virtualResult = await loadVirtualGamepadAdapter({platform: platformName, packageName: virtualGamepadPackageName, loader: virtualGamepadLoader, options: virtualGamepadOptions});
   const capabilities = result.status === 'available' ? result.capabilities : {};
   const nativeInput = Boolean(result.status === 'available' && (capabilities.input || capabilities.keyboard || capabilities.pointer || capabilities.gamepad || capabilities.rumble));
   const nativeCapture = Boolean(result.status === 'available' && capabilities.capture);
   const nativeAudio = Boolean(result.status === 'available' && capabilities.audio);
-  const runtimePlatformAdapters = createPlatformAdapterRegistry({platform: platformName, capabilities});
-  const environment = Object.freeze({...base, platformAdapters: runtimePlatformAdapters.describe(), nativeBinding: Object.freeze({status: result.status, platform: result.platform, packageName: result.packageName, reason: result.reason || null, capabilities: Object.freeze({...capabilities})}), inputAdapter: normalizeInputAdapterCapabilities({platform: platformName, state: nativeInput ? 'ready' : 'unconfigured', keyboard: Boolean(capabilities.keyboard), pointer: Boolean(capabilities.pointer), gamepad: Boolean(capabilities.gamepad), virtualGamepad: Boolean(capabilities.virtualGamepad ?? capabilities.gamepad), rumble: Boolean(capabilities.rumble)}), readiness: Object.freeze({...base.readiness, mediaCapture: nativeCapture, osInput: nativeInput, audioCapture: nativeAudio})});
-  return Object.freeze({environment, bindings: result.bindings || null});
+  const virtualInput = virtualResult.status === 'available'; const inputReady = nativeInput || virtualInput;
+  const runtimeCapabilities = {...capabilities, virtualGamepad: Boolean(capabilities.virtualGamepad || virtualInput)};
+  const runtimePlatformAdapters = createPlatformAdapterRegistry({platform: platformName, capabilities: runtimeCapabilities});
+  const nativeBindings = result.bindings || (virtualInput ? {platform: platformName} : null);
+  const bindings = nativeBindings ? Object.freeze({...nativeBindings, ...(virtualInput ? {input: createInputAdapterMux({platform: platformName, base: nativeBindings.input || virtualResult.adapter, virtualGamepad: virtualResult.adapter})} : {})}) : null;
+  const environment = Object.freeze({...base, platformAdapters: runtimePlatformAdapters.describe(), nativeBinding: Object.freeze({status: result.status, platform: result.platform, packageName: result.packageName, reason: result.reason || null, capabilities: Object.freeze({...capabilities})}), virtualGamepadBinding: Object.freeze({status: virtualResult.status, platform: virtualResult.platform, packageName: virtualResult.packageName, reason: virtualResult.reason || null, capabilities: Object.freeze({...virtualResult.capabilities})}), inputAdapter: normalizeInputAdapterCapabilities({platform: platformName, state: inputReady ? 'ready' : 'unconfigured', keyboard: Boolean(capabilities.keyboard), pointer: Boolean(capabilities.pointer), gamepad: Boolean(capabilities.gamepad || virtualInput), virtualGamepad: Boolean(runtimeCapabilities.virtualGamepad), rumble: Boolean(capabilities.rumble)}), readiness: Object.freeze({...base.readiness, mediaCapture: nativeCapture, osInput: inputReady, audioCapture: nativeAudio})});
+  return Object.freeze({environment, bindings});
 }

@@ -1,0 +1,6 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {loadVirtualGamepadAdapter} from './virtual-gamepad-loader.mjs';
+
+test('virtual gamepad loader validates an injected platform driver package', async () => { const adapter = {platform: 'win32', execute() {}, close() {}}; const result = await loadVirtualGamepadAdapter({platform: 'win32', packageName: '@test/windows-virtual-gamepad', loader: async name => { assert.equal(name, '@test/windows-virtual-gamepad'); return {createVirtualGamepad: async options => { assert.equal(options.platform, 'win32'); return adapter; }}; }}); assert.equal(result.status, 'available'); assert.equal(result.capabilities.virtualGamepad, true); assert.equal(result.adapter, adapter); });
+test('virtual gamepad loader fails closed for missing or malformed packages', async () => { const missing = await loadVirtualGamepadAdapter({platform: 'darwin', packageName: '@test/missing', loader: async () => { const error = new Error('missing'); error.code = 'ERR_MODULE_NOT_FOUND'; throw error; }}); assert.equal(missing.status, 'unavailable'); assert.match(missing.reason, /not installed/); const malformed = await loadVirtualGamepadAdapter({platform: 'darwin', packageName: '@test/malformed', loader: async () => ({})}); assert.match(malformed.reason, /export createVirtualGamepad/); });

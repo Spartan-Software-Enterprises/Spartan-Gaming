@@ -12,7 +12,7 @@ function required(value, name) { if (typeof value !== 'string' || !value.trim())
 function capabilityReady(kind, capabilities = {}) {
   if (kind === 'capture') return Boolean(capabilities.capture);
   if (kind === 'audio') return Boolean(capabilities.audio);
-  if (kind === 'input') return Boolean(capabilities.input || capabilities.keyboard || capabilities.pointer || capabilities.gamepad || capabilities.rumble);
+  if (kind === 'input') return Boolean(capabilities.input || capabilities.keyboard || capabilities.pointer || capabilities.gamepad || capabilities.virtualGamepad || capabilities.rumble);
   return false;
 }
 

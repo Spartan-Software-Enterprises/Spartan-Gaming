@@ -39,7 +39,8 @@ if (!Number.isInteger(maxMessagesPerSecond) || maxMessagesPerSecond < 1 || maxMe
 const pairingCode = args.get('pairing-code') || createPairingCode();
 const pairing = createPairingAuthority({code: pairingCode});
 const nativePackage = String(args.get('native-package') || process.env.SPARTAN_NATIVE_PACKAGE || '').trim() || undefined;
-const hostRuntime = await detectHostRuntime({packageName: nativePackage, bindingOptions: {environment: process.env}});
+const virtualGamepadPackage = String(args.get('virtual-gamepad-package') || process.env.SPARTAN_VIRTUAL_GAMEPAD_PACKAGE || '').trim() || undefined;
+const hostRuntime = await detectHostRuntime({packageName: nativePackage, bindingOptions: {environment: process.env}, virtualGamepadPackageName: virtualGamepadPackage, virtualGamepadOptions: {environment: process.env}});
 const environment = hostRuntime.environment;
 const inputEnabled = args.get('enable-input') === true || args.get('enable-input') === 'true';
 const nativeMediaEnabled = args.get('enable-native-media') === true || args.get('enable-native-media') === 'true';
