@@ -68,7 +68,7 @@ CGKeyCode key_code(const std::string& control) {
   if (control == "F1") return kVK_F1; if (control == "F2") return kVK_F2; if (control == "F3") return kVK_F3; if (control == "F4") return kVK_F4; if (control == "F5") return kVK_F5; if (control == "F6") return kVK_F6;
   if (control == "F7") return kVK_F7; if (control == "F8") return kVK_F8; if (control == "F9") return kVK_F9; if (control == "F10") return kVK_F10; if (control == "F11") return kVK_F11; if (control == "F12") return kVK_F12;
   if (control == "F13") return kVK_F13; if (control == "F14") return kVK_F14; if (control == "F15") return kVK_F15; if (control == "F16") return kVK_F16; if (control == "F17") return kVK_F17; if (control == "F18") return kVK_F18; if (control == "F19") return kVK_F19; if (control == "F20") return kVK_F20;
-  if (control == "NumLock") return kVK_KeypadClear;
+  if (control == "NumLock") return kVK_ANSI_KeypadClear;
   if (control == "Numpad0") return kVK_ANSI_Keypad0; if (control == "Numpad1") return kVK_ANSI_Keypad1; if (control == "Numpad2") return kVK_ANSI_Keypad2; if (control == "Numpad3") return kVK_ANSI_Keypad3;
   if (control == "Numpad4") return kVK_ANSI_Keypad4; if (control == "Numpad5") return kVK_ANSI_Keypad5; if (control == "Numpad6") return kVK_ANSI_Keypad6; if (control == "Numpad7") return kVK_ANSI_Keypad7;
   if (control == "Numpad8") return kVK_ANSI_Keypad8; if (control == "Numpad9") return kVK_ANSI_Keypad9;
