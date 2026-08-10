@@ -27,6 +27,11 @@ napi_value fail(napi_env env, const char* message) {
   return nullptr;
 }
 
+napi_value fail_errno(napi_env env, const char* message) {
+  const std::string detail = std::string(message) + ": " + std::strerror(errno);
+  return fail(env, detail.c_str());
+}
+
 bool property(napi_env env, napi_value object, const char* name, napi_value* value) {
   bool has = false;
   if (napi_has_named_property(env, object, name, &has) != napi_ok || !has) return false;
@@ -160,13 +165,13 @@ napi_value execute(napi_env env, napi_callback_info info) {
     effect.u.rumble.weak_magnitude = static_cast<__u16>(bounded_weak * 65535.0);
     effect.replay.length = static_cast<__u16>(duration < 0.0 ? 0.0 : duration > 5000.0 ? 5000.0 : duration);
     effect.replay.delay = static_cast<__u16>(delay < 0.0 ? 0.0 : delay > 5000.0 ? 5000.0 : delay);
-    if (ioctl(device_fd, EVIOCSFF, &effect) < 0) return fail(env, "failed to upload Linux force-feedback effect");
+    if (ioctl(device_fd, EVIOCSFF, &effect) < 0) return fail_errno(env, "failed to upload Linux force-feedback effect");
     rumble_effect_id = effect.id;
     input_event event{};
     event.type = EV_FF;
     event.code = static_cast<unsigned short>(effect.id);
     event.value = 1;
-    if (write(device_fd, &event, sizeof(event)) != static_cast<ssize_t>(sizeof(event))) return fail(env, "failed to play Linux force-feedback effect");
+    if (write(device_fd, &event, sizeof(event)) != static_cast<ssize_t>(sizeof(event))) return fail_errno(env, "failed to play Linux force-feedback effect");
     napi_value result; napi_get_boolean(env, true, &result); return result;
   }
   if (kind == "button") {
