@@ -253,6 +253,15 @@ napi_value execute(napi_env env, napi_callback_info info) {
 }
 
 napi_value close(napi_env env, napi_callback_info) {
+  if (ff_device_fd >= 0 && rumble_effect_id >= 0) {
+    input_event stop{};
+    stop.type = EV_FF;
+    stop.code = static_cast<unsigned short>(rumble_effect_id);
+    stop.value = 0;
+    write(ff_device_fd, &stop, sizeof(stop));
+    ioctl(ff_device_fd, EVIOCRMFF, rumble_effect_id);
+    rumble_effect_id = -1;
+  }
   ff_worker_running = false;
   if (ff_worker.joinable()) ff_worker.join();
   if (ff_device_fd >= 0) { ::close(ff_device_fd); ff_device_fd = -1; }
