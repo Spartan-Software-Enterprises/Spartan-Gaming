@@ -67,7 +67,7 @@ if (nativeMediaEnabled) {
 const hostVideo = resolveHostVideoCapabilities({encoders: environment.nativeBinding?.capabilities?.encoders?.hardware, display: hostRuntime.bindings?.display || null, maxWidth: mediaPolicy.width, maxHeight: mediaPolicy.height, maxFramerate: mediaPolicy.framerate, hdr: false});
 const capabilities = {transports: nativeMediaEnabled ? ['webrtc'] : ['websocket'], video: hostVideo, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: environment.inputAdapter.gamepad, virtualGamepad: environment.inputAdapter.virtualGamepad, keyboard: environment.inputAdapter.keyboard, pointer: environment.inputAdapter.pointer, rumble: environment.inputAdapter.rumble}};
 const virtualGamepadPermission = virtualGamepadPermissionGranted({inputEnabled: inputEnabled && controllerPolicy.allowGamepad, inputAdapter: environment.inputAdapter});
-const hapticPermission = Boolean(inputEnabled && controllerPolicy.rumble && controllerPolicy.hapticsBackend !== 'Disabled' && environment.inputAdapter.rumble);
+const hapticPermission = Boolean(inputEnabled && controllerPolicy.allowGamepad && controllerPolicy.rumble && controllerPolicy.hapticsBackend !== 'Disabled' && environment.inputAdapter.rumble);
 const inputPermissions = {'remote-input': true, 'virtual-gamepad': virtualGamepadPermission, 'haptic-output': hapticPermission};
 const inputExecutor = inputEnabled && hostRuntime.bindings?.input && environment.readiness.osInput ? createNativeInputExecutor({platform: environment.platform, adapter: hostRuntime.bindings.input, permissions: inputPermissions, controllerPolicy}) : null;
 const rumbleBroadcast = inputExecutor ? createRumbleBroadcastController({adapter: inputExecutor.adapter, controllerPolicy}) : null;

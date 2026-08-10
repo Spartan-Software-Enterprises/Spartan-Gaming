@@ -21,7 +21,7 @@ export function controllerPolicyFromSettings(settings = {}) {
 
 export function controllerPolicyAllowsEvent(event, policy = normalizeControllerPolicy()) {
   const normalized = normalizeControllerPolicy(policy); const kind = event?.kind || (event?.source === 'gamepad' ? 'button' : event?.source);
-  if (kind === 'rumble') { const index = Number.isInteger(event?.gamepadIndex) ? event.gamepadIndex : 0; return normalized.rumble && normalized.hapticsBackend !== 'Disabled' && (normalized.multipleControllers || index === 0) && index < normalized.playerSlots; }
+  if (kind === 'rumble') { const index = Number.isInteger(event?.gamepadIndex) ? event.gamepadIndex : 0; return normalized.allowGamepad && normalized.rumble && normalized.hapticsBackend !== 'Disabled' && (normalized.multipleControllers || index === 0) && index < normalized.playerSlots; }
   if (event?.source === 'hid') return normalized.allowHid;
   if (event?.source === 'gamepad' || ['button', 'axis'].includes(kind)) { const index = Number.isInteger(event?.gamepadIndex) ? event.gamepadIndex : 0; return normalized.allowGamepad && (normalized.multipleControllers || index === 0) && index < normalized.playerSlots; }
   return true;
