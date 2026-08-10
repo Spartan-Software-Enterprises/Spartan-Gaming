@@ -77,8 +77,8 @@ test('native package rollout builds, verifies, and conditionally publishes signe
 test('production rollout workflow keeps activation operator-controlled and secret-safe', () => {
   assert.match(productionRollout, /workflow_dispatch:/);
   assert.match(productionRollout, /runs-on: \$\{\{ inputs\.runner_label \}\}/);
-  assert.match(productionRollout, /deployment:check/);
-  assert.match(productionRollout, /deployment:preflight/);
+  assert.match(productionRollout, /node --env-file="\$DEPLOYMENT_ENV_FILE" scripts\/validate-production-config\.mjs/);
+  assert.match(productionRollout, /node --env-file="\$DEPLOYMENT_ENV_FILE" scripts\/deployment\/production-preflight\.mjs/);
   assert.match(productionRollout, /deployment:rollout/);
   assert.match(productionRollout, /--execute --confirm/);
   assert.match(productionRollout, /COMPOSE_FILE: \$\{\{ inputs\.compose_file \}\}/);

@@ -51,9 +51,19 @@ jobs:
       - name: Install deployment tooling
         run: npm install --ignore-scripts --no-audit --no-fund
       - name: Validate operator-managed production configuration
-        run: npm run deployment:check
+        shell: bash
+        env:
+          DEPLOYMENT_ENV_FILE: ${{ inputs.env_file }}
+        run: |
+          set -euo pipefail
+          node --env-file="$DEPLOYMENT_ENV_FILE" scripts/validate-production-config.mjs
       - name: Verify mounted TLS and secret-file inputs
-        run: npm run deployment:preflight
+        shell: bash
+        env:
+          DEPLOYMENT_ENV_FILE: ${{ inputs.env_file }}
+        run: |
+          set -euo pipefail
+          node --env-file="$DEPLOYMENT_ENV_FILE" scripts/deployment/production-preflight.mjs
       - name: Apply Compose rollout and verify HTTPS health
         shell: bash
         env:
