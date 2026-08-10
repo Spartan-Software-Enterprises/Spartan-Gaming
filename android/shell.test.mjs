@@ -16,7 +16,7 @@ test('Android shell packages the shared frontend through a safe asset origin', (
   assert.match(activity, /WebViewAssetLoader/);
   assert.match(activity, /appassets\.androidplatform\.net/);
   assert.match(activity, /allowFileAccess = false/);
-  assert.match(activity, /addJavascriptInterface\(bridge, "SpartanAndroid"\)/);
+  assert.match(activity, /addJavascriptInterface\(nativeBridge, "SpartanAndroid"\)/);
   assert.match(activity, /GameNativeHandoff\.launchOrInstall/);
   assert.match(manifest, /android:usesCleartextTraffic="false"/);
   assert.match(manifest, /android\.permission\.INTERNET/);

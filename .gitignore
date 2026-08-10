@@ -8,6 +8,7 @@ Thumbs.db
 # Build output
 out/
 build/
+.gradle/
 dist/
 dist-electron/
 target/
