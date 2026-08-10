@@ -7,7 +7,7 @@ import {createInputPermissionPolicy} from '../input/policy.mjs';
 import {createHapticsController} from '../input/haptics.mjs';
 import {createPointerInputEvent, createWheelInputEvent} from '../input/pointer.mjs';
 import {createWebRtcTransport, createWebSocketSignalTransport, createWebTransportSignalTransport} from '../transport/transport.mjs';
-import {readTransportPolicy, resolveSignalingTransport} from './transport-config.mjs';
+import {readTransportPolicy, resolveSignalingEndpoint, resolveSignalingTransport} from './transport-config.mjs';
 import {createPlayerState, formatLatency, formatNegotiatedCapabilities, formatRate, reducePlayerState} from './player-state.mjs';
 import {captureVideoFrame, createInstantReplayController, createRecordingController} from '../capture/capture.mjs';
 import {createImmersiveController} from './immersive.mjs';
@@ -65,7 +65,7 @@ let displayNegotiation = resolveDisplayNegotiation();
 const telemetryLog = createSessionTelemetryLog({enabled: false});
 const previousGamepad = new Map();
 
-elements.connectionEndpoint.value = query.get('signal') || pendingHostPair?.endpoint || recoveryHandoff?.endpoint || '';
+elements.connectionEndpoint.value = resolveSignalingEndpoint({queryEndpoint: query.get('signal'), pendingEndpoint: pendingHostPair?.endpoint, recoveryEndpoint: recoveryHandoff?.endpoint, customEndpoint: sessionPreferences.preferences.customSignalingUrl});
 elements.connectionSession.value = query.get('session') || pendingHostPair?.sessionId || recoveryHandoff?.sessionId || 'ses-browser-host';
 elements.connectionTicket.value = query.get('ticket') || pendingHostPair?.ticket || recoveryHandoff?.ticket || '';
 installLanHandoffListener({handoffId: query.get('handoff'), target: 'client', onHandoff: handoff => { elements.connectionEndpoint.value = handoff.endpoint; elements.connectionSession.value = handoff.sessionId; elements.connectionTicket.value = handoff.ticket; elements.message.textContent = 'LAN session details received. Press Connect securely to join.'; }});
@@ -164,7 +164,7 @@ async function connect(connectionValues = {}) {
 }
 
 async function start() {
-  const endpoint = query.get('signal') || pendingHostPair?.endpoint || recoveryHandoff?.endpoint; const ticket = query.get('ticket') || pendingHostPair?.ticket || recoveryHandoff?.ticket; const sessionId = query.get('session') || pendingHostPair?.sessionId || recoveryHandoff?.sessionId;
+  const endpoint = resolveSignalingEndpoint({queryEndpoint: query.get('signal'), pendingEndpoint: pendingHostPair?.endpoint, recoveryEndpoint: recoveryHandoff?.endpoint, customEndpoint: sessionPreferences.preferences.customSignalingUrl}); const ticket = query.get('ticket') || pendingHostPair?.ticket || recoveryHandoff?.ticket; const sessionId = query.get('session') || pendingHostPair?.sessionId || recoveryHandoff?.sessionId;
   try {
     await prepareSession();
     installTouchControls();

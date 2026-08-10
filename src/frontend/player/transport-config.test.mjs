@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {readTransportPolicy, resolveSignalingTransport} from './transport-config.mjs';
+import {readTransportPolicy, resolveSignalingEndpoint, resolveSignalingTransport} from './transport-config.mjs';
 
 test('player transport settings normalize saved labels without storing credentials', () => {
   const storage = {getItem: () => JSON.stringify({'streaming.transportPreference': 'WebTransport experimental', 'streaming.icePolicy': 'Relay only'})};
@@ -27,3 +27,4 @@ test('player fails clearly when a requested transport is unavailable', () => {
   assert.throws(() => resolveSignalingTransport({endpoint: 'https://relay.example.test/signal', policy: {preference: 'webtransport'}, webTransportAvailable: false}), /unavailable/);
   assert.throws(() => resolveSignalingTransport({endpoint: 'wss://relay.example.test/signal', policy: {preference: 'webtransport'}, webTransportAvailable: true}), /compatible endpoint/);
 });
+test('player signaling endpoint precedence preserves explicit handoffs before custom settings', () => { assert.equal(resolveSignalingEndpoint({customEndpoint: 'wss://settings.example/signal'}), 'wss://settings.example/signal'); assert.equal(resolveSignalingEndpoint({queryEndpoint: 'wss://query.example/signal', pendingEndpoint: 'wss://pair.example/signal', customEndpoint: 'wss://settings.example/signal'}), 'wss://query.example/signal'); assert.equal(resolveSignalingEndpoint({queryEndpoint: '  ', recoveryEndpoint: 'wss://recovery.example/signal'}), 'wss://recovery.example/signal'); assert.equal(resolveSignalingEndpoint(), ''); });

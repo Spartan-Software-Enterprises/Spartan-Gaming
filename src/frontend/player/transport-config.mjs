@@ -9,6 +9,8 @@ export function readTransportPolicy(storage = globalThis.localStorage) {
   return policy;
 }
 
+export function resolveSignalingEndpoint({queryEndpoint = '', pendingEndpoint = '', recoveryEndpoint = '', customEndpoint = ''} = {}) { return [queryEndpoint, pendingEndpoint, recoveryEndpoint, customEndpoint].find(value => typeof value === 'string' && value.trim())?.trim() || ''; }
+
 export function resolveSignalingTransport({endpoint, policy, webTransportAvailable = typeof globalThis.WebTransport === 'function', webSocketAvailable = typeof globalThis.WebSocket === 'function'} = {}) {
   const normalized = normalizeTransportPolicy(policy);
   const protocol = new URL(endpoint).protocol;
