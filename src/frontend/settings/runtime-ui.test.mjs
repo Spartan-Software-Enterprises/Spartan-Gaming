@@ -45,7 +45,7 @@ test('runtime UI exposes Fire TV remote-navigation metadata', () => {
   const navigatorRef = {userAgent: 'Mozilla/5.0 (Linux; Android 9; AFTSSS Build/PS7292)', platform: 'Linux armv7l'};
   const documentRef = {defaultView: {navigator: navigatorRef, innerWidth: 1920}, documentElement: root, head: {append(node) { nodes.set(node.id, node); }}, getElementById(id) { return nodes.get(id); }, createElement() { return {id: '', textContent: ''}; }};
   const settings = resolveRuntimeUiSettings({}, {navigatorRef, viewport: {width: 1920}});
-  applyRuntimeUiSettings(documentRef, {});
+  applyRuntimeUiSettings(documentRef, {}, {navigation: {scheduler: () => null}});
   assert.equal(settings.platform, 'fire-tv');
   assert.equal(settings.enginePolicy, 'chromium-capable');
   assert.equal(settings.featureGates.tvRemoteNavigation, true);

@@ -87,7 +87,7 @@ html[data-spartan-device-mode="mobile"] body,html[data-spartan-device-mode="hand
 html[data-spartan-device-mode="mobile"] .content,html[data-spartan-device-mode="handheld"] .content,html[data-spartan-device-mode="mobile"] .main,html[data-spartan-device-mode="handheld"] .main{padding-bottom:calc(45px + env(safe-area-inset-bottom))}
 `;
 
-export function applyRuntimeUiSettings(documentRef, settings = {}) {
+export function applyRuntimeUiSettings(documentRef, settings = {}, {navigation = {}} = {}) {
   if (!documentRef?.documentElement) return resolveRuntimeUiSettings(settings);
   globalThis.spartanElectron?.setQuitGuard?.(settings['general.askBeforeQuit'] !== false);
   const resolved = resolveRuntimeUiSettings(settings, {navigatorRef: documentRef.defaultView?.navigator || globalThis.navigator, viewport: {width: documentRef.defaultView?.innerWidth}});
@@ -119,6 +119,6 @@ export function applyRuntimeUiSettings(documentRef, settings = {}) {
   if (!documentRef.getElementById(STYLE_ID)) {
     const style = documentRef.createElement('style'); style.id = STYLE_ID; style.textContent = RUNTIME_STYLES; documentRef.head?.append(style);
   }
-  syncRuntimeControllerNavigation(documentRef);
+  syncRuntimeControllerNavigation(documentRef, navigation);
   return resolved;
 }
