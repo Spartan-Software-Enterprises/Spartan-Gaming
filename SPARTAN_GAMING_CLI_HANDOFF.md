@@ -146,7 +146,9 @@ The Android mobile increment adds `android/gamemode/AndroidGameModeBridge.kt`
 and a shared `resolveAndroidGameModeIntent()` contract. Android 12+ shells
 query `GameManager` on resume, preserve the observed mode, and never claim the
 application can change the system-selected mode; Android hardware validation
-remains a lab gate.
+remains a lab gate. The Android policy suite passed 4/4 locally and on AWS at
+`8fc8d0e`; repository checks and the full package suite also exited
+successfully.
 
 The current Proton/SteamOS increment adds a user-owned Linux/SteamOS Proton
 launch boundary. `host/proton.mjs` detects a selected installation, validates
