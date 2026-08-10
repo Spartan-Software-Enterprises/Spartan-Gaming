@@ -83,12 +83,12 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- The published code state is `e06efe7` on `main`; local and AWS worktrees are
+- The published code state is `f208cb0` on `main`; local and AWS worktrees are
   clean and synchronized with `origin/main`.
 - `npm run check`: repository checks pass on the current code state locally
   and on the AWS dev server.
-- `npm test`: the current local run completed with 633 tests, 629 passed,
-  4 skipped, and 0 failed. The AWS run completed with 633 tests, 631 passed,
+- `npm test`: the current local run completed with 634 tests, 630 passed,
+  4 skipped, and 0 failed. The AWS run completed with 634 tests, 632 passed,
   2 skipped, and 0 failed; the difference is environment-gated integration
   coverage, not a failure.
 - AWS Playwright 1.55.0 completed 22/22 navigations across 11 maintained
@@ -187,8 +187,10 @@ or text input. The bridge fails closed for missing, oversized, malformed, or
 unknown actions or non-object payloads and never exposes raw Android objects or
 arbitrary command/URL execution. The bridge also forwards only positive,
 allow-listed GameNative app IDs and store names to the native handoff. Focused
-bridge/runtime validation passed 15/15, and the full local suite passed 633
-tests with 629 passed, 4 skipped, and 0 failed. Android SDK
+bridge/runtime validation passed 16/16, and the full local suite passed 634
+tests with 632 passed, 2 skipped, and 0 failed. Requests carry correlation IDs
+and an optional native `ResultSink` can dispatch validated
+`spartan:android-result` events. Android SDK
 compilation, WebView lifecycle, permissions, callbacks, and device behavior
 remain physical Android lab gates.
 
