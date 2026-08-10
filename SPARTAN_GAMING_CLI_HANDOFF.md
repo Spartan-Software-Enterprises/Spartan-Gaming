@@ -125,6 +125,11 @@ review; stay within the AWS credit limit.
   `31441280407` succeeded on `804fef4`, including the APK artifact upload.
   The setup-java deprecation warning is resolved; GitHub still reports the
   upstream `setup-android@v3` Node-runtime warning.
+- The latest `90f9d29` push passed Android debug run `31441430002` and
+  cross-platform contracts run `31441430016`. The cross-platform matrix
+  exercised Linux/macOS/Windows Electron packaging, native package contracts,
+  Redis integration, and Windows native input package build/test paths; these
+  remain CI evidence, not physical hardware evidence.
 - The AWS full suite on `01ced66` passed 632 of 634 tests with 2 environment-
   gated skips and 0 failures; repository checks passed 431/431.
 - AWS Playwright 1.55.0 completed 22/22 navigations across 11 maintained
