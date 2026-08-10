@@ -20,12 +20,14 @@ import { clearSessionRecoveryHandoff, readSessionRecoveryHandoff } from '../sess
 import { resolveStartupRoute } from '../startup/route.mjs';
 import { createActiveProfileStorage } from '../profiles/storage.mjs';
 import { createProviderDetailsModel } from '../providers/details.mjs';
+import { nextConsoleMode, resolveConsoleMode } from '../platform/console-mode.mjs';
 
 const profileStorage = createActiveProfileStorage();
 const launchHistory = createLaunchHistoryStore({storage: profileStorage});
 const workspaceStore = createWorkspaceStore({storage: profileStorage});
 const communityCatalogStore = createCommunityProviderCatalogStore();
 const settings = createSettingsStore().read();
+const settingsStore = createSettingsStore();
 const recoveryHandoff = settings['general.restoreSession'] !== false ? readSessionRecoveryHandoff(sessionStorage) : null;
 const startupRoute = new URLSearchParams(globalThis.location?.search || '').get('startup') === '1' ? resolveStartupRoute(settings, {recovery: recoveryHandoff, lastLaunch: launchHistory.latest()}) : null;
 if (startupRoute && typeof globalThis.location?.replace === 'function') globalThis.location.replace(startupRoute);
@@ -43,6 +45,13 @@ const statusPill = sessionStatus.closest('.status-pill');
 const providerDialog = document.querySelector('[data-provider-dialog]');
 const WATCH_KINDS = new Set(['live-streaming', 'social-streaming', 'self-hosted-live-streaming']);
 const sessionManager = createSessionManager({idFactory: () => `ses-${crypto.randomUUID()}`});
+let consoleMode = resolveConsoleMode({settings, deviceMode: String(settings['appearance.deviceMode'] || 'desktop').toLowerCase()});
+document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="./console-mode.css">');
+document.body.classList.toggle('console-mode', consoleMode);
+document.querySelector('.topbar')?.insertAdjacentHTML('beforeend', '<button class="console-mode-toggle" data-console-mode-toggle type="button" aria-pressed="false">▣ Console Mode</button>');
+const consoleModeToggle = document.querySelector('[data-console-mode-toggle]');
+function renderConsoleMode() { document.body.classList.toggle('console-mode', consoleMode); if (consoleModeToggle) { consoleModeToggle.setAttribute('aria-pressed', String(consoleMode)); consoleModeToggle.textContent = consoleMode ? '▣ Exit Console Mode' : '▣ Console Mode'; } }
+consoleModeToggle?.addEventListener('click', () => { consoleMode = nextConsoleMode(consoleMode); settingsStore.save({...settings, 'appearance.consoleMode': consoleMode}); renderConsoleMode(); showToast(consoleMode ? 'Console Mode enabled' : 'Console Mode disabled'); });
 let sessionStatusId = 'idle';
 let toastTimer;
 let selectedProviderDetails = null;
@@ -174,6 +183,7 @@ document.querySelectorAll('[data-section]').forEach(button => button.addEventLis
   state.filter = route.filter; document.querySelectorAll('[data-filter]').forEach(item => item.classList.toggle('is-active', item.dataset.filter === state.filter)); render();
 }));
 renderResume();
+renderConsoleMode();
 updateReadinessStatus();
 loadCatalog();
 window.addEventListener('online', updateReadinessStatus);

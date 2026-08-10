@@ -22,6 +22,7 @@ export const settingsCategories = [
       select('appearance.accent', 'Accent color', 'Used for focus, active controls, selection, and session status.', ['Cyan', 'Violet', 'Lime', 'Amber', 'Red', 'Custom'], 'Cyan'),
       select('appearance.density', 'Interface density', 'Controls spacing in navigation, library rows, and settings.', ['Comfortable', 'Compact', 'Controller-first'], 'Comfortable'),
       select('appearance.deviceMode', 'Device presentation mode', 'Tune navigation, focus targets, touch controls, fullscreen, and layout for the current device class.', ['Automatic', 'Desktop', 'ChromeOS', 'Handheld', 'Mobile', 'Television'], 'Automatic'),
+      toggle('appearance.consoleMode', 'Console mode', 'Use a controller-first, fullscreen-friendly dashboard presentation with larger focus targets.', false),
       select('appearance.tabLayout', 'Tab layout', 'Choose how browser tabs are presented during normal browsing.', ['Top tabs', 'Vertical tabs', 'Compact tabs', 'Hidden in gaming mode'], 'Top tabs'),
       toggle('appearance.translucentChrome', 'Translucent browser chrome', 'Use a subtle translucent surface where the platform compositor supports it.', true),
       toggle('appearance.reduceMotion', 'Reduce motion', 'Respect reduced-motion preferences and remove non-essential transitions.'),
