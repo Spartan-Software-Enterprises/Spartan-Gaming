@@ -10,6 +10,18 @@ const FRAMERATES = new Set(['30 FPS', '60 FPS', '90 FPS', '120 FPS', '144 FPS'])
 const AUDIO_CODECS = new Set(['Automatic', 'Opus', 'AAC']);
 const LOG_LEVELS = new Set(['Errors only', 'Connection events', 'Verbose']);
 
+/** Resolve the host OS using Electron's authoritative platform when available. */
+export function detectHostPlatform({electronPlatform, navigatorRef = globalThis.navigator} = {}) {
+  if (PLATFORMS.has(electronPlatform)) return electronPlatform;
+  const platform = String(navigatorRef?.userAgentData?.platform || '').toLowerCase();
+  if (platform.includes('mac')) return 'darwin';
+  if (platform.includes('win')) return 'win32';
+  const userAgent = String(navigatorRef?.userAgent || '').toLowerCase();
+  if (userAgent.includes('windows')) return 'win32';
+  if (userAgent.includes('mac os') || userAgent.includes('macintosh')) return 'darwin';
+  return 'linux';
+}
+
 function text(value, maximum = 256) { return typeof value === 'string' && value.trim() && value.length <= maximum ? value.trim() : undefined; }
 function number(value, fallback, minimum, maximum) { const result = Number(value); return Number.isInteger(result) ? Math.max(minimum, Math.min(maximum, result)) : fallback; }
 function deviceIds(value) { if (typeof value !== 'string') return []; return [...new Set(value.split(',').map(item => item.trim()).filter(Boolean))].slice(0, 8).filter(item => item.length <= 128); }

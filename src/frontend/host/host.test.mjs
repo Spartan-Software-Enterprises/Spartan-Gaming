@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {clearPendingHostPair, createHostConnectionProfile, createHostProfileStore, createPairingRequest, createPendingHostPair, normalizeHostProfile, parseHostEndpoint, readPendingHostPair, savePendingHostPair, selectHostTransport} from './host.mjs';
-import {createHostConfigFromSettings} from './config.mjs';
+import {createHostConfigFromSettings, detectHostPlatform} from './config.mjs';
 import './lan-handoff.test.mjs';
+
+test('host platform detection prefers Electron platform and handles browser fallbacks', () => { assert.equal(detectHostPlatform({electronPlatform: 'win32', navigatorRef: {userAgent: 'Macintosh'}}), 'win32'); assert.equal(detectHostPlatform({electronPlatform: 'darwin', navigatorRef: {userAgent: 'Windows NT'}}), 'darwin'); assert.equal(detectHostPlatform({navigatorRef: {userAgentData: {platform: 'macOS'}}}), 'darwin'); assert.equal(detectHostPlatform({navigatorRef: {userAgentData: {platform: 'Windows'}}}), 'win32'); assert.equal(detectHostPlatform({navigatorRef: {userAgent: 'Mozilla/5.0 (X11; Linux x86_64)'}}), 'linux'); });
 
 test('host endpoints reject credentials and insecure remote URLs', () => { assert.throws(() => parseHostEndpoint('https://user:pass@example.test'), /credentials/); assert.throws(() => parseHostEndpoint('http://example.test'), /TLS/); assert.equal(parseHostEndpoint('http://localhost:8787').local, true); });
 test('transport selection prefers WebRTC among shared transports', () => { assert.equal(selectHostTransport({clientTransports: ['websocket', 'webrtc'], hostTransports: ['webrtc', 'websocket'], endpoint: 'wss://host.example/session'}), 'webrtc'); assert.throws(() => selectHostTransport({clientTransports: ['webtransport'], hostTransports: ['webtransport'], endpoint: 'http://example.test'}), /TLS/); });

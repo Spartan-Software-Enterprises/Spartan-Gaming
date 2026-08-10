@@ -4,7 +4,7 @@ import {createSettingsStore} from './profile.mjs';
 import {resolveSettingsAction} from './actions.mjs';
 import {applyRuntimeUiSettings} from './runtime-ui.mjs';
 import {clearProviderSessionState} from '../providers/session-cleanup.mjs';
-import {createHostConfigFromSettings} from '../host/config.mjs';
+import {createHostConfigFromSettings, detectHostPlatform} from '../host/config.mjs';
 import {renderSettingControl} from './control.mjs';
 
 const settingsStore = createSettingsStore();
@@ -119,7 +119,7 @@ function downloadSettings() {
 }
 
 function downloadHostConfig() {
-  const platform = globalThis.navigator?.userAgentData?.platform?.toLowerCase().includes('mac') ? 'darwin' : globalThis.navigator?.userAgent?.toLowerCase().includes('windows') ? 'win32' : 'linux';
+  const platform = detectHostPlatform({electronPlatform: globalThis.spartanElectron?.platform, navigatorRef: globalThis.navigator});
   downloadJson('spartan-host.json', JSON.stringify(createHostConfigFromSettings({platform, settings: state}), null, 2));
 }
 
