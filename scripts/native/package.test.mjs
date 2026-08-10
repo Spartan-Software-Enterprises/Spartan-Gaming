@@ -6,6 +6,7 @@ import test from 'node:test';
 import './sign-release.test.mjs';
 import './verify-release.test.mjs';
 import './verify-linux-uinput.test.mjs';
+import './verify-virtual-gamepad.test.mjs';
 import {createNativePackageMatrix, createNativePackagePlan, parseNativePackageArguments} from './package.mjs';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');

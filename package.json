@@ -25,6 +25,8 @@
     "native:build-linux": "node scripts/native/package.mjs --platform linux --execute",
     "native:verify-linux": "node scripts/native/verify-linux-uinput.mjs",
     "native:verify-desktop": "node scripts/native/verify-desktop-capabilities.mjs",
+    "native:verify-virtual-gamepad": "node scripts/native/verify-virtual-gamepad.mjs",
+    "test:native-virtual-gamepad": "node --test scripts/native/verify-virtual-gamepad.test.mjs",
     "test:native-linux-package": "node --test native/linux/package.test.mjs",
     "test:native-windows-package": "node --test native/windows/package.test.mjs",
     "test:native-macos-package": "node --test native/macos/package.test.mjs",

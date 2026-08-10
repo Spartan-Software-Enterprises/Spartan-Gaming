@@ -226,6 +226,22 @@ attached or that a real haptic effect was felt. The final hardware gate must
 run this check on each target operating system with the intended devices
 connected, then record the result in the release handoff.
 
+For a separately installed Windows or macOS virtual-gamepad adapter, verify
+the signed package before enabling it in the host configuration:
+
+```bash
+npm run native:verify-virtual-gamepad -- \
+  --platform windows \
+  --install-root 'C:/Spartan/adapters' \
+  --adapter-id windows-virtual-gamepad \
+  --public-key-file /run/secrets/virtual-gamepad-public-key.json
+```
+
+The command verifies the current pointer, manifest identity, platform and
+package kind, every declared file digest, the release signature, and the
+factory contract. It never executes a controller operation; the actual
+driver/hardware exercise remains an operator-run final gate.
+
 When `RELEASE_SIGNING_SERVICE_URL` is configured as a repository variable, or
 `signing_service_url` is supplied to a manual rollout, the workflow can call
 that external HTTPS service with the `SPARTAN_RELEASE_SIGNING_TOKEN` secret.
