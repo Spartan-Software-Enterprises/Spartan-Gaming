@@ -267,6 +267,17 @@ attached or that a real haptic effect was felt. The final hardware gate must
 run this check on each target operating system with the intended devices
 connected, then record the result in the release handoff.
 
+The manual hardware gate also runs an explicit exercise after the observation
+check. `--execute --confirm --require-execution` starts and stops the selected
+capture and audio lifecycles, sends an F20 press/release pair, and requests a
+short rumble. The exercise is bounded and opt-in because it requires screen and
+microphone permissions and can affect the focused desktop or an attached
+controller. `SPARTAN_HARDWARE_CAPTURE_SOURCE` and
+`SPARTAN_HARDWARE_AUDIO_SOURCE` may be supplied by the runner for non-default
+devices. A report marked ready proves that the adapter accepted the operations;
+it does not replace an operator confirming the captured media and felt haptic
+response.
+
 The manual `Hardware validation gate` GitHub Actions workflow provides that
 operator-run surface on a labeled self-hosted Windows, macOS, or Linux runner.
 It requires native input, audio, and haptics readiness, and can explicitly run
@@ -294,7 +305,12 @@ npm run native:verify-virtual-gamepad -- \
 The command verifies the current pointer, manifest identity, platform and
 package kind, every declared file digest, the release signature, and the
 factory contract. It never executes a controller operation; the actual
-driver/hardware exercise remains an operator-run final gate.
+driver/hardware exercise remains an operator-run final gate. To run the
+bounded injection exercise after signature verification, add
+`--execute --confirm --require-execution`; it sends button 0 press/release and
+axis 0 neutral through the installed adapter and records only the operation
+count. Keep the target game or other input-sensitive application closed while
+performing this test.
 
 When `RELEASE_SIGNING_SERVICE_URL` is configured as a repository variable, or
 `signing_service_url` is supplied to a manual rollout, the workflow can call

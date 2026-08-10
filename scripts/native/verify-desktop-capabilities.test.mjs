@@ -9,6 +9,13 @@ test('desktop capability verification is observation-only and reports a ready in
   assert.equal(report.capabilities.input.state, 'ready'); assert.equal(report.capabilities.audio.state, 'ready'); assert.equal(report.capabilities.haptics.state, 'ready');
 });
 
+test('desktop capability verification can explicitly exercise capture, audio, input, and haptics', async () => {
+  const calls = []; const lifecycle = name => ({async start(options) { calls.push([name, 'start', options]); }, async stop() { calls.push([name, 'stop']); }});
+  const report = await verifyDesktopCapabilities({platform: 'win32', execute: true, delay: async () => {}, environment: {SPARTAN_HARDWARE_CAPTURE_SOURCE: 'display-1', SPARTAN_HARDWARE_AUDIO_SOURCE: 'mic-1'}, loadModule: async () => ({createBindings: async () => ({capabilities: {input: true, audio: true, rumble: true}, input: {async execute(operation) { calls.push(['input', operation]); }}, capture: lifecycle('capture'), audio: lifecycle('audio'), close() { calls.push(['bindings', 'close']); }})})});
+  assert.equal(report.status, 'ready'); assert.deepEqual(report.execution, {state: 'ready', capture: 'verified', audio: 'verified', input: 'verified', haptics: 'verified'});
+  assert.deepEqual(calls.filter(call => call[0] === 'input').map(call => call[1]), [{kind: 'key', control: 'F20', pressed: true}, {kind: 'key', control: 'F20', pressed: false}, {kind: 'rumble', gamepadIndex: 0, strongMagnitude: 0.25, weakMagnitude: 0.15, durationMs: 250}]); assert.equal(calls.at(-1)[0], 'bindings');
+});
+
 test('desktop capability verification separates missing audio and haptics from input readiness', async () => {
   const report = await verifyDesktopCapabilities({platform: 'win32', loadModule: async () => ({createBindings: async () => ({capabilities: {input: true, audio: false, rumble: false}, input: {execute() {}}, capture: {start() {}}, audio: {}, close() {}})})});
   assert.equal(report.capabilities.input.state, 'ready'); assert.equal(report.capabilities.audio.state, 'unavailable'); assert.equal(report.capabilities.haptics.state, 'unavailable');

@@ -25,8 +25,13 @@ on:
         required: true
         default: false
         type: boolean
+      execute_hardware:
+        description: 'Run the explicit capture/audio/input/haptics exercise; requires connected target hardware and operator confirmation'
+        required: true
+        default: false
+        type: boolean
       verify_virtual_gamepad:
-        description: 'Verify the installed signed virtual-gamepad package'
+        description: 'Verify and exercise the installed signed virtual-gamepad package with a bounded button/axis sequence'
         required: true
         default: false
         type: boolean
@@ -63,6 +68,17 @@ jobs:
           TARGET_PLATFORM: ${{ inputs.platform }}
           INSTALL_ROOT: ${{ inputs.install_root }}
         run: npm run native:verify-desktop -- --platform "$TARGET_PLATFORM" --install-root "$INSTALL_ROOT" --report-file "$RUNNER_TEMP/spartan-native-$TARGET_PLATFORM.json" --require-hardware --require-input --require-audio --require-haptics
+      - name: Require explicit hardware exercise confirmation
+        shell: bash
+        env:
+          EXECUTE_HARDWARE: ${{ inputs.execute_hardware }}
+        run: test "$EXECUTE_HARDWARE" = "true"
+      - name: Exercise native capture audio input and haptics
+        shell: bash
+        env:
+          TARGET_PLATFORM: ${{ inputs.platform }}
+          INSTALL_ROOT: ${{ inputs.install_root }}
+        run: npm run native:verify-desktop -- --platform "$TARGET_PLATFORM" --install-root "$INSTALL_ROOT" --report-file "$RUNNER_TEMP/spartan-native-exercise-$TARGET_PLATFORM.json" --execute --confirm --require-execution --duration-ms 250
       - name: Require external virtual-driver evidence on Windows and macOS
         if: ${{ inputs.platform != 'linux' }}
         shell: bash
@@ -88,7 +104,7 @@ jobs:
           test -n "$VIRTUAL_INSTALL_ROOT"
           test -n "$VIRTUAL_ADAPTER_ID"
           test -f "$PUBLIC_KEY_FILE"
-          npm run native:verify-virtual-gamepad -- --platform "$TARGET_PLATFORM" --install-root "$VIRTUAL_INSTALL_ROOT" --adapter-id "$VIRTUAL_ADAPTER_ID" --public-key-file "$PUBLIC_KEY_FILE" --report-file "$RUNNER_TEMP/spartan-virtual-gamepad-$TARGET_PLATFORM.json"
+          npm run native:verify-virtual-gamepad -- --platform "$TARGET_PLATFORM" --install-root "$VIRTUAL_INSTALL_ROOT" --adapter-id "$VIRTUAL_ADAPTER_ID" --public-key-file "$PUBLIC_KEY_FILE" --report-file "$RUNNER_TEMP/spartan-virtual-gamepad-$TARGET_PLATFORM.json" --execute --confirm --require-execution
       - name: Retain capability reports
         if: ${{ always() }}
         uses: actions/upload-artifact@v7

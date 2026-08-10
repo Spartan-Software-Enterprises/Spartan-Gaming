@@ -65,6 +65,9 @@ test('hardware validation workflow requires real platform capabilities and signe
   assert.match(hardwareWorkflow, /--require-input/);
   assert.match(hardwareWorkflow, /--require-audio/);
   assert.match(hardwareWorkflow, /--require-haptics/);
+  assert.match(hardwareWorkflow, /execute_hardware:/);
+  assert.match(hardwareWorkflow, /Exercise native capture audio input and haptics/);
+  assert.match(hardwareWorkflow, /--execute --confirm --require-execution/);
   assert.match(hardwareWorkflow, /Require external virtual-driver evidence on Windows and macOS/);
   assert.match(hardwareWorkflow, /test "\$VERIFY_VIRTUAL_GAMEPAD" = "true"/);
   assert.match(hardwareWorkflow, /native:verify-linux/);
