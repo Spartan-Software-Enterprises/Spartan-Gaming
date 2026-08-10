@@ -64,6 +64,12 @@ summary for capture source, media limits, audio consent, input enablement,
 pairing, wake, and diagnostic settings, so the Electron health panel can
 confirm that the exported host configuration arrived intact.
 
+When native media is enabled, the agent resolves those labels into bounded
+capture and encoder parameters before creating the WebRTC host: resolution,
+framerate, H.264/VP9/AV1 preference, and Opus/AAC audio preference are applied
+to the native session. HEVC remains a settings-compatible request but falls
+back to H.264 until an HEVC RTP path is available.
+
 For repeatable supervisor configuration, pass `--config /path/to/host.json`
 to `host/agent.mjs` or include the same path in the shell-free deployment plan.
 The JSON contract covers host identity, bind/limits, native packages, media

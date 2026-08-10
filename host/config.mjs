@@ -11,6 +11,10 @@ const RESOLUTIONS = new Set(['720p', '1080p', '1440p', '4K', 'Source']);
 const FRAMERATES = new Set(['30 FPS', '60 FPS', '90 FPS', '120 FPS', '144 FPS']);
 const AUDIO_CODECS = new Set(['Automatic', 'Opus', 'AAC']);
 const LOG_LEVELS = new Set(['Errors only', 'Connection events', 'Verbose']);
+const RESOLUTION_DIMENSIONS = Object.freeze({ '720p': Object.freeze([1280, 720]), '1080p': Object.freeze([1920, 1080]), '1440p': Object.freeze([2560, 1440]), '4K': Object.freeze([3840, 2160]) });
+const FRAMERATE_VALUES = Object.freeze({'30 FPS': 30, '60 FPS': 60, '90 FPS': 90, '120 FPS': 120, '144 FPS': 144});
+const VIDEO_CODEC_VALUES = Object.freeze({'H.264': 'h264', VP9: 'vp9', AV1: 'av1', HEVC: 'h264'});
+const AUDIO_CODEC_VALUES = Object.freeze({Opus: 'opus', AAC: 'aac'});
 
 function text(value, name, maximum = 256) { if (value === undefined || value === null || value === '') return undefined; if (typeof value !== 'string' || !value.trim() || value.length > maximum || /[\u0000\r\n]/.test(value)) throw new TypeError(`${name} must be a bounded single-line string`); return value.trim(); }
 function integer(value, name, fallback, minimum, maximum) { if (value === undefined) return fallback; const result = Number(value); if (!Number.isInteger(result) || result < minimum || result > maximum) throw new RangeError(`${name} must be between ${minimum} and ${maximum}`); return result; }
@@ -38,4 +42,11 @@ export function readHostConfig(path, {platform = process.platform, readFile = re
 export function createHostRuntimePolicy(config = {}) {
   if (!config || typeof config !== 'object') throw new TypeError('normalized host configuration is required');
   return Object.freeze({captureSource: config.captureSource || 'Automatic', videoCodec: config.videoCodec || 'Automatic', maxResolution: config.maxResolution || '1080p', maxFramerate: config.maxFramerate || '60 FPS', captureSystemAudio: config.captureSystemAudio !== false, captureMicrophone: config.captureMicrophone === true, audioCodec: config.audioCodec || 'Automatic', enableNativeMedia: config.enableNativeMedia === true, enableNativeAudio: config.enableNativeAudio === true, enableInput: config.enableInput !== false, requireExplicitPairing: config.requireExplicitPairing !== false, wakeOnLan: config.wakeOnLan === true, logLevel: config.logLevel || 'Connection events'});
+}
+
+/** Resolve portable labels into bounded native media parameters. */
+export function createHostMediaPolicy(config = {}) {
+  const runtime = createHostRuntimePolicy(config);
+  const dimensions = RESOLUTION_DIMENSIONS[runtime.maxResolution] || RESOLUTION_DIMENSIONS['1080p'];
+  return Object.freeze({...runtime, width: dimensions[0], height: dimensions[1], framerate: FRAMERATE_VALUES[runtime.maxFramerate] || 60, videoCodec: VIDEO_CODEC_VALUES[runtime.videoCodec] || 'h264', audioCodec: AUDIO_CODEC_VALUES[runtime.audioCodec] || 'opus'});
 }

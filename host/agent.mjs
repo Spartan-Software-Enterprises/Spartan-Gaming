@@ -15,13 +15,14 @@ import {negotiateHostOffer} from './session.mjs';
 import {createReferenceGameLaunch} from './reference-launch.mjs';
 import {loadWerift} from './werift-adapter.mjs';
 import {createNativeWeriftConnection} from './native-agent.mjs';
-import {createHostRuntimePolicy, readHostConfig} from './config.mjs';
+import {createHostMediaPolicy, createHostRuntimePolicy, readHostConfig} from './config.mjs';
 import {platform as osPlatform} from 'node:os';
 
 const args = new Map();
 for (let index = 2; index < process.argv.length; index += 1) { const value = process.argv[index]; if (value.startsWith('--')) args.set(value.slice(2), process.argv[index + 1]?.startsWith('--') ? true : process.argv[++index]); }
 const hostConfig = readHostConfig(args.get('config'), {platform: osPlatform()});
 const runtimePolicy = createHostRuntimePolicy(hostConfig);
+const mediaPolicy = createHostMediaPolicy(hostConfig);
 const configured = (cliName, configName, fallback) => args.has(cliName) ? args.get(cliName) : (hostConfig[configName] ?? fallback);
 const hostId = String(configured('id', 'hostId', `host-${randomUUID().slice(0, 8)}`));
 const hostName = String(configured('name', 'hostName', 'Spartan Host'));
@@ -54,6 +55,7 @@ const inputEnabled = args.has('enable-input') ? args.get('enable-input') === tru
 const controllerPolicy = hostConfig.controllerPolicy;
 const nativeMediaEnabled = args.has('enable-native-media') ? args.get('enable-native-media') === true || args.get('enable-native-media') === 'true' : hostConfig.enableNativeMedia;
 const nativeAudioEnabled = args.has('enable-native-audio') ? args.get('enable-native-audio') === true || args.get('enable-native-audio') === 'true' : hostConfig.enableNativeAudio;
+const nativeAudioActive = nativeAudioEnabled && (runtimePolicy.captureSystemAudio || runtimePolicy.captureMicrophone);
 const nativeAudioSource = configured('audio-source', 'audioSource', '') ? String(configured('audio-source', 'audioSource', '')) : null;
 const nativeAudioBackend = configured('audio-backend', 'audioBackend', '') ? String(configured('audio-backend', 'audioBackend', '')) : null;
 const audioOptions = Object.freeze({...(nativeAudioSource ? {source: nativeAudioSource} : {}), ...(nativeAudioBackend ? {backend: nativeAudioBackend} : {})});
@@ -62,7 +64,7 @@ if (nativeMediaEnabled) {
   try { weriftModule = await loadWerift(); } catch { throw new Error('native media requires the optional werift package; install it before using --enable-native-media'); }
   if (!hostRuntime.bindings?.capture?.plan) throw new Error('native media requires an installed platform binding with capture.plan()');
 }
-const hostVideo = resolveHostVideoCapabilities({encoders: environment.nativeBinding?.capabilities?.encoders?.hardware, display: hostRuntime.bindings?.display || null, maxWidth: 3840, maxHeight: 2160, maxFramerate: 144, hdr: false});
+const hostVideo = resolveHostVideoCapabilities({encoders: environment.nativeBinding?.capabilities?.encoders?.hardware, display: hostRuntime.bindings?.display || null, maxWidth: mediaPolicy.width, maxHeight: mediaPolicy.height, maxFramerate: mediaPolicy.framerate, hdr: false});
 const capabilities = {transports: nativeMediaEnabled ? ['webrtc'] : ['websocket'], video: hostVideo, audio: {codecs: ['opus'], channels: 2}, input: {gamepad: environment.inputAdapter.gamepad, virtualGamepad: environment.inputAdapter.virtualGamepad, keyboard: environment.inputAdapter.keyboard, pointer: environment.inputAdapter.pointer, rumble: environment.inputAdapter.rumble}};
 const virtualGamepadPermission = virtualGamepadPermissionGranted({inputEnabled: inputEnabled && controllerPolicy.allowGamepad, inputAdapter: environment.inputAdapter});
 const hapticPermission = Boolean(inputEnabled && controllerPolicy.rumble && controllerPolicy.hapticsBackend !== 'Disabled' && environment.inputAdapter.rumble);
@@ -75,7 +77,7 @@ let configuredGameArgs = args.get('game-args-json') ? JSON.parse(String(args.get
 if (!Array.isArray(configuredGameArgs)) throw new TypeError('game-args-json must contain an array');
 const gameLaunch = gameLaunchEnabled ? createReferenceGameLaunch({platform: environment.platform, runtimeId: args.get('runtime-id'), runtimeKind: args.get('runtime-kind') || 'native-emulator', runtimeVersion: args.get('runtime-version') || 'unversioned', runtimePath: args.get('runtime-path'), gamePath: args.get('game-path'), hostContentId: args.get('host-content-id'), args: configuredGameArgs, cwd: args.get('game-cwd'), spawnImpl: undefined, maxOutputBytes: 64 * 1024, stopTimeoutMs: 2_000}) : null;
 const nativeRuntimeProfile = gameLaunch ? {id: String(args.get('runtime-id')), kind: String(args.get('runtime-kind') || 'native-emulator'), version: String(args.get('runtime-version') || 'unversioned'), trust: 'signed', enabled: true, executablePath: String(args.get('runtime-path'))} : null;
-const hostCapabilities = normalizeHostCapabilities({media: {state: nativeMediaEnabled ? 'ready' : 'not-configured', capture: nativeMediaEnabled, encode: nativeMediaEnabled, audio: nativeMediaEnabled && nativeAudioEnabled, transports: nativeMediaEnabled ? ['webrtc'] : ['webrtc']}, process: {mode: gameLaunch ? 'managed' : 'none', launch: Boolean(gameLaunch), emulator: Boolean(gameLaunch)}, publisher: nativeMediaEnabled ? {state: 'ready', transports: ['webrtc'], video: capabilities.video, audio: capabilities.audio} : environment.publisher, audioPublisher: nativeMediaEnabled && nativeAudioEnabled ? {state: 'ready', codecs: ['opus'], channels: 2} : environment.audioPublisher, inputAdapter: environment.inputAdapter, webrtc: nativeMediaEnabled ? {adapters: [{id: 'werift', state: 'available'}]} : environment.webrtc, input: capabilities.input});
+const hostCapabilities = normalizeHostCapabilities({media: {state: nativeMediaEnabled ? 'ready' : 'not-configured', capture: nativeMediaEnabled, encode: nativeMediaEnabled, audio: nativeAudioActive, transports: nativeMediaEnabled ? ['webrtc'] : ['webrtc']}, process: {mode: gameLaunch ? 'managed' : 'none', launch: Boolean(gameLaunch), emulator: Boolean(gameLaunch)}, publisher: nativeMediaEnabled ? {state: 'ready', transports: ['webrtc'], video: capabilities.video, audio: capabilities.audio} : environment.publisher, audioPublisher: nativeAudioActive ? {state: 'ready', codecs: [mediaPolicy.audioCodec], channels: 2} : environment.audioPublisher, inputAdapter: environment.inputAdapter, webrtc: nativeMediaEnabled ? {adapters: [{id: 'werift', state: 'available'}]} : environment.webrtc, input: capabilities.input});
 const sessions = new Set(); const connections = new Set(); let rejectedConnections = 0; let inputEvents = 0; let droppedInputEvents = 0; let lastQuality = null; let lastInputPlan = null; let lastInputExecution = {state: inputExecutor ? 'ready' : 'disabled', reason: inputEnabled && !inputExecutor ? 'native input adapter is unavailable or not ready' : null};
 
 function json(response, status, body) { response.writeHead(status, {'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store'}); response.end(JSON.stringify(body)); }
@@ -110,7 +112,7 @@ async function handleMessage(connection, text, session) {
     if (!pairing.verify(message.payload.pairingCode)) { connection.close(); return; }
     let native;
     try {
-      native = createNativeWeriftConnection({connection, sessionId: message.sessionId, bindings: hostRuntime.bindings, module: weriftModule, platform: environment.platform, permissions: {'screen-capture': true, 'remote-input': inputEnabled, 'virtual-gamepad': virtualGamepadPermission, ...(nativeAudioEnabled ? {microphone: true, 'microphone-capture': true} : {})}, includeAudio: nativeAudioEnabled, audioOptions, runtimeProfile: nativeRuntimeProfile, gamePath: args.get('game-path') ? String(args.get('game-path')) : null, gameArgs: configuredGameArgs, gameCwd: args.get('game-cwd'), gameEnv: undefined, hostContentId: args.get('host-content-id') ? String(args.get('host-content-id')) : null, hostId, hostName, capabilities, onInput: () => { inputEvents += 1; }, onQuality: quality => { lastQuality = quality; }});
+      native = createNativeWeriftConnection({connection, sessionId: message.sessionId, bindings: hostRuntime.bindings, module: weriftModule, platform: environment.platform, permissions: {'screen-capture': true, 'remote-input': inputEnabled, 'virtual-gamepad': virtualGamepadPermission, ...(nativeAudioActive ? {microphone: true, 'microphone-capture': true} : {})}, includeAudio: nativeAudioActive, width: mediaPolicy.width, height: mediaPolicy.height, framerate: mediaPolicy.framerate, codec: mediaPolicy.videoCodec, audioCodec: mediaPolicy.audioCodec, captureOptions: {audio: runtimePolicy.captureSystemAudio}, audioOptions, runtimeProfile: nativeRuntimeProfile, gamePath: args.get('game-path') ? String(args.get('game-path')) : null, gameArgs: configuredGameArgs, gameCwd: args.get('game-cwd'), gameEnv: undefined, hostContentId: args.get('host-content-id') ? String(args.get('host-content-id')) : null, hostId, hostName, capabilities, onInput: () => { inputEvents += 1; }, onQuality: quality => { lastQuality = quality; }});
       session.native = native; session.sessionId = message.sessionId;
       const connected = new Promise((resolve, reject) => { const offConnected = native.host.on('connected', value => { offConnected?.(); offError?.(); resolve(value); }); const offError = native.host.on('error', error => { offConnected?.(); offError?.(); reject(error); }); });
       await native.start(); native.receive(message); await connected; session.accepted = true; sessions.add(session); if (rumbleBroadcast && session.send) rumbleBroadcast.add(session); return;
