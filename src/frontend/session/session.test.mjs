@@ -13,7 +13,7 @@ test('capability negotiation rejects incompatible sessions', () => {
 });
 
 test('controller capability negotiation preserves numeric and enum semantics', () => {
-  const result = negotiateCapabilities({input: {playerSlots: 8, inputMode: 'XInput', virtualGamepadBackend: 'Windows XInput', hapticsBackend: 'Native rumble', steeringRange: 1080, splitInput: true}}, {input: {playerSlots: 2, inputMode: 'DirectInput', virtualGamepadBackend: 'Automatic', hapticsBackend: 'Automatic', steeringRange: 540, splitInput: false}});
+  const result = negotiateCapabilities({input: {playerSlots: 8, inputMode: 'XInput', virtualGamepadBackend: 'Windows external driver', hapticsBackend: 'Native rumble', steeringRange: 1080, splitInput: true}}, {input: {playerSlots: 2, inputMode: 'DirectInput', virtualGamepadBackend: 'Automatic', hapticsBackend: 'Automatic', steeringRange: 540, splitInput: false}});
   assert.equal(result.input.playerSlots, 2); assert.equal(result.input.steeringRange, 540); assert.equal(result.input.inputMode, 'Auto-detect'); assert.equal(result.input.virtualGamepadBackend, 'Automatic'); assert.equal(result.input.hapticsBackend, 'Automatic'); assert.equal(result.input.splitInput, false);
 });
 

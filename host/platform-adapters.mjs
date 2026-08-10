@@ -3,8 +3,8 @@ const KINDS = new Set(['capture', 'audio', 'input', 'windowing', 'packaging']);
 const STATES = new Set(['planned', 'available', 'ready', 'unavailable']);
 
 const DEFAULT_ADAPTERS = Object.freeze([
-  {id: 'windows-native', platform: 'win32', adapters: {capture: {technology: 'Desktop Duplication / Windows Graphics Capture', state: 'planned'}, audio: {technology: 'WASAPI', state: 'planned'}, input: {technology: 'SendInput / XInput', state: 'planned'}, windowing: {technology: 'Win32 / App SDK', state: 'planned'}, packaging: {technology: 'MSIX / signed installer', state: 'planned'}}},
-  {id: 'macos-native', platform: 'darwin', adapters: {capture: {technology: 'ScreenCaptureKit', state: 'planned'}, audio: {technology: 'CoreAudio', state: 'planned'}, input: {technology: 'Core Graphics / HID', state: 'planned'}, windowing: {technology: 'AppKit', state: 'planned'}, packaging: {technology: 'notarized app bundle', state: 'planned'}}},
+  {id: 'windows-native', platform: 'win32', adapters: {capture: {technology: 'Desktop Duplication / Windows Graphics Capture', state: 'planned'}, audio: {technology: 'WASAPI', state: 'planned'}, input: {technology: 'SendInput / XInput rumble / external virtual-gamepad driver', state: 'planned'}, windowing: {technology: 'Win32 / App SDK', state: 'planned'}, packaging: {technology: 'MSIX / signed installer', state: 'planned'}}},
+  {id: 'macos-native', platform: 'darwin', adapters: {capture: {technology: 'ScreenCaptureKit', state: 'planned'}, audio: {technology: 'CoreAudio', state: 'planned'}, input: {technology: 'Core Graphics / CoreHaptics / external virtual-gamepad driver', state: 'planned'}, windowing: {technology: 'AppKit', state: 'planned'}, packaging: {technology: 'notarized app bundle', state: 'planned'}}},
   {id: 'linux-native', platform: 'linux', adapters: {capture: {technology: 'PipeWire / xdg-desktop-portal', state: 'planned'}, audio: {technology: 'PipeWire / ALSA', state: 'planned'}, input: {technology: 'uinput', state: 'planned'}, windowing: {technology: 'Ozone / Wayland / X11', state: 'planned'}, packaging: {technology: 'distribution package / signed bundle', state: 'planned'}}},
 ]);
 

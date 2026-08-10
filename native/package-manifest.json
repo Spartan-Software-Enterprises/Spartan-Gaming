@@ -17,7 +17,7 @@
       "platform": "darwin",
       "packageName": "@spartan-gaming/native-macos",
       "format": "node-addon",
-      "requiredApis": ["ScreenCaptureKit", "CoreAudio", "CGEvent / IOHIDUserDevice"],
+      "requiredApis": ["ScreenCaptureKit", "CoreAudio", "CGEvent / GameController / CoreHaptics"],
       "sourceDirectory": "native/macos",
       "artifactName": "spartan-native-macos.node"
     },

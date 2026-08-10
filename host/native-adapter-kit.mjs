@@ -2,8 +2,8 @@ const PLATFORMS = new Set(['win32', 'darwin', 'linux']);
 const KINDS = new Set(['capture', 'audio', 'input']);
 const OPERATIONS = Object.freeze({capture: Object.freeze(['start', 'stop']), audio: Object.freeze(['start', 'stop']), input: Object.freeze(['execute'])});
 const PLATFORM_SPECS = Object.freeze({
-  win32: Object.freeze({id: 'windows-native', technologies: Object.freeze({capture: 'Windows Graphics Capture / Desktop Duplication', audio: 'WASAPI', input: 'SendInput / XInput'}), permission: Object.freeze({capture: 'screen-capture', audio: 'microphone-capture', input: 'remote-input'})}),
-  darwin: Object.freeze({id: 'macos-native', technologies: Object.freeze({capture: 'ScreenCaptureKit / AVFoundation', audio: 'CoreAudio', input: 'CGEvent / IOHIDUserDevice'}), permission: Object.freeze({capture: 'screen-recording', audio: 'microphone-capture', input: 'remote-input'})}),
+  win32: Object.freeze({id: 'windows-native', technologies: Object.freeze({capture: 'Windows Graphics Capture / Desktop Duplication', audio: 'WASAPI', input: 'SendInput / XInput rumble'}), permission: Object.freeze({capture: 'screen-capture', audio: 'microphone-capture', input: 'remote-input'})}),
+  darwin: Object.freeze({id: 'macos-native', technologies: Object.freeze({capture: 'ScreenCaptureKit / AVFoundation', audio: 'CoreAudio', input: 'CGEvent / CoreHaptics'}), permission: Object.freeze({capture: 'screen-recording', audio: 'microphone-capture', input: 'remote-input'})}),
   linux: Object.freeze({id: 'linux-native', technologies: Object.freeze({capture: 'PipeWire / xdg-desktop-portal', audio: 'PipeWire / PulseAudio', input: 'uinput'}), permission: Object.freeze({capture: 'screen-capture', audio: 'audio-session', input: 'remote-input'})}),
 });
 

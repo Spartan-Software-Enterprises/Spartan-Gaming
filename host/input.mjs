@@ -5,8 +5,8 @@ const STATES = new Set(['unconfigured', 'plan-only', 'ready', 'active', 'failed'
 const KINDS = new Set(['button', 'axis', 'key', 'pointer', 'touch', 'rumble']);
 
 const ADAPTERS = Object.freeze({
-  win32: Object.freeze({id: 'windows-send-input', technologies: Object.freeze(['SendInput', 'XInput/virtual-HID-adapter'])}),
-  darwin: Object.freeze({id: 'macos-cgevent-hid', technologies: Object.freeze(['CGEventPost', 'IOHIDUserDevice'])}),
+  win32: Object.freeze({id: 'windows-send-input', technologies: Object.freeze(['SendInput', 'XInput rumble', 'external virtual-gamepad driver'])}),
+  darwin: Object.freeze({id: 'macos-cgevent-hid', technologies: Object.freeze(['CGEventPost', 'CoreHaptics', 'external virtual-gamepad driver'])}),
   linux: Object.freeze({id: 'linux-uinput', technologies: Object.freeze(['uinput', 'libinput-compatible device adapter'])}),
 });
 
