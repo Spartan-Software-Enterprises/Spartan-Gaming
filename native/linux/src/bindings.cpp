@@ -131,15 +131,22 @@ bool ensure_device() {
   for (int index = 0; index < 16; ++index) if (ioctl(device_fd, UI_SET_KEYBIT, BTN_TRIGGER_HAPPY1 + index) < 0) { close(device_fd); device_fd = -1; return false; }
   const int axes[] = {ABS_X, ABS_Y, ABS_RX, ABS_RY, ABS_Z, ABS_RZ};
   for (const int axis : axes) if (ioctl(device_fd, UI_SET_ABSBIT, axis) < 0) { close(device_fd); device_fd = -1; return false; }
-  uinput_user_dev device{};
-  std::strncpy(device.name, "Spartan Gaming Virtual Gamepad", UINPUT_MAX_NAME_SIZE - 1);
-  device.id.bustype = BUS_USB;
-  device.id.vendor = 0x5350;
-  device.id.product = 0x0001;
-  device.id.version = 1;
-  device.ff_effects_max = 16;
-  for (const int axis : axes) { device.absmin[axis] = -32767; device.absmax[axis] = 32767; }
-  if (write(device_fd, &device, sizeof(device)) != static_cast<ssize_t>(sizeof(device)) || ioctl(device_fd, UI_DEV_CREATE) < 0) { close(device_fd); device_fd = -1; return false; }
+  uinput_setup setup{};
+  std::strncpy(setup.name, "Spartan Gaming Virtual Gamepad", UINPUT_MAX_NAME_SIZE - 1);
+  setup.id.bustype = BUS_USB;
+  setup.id.vendor = 0x5350;
+  setup.id.product = 0x0001;
+  setup.id.version = 1;
+  setup.ff_effects_max = 16;
+  if (ioctl(device_fd, UI_DEV_SETUP, &setup) < 0) { close(device_fd); device_fd = -1; return false; }
+  for (const int axis : axes) {
+    uinput_abs_setup abs{};
+    abs.code = axis;
+    abs.absinfo.minimum = -32767;
+    abs.absinfo.maximum = 32767;
+    if (ioctl(device_fd, UI_ABS_SETUP, &abs) < 0) { close(device_fd); device_fd = -1; return false; }
+  }
+  if (ioctl(device_fd, UI_DEV_CREATE) < 0) { close(device_fd); device_fd = -1; return false; }
   usleep(20'000);
   return true;
 }
