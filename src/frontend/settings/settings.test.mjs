@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {defaultSettings, settingsCategories} from './settings-data.mjs';
+import {normalizeControllerPolicy} from '../input/controller-policy.mjs';
 
 test('settings registry has unique keys and defaults', () => {
   const settings = settingsCategories.flatMap((category) => category.settings);
@@ -16,3 +17,7 @@ test('settings registry has unique keys and defaults', () => {
   }
 });
 
+test('controller settings options are accepted by the shared policy normalizer', () => {
+  const setting = settingsCategories.find(category => category.id === 'controllers').settings.find(item => item.key === 'controllers.defaultProfile');
+  for (const profile of setting.options) assert.equal(normalizeControllerPolicy({defaultProfile: profile}).defaultProfile, profile);
+});
