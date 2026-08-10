@@ -9,15 +9,15 @@ Spartan Gaming is intended to be universal across practical Chromium-supported e
 | Linux | Primary desktop target | Ozone/Wayland/X11, VA-API/Vulkan paths, packages, controller/device permissions |
 | ChromeOS | Large-screen and lightweight target | ChromeOS integration, kiosk/fullscreen, device and power behavior |
 | Android | Mobile and handheld target | Touch controls, Android media codecs, lifecycle, controller UX, Play distribution |
-| iOS/iPadOS | Conditional mobile target | Apple browser-engine, entitlement, distribution, and media constraints |
-| TV/embedded | Later exploration | Remote navigation, gamepad UX, television display and input constraints |
+| Amazon Fire TV / Fire Stick | Television/browser target | Silk/Chromium-compatible web surface, remote navigation, controller and media capability gates |
+| Roku | Television/browser target | Roku browser-capable surface where available, remote navigation, HTTPS provider handoffs |
 
 The frontend now has a capability-driven presentation profile for desktop,
 ChromeOS, handheld, mobile, and television classes. Automatic detection is
 conservative and can be overridden in Settings; the profile changes focus
 targets, navigation hints, touch-control preference, fullscreen preference,
-safe-area spacing, and library density. It does not claim native packaging,
-TV certification, or iOS engine/entitlement support.
+safe-area spacing, and library density. It does not claim native packaging or
+TV certification. Apple platforms are outside the supported product scope.
 In television mode, the shared controller navigator also focuses the first
 available control when the surface starts, so a remote/gamepad can operate the
 shell without a pointer. The navigator is installed by the shared PWA/runtime
@@ -25,19 +25,6 @@ bootstrap, so the same behavior applies to Dashboard, Settings, Providers,
 Emulation, Host, Diagnostics, and other frontend entrypoints. Changing the
 presentation mode synchronizes the navigator and tears down polling when a
 controller-first surface is no longer selected.
-
-## iOS/iPadOS strategy
-
-iOS and iPadOS are a conditional target with a Web/PWA-first support profile.
-The shared frontend detects iPhone and both touch-enabled and desktop-mode
-iPad signals, applies safe-area/mobile presentation behavior, and keeps remote
-streaming and browser emulation capability-gated by the browser’s actual APIs.
-The default product path does not claim a native Blink/Chromium shell. A native
-alternative-engine build is a separate platform project that requires the
-appropriate Apple entitlements, security review, packaging, and region-specific
-distribution decisions. The compatibility contract is implemented in
-`src/frontend/platform/compatibility.mjs` and exposes the selected engine policy
-and feature gates to runtime UI metadata.
 
 ## Shared layers
 
@@ -72,5 +59,6 @@ Linux, macOS, and Windows are the first desktop build targets. Their tracked
 development GN templates are in `chromium/args/`, and the source checkout is
 external to this repository. Run `node scripts/chromium/check-environment.mjs
 --platform <linux|mac|windows>` to validate the local toolchain without
-requiring Chromium in CI. Android, ChromeOS, iOS/iPadOS, and TV targets remain
-product targets with separate packaging and feasibility gates.
+requiring Chromium in CI. Android, ChromeOS, handheld, and TV targets remain
+product targets with separate packaging and feasibility gates. Apple platforms
+are outside the supported product scope.

@@ -1,5 +1,5 @@
-const TV_USER_AGENT = /smart-tv|smarttv|hbbtv|tizen|webos|web0s|appletv|googletv|android tv|aft\w+|netcast/i;
-const MOBILE_USER_AGENT = /android|iphone|ipad|ipod|mobile|phone/i;
+const TV_USER_AGENT = /smart-tv|smarttv|hbbtv|tizen|webos|web0s|googletv|android tv|aft\w+|fire tv|roku|netcast/i;
+const MOBILE_USER_AGENT = /android|mobile|phone/i;
 
 export const DEVICE_MODES = Object.freeze(['desktop', 'chromeos', 'handheld', 'mobile', 'television']);
 export const DEVICE_MODE_OPTIONS = Object.freeze(['Automatic', 'Desktop', 'ChromeOS', 'Handheld', 'Mobile', 'Television']);

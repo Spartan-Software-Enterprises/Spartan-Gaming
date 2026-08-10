@@ -10,7 +10,6 @@
 - [ ] Linux
 - [ ] ChromeOS
 - [ ] Android
-- [ ] iOS/iPadOS
 
 ## Validation
 
@@ -22,4 +21,3 @@
 - [ ] Permissions are explicit and origin-scoped
 - [ ] No credentials or private stream data included
 - [ ] Security impact documented, if applicable
-

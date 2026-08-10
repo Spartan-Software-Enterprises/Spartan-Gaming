@@ -514,10 +514,7 @@ System-wide virtual-controller injection is intentionally a separate signed
 driver milestone. [Microsoft’s supported Virtual HID Framework](https://learn.microsoft.com/en-us/windows-hardware/drivers/hid/virtual-hid-framework--vhf-)
 requires a
 kernel-mode HID source driver and the Windows Driver Kit; the user-mode
-`SendInput`/XInput binding cannot provide that device class. Apple’s
-[GCVirtualController](https://developer.apple.com/documentation/gamecontroller/gcvirtualcontroller)
-is an app-configured controller surface, not a general
-system-wide macOS device bridge. Until signed, platform-specific driver
+`SendInput`/XInput binding cannot provide that device class. Until signed, platform-specific driver
 packages and their installation/permission UX exist, the host advertises
 Windows/macOS virtual-gamepad capability as unavailable rather than silently
 falling back to keyboard or pointer injection.

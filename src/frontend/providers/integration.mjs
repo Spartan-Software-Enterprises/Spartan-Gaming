@@ -49,6 +49,8 @@ export function createProviderIntegration(entry, {profile = {}, report = {}} = {
   const missingCapabilities = (entry.capabilities || []).filter(capability => capability === 'gamepad' && report.input?.gamepad === false);
   const requirements = Object.freeze([...(entry.requirements || [])]);
   const notes = [...(preset.notes || [])];
+  if (entry.nativeApp?.platform === 'android') notes.push(`Android companion: ${entry.nativeApp.packageName}. Installation and permissions remain user-controlled.`);
+  if (entry.nativeApp?.license === 'GPL-3.0') notes.push('GameNative is a separately distributed GPLv3 application; Spartan Gaming does not embed or redistribute its source.');
   if (regionHint !== 'automatic') notes.push(`Region hint: ${REGION_LABELS[regionHint]}. The provider decides actual availability.`);
   if (profile.autoFullscreen === true) notes.push('Fullscreen is requested after the provider surface is ready when the browser permits it.');
   if (missingCapabilities.length) notes.push('Connect a supported controller before starting this service.');

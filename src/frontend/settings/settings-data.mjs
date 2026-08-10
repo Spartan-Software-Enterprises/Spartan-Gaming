@@ -117,6 +117,8 @@ export const settingsCategories = [
       toggle('providers.showCatalog', 'Show provider catalog', 'Include supported cloud, remote-play, and streaming providers in the library.', true),
       toggle('providers.autoDetect', 'Detect provider sessions', 'Recognize active supported provider sessions and attach the Spartan overlay.', true),
       toggle('providers.preferOfficialApps', 'Prefer official native apps', 'Launch a provider’s official app when browser support is unavailable or explicitly preferred.'),
+      toggle('providers.gameNativeCompanion', 'Enable GameNative Android companion', 'Show the official GameNative Android companion in the provider catalog. Spartan Gaming opens the official site or release page; installation and account access remain user-mediated.', true),
+      select('providers.gameNativeStore', 'GameNative library source', 'Choose the store families to surface when preparing a GameNative Android session.', ['Steam', 'Epic', 'GOG', 'Amazon', 'All supported stores'], 'All supported stores'),
       select('providers.region', 'Service region', 'Region hint used for links, latency tests, and provider recommendations.', ['Automatic', 'North America', 'Europe', 'Asia Pacific', 'Latin America', 'Custom'], 'Automatic'),
       toggle('providers.healthChecks', 'Run provider health checks', 'Test provider reachability and compatibility without signing in.'),
       toggle('providers.librarySync', 'Sync provider libraries', 'Use approved account integrations to show owned or available games.'),

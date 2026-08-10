@@ -148,7 +148,7 @@ async function loadCatalog() {
     validateCatalogManifest(emulators, 'emulator');
     validateCatalogManifest(games, 'game');
     const catalog = createFrontendCatalog({ providers: mergeCommunityProviders({providers: providers.providers, community: communityCatalogStore.list()}), emulators: emulators.projects, games: games.games });
-    state.catalog = settings['providers.showCatalog'] === false ? catalog.entries.filter(entry => entry.backendType !== 'provider') : catalog.entries;
+    state.catalog = settings['providers.showCatalog'] === false ? catalog.entries.filter(entry => entry.backendType !== 'provider') : catalog.entries.filter(entry => settings['providers.gameNativeCompanion'] === false ? entry.id !== 'gamenative' : true);
     rebuildAdapters();
     updateReadinessStatus();
     render();

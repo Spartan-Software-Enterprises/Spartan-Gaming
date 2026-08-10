@@ -15,7 +15,5 @@ Cloud gaming users span desktops, laptops, handhelds, televisions, tablets, and 
 ## Consequences
 
 - Cross-platform abstractions and CI are foundational work.
-- iOS/iPadOS support requires a separate feasibility track.
 - Release quality matters more than claiming simultaneous feature parity.
 - Chromium rebases and third-party licensing need explicit ownership.
-

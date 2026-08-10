@@ -23,6 +23,8 @@ test('provider and emulator manifests compose into one frontend catalog', async 
   assert.equal(catalog.get('pcsx2').backendType, 'emulator');
   assert.equal(catalog.get('2048').backendType, 'game');
   assert.equal(catalog.get('2048').kind, 'browser-game');
+  assert.equal(catalog.get('gamenative').nativeApp.packageName, 'app.gamenative');
+  assert.equal(catalog.get('gamenative').nativeApp.license, 'GPL-3.0');
   assert.ok(catalog.find({backendType: 'provider', capability: 'gamepad'}).length > 0);
   assert.ok(catalog.find({backendType: 'emulator', supportLevel: 'B'}).length > 0);
   assert.ok(catalog.find({backendType: 'emulator'}).some((entry) => entry.id === 'pcsx2' && entry.systems.includes('playstation-2')));

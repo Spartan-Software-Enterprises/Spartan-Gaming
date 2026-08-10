@@ -168,7 +168,7 @@ Browser signaling and media transport primitives live in `src/frontend/transport
 
 The browser product layer should share UX, session, protocol, and diagnostics code. Windowing, media capture, hardware acceleration, packaging, signing, permissions, and input backends should be isolated behind platform adapters.
 
-The initial release matrix is Windows, macOS, and Linux. ChromeOS and Android follow with platform-specific packaging work. iOS/iPadOS use the documented Web/PWA-first compatibility profile; native packaging and any alternative engine remain conditional on the browser-engine, entitlement, and distribution rules that apply at release time.
+The initial release matrix is Windows, macOS, and Linux. ChromeOS and Android follow with platform-specific packaging work. Apple platforms are outside the supported product scope and are not release or validation targets.
 
 ## Latency model
 
