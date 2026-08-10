@@ -62,6 +62,11 @@ function renderResume() {
 }
 function openProviderSurface(entry, plan) {
   const integration = plan.integration || {};
+  if (globalThis.spartanElectron?.isElectron && typeof globalThis.spartanElectron.openProvider === 'function') {
+    globalThis.spartanElectron.openProvider(plan.url, entry.name).catch(error => showToast(error.message));
+    showToast(`${entry.name}: official player opened.`);
+    return;
+  }
   document.querySelector('[data-provider-title]').textContent = entry.name;
   document.querySelector('[data-provider-detail]').textContent = `${integration.surfaces?.length ? integration.surfaces.join(' · ') : entry.kind} · ${integration.quality || 'balanced'} quality · ${integration.regionLabel || 'Automatic'} region`;
   document.querySelector('[data-provider-frame]').src = plan.url;
@@ -70,7 +75,7 @@ function openProviderSurface(entry, plan) {
   document.querySelector('[data-provider-notes]').textContent = notes.join(' ');
   if (typeof providerDialog.showModal === 'function') providerDialog.showModal(); else providerDialog.setAttribute('open', '');
 }
-function closeProviderSurface() { document.querySelector('[data-provider-frame]').src = 'about:blank'; if (typeof providerDialog.close === 'function' && providerDialog.open) providerDialog.close(); else providerDialog.removeAttribute('open'); }
+function closeProviderSurface() { if (globalThis.spartanElectron?.isElectron && typeof globalThis.spartanElectron.closeProvider === 'function') { void globalThis.spartanElectron.closeProvider(); return; } document.querySelector('[data-provider-frame]').src = 'about:blank'; if (typeof providerDialog.close === 'function' && providerDialog.open) providerDialog.close(); else providerDialog.removeAttribute('open'); }
 function openProviderDetails(entry, plan) {
   const dialog = document.querySelector('[data-provider-details-dialog]');
   const content = document.querySelector('[data-provider-details]');
