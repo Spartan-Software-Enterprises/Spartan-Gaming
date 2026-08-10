@@ -10,6 +10,13 @@ test('player transport settings normalize saved labels without storing credentia
   assert.equal(policy.credentials, 'session-scoped');
 });
 
+test('experimental WebTransport requires both the streaming permission and advanced master toggle', () => {
+  const disabled = {getItem: () => JSON.stringify({'streaming.transportPreference': 'WebTransport experimental', 'advanced.experimentalWebTransport': false})};
+  assert.equal(readTransportPolicy(disabled).allowWebTransport, false);
+  const enabled = {getItem: () => JSON.stringify({'streaming.transportPreference': 'WebTransport experimental', 'streaming.allowWebTransport': true, 'advanced.experimentalWebTransport': true})};
+  assert.equal(readTransportPolicy(enabled).allowWebTransport, true);
+});
+
 test('privacy WebRTC IP protection overrides the all-candidates stream setting', () => {
   const storage = {getItem: () => JSON.stringify({'streaming.icePolicy': 'All candidates', 'privacy.preventWebRtcIpLeak': true})};
   assert.equal(readTransportPolicy(storage).icePolicy, 'relay');

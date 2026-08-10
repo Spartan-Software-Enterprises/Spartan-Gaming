@@ -26,6 +26,7 @@ test('session preferences fall back safely for invalid settings', () => {
   assert.equal(result.preferences.qualityProfiles.find(profile => profile.id === 'ultra').maxWidth, 1920);
   assert.equal(result.preferences.autoFullscreen, true);
 });
+test('force software decode overrides the streaming hardware decode preference', () => { assert.equal(createSessionPreferences({'streaming.hardwareDecode': true, 'performance.forceSoftwareDecode': true}).preferences.hardwareDecode, false); assert.equal(createSessionPreferences({'streaming.hardwareDecode': true, 'performance.forceSoftwareDecode': false}).preferences.hardwareDecode, true); });
 test('session preferences carry bounded display selection and refresh policy', () => { const result = createSessionPreferences({'media.display': 'Display 2', 'media.refreshRate': '240 Hz'}); assert.deepEqual(result.preferences.display, {kind: 'index', index: 1}); assert.equal(result.preferences.maxRefreshRate, 240); const ask = createSessionPreferences({'media.display': 'Ask each time', 'media.refreshRate': 'Automatic'}); assert.equal(ask.preferences.display, 'ask'); assert.equal(ask.preferences.maxRefreshRate, null); });
 test('session preferences carry the touch-control layout choice', () => { assert.equal(createSessionPreferences({'accessibility.touchLayout': 'Minimal'}).preferences.touchLayout, 'Minimal'); });
 test('session preferences honor the Picture-in-Picture setting', () => { assert.equal(createSessionPreferences({'gaming.pictureInPicture': false}).preferences.pictureInPicture, false); });
