@@ -6,6 +6,7 @@ import {applyRuntimeUiSettings} from './runtime-ui.mjs';
 import {clearProviderSessionState} from '../providers/session-cleanup.mjs';
 import {createHostConfigFromSettings, detectHostPlatform} from '../host/config.mjs';
 import {renderSettingControl} from './control.mjs';
+import {resolveElectronRuntimeSettings} from './electron-runtime.mjs';
 
 const settingsStore = createSettingsStore();
 const state = {...settingsStore.read()};
@@ -16,7 +17,7 @@ let query = '';
 function saveState() {
   Object.assign(state, settingsStore.save(state));
   applyRuntimeUiSettings(document, state);
-  globalThis.spartanElectron?.applyRuntimeSettings?.({backgroundApps: state['general.backgroundApps'] === true, backgroundThrottling: state['performance.backgroundThrottling'] !== false, powerMode: state['performance.powerMode'], doNotTrack: state['privacy.doNotTrack'] === true, blockThirdPartyCookies: state['privacy.blockThirdPartyCookies'] === true, permissionPrompts: state['privacy.permissionPrompts']});
+  globalThis.spartanElectron?.applyRuntimeSettings?.(resolveElectronRuntimeSettings(state));
   const status = document.querySelector('[data-save-status]');
   if (status) {
     status.textContent = 'Saved locally';
@@ -144,6 +145,7 @@ document.querySelector('[data-import-file]').addEventListener('change', async (e
   try {
     Object.assign(state, settingsStore.import(await file.text()));
     applyRuntimeUiSettings(document, state);
+    globalThis.spartanElectron?.applyRuntimeSettings?.(resolveElectronRuntimeSettings(state));
     render();
     document.querySelector('[data-save-status]').textContent = 'Imported and saved';
   } catch (error) {
@@ -153,4 +155,4 @@ document.querySelector('[data-import-file]').addEventListener('change', async (e
 });
 
 render();
-globalThis.spartanElectron?.applyRuntimeSettings?.({backgroundApps: state['general.backgroundApps'] === true, backgroundThrottling: state['performance.backgroundThrottling'] !== false, powerMode: state['performance.powerMode'], doNotTrack: state['privacy.doNotTrack'] === true, blockThirdPartyCookies: state['privacy.blockThirdPartyCookies'] === true, permissionPrompts: state['privacy.permissionPrompts']});
+globalThis.spartanElectron?.applyRuntimeSettings?.(resolveElectronRuntimeSettings(state));
