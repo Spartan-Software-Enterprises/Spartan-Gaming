@@ -9,6 +9,7 @@ Thumbs.db
 out/
 build/
 dist/
+dist-electron/
 target/
 node_modules/
 *.log
@@ -23,4 +24,3 @@ node_modules/
 # Chromium/depot_tools local state
 .gclient_entries
 src/third_party/depot_tools/
-

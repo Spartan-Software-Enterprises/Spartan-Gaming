@@ -8,6 +8,31 @@ permissions:
   contents: read
 
 jobs:
+  electron-desktop:
+    name: Electron desktop package (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: mac
+          - os: windows-latest
+            platform: windows
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+      - name: Install Electron dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Test Electron shell contracts
+        run: npm run electron:test
+      - name: Build unpacked Electron desktop artifact
+        run: npm run desktop:package -- --dir
+
   contracts:
     name: ${{ matrix.platform }} contracts
     runs-on: ${{ matrix.os }}
