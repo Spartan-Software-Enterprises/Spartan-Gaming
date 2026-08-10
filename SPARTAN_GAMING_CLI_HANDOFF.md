@@ -83,8 +83,8 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- `npm run check`: 423 tests passed, 0 failed on the AWS dev server; the local
-  check also passed without repository errors on `70a56b8`.
+- `npm run check`: 427 tests passed, 0 failed on the AWS dev server at
+  `4198284`; the local check also passed without repository errors.
 - `npm test`: 616 tests, 612 passed, 0 failed, and 4 skipped locally after
   `fc12cd0`; the AWS run also completed with 616 tests, 614 passed, 0 failed,
   and 2 skipped. The difference is environment-gated integration coverage,
@@ -97,6 +97,9 @@ review; stay within the AWS credit limit.
   on `70a56b8`, the focused SteamOS/Proton/settings suite passed 79/79.
   The AWS pretest phase passed 47 with 1 skip; the main suite passed 619 with 2
   skips and 0 failures.
+- On `4198284`, the focused power/session suite passed 59/59. The AWS pretest
+  phase passed 47 with 1 skip; the full main suite passed 618 of 620 tests with
+  2 skips and 0 failures.
 - PWA install tests: 2 passed locally; the AWS focused distribution/server/
   install run passed 7 tests.
 - The latest PWA distribution tests also verify the SVG app mark, manifest
