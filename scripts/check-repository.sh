@@ -134,6 +134,8 @@ required_files=(
   host/proton.test.mjs
   host/steam-os.mjs
   host/steam-os.test.mjs
+  host/steam-os-packaging.mjs
+  host/steam-os-packaging.test.mjs
   host/launch-request.mjs
   host/launch-request.test.mjs
   host/publisher.mjs
@@ -507,8 +509,9 @@ node --check native/desktop/reference-adapter.mjs
 node --check host/game-launcher.mjs
 node --check host/proton.mjs
 node --check host/steam-os.mjs
+node --check host/steam-os-packaging.mjs
 node --check host/launch-request.mjs
-node --test host/proton.test.mjs host/steam-os.test.mjs
+node --test host/proton.test.mjs host/steam-os.test.mjs host/steam-os-packaging.test.mjs
 node --test src/frontend/input/steam-input.test.mjs
 node --test src/frontend/settings/control.test.mjs
 node --test src/frontend/adapters/manifest-registry.test.mjs

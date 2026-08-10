@@ -317,6 +317,15 @@ Steam-owned mode reports `official-handoff-required`; and non-Steam mode reports
 Steam app IDs are bounded metadata only. No Steam credentials, client control,
 DRM bypass, anti-cheat bypass, or authentication bypass is implemented.
 
+`host/steam-os-packaging.mjs` adds the immutable-host packaging boundary. It
+normalizes a reverse-DNS app ID and user-scope Flatpak filesystem locations,
+then creates shell-free, operator-run-only bundle install, update, uninstall,
+and commit-pinned rollback plans. Install plans require explicit consent, a
+SHA-256 artifact digest, and a separately verified signature; the portable core
+does not execute Flatpak, request elevation, add remotes, or claim custody of
+package-signing keys. User data is modeled under `~/.var/app/<app-id>` and
+configuration/cache remain in user-owned XDG-style paths.
+
 The same launcher can be supplied to `createNativeWeriftHost`; it is started
 only after the remote offer has passed capability negotiation, before video or
 audio publishers start, and is stopped during session teardown.

@@ -55,7 +55,7 @@ behavior must be exercised on the target device or operating system.
 | Roku remote navigation and playback surface | Shared television profile tested | Verify the actual Roku runtime, packaging/certification feasibility, focus model, playback, and controller limits |
 | WebRTC/WebTransport/WebSocket transport fallback and session recovery | Protocol and fake-transport tests passed | Exercise real WAN/LAN loss, NAT/TURN paths, reconnects, datagrams, media continuity, and device sleep/wake |
 | Screenshots, local recording, instant replay, Media Session, and Picture-in-Picture | Browser contracts tested | Verify codecs, storage permissions, sustained recording, battery/thermal impact, and OS media controls |
-| Signed adapters, native packages, updates, rollback, and external signing custody | Verification and rollback contracts tested | Use the signing service/HSM boundary and install signed artifacts on every target OS |
+| Signed adapters, native packages, updates, rollback, and external signing custody | Verification and rollback contracts tested; SteamOS user-scope Flatpak plans now cover digest-gated install, update, uninstall, and commit-pinned rollback without executing the package manager | Use the signing service/HSM boundary and install signed artifacts on every target OS, including a physical immutable SteamOS host |
 | Production Redis, TURN, TLS, DNS, rollout, and secret rotation | Dev services and preflight verified | Run operator-controlled production activation, external monitoring, rotation, rollback, and incident recovery |
 
 The Android and large-screen items follow the platform guidance for PiP,
@@ -75,7 +75,8 @@ Research references: [Electron security](https://www.electronjs.org/docs/latest/
 [SteamOS recommendations](https://partner.steamgames.com/doc/steamhardware/recommendations),
 [Steam Input](https://partner.steamgames.com/doc/features/steam_controller/getting_started_for_devs),
 [Gamescope](https://github.com/ValveSoftware/gamescope), and
-[Proton](https://github.com/ValveSoftware/Proton).
+[Proton](https://github.com/ValveSoftware/Proton), and
+[Flatpak command reference](https://docs.flatpak.org/en/latest/flatpak-command-reference.html).
 
 ## Required lab matrix
 
