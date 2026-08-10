@@ -95,7 +95,7 @@ At minimum, provide these operator-controlled targets:
 | Windows 11 desktop | Electron package launch, display/audio capture, controller input, rumble, signed virtual-gamepad driver exercise |
 | macOS supported release | Electron package launch, Screen Recording/Microphone/Input Monitoring permissions, capture/audio, controller/haptics, signed virtual-gamepad driver exercise |
 | Physical Linux desktop | X11 or Wayland capture, PipeWire/Pulse audio, `/dev/uinput`, physical controller, force feedback, GPU codecs |
-| Android phone/tablet/foldable | APK install, lifecycle, orientation, PiP, touch layout, Game Mode, GameNative handoff, permissions |
+| Android phone/tablet/foldable | APK install, lifecycle, orientation, PiP, touch layout, bounded `SpartanAndroid` WebView bridge callbacks, Game Mode, GameNative handoff, permissions |
 | Fire TV / Fire Stick | Remote focus navigation, safe area, playback, app/browser packaging feasibility |
 | Roku target | Remote navigation, web surface feasibility, playback, packaging/certification feasibility |
 | Controller bench | Xbox/XInput, DualSense/DInput, Nintendo layout, generic HID, wheel/HOTAS, gyro/touchpad/adaptive trigger where available |
