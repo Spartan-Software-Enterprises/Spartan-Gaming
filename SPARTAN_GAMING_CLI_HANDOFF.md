@@ -83,7 +83,7 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- The published code state is `115d7ce` on `main`; local and AWS worktrees are
+- The published code state is `6e315ad` on `main`; local and AWS worktrees are
   clean and synchronized with `origin/main`.
 - `npm run check`: repository checks pass on the current code state locally
   and on the AWS dev server.
@@ -141,6 +141,14 @@ and routes GameNative/controller/Game Mode actions through native boundaries.
 The shell contract passed 2/2 locally and on AWS at `115d7ce`; APK build and
 device validation remain explicitly unverified because the available hosts do
 not contain Android SDK/Gradle tooling.
+
+The current Electron lifecycle increment adds single-instance enforcement and
+an allow-listed `spartan://launch?backend=<catalog-id>` protocol handoff.
+Second-instance/open-url events restore the primary window and deliver only a
+normalized catalog ID through the isolated preload bridge; the dashboard
+queues the request until its catalog is ready. The Electron suite passed
+16/16 locally and on AWS at `6e315ad`; packaged protocol registration and
+physical installed-app behavior remain release validation gates.
 
 The latest Electron increment completes the background-app workflow: enabling
 `general.backgroundApps` now creates a native tray entry with restore and quit
