@@ -52,6 +52,16 @@ test('runtime UI exposes Fire TV remote-navigation metadata', () => {
   assert.equal(root.dataset.spartanPlatform, 'fire-tv');
 });
 
+test('runtime UI forwards a bounded Android policy request to the optional native bridge', () => {
+  const root = {dataset: {}, style: {setProperty() {}}};
+  const nodes = new Map();
+  const messages = [];
+  const navigatorRef = {userAgent: 'Mozilla/5.0 (Linux; Android 15)', platform: 'Linux arm64'};
+  const documentRef = {defaultView: {navigator: navigatorRef, innerWidth: 390, devicePixelRatio: 1, SpartanAndroid: {postMessage(value) { messages.push(JSON.parse(value)); return true; }}}, documentElement: root, head: {append(node) { nodes.set(node.id, node); }}, getElementById(id) { return nodes.get(id); }, createElement() { return {id: '', textContent: ''}; }};
+  applyRuntimeUiSettings(documentRef, {'mobile.orientation': 'Landscape', 'mobile.gameMode': 'Performance'});
+  assert.deepEqual(messages, [{version: 1, action: 'android.policy', payload: {formFactor: 'phone', orientation: 'landscape', currentOrientation: 'unknown', keepScreenAwake: true, pictureInPicture: true, edgeToEdge: true, dataSaver: false, gameMode: 'Performance', touchLayout: 'automatic'}}]);
+});
+
 test('television settings configure safe area, pointer visibility, and navigation policy', () => {
   const root = {dataset: {}, style: {values: new Map(), setProperty(key, value) { this.values.set(key, value); }}};
   const nodes = new Map();

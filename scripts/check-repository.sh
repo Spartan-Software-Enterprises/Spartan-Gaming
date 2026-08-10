@@ -11,6 +11,9 @@ required_files=(
   android/gamemode/AndroidGameModeBridge.kt
   android/controller/AndroidControllerInventory.kt
   android/text-input/AndroidGameTextInputContract.kt
+  android/SpartanAndroidBridge.kt
+  src/frontend/platform/android-bridge.mjs
+  src/frontend/platform/android-bridge.test.mjs
   scripts/playwright/smoke.mjs
   ROADMAP.md
   CONTRIBUTING.md

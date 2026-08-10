@@ -179,6 +179,17 @@ IME behavior remain intentionally unverified platform work. The focused
 text-entry suite passed 3/3 locally; rerun it with the full repository suite
 before publishing the next handoff.
 
+The current Android bridge increment adds `src/frontend/platform/android-bridge.mjs`
+and `android/SpartanAndroidBridge.kt`. Android WebView policy requests now use a
+versioned, 16-KiB-bounded message protocol through the optional `SpartanAndroid`
+interface; native handlers may separately query Game Mode, controller inventory,
+or text input. The bridge fails closed for missing, oversized, malformed, or
+unknown requests and never exposes raw Android objects or arbitrary command/URL
+execution. Focused bridge/runtime validation passed 13/13, and the full local
+suite passed 632 tests with 628 passed, 4 skipped, and 0 failed. Android SDK
+compilation, WebView lifecycle, permissions, callbacks, and device behavior
+remain physical Android lab gates.
+
 The repository-owned `scripts/playwright/smoke.mjs` runner now makes the browser
 matrix reproducible with an externally installed Playwright module; invoke it
 directly when a pure JSON report is required. The remote

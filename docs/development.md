@@ -195,6 +195,8 @@ The Android shell has a matching native Game Mode boundary in `android/gamemode/
 
 Android controller metadata is normalized by `src/frontend/input/android-controller.mjs` after the native `AndroidControllerInventory` bridge reports gamepad/joystick devices. The bridge keeps bounded IDs, names, vendor/product metadata, and approved haptics/motion/battery capabilities only; actual input events continue through the shared controller pipeline.
 
+The shared Android runtime now forwards a bounded `android.policy` message through the optional `SpartanAndroid` WebView interface whenever the detected platform is Android. `src/frontend/platform/android-bridge.mjs` also defines query requests for Game Mode, controller inventory, and text input. `android/SpartanAndroidBridge.kt` accepts only those versioned actions and delegates them to an Activity-owned handler; it never exposes raw Android objects or arbitrary command/URL execution. WebView installation, permission handling, callbacks, and device behavior remain native-shell and physical-lab work.
+
 Controller text entry uses `src/frontend/input/text-entry.mjs` to carry bounded
 text plus selection/composition ranges. Keyboard display is fail-closed until
 the request is both focused and user-initiated. Android's corresponding

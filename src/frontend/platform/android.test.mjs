@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {detectAndroidFormFactor, resolveAndroidGameModeIntent, resolveAndroidPolicy} from './android.mjs';
+import './android-bridge.test.mjs';
 
 test('Android form factor follows current window width and density', () => {
   assert.equal(detectAndroidFormFactor({viewport: {width: 390}, density: 1}), 'phone');

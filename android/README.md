@@ -51,3 +51,18 @@ allowed when it came from a focused user gesture. The matching
 shell must bind the official GameTextInput C API/Prefab library and report the
 result. Spartan does not expose raw `InputConnection` objects or claim Android
 keyboard behavior until an Android build and device test pass.
+
+## WebView bridge
+
+`SpartanAndroidBridge.kt` is the narrow JavaScript bridge for an Android shell.
+Install one instance on the primary WebView with `addJavascriptInterface` under
+the name `SpartanAndroid`; the shared frontend then sends versioned messages
+through `postMessage`. The bridge accepts only the bounded actions
+`android.policy`, `android.game-mode.query`, `android.controllers.snapshot`,
+and `android.text-input`, forwarding them to an Activity-owned `Handler`.
+
+The bridge never exposes a `Context`, raw `InputDevice`, `InputConnection`, or
+arbitrary command/URL surface to JavaScript. The Activity remains responsible
+for WebView lifecycle, origin policy, Android permissions, GameTextInput,
+GameNative consent, and native result callbacks. This contract is compile and
+device-lab work until an Android shell is added and exercised on real targets.

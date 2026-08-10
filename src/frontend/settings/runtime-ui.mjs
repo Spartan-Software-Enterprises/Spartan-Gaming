@@ -1,6 +1,8 @@
 import {detectDeviceMode, resolvePresentationProfile} from '../platform/device-mode.mjs';
 import {detectRuntimePlatform, resolvePlatformCompatibility} from '../platform/compatibility.mjs';
 import {syncRuntimeControllerNavigation} from '../input/navigation.mjs';
+import {createAndroidBridge} from '../platform/android-bridge.mjs';
+import {detectAndroidFormFactor, resolveAndroidPolicy} from '../platform/android.mjs';
 
 const ACCENTS = Object.freeze({Cyan: '#50e1d1', Violet: '#9a84ff', Lime: '#b8ef65', Amber: '#f5c563', Red: '#ff8f9c'});
 const THEMES = Object.freeze({'Spartan Dark': 'dark', 'Spartan Light': 'light', System: 'system', 'OLED Black': 'oled'});
@@ -110,6 +112,15 @@ export function applyRuntimeUiSettings(documentRef, settings = {}, {navigation =
   if (!documentRef?.documentElement) return resolveRuntimeUiSettings(settings);
   globalThis.spartanElectron?.setQuitGuard?.(settings['general.askBeforeQuit'] !== false);
   const resolved = resolveRuntimeUiSettings(settings, {navigatorRef: documentRef.defaultView?.navigator || globalThis.navigator, viewport: {width: documentRef.defaultView?.innerWidth}});
+  if (resolved.platform === 'android') {
+    const androidWindow = documentRef.defaultView;
+    const androidPolicy = resolveAndroidPolicy({
+      settings,
+      formFactor: detectAndroidFormFactor({viewport: {width: androidWindow?.innerWidth}, density: androidWindow?.devicePixelRatio, windowSegments: androidWindow?.visualViewport?.segments || []}),
+      orientation: androidWindow?.screen?.orientation?.type?.startsWith('portrait') ? 'portrait' : androidWindow?.screen?.orientation?.type?.startsWith('landscape') ? 'landscape' : 'unknown',
+    });
+    createAndroidBridge({bridge: androidWindow?.SpartanAndroid || globalThis.SpartanAndroid}).applyPolicy(androidPolicy);
+  }
   const root = documentRef.documentElement;
   root.dataset.spartanTheme = resolved.theme;
   root.lang = resolved.locale;
