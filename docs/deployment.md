@@ -38,6 +38,21 @@ credentials are minted through the admin-only TURN credential route from the
 mounted shared secret. Certificate issuance/rotation and the exact browser
 origin remain operator-owned production inputs.
 
+Before reloading a rotated certificate pair, validate that it is not expired
+and that the private key matches the certificate:
+
+```bash
+npm run deployment:tls-check -- --key /run/secrets/signaling.key --cert /run/secrets/signaling.crt
+```
+
+The checker prints only certificate subject, issuer, and remaining days. For
+an application-owned pair, `rotateTlsCertificatePair()` in
+`scripts/deployment/tls-rotation.mjs` validates the replacement first, stages
+the key with mode `0600` and certificate with mode `0644`, publishes both, and
+restores the previous pair if publication fails. Reload the signaling process
+only after the rotation operation succeeds; the utility does not restart
+containers or contact an external certificate authority.
+
 The default Compose mapping binds `127.0.0.1:8790` on the host. The service
 health endpoint is:
 
