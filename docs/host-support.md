@@ -407,6 +407,15 @@ when only a single magnitude is supplied. Rumble is advertised only when
 `/dev/uinput` is writable; hosts without that device or permission
 fail closed.
 
+On a real Linux host, run `npm run native:verify-linux` for a non-mutating
+prerequisite probe. Add `--execute` to send a bounded button/axis/release
+sequence through the installed binding, and add `--rumble` to require an
+observed force-feedback event as well. The command exits non-zero when the
+device, installed package, kernel capability, or permission is unavailable;
+it never reports a planned or source-only package as verified. Android/Termux
+and unprivileged CI hosts should therefore report unavailable rather than
+being treated as Linux uinput evidence.
+
 The virtual gamepad also reads force-feedback uploads from the kernel and
 forwards them to connected sessions as host-issued rumble input events, so a
 host-local game that rumbles the virtual controller causes the remote client browser

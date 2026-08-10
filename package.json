@@ -23,6 +23,7 @@
     "test:virtual-gamepad": "node --test host/virtual-gamepad-loader.test.mjs host/input-adapter-mux.test.mjs",
     "test:serial": "node scripts/run-tests.mjs --concurrency 1",
     "native:build-linux": "node scripts/native/package.mjs --platform linux --execute",
+    "native:verify-linux": "node scripts/native/verify-linux-uinput.mjs",
     "test:native-linux-package": "node --test native/linux/package.test.mjs",
     "test:native-windows-package": "node --test native/windows/package.test.mjs",
     "test:native-macos-package": "node --test native/macos/package.test.mjs",
