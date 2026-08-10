@@ -84,7 +84,7 @@ review; stay within the AWS credit limit.
 ## Verified baseline
 
 - `npm run check`: 422 tests passed, 0 failed locally and on the AWS dev server
-  for the explicit SteamOS profile commit `c6d2533`.
+  for the portable Steam Input commit `ccc7ae5`.
 - `npm test`: 616 tests, 612 passed, 0 failed, and 4 skipped locally after
   `fc12cd0`; the AWS run also completed with 616 tests, 614 passed, 0 failed,
   and 2 skipped. The difference is environment-gated integration coverage,
@@ -93,6 +93,8 @@ review; stay within the AWS credit limit.
   1 skipped) and 617 main-suite tests (615 passed, 0 failed, 2 skipped).
 - On `c6d2533`, the AWS full suite completed with 48 pretest cases (47 passed,
   1 skipped) and 618 main-suite tests (616 passed, 0 failed, 2 skipped).
+- On `ccc7ae5`, the AWS focused controller/session/settings suite passed 70/70;
+  repository checks remained 422/422 with 0 failures.
 - PWA install tests: 2 passed locally; the AWS focused distribution/server/
   install run passed 7 tests.
 - The latest PWA distribution tests also verify the SVG app mark, manifest
@@ -148,6 +150,12 @@ host configuration. Focused AWS validation passed 41/41 and repository checks
 passed 422/422. Physical Steam Deck/Game Mode/Desktop Mode, real Gamescope,
 Steam Input actions/glyphs, power behavior, and real Proton/native game
 execution remain local-lab gates.
+
+The latest controller increment adds `src/frontend/input/steam-input.mjs` with
+a portable action manifest, optional official bridge capability, and bounded
+Xbox/PlayStation/Nintendo/Steam glyph fallbacks. The bridge is metadata-only;
+Gamepad/HID input remains the fallback and no Steam client control or
+credentials are handled. AWS focused validation passed 70/70.
 
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
