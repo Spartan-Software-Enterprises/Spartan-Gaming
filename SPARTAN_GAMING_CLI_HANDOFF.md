@@ -134,6 +134,12 @@ still applies to tray quit. Tray policy is covered by
 `desktop/electron/tray-policy.test.mjs`, and Electron syntax/tests are now part
 of `npm run check`.
 
+The current Electron power increment adds `desktop/electron/power-runtime.mjs`
+and a preload power-event listener. Electron `powerMonitor` suspend/resume,
+AC/battery, thermal, and speed-limit events are reduced to bounded diagnostics;
+active sessions use a session-aware `powerSaveBlocker` policy. Physical desktop
+power and thermal behavior remain lab gates.
+
 The current Proton/SteamOS increment adds a user-owned Linux/SteamOS Proton
 launch boundary. `host/proton.mjs` detects a selected installation, validates
 compatibility-prefix and allow-listed runtime options, and creates a shell-free

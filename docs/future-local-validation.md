@@ -41,7 +41,7 @@ behavior must be exercised on the target device or operating system.
 | Feature/function | Remote status | Local-lab work |
 | --- | --- | --- |
 | Electron Provider Player isolation, permission prompts, navigation limits, and IPC sender validation | Contract-tested | Launch packaged builds on every desktop OS and test real remote-provider handoffs |
-| Electron fullscreen, quit guard, background behavior, tray restore/quit actions, power mode, and privacy controls | Contract-tested, including tray policy and runtime synchronization | Verify native window behavior, tray icon/menu behavior, suspend/resume, GPU use, permissions, and shutdown on Windows/macOS/Linux |
+| Electron fullscreen, quit guard, background behavior, tray restore/quit actions, power mode, native power telemetry, and privacy controls | Contract-tested, including tray policy, runtime synchronization, bounded power events, and session-aware power-save blocking | Verify native window behavior, tray icon/menu behavior, suspend/resume, thermal/speed-limit events, GPU use, permissions, and shutdown on Windows/macOS/Linux |
 | Hardware display capture and system/microphone audio | Linux wrapper verified | Verify OS permission prompts, physical displays, audio devices, source selection, and teardown on every desktop OS |
 | WebGPU, hardware decode, AV1, HDR, high refresh, multi-display, and display targeting | Browser capability/policy contracts | Test real GPUs, monitors, HDR modes, refresh rates, fullscreen targets, and power/thermal behavior |
 | PWA install surface, install prompt, launch display fallbacks, launcher shortcuts, and offline shell caching | Manifest/icon/service-worker contracts and deferred install-prompt controller tested; manifest is explicitly precached | Install from supported desktop/mobile browsers and verify prompt availability, icons, shortcut launch targets, display-mode fallbacks, update recovery, and offline startup |
@@ -65,6 +65,8 @@ security requirements for context isolation, sandboxing, permission handlers,
 restricted navigation, and current Electron releases.
 
 Research references: [Electron security](https://www.electronjs.org/docs/latest/tutorial/security),
+[Electron powerMonitor](https://www.electronjs.org/docs/latest/api/power-monitor/),
+[Electron powerSaveBlocker](https://www.electronjs.org/docs/latest/api/power-save-blocker),
 [PWA display modes](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/display_override),
 [PWA shortcuts](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/shortcuts),
 [Android PiP](https://developer.android.com/develop/ui/views/picture-in-picture),

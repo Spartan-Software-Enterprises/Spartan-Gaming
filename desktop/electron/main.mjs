@@ -1,10 +1,11 @@
-import {app, BrowserWindow, Menu, Tray, nativeImage, dialog, ipcMain, shell, WebContentsView} from 'electron';
+import {app, BrowserWindow, Menu, Tray, nativeImage, dialog, ipcMain, shell, WebContentsView, powerMonitor, powerSaveBlocker} from 'electron';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createFrontendServer} from '../../scripts/frontend/serve.mjs';
 import {isAllowedExternalUrl, isAllowedNavigation, isAllowedProviderUrl} from './security.mjs';
 import {applyElectronPrivacyHeaders, normalizeElectronRuntimePolicy, resolvePermissionDecision, shouldQuitWhenWindowsClose} from './runtime-policy.mjs';
 import {createTrayMenuTemplate, shouldCreateTray} from './tray-policy.mjs';
+import {normalizePowerEvent, resolvePowerSaveBlockerType} from './power-runtime.mjs';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 let frontend;
@@ -15,6 +16,8 @@ let quitGuardEnabled = true;
 let sessionActive = false;
 let quitting = false;
 let runtimePolicy = normalizeElectronRuntimePolicy();
+let powerBlockerId = null;
+let powerBlockerType = null;
 const privacySessions = new WeakSet();
 const permissionDecisions = new Map();
 
@@ -71,6 +74,22 @@ function createTrayIcon() {
 
 function destroyTray() { trayRef?.destroy(); trayRef = null; }
 
+function syncPowerSaveBlocker() {
+  const desired = resolvePowerSaveBlockerType({active: sessionActive, powerMode: runtimePolicy.powerMode});
+  if (desired === powerBlockerType && powerBlockerId !== null) return;
+  if (powerBlockerId !== null) { try { powerSaveBlocker.stop(powerBlockerId); } catch {} powerBlockerId = null; powerBlockerType = null; }
+  if (!desired) return;
+  try { powerBlockerId = powerSaveBlocker.start(desired); powerBlockerType = desired; } catch { powerBlockerId = null; powerBlockerType = null; }
+}
+
+function broadcastPowerEvent(type, details = {}) { windowRef?.webContents.send('spartan:power-event', normalizePowerEvent(type, details)); }
+
+function installPowerMonitoring() {
+  for (const event of ['suspend', 'resume', 'on-battery', 'on-ac', 'shutdown', 'lock-screen', 'unlock-screen']) powerMonitor.on(event, () => broadcastPowerEvent(event));
+  powerMonitor.on('thermal-state-change', (_event, details) => broadcastPowerEvent('thermal-state-change', details));
+  powerMonitor.on('speed-limit-change', (_event, details) => broadcastPowerEvent('speed-limit-change', details));
+}
+
 function syncTray() {
   if (!shouldCreateTray(runtimePolicy) || trayRef) return;
   trayRef = new Tray(createTrayIcon());
@@ -98,8 +117,9 @@ app.whenReady().then(async () => {
   ipcMain.handle('spartan:open-provider', (_event, {url, title}) => createProviderView(url, title));
   ipcMain.handle('spartan:close-provider', closeProviderView);
   ipcMain.handle('spartan:set-quit-guard', (_event, enabled) => { if (typeof enabled !== 'boolean') throw new TypeError('quit guard must be boolean'); quitGuardEnabled = enabled; return quitGuardEnabled; });
-  ipcMain.handle('spartan:set-session-active', (_event, active) => { if (typeof active !== 'boolean') throw new TypeError('session state must be boolean'); sessionActive = active; return sessionActive; });
-  ipcMain.handle('spartan:apply-runtime-settings', (event, settings) => { if (event.sender !== windowRef.webContents) throw new Error('runtime settings may only be applied by the primary window'); runtimePolicy = normalizeElectronRuntimePolicy(settings); event.sender.setBackgroundThrottling(runtimePolicy.backgroundThrottling); if (runtimePolicy.backgroundApps) syncTray(); else destroyTray(); return runtimePolicy; });
+  ipcMain.handle('spartan:set-session-active', (_event, active) => { if (typeof active !== 'boolean') throw new TypeError('session state must be boolean'); sessionActive = active; syncPowerSaveBlocker(); return sessionActive; });
+  ipcMain.handle('spartan:apply-runtime-settings', (event, settings) => { if (event.sender !== windowRef.webContents) throw new Error('runtime settings may only be applied by the primary window'); runtimePolicy = normalizeElectronRuntimePolicy(settings); event.sender.setBackgroundThrottling(runtimePolicy.backgroundThrottling); syncPowerSaveBlocker(); if (runtimePolicy.backgroundApps) syncTray(); else destroyTray(); return runtimePolicy; });
+  installPowerMonitoring();
   ipcMain.handle('spartan:toggle-fullscreen', () => { windowRef.setFullScreen(!windowRef.isFullScreen()); return windowRef.isFullScreen(); });
   await createMainWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) void createMainWindow(); });
@@ -116,3 +136,4 @@ app.on('before-quit', event => {
 });
 
 app.on('will-quit', destroyTray);
+app.on('will-quit', () => { if (powerBlockerId !== null) { try { powerSaveBlocker.stop(powerBlockerId); } catch {} powerBlockerId = null; powerBlockerType = null; } });
