@@ -31,4 +31,5 @@ test('production preflight is part of the published deployment surface', () => {
   assert.match(fs.readFileSync('scripts/validate-production-config.mjs', 'utf8'), /resolveProductionConfig/);
   assert.match(fs.readFileSync('signaling/production-config.mjs', 'utf8'), /resolveConfiguredSecret/);
   assert.match(fs.readFileSync('signaling/agent.mjs', 'utf8'), /resolveSignalingSecrets/);
+  assert.match(fs.readFileSync('signaling/production-config.mjs', 'utf8'), /production broker package/);
 });

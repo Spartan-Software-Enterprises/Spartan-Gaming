@@ -17,9 +17,10 @@ export function normalizeProductionConfig(options = {}) {
   if (!allowedOrigins.length || allowedOrigins.some(origin => !origin.startsWith('https://'))) throw new TypeError('production allowed origins must contain HTTPS origins');
   const sessionStore = text(options.sessionStore).toLowerCase();
   if (!SESSION_STORES.has(sessionStore)) throw new TypeError('production session store must be redis, database, or external');
+  const brokerPackage = required(options.brokerPackage, 'production broker package');
   const turnUrls = [...new Set(urls(options.turnUrls))];
   if (!turnUrls.length || turnUrls.some(url => !/^turns?:/i.test(url))) throw new TypeError('production TURN URLs must contain turn: or turns: endpoints');
-  return Object.freeze({environment: 'production', tls: Object.freeze({keyPath: tlsKey, certPath: tlsCert}), allowedOrigins: Object.freeze(allowedOrigins), sessionStore, turnUrls: Object.freeze(turnUrls), secrets: Object.freeze({configured: true, adminConfigured: true})});
+  return Object.freeze({environment: 'production', tls: Object.freeze({keyPath: tlsKey, certPath: tlsCert}), allowedOrigins: Object.freeze(allowedOrigins), sessionStore, brokerPackage, turnUrls: Object.freeze(turnUrls), secrets: Object.freeze({configured: true, adminConfigured: true})});
 }
 
 export function resolveConfiguredSecret({env = process.env, name, readFile = readFileSync} = {}) {
@@ -40,6 +41,7 @@ export function resolveProductionConfig({env = process.env, readFile = readFileS
     tlsCert: text(env.SPARTAN_SIGNALING_TLS_CERT),
     allowedOrigins: env.SPARTAN_SIGNALING_ALLOWED_ORIGINS,
     sessionStore: env.SPARTAN_SIGNALING_SESSION_STORE,
+    brokerPackage: env.SPARTAN_SIGNALING_BROKER_PACKAGE,
     turnUrls: env.SPARTAN_SIGNALING_TURN_URLS,
   };
   return normalizeProductionConfig(source);

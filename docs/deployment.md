@@ -92,7 +92,9 @@ Before promoting a deployment, run `npm run deployment:check` with
 `SPARTAN_SIGNALING_ADMIN_SECRET` (or `SPARTAN_SIGNALING_ADMIN_SECRET_FILE`),
 `SPARTAN_SIGNALING_TLS_KEY`, `SPARTAN_SIGNALING_TLS_CERT`,
 `SPARTAN_SIGNALING_ALLOWED_ORIGINS`, `SPARTAN_SIGNALING_SESSION_STORE`, and
-`SPARTAN_SIGNALING_TURN_URLS` set. The preflight requires strong distinct
+`SPARTAN_SIGNALING_BROKER_PACKAGE`, and `SPARTAN_SIGNALING_TURN_URLS` set. The
+broker package must export the validated `createBroker()` contract; the
+preflight requires strong distinct
 secrets, HTTPS origins, a non-memory session store (`redis`, `database`, or
 `external`), and `turn:`/`turns:` endpoints; it prints only a redacted
 configuration summary and never emits secret values. Inline and file forms
