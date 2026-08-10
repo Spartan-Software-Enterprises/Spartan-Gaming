@@ -17,6 +17,11 @@ export function createQualityProfiles({maxWidth = 3840, maxHeight = 2160, maxFra
   return Object.freeze(QUALITY_PROFILES.map(profile => Object.freeze({...profile, maxWidth: Math.min(profile.maxWidth, limits.maxWidth), maxHeight: Math.min(profile.maxHeight, limits.maxHeight), maxFramerate: Math.min(profile.maxFramerate, limits.maxFramerate), bitrateKbps: Math.min(profile.bitrateKbps, limits.bitrateKbps)})));
 }
 
+export function findQualityProfile(profiles = QUALITY_PROFILES, id = 'balanced') {
+  const available = Array.isArray(profiles) && profiles.length ? profiles : QUALITY_PROFILES;
+  return available.find(profile => profile?.id === id) || available.find(profile => profile?.id === 'balanced') || available[available.length - 1];
+}
+
 function clamp(value, minimum, maximum) { return Math.max(minimum, Math.min(maximum, value)); }
 function profileIndex(id) { return Math.max(0, QUALITY_PROFILES.findIndex(profile => profile.id === id)); }
 
