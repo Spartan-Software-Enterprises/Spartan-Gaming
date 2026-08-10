@@ -19,7 +19,16 @@ android {
         buildConfig = false
     }
 
-    sourceSets["main"].kotlin.srcDirs(rootProject.projectDir)
+    sourceSets["main"].kotlin.setSrcDirs(
+        listOf(
+            rootProject.file("SpartanAndroidBridge.kt"),
+            rootProject.file("controller"),
+            rootProject.file("gamemode"),
+            rootProject.file("gamenative"),
+            rootProject.file("text-input"),
+            project.file("src/main/kotlin"),
+        ),
+    )
     sourceSets["main"].assets.srcDir(layout.buildDirectory.dir("generated/assets"))
 }
 
