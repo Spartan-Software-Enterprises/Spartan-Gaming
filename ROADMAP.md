@@ -24,7 +24,7 @@
 - [x] Controller remapping profiles and live gamepad/HID inspector.
 - [x] Capability-aware Keyboard Lock and Pointer Lock controls with graceful permission fallback.
 - [x] Stream and system diagnostics page.
-- [ ] Windows, macOS, and Linux development builds.
+- [x] Windows, macOS, and Linux development builds (Electron unpacked artifacts are built and contract-tested by the cross-platform CI matrix; signed release installers remain a separate release step).
 - [x] Plan-first Windows/macOS/Linux development-build matrix with isolated artifact metadata (compiled binaries remain external-checkout work).
 - [x] Unified frontend catalog and launcher model.
 - [x] Capability-aware launch plans with explicit readiness, troubleshooting, and next actions.
