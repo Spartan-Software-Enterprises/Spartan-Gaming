@@ -4,9 +4,9 @@ const PLATFORMS = new Set(['win32', 'darwin', 'linux']);
 function required(value, name) { if (typeof value !== 'string' || !value.trim()) throw new TypeError(`${name} must be a non-empty string`); return value.trim(); }
 
 /** Load an operator-installed, platform-specific virtual-gamepad driver adapter. */
-export async function loadVirtualGamepadAdapter({platform, packageName, backend = 'Automatic', config, loader = name => import(name), runtime, allowUnverified = false, options = {}} = {}) {
+export async function loadVirtualGamepadAdapter({platform, packageName, backend = 'Automatic', deviceId, deviceIds, config, loader = name => import(name), runtime, allowUnverified = false, options = {}} = {}) {
   if (!PLATFORMS.has(platform)) throw new TypeError(`unsupported virtual gamepad platform: ${platform}`);
-  const normalized = config || normalizeVirtualGamepadConfig({platform, backend, packageName});
+  const normalized = config || normalizeVirtualGamepadConfig({platform, backend, packageName, deviceId, deviceIds});
   if (normalized.backend === 'Disabled' || normalized.backend === 'Browser Gamepad') return Object.freeze({status: 'not-required', platform, packageName: null, reason: null, readiness: describeVirtualGamepadReadiness({config: normalized})});
   const name = normalized.packageName || (runtime ? 'installed virtual-gamepad runtime' : required(normalized.packageName, 'packageName'));
   if (typeof loader !== 'function') throw new TypeError('loader must be a function');
@@ -15,7 +15,7 @@ export async function loadVirtualGamepadAdapter({platform, packageName, backend 
   try {
     if (runtime) {
       if (typeof runtime.load !== 'function') throw new TypeError('verified virtual gamepad runtime must implement load()');
-      const loaded = await runtime.load(); adapter = loaded?.adapter; verifiedPackageName = loaded?.manifest?.id || name;
+      const loaded = await runtime.load({options: {config: normalized, ...options}}); adapter = loaded?.adapter; verifiedPackageName = loaded?.manifest?.id || name;
     } else {
       const module = await loader(name);
       if (typeof module?.createVirtualGamepad !== 'function') { const reason = 'virtual gamepad package must export createVirtualGamepad'; return Object.freeze({status: 'unavailable', platform, packageName: name, reason, readiness: describeVirtualGamepadReadiness({config: normalized, adapterStatus: 'unavailable', adapterReason: reason})}); }

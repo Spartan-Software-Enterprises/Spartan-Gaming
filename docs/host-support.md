@@ -43,6 +43,12 @@ install root and adapter ID are also accepted in non-secret host JSON. Without
 all three values, the installed runtime remains unavailable and the host
 reports the capability as not ready.
 
+When the verified factory is activated, it receives the normalized, non-secret
+virtual-gamepad configuration as well: backend, platform, selected device, and
+bounded device-slot IDs. This lets a Windows or macOS driver package select the
+operator-approved device without reading host secrets or bypassing manifest
+verification.
+
 Use `--virtual-gamepad-backend` with `Automatic`, `Linux uinput`, `Windows
 external driver`, `macOS external driver`, `Browser Gamepad`, or `Disabled` to
 make the intended controller path explicit. `--virtual-gamepad-device` carries
