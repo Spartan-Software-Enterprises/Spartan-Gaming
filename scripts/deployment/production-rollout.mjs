@@ -30,7 +30,7 @@ function composeArgs({composeExecutable: executable, composeFile, project, envFi
 }
 
 /** Create a secret-free, shell-free production deployment and health-check contract. */
-export function createProductionRolloutPlan({composeExecutable: executable = 'docker', composeFile = 'docker-compose.production.yml', project = 'spartan-gaming', envFile, healthEndpoint = 'https://127.0.0.1/health', adminHealthEndpoint, includeTurn = true} = {}) {
+export function createProductionRolloutPlan({composeExecutable: executable = 'docker', composeFile = 'docker-compose.production.yml', project = 'spartan-gaming', envFile, healthEndpoint = 'https://127.0.0.1/health', adminHealthEndpoint, includeTurn = true, requireBroker = false} = {}) {
   const normalizedExecutable = composeExecutable(executable);
   const normalizedComposeFile = absolute(composeFile, 'composeFile');
   const normalizedProject = projectName(project);
@@ -38,7 +38,7 @@ export function createProductionRolloutPlan({composeExecutable: executable = 'do
   const health = healthUrl(healthEndpoint, 'healthEndpoint');
   const adminHealth = adminHealthEndpoint ? healthUrl(adminHealthEndpoint, 'adminHealthEndpoint') : null;
   const base = {composeExecutable: normalizedExecutable, composeFile: normalizedComposeFile, project: normalizedProject, envFile: normalizedEnvFile, includeTurn: Boolean(includeTurn)};
-  return Object.freeze({status: 'planned', compose: Object.freeze({preflight: composeArgs({...base, action: 'config'}), up: composeArgs({...base, action: 'up'})}), health: Object.freeze({endpoint: health, adminEndpoint: adminHealth, required: Object.freeze(['service'])}), security: Object.freeze({shell: false, credentials: 'external-secret-files', turn: Boolean(includeTurn), operatorConfirmationRequired: true})});
+  return Object.freeze({status: 'planned', compose: Object.freeze({preflight: composeArgs({...base, action: 'config'}), up: composeArgs({...base, action: 'up'})}), health: Object.freeze({endpoint: health, adminEndpoint: adminHealth, required: Object.freeze(['service', ...(requireBroker ? ['broker'] : [])])}), security: Object.freeze({shell: false, credentials: 'external-secret-files', turn: Boolean(includeTurn), operatorConfirmationRequired: true})});
 }
 
 function defaultRunner({program, args}) {
@@ -56,7 +56,8 @@ async function checkHealth(endpoint, {fetchImpl = fetch, timeoutMs = 10_000} = {
     if (!response?.ok) throw new Error(`health endpoint returned HTTP ${response?.status ?? 'unknown'}`);
     const body = await response.json();
     if (!body || typeof body !== 'object' || typeof body.service !== 'string') throw new Error('health endpoint returned an invalid service status');
-    return Object.freeze({status: 'healthy', service: evidenceText(body.service), health: evidenceText(typeof body.status === 'string' ? body.status : 'ok')});
+    const broker = body.broker && typeof body.broker === 'object' ? Object.freeze({status: evidenceText(body.broker.status), backend: evidenceText(body.broker.backend)}) : null;
+    return Object.freeze({status: 'healthy', service: evidenceText(body.service), health: evidenceText(typeof body.status === 'string' ? body.status : 'ok'), ...(broker ? {broker} : {})});
   } finally { clearTimeout(timeout); }
 }
 
@@ -66,6 +67,7 @@ export async function executeProductionRollout(plan, {runner = defaultRunner, fe
   if (typeof runner !== 'function') throw new TypeError('runner must be a function');
   await runner(plan.compose.preflight); await runner(plan.compose.up);
   const primary = await checkHealth(plan.health.endpoint, {fetchImpl, timeoutMs});
+  if (plan.health.required.includes('broker') && primary.broker?.status !== 'ready') throw new Error('production broker health is not ready');
   const admin = checkAdmin && plan.health.adminEndpoint ? await checkHealth(plan.health.adminEndpoint, {fetchImpl, timeoutMs}) : null;
   return Object.freeze({status: 'healthy', primary, admin});
 }
@@ -73,7 +75,7 @@ export async function executeProductionRollout(plan, {runner = defaultRunner, fe
 /** Create bounded, secret-free evidence suitable for an operator artifact. */
 export function createProductionRolloutReport(plan, result, {now = new Date()} = {}) {
   if (!plan?.health || result?.status !== 'healthy') throw new TypeError('a healthy rollout result is required');
-  return Object.freeze({version: 1, kind: 'production-rollout', status: 'healthy', recordedAt: new Date(now).toISOString(), includeTurn: plan.security.turn, primary: Object.freeze({status: result.primary?.status, service: evidenceText(result.primary?.service), health: evidenceText(result.primary?.health)}), admin: result.admin ? Object.freeze({status: result.admin.status, service: evidenceText(result.admin.service), health: evidenceText(result.admin.health)}) : null});
+  return Object.freeze({version: 1, kind: 'production-rollout', status: 'healthy', recordedAt: new Date(now).toISOString(), includeTurn: plan.security.turn, required: Object.freeze([...plan.health.required]), primary: Object.freeze({status: result.primary?.status, service: evidenceText(result.primary?.service), health: evidenceText(result.primary?.health), ...(result.primary?.broker ? {broker: Object.freeze({status: evidenceText(result.primary.broker.status), backend: evidenceText(result.primary.broker.backend)})} : {})}), admin: result.admin ? Object.freeze({status: result.admin.status, service: evidenceText(result.admin.service), health: evidenceText(result.admin.health), ...(result.admin.broker ? {broker: Object.freeze({status: evidenceText(result.admin.broker.status), backend: evidenceText(result.admin.broker.backend)})} : {})}) : null});
 }
 
 async function writeReport(file, report) { if (!text(file)) return; const target = path.resolve(file); if (target === path.parse(target).root) throw new TypeError('report file cannot be the filesystem root'); await writeFile(target, `${JSON.stringify(report, null, 2)}\n`, {encoding: 'utf8', mode: 0o600}); }
@@ -82,7 +84,7 @@ function argument(argv, name) { const index = argv.indexOf(name); return index <
 if (path.resolve(process.argv[1] || '') === path.resolve(new URL(import.meta.url).pathname)) {
   try {
     const argv = process.argv.slice(2);
-    const plan = createProductionRolloutPlan({composeFile: argument(argv, '--compose-file') || 'docker-compose.production.yml', project: argument(argv, '--project') || 'spartan-gaming', envFile: argument(argv, '--env-file') || undefined, healthEndpoint: argument(argv, '--health') || 'https://127.0.0.1/health', adminHealthEndpoint: argument(argv, '--admin-health') || undefined, includeTurn: !argv.includes('--without-turn'), composeExecutable: argument(argv, '--compose-executable') || 'docker'});
+    const plan = createProductionRolloutPlan({composeFile: argument(argv, '--compose-file') || 'docker-compose.production.yml', project: argument(argv, '--project') || 'spartan-gaming', envFile: argument(argv, '--env-file') || undefined, healthEndpoint: argument(argv, '--health') || 'https://127.0.0.1/health', adminHealthEndpoint: argument(argv, '--admin-health') || undefined, includeTurn: !argv.includes('--without-turn'), requireBroker: argv.includes('--require-broker'), composeExecutable: argument(argv, '--compose-executable') || 'docker'});
     if (!argv.includes('--execute')) { console.log(JSON.stringify(plan, null, 2)); process.exit(0); }
     if (!argv.includes('--confirm')) throw new Error('production execution requires --confirm');
     const result = await executeProductionRollout(plan, {checkAdmin: argv.includes('--check-admin')}); const report = createProductionRolloutReport(plan, result); await writeReport(argument(argv, '--report-file'), report); console.log(JSON.stringify(result));

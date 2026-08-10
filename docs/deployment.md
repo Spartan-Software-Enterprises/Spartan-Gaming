@@ -197,6 +197,11 @@ and retains it as a short-lived GitHub artifact. The report records only the
 rollout status, whether the TURN profile was selected, and normalized service
 health statuses; it does not include environment values, endpoint bodies,
 tokens, or certificate material.
+The workflow requires a ready broker health signal by default; this proves the
+running signaling service can reach its configured Redis/production broker,
+not merely that a Redis URL exists in an environment file. Operators using a
+separately managed session backend may explicitly disable that requirement
+only after reviewing the backend's independent health evidence.
 
 For an operator-managed coturn relay, generate a bounded configuration from
 the same shared secret used by the signaling TURN credential endpoint:
