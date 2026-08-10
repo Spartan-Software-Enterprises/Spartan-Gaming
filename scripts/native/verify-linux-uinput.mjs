@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import path from 'node:path';
-import {access, constants} from 'node:fs/promises';
+import {access, constants, writeFile} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
 
 function text(value) { return typeof value === 'string' ? value.trim() : ''; }
@@ -56,10 +56,11 @@ export async function verifyLinuxUinput({installRoot = path.resolve('out/native-
 }
 
 function argument(argv, name) { const index = argv.indexOf(name); return index < 0 ? '' : argv[index + 1]; }
+async function writeReport(file, report) { if (!file) return; const target = path.resolve(file); if (target === path.parse(target).root) throw new TypeError('report file cannot be the filesystem root'); await writeFile(target, `${JSON.stringify(report, null, 2)}\n`, {encoding: 'utf8', mode: 0o600}); }
 if (path.resolve(process.argv[1] || '') === path.resolve(new URL(import.meta.url).pathname)) {
   try {
     const argv = process.argv.slice(2);
-    const result = await verifyLinuxUinput({installRoot: argument(argv, '--install-root') || undefined, devicePath: argument(argv, '--device') || undefined, execute: argv.includes('--execute'), rumble: argv.includes('--rumble'), timeoutMs: argument(argv, '--timeout-ms') || undefined});
+    const result = await verifyLinuxUinput({installRoot: argument(argv, '--install-root') || undefined, devicePath: argument(argv, '--device') || undefined, execute: argv.includes('--execute'), rumble: argv.includes('--rumble'), timeoutMs: argument(argv, '--timeout-ms') || undefined}); await writeReport(argument(argv, '--report-file'), result);
     console.log(JSON.stringify(result));
     if (result.status !== 'ready') process.exitCode = 2;
   } catch (error) { console.error(`Linux uinput verification failed: ${error.message}`); process.exitCode = 1; }

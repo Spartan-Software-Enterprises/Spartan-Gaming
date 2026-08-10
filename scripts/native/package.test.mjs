@@ -60,6 +60,7 @@ test('hardware validation workflow requires real platform capabilities and signe
   assert.match(hardwareWorkflow, /workflow_dispatch:/);
   assert.match(hardwareWorkflow, /runs-on: \$\{\{ inputs\.runner_label \}\}/);
   assert.match(hardwareWorkflow, /native:verify-desktop/);
+  assert.match(hardwareWorkflow, /--report-file/);
   assert.match(hardwareWorkflow, /--require-hardware/);
   assert.match(hardwareWorkflow, /--require-input/);
   assert.match(hardwareWorkflow, /--require-audio/);
@@ -67,6 +68,7 @@ test('hardware validation workflow requires real platform capabilities and signe
   assert.match(hardwareWorkflow, /native:verify-linux/);
   assert.match(hardwareWorkflow, /--execute --rumble/);
   assert.match(hardwareWorkflow, /native:verify-virtual-gamepad/);
+  assert.match(hardwareWorkflow, /actions\/upload-artifact@v7/);
   assert.match(hardwareWorkflow, /test -f \"\$PUBLIC_KEY_FILE\"/);
   assert.doesNotMatch(hardwareWorkflow, /SPARTAN_.*SECRET\s*:/);
 });

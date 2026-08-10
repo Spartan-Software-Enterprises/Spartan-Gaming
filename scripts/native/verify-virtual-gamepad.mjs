@@ -9,6 +9,7 @@ function text(value) { return typeof value === 'string' ? value.trim() : ''; }
 function required(value, name) { const result = text(value); if (!result) throw new TypeError(`${name} is required`); return result; }
 function platform(value) { const result = PLATFORMS[text(value).toLowerCase()]; if (!result) throw new TypeError(`unsupported virtual-gamepad platform: ${value}`); return result; }
 function argument(argv, name) { const index = argv.indexOf(name); return index < 0 ? '' : argv[index + 1]; }
+async function writeReport(file, report) { if (!text(file)) return; const target = path.resolve(file); if (target === path.parse(target).root) throw new TypeError('report file cannot be the filesystem root'); await fs.writeFile(target, `${JSON.stringify(report, null, 2)}\n`, {encoding: 'utf8', mode: 0o600}); }
 
 /** Verify an installed signed virtual-gamepad package without sending input. */
 export async function verifyInstalledVirtualGamepad({platform: targetPlatform, installRoot, id, publicKeyJwk, fsImpl = fs, loadModule = specifier => import(specifier), verifyManifest} = {}) {
@@ -32,7 +33,7 @@ if (path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1
     const argv = process.argv.slice(2); if (argv.includes('--help') || argv.includes('-h')) { console.log('Usage: npm run native:verify-virtual-gamepad -- --platform windows|macos|linux --install-root PATH --adapter-id ID [--public-key-file PATH]'); process.exit(0); }
     const publicKeyText = text(process.env.SPARTAN_VIRTUAL_GAMEPAD_PUBLIC_KEY_JWK) || (argument(argv, '--public-key-file') ? await fs.readFile(path.resolve(argument(argv, '--public-key-file')), 'utf8') : '');
     const publicKeyJwk = JSON.parse(required(publicKeyText, 'public key JWK'));
-    const report = await verifyInstalledVirtualGamepad({platform: argument(argv, '--platform') || process.platform, installRoot: argument(argv, '--install-root'), id: argument(argv, '--adapter-id'), publicKeyJwk});
+    const report = await verifyInstalledVirtualGamepad({platform: argument(argv, '--platform') || process.platform, installRoot: argument(argv, '--install-root'), id: argument(argv, '--adapter-id'), publicKeyJwk}); await writeReport(argument(argv, '--report-file'), report);
     console.log(JSON.stringify(report, null, 2)); if (report.status !== 'ready') process.exitCode = 2;
   } catch (error) { console.error(`virtual-gamepad verification failed: ${error.message}`); process.exitCode = 1; }
 }

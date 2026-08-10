@@ -38,9 +38,10 @@ export async function verifyDesktopCapabilities({platform = process.platform, in
 }
 
 function argument(argv, name) { const index = argv.indexOf(name); return index < 0 ? '' : argv[index + 1]; }
+async function writeReport(file, report) { if (!text(file)) return; const target = path.resolve(file); if (target === path.parse(target).root) throw new TypeError('report file cannot be the filesystem root'); await fs.writeFile(target, `${JSON.stringify(report, null, 2)}\n`, {encoding: 'utf8', mode: 0o600}); }
 if (path.resolve(process.argv[1] || '') === path.resolve(new URL(import.meta.url).pathname)) {
   try {
-    const argv = process.argv.slice(2); const platform = requiredPlatform(argument(argv, '--platform') || process.platform); const report = await verifyDesktopCapabilities({platform, installRoot: argument(argv, '--install-root') || undefined});
+    const argv = process.argv.slice(2); const platform = requiredPlatform(argument(argv, '--platform') || process.platform); const report = await verifyDesktopCapabilities({platform, installRoot: argument(argv, '--install-root') || undefined}); await writeReport(argument(argv, '--report-file'), report);
     console.log(JSON.stringify(report, null, 2));
     if (argv.includes('--require-hardware') && report.status !== 'ready') process.exitCode = 2;
     if (argv.includes('--require-virtual-gamepad') && report.virtualGamepad.state !== 'ready') process.exitCode = 3;

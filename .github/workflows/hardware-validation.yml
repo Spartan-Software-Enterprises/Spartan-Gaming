@@ -62,13 +62,13 @@ jobs:
         env:
           TARGET_PLATFORM: ${{ inputs.platform }}
           INSTALL_ROOT: ${{ inputs.install_root }}
-        run: npm run native:verify-desktop -- --platform "$TARGET_PLATFORM" --install-root "$INSTALL_ROOT" --require-hardware --require-input --require-audio --require-haptics
+        run: npm run native:verify-desktop -- --platform "$TARGET_PLATFORM" --install-root "$INSTALL_ROOT" --report-file "$RUNNER_TEMP/spartan-native-$TARGET_PLATFORM.json" --require-hardware --require-input --require-audio --require-haptics
       - name: Exercise Linux uinput and force feedback
         if: ${{ inputs.platform == 'linux' && inputs.verify_linux_device }}
         shell: bash
         env:
           INSTALL_ROOT: ${{ inputs.install_root }}
-        run: npm run native:verify-linux -- --install-root "$INSTALL_ROOT" --execute --rumble
+        run: npm run native:verify-linux -- --install-root "$INSTALL_ROOT" --report-file "$RUNNER_TEMP/spartan-linux-uinput.json" --execute --rumble
       - name: Verify signed virtual-gamepad package
         if: ${{ inputs.verify_virtual_gamepad }}
         shell: bash
@@ -82,4 +82,12 @@ jobs:
           test -n "$VIRTUAL_INSTALL_ROOT"
           test -n "$VIRTUAL_ADAPTER_ID"
           test -f "$PUBLIC_KEY_FILE"
-          npm run native:verify-virtual-gamepad -- --platform "$TARGET_PLATFORM" --install-root "$VIRTUAL_INSTALL_ROOT" --adapter-id "$VIRTUAL_ADAPTER_ID" --public-key-file "$PUBLIC_KEY_FILE"
+          npm run native:verify-virtual-gamepad -- --platform "$TARGET_PLATFORM" --install-root "$VIRTUAL_INSTALL_ROOT" --adapter-id "$VIRTUAL_ADAPTER_ID" --public-key-file "$PUBLIC_KEY_FILE" --report-file "$RUNNER_TEMP/spartan-virtual-gamepad-$TARGET_PLATFORM.json"
+      - name: Retain capability reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: spartan-hardware-validation-${{ inputs.platform }}
+          path: ${{ runner.temp }}/spartan-*.json
+          if-no-files-found: ignore
+          retention-days: 14

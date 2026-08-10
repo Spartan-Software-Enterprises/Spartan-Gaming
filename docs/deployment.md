@@ -256,6 +256,10 @@ verify a separately installed signed virtual-gamepad package using a
 runner-local public-key file. The workflow is intentionally manual and fails
 closed; a passing package contract or hosted CI runner does not substitute for
 connecting the target controller, audio device, and display hardware.
+Each run retains short-lived capability reports as a GitHub artifact. The
+reports contain normalized readiness states and package paths, not controller
+input, credentials, private keys, or adapter contents; treat them as operator
+evidence for the corresponding platform run.
 
 For a separately installed Windows or macOS virtual-gamepad adapter, verify
 the signed package before enabling it in the host configuration:
