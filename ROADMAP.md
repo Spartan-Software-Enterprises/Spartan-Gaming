@@ -66,7 +66,7 @@
 
 ## Milestone 3: self-hosted stack
 
-- [ ] Windows and Linux host agent (native composition boundary, optional runtime package discovery, guarded input execution, package capture/audio lifecycles, and package-backed Werift assembly implemented; production signaling, credentials, and deployment remain pending).
+- [ ] Windows and Linux host agent (native composition boundary, optional runtime package discovery, guarded input execution, package capture/audio lifecycles, and package-backed Werift assembly implemented; Redis-backed signaling, ephemeral TURN credentials, secret-file validation, and a hardened production Compose baseline are implemented; operator-managed TLS/certificate rotation, TURN relay operations, host deployment, and native package rollout remain pending).
 - [x] Secure device pairing UX and frontend contract (agent/signaling implementation pending).
 - [x] Dependency-free reference host control plane (media and OS adapters pending).
 - [x] Shell-free managed process lifecycle with bounded output and pipeline rollback.
