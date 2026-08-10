@@ -3,9 +3,10 @@ import test from 'node:test';
 import {applyElectronPrivacyHeaders, isThirdPartyRequest, normalizeElectronRuntimePolicy} from './runtime-policy.mjs';
 
 test('Electron runtime policy defaults to throttling and accepts the explicit performance setting', () => {
-  assert.deepEqual(normalizeElectronRuntimePolicy(), {backgroundThrottling: true, doNotTrack: false, blockThirdPartyCookies: false});
-  assert.deepEqual(normalizeElectronRuntimePolicy({backgroundThrottling: false, doNotTrack: true, blockThirdPartyCookies: true}), {backgroundThrottling: false, doNotTrack: true, blockThirdPartyCookies: true});
-  assert.deepEqual(normalizeElectronRuntimePolicy({backgroundThrottling: 'false', doNotTrack: 'true'}), {backgroundThrottling: true, doNotTrack: false, blockThirdPartyCookies: false});
+  assert.deepEqual(normalizeElectronRuntimePolicy(), {backgroundThrottling: true, powerMode: 'Balanced', doNotTrack: false, blockThirdPartyCookies: false});
+  assert.deepEqual(normalizeElectronRuntimePolicy({backgroundThrottling: false, powerMode: 'Performance', doNotTrack: true, blockThirdPartyCookies: true}), {backgroundThrottling: false, powerMode: 'Performance', doNotTrack: true, blockThirdPartyCookies: true});
+  assert.deepEqual(normalizeElectronRuntimePolicy({backgroundThrottling: false, powerMode: 'Battery saver'}), {backgroundThrottling: true, powerMode: 'Battery saver', doNotTrack: false, blockThirdPartyCookies: false});
+  assert.deepEqual(normalizeElectronRuntimePolicy({backgroundThrottling: 'false', powerMode: 'unsupported', doNotTrack: 'true'}), {backgroundThrottling: true, powerMode: 'Balanced', doNotTrack: false, blockThirdPartyCookies: false});
 });
 
 test('Electron privacy headers add DNT and strip cookies only for cross-origin requests', () => {

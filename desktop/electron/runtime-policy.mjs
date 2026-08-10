@@ -2,7 +2,8 @@ function origin(value) { try { return new URL(String(value)).origin; } catch { r
 
 /** Normalize settings that can be applied to the Electron renderer at runtime. */
 export function normalizeElectronRuntimePolicy(settings = {}) {
-  return Object.freeze({backgroundThrottling: settings?.backgroundThrottling !== false, doNotTrack: settings?.doNotTrack === true, blockThirdPartyCookies: settings?.blockThirdPartyCookies === true});
+  const powerMode = ['Balanced', 'Performance', 'Battery saver'].includes(settings?.powerMode) ? settings.powerMode : 'Balanced';
+  return Object.freeze({backgroundThrottling: settings?.backgroundThrottling !== false || powerMode === 'Battery saver', powerMode, doNotTrack: settings?.doNotTrack === true, blockThirdPartyCookies: settings?.blockThirdPartyCookies === true});
 }
 
 export function isThirdPartyRequest({url, initiator} = {}) {
