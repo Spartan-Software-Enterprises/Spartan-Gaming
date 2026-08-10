@@ -58,6 +58,23 @@ secrets, TLS private keys, provider credentials, and AWS access keys. Use the
 host's existing secret paths/environment configuration; do not print or commit
 their values.
 
+### Noninteractive authorized connection
+
+Agents on the authorized development device may connect without asking the
+operator for input. The key is already provisioned at the protected local path;
+resolve the current ephemeral address from the AWS instance inventory, then
+use batch SSH so the command fails clearly instead of prompting:
+
+    instance_id='i-0d3d5c3c1724d02f4'
+    region='us-east-1'
+    ssh_key='/data/data/com.termux/files/home/.ssh/spartan-dev'
+    public_ip="$(aws ec2 describe-instances --region "$region" --instance-ids "$instance_id" --query 'Reservations[0].Instances[0].PublicIpAddress' --output text)"
+    ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -i "$ssh_key" "ec2-user@$public_ip" 'cd ~/Spartan-Gaming'
+
+If AWS lookup is unavailable, use the current address from the protected
+runbook/configuration. Never replace this with a password prompt or commit the
+private key itself.
+
 Remote tooling includes Git, Rust/Cargo, GCC, CMake, Node.js/npm, Python,
 Docker, Playwright 1.55.0, Chromium headless, and the Linux packages required
 by Chromium. Existing development services are Redis, signaling, and TURN.
