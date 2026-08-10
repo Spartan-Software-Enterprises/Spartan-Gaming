@@ -53,6 +53,8 @@ required_files=(
   scripts/frontend/build.test.mjs
   scripts/lan-demo.mjs
   scripts/lan-demo.test.mjs
+  scripts/native/verify-release.mjs
+  scripts/native/verify-release.test.mjs
   scripts/chromium/check-environment.mjs
   scripts/chromium/bootstrap.mjs
   scripts/chromium/bootstrap.test.mjs
@@ -395,6 +397,7 @@ node --check host/native-package.mjs
 node --check scripts/frontend/serve.mjs
 node --check scripts/frontend/build.mjs
 node --check scripts/lan-demo.mjs
+node --check scripts/native/verify-release.mjs
 node --check host/executable-platform-host.mjs
 node --check host/adapter-runtime.mjs
 node --check release/package-signing-service.mjs
