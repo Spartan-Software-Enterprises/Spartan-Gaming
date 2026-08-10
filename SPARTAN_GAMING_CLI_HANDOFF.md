@@ -83,13 +83,14 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- `npm run check`: 421 tests passed, 0 failed locally after the Proton/SteamOS
-  increment; the AWS server previously passed 420 tests on the tray baseline
-  and must be synchronized and rerun for the new commit.
+- `npm run check`: 421 tests passed, 0 failed locally and on the AWS dev server
+  for the Proton/SteamOS commit `56558f8`.
 - `npm test`: 616 tests, 612 passed, 0 failed, and 4 skipped locally after
   `fc12cd0`; the AWS run also completed with 616 tests, 614 passed, 0 failed,
   and 2 skipped. The difference is environment-gated integration coverage,
   not a failure.
+- On `56558f8`, the AWS full suite completed with 48 pretest cases (47 passed,
+  1 skipped) and 617 main-suite tests (615 passed, 0 failed, 2 skipped).
 - PWA install tests: 2 passed locally; the AWS focused distribution/server/
   install run passed 7 tests.
 - The latest PWA distribution tests also verify the SVG app mark, manifest
