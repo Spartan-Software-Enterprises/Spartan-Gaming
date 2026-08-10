@@ -197,6 +197,15 @@ and retains it as a short-lived GitHub artifact. The report records only the
 rollout status, whether the TURN profile was selected, and normalized service
 health statuses; it does not include environment values, endpoint bodies,
 tokens, or certificate material.
+
+After collecting the production report, one native exercise report from each
+Windows, macOS, and Linux runner, the two desktop virtual-gamepad exercise
+reports, and the three signed-package verification reports, run
+`npm run roadmap:acceptance` with repeated `--hardware-report`,
+`--virtual-gamepad-report`, and `--signed-package-report` options. The command
+produces a bounded acceptance ledger and exits non-zero until every external
+gate is represented by verified evidence. It never treats hosted contract CI,
+an unsigned package, or a configuration-only report as completion.
 The workflow requires a ready broker health signal by default; this proves the
 running signaling service can reach its configured Redis/production broker,
 not merely that a Redis URL exists in an environment file. Operators using a

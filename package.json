@@ -35,6 +35,7 @@
     "native:release-manifest": "node scripts/native/release-manifest.mjs",
     "native:sign-release": "node scripts/native/sign-release.mjs",
     "native:verify-release": "node scripts/native/verify-release.mjs",
+    "roadmap:acceptance": "node scripts/roadmap/acceptance.mjs",
     "host": "node host/agent.mjs",
     "signaling": "node signaling/agent.mjs",
     "deployment:check": "node scripts/validate-production-config.mjs",
