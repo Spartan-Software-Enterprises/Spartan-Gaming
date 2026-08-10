@@ -1,4 +1,7 @@
-const PROFILES = new Set(['Auto-detect', 'Xbox layout', 'Xbox Elite / Elite 2', 'Xbox Adaptive Controller', 'PlayStation layout', 'DualSense / DualShock', 'DualSense Edge', 'PlayStation Portal', 'Nintendo layout', 'Joy-Con pair', 'Switch Pro Controller', 'Nintendo Wii U Pro Controller', 'Steam Deck', 'Steam Controller', 'Stadia controller', '8BitDo / XInput', 'Backbone / Razer Kishi', 'Arcade stick', 'Racing wheel and pedals', 'Logitech racing wheel', 'Thrustmaster racing wheel', 'Flight stick and throttle', 'HOTAS flight stick', 'Generic HID controller', 'Keyboard and mouse']);
+import {BUILTIN_CONTROLLER_PROFILES} from './profiles.mjs';
+
+export const CONTROLLER_PROFILE_OPTIONS = Object.freeze(['Auto-detect', ...BUILTIN_CONTROLLER_PROFILES.map(profile => profile.name)]);
+const PROFILES = new Set(CONTROLLER_PROFILE_OPTIONS);
 const INPUT_MODES = new Set(['Auto-detect', 'XInput', 'DirectInput', 'Standard Gamepad', 'HID passthrough']);
 const VIRTUAL_GAMEPAD_BACKENDS = new Set(['Automatic', 'Browser Gamepad', 'Linux uinput', 'Windows external driver', 'macOS external driver', 'Disabled']);
 const HAPTICS = new Set(['Automatic', 'Browser vibration', 'Native rumble', 'Disabled']);

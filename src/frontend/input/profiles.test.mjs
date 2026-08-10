@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {BUILTIN_CONTROLLER_PROFILES, createControllerProfile, createControllerProfileStore, resolveControllerProfile, updateControllerBinding, validateBindings} from './profiles.mjs';
+import {CONTROLLER_PROFILE_OPTIONS} from './controller-policy.mjs';
 
 test('built-in profiles cover common controller families and are immutable', () => { assert.equal(BUILTIN_CONTROLLER_PROFILES.length, 24); assert.ok(BUILTIN_CONTROLLER_PROFILES.some(profile => profile.id === 'xbox-elite-layout')); assert.ok(BUILTIN_CONTROLLER_PROFILES.some(profile => profile.id === 'xbox-adaptive-layout')); assert.ok(BUILTIN_CONTROLLER_PROFILES.some(profile => profile.id === 'dualsense-edge-layout')); assert.ok(BUILTIN_CONTROLLER_PROFILES.some(profile => profile.id === 'playstation-portal-layout')); assert.ok(BUILTIN_CONTROLLER_PROFILES.some(profile => profile.id === 'joy-con-layout')); assert.ok(BUILTIN_CONTROLLER_PROFILES.some(profile => profile.id === 'wii-u-pro-layout')); assert.ok(BUILTIN_CONTROLLER_PROFILES.some(profile => profile.id === 'steam-controller-layout')); assert.ok(BUILTIN_CONTROLLER_PROFILES.some(profile => profile.id === 'logitech-wheel-layout')); assert.ok(BUILTIN_CONTROLLER_PROFILES.some(profile => profile.id === 'thrustmaster-wheel-layout')); assert.ok(BUILTIN_CONTROLLER_PROFILES.some(profile => profile.id === 'hotas-layout')); assert.equal(Object.isFrozen(BUILTIN_CONTROLLER_PROFILES[0]), true); });
 test('variant profiles preserve unique extra controls', () => { const elite = BUILTIN_CONTROLLER_PROFILES.find(profile => profile.id === 'xbox-elite-layout'); const edge = BUILTIN_CONTROLLER_PROFILES.find(profile => profile.id === 'dualsense-edge-layout'); assert.equal(elite.bindings.leftPaddle2, 'button-13'); assert.equal(edge.bindings.rightPaddle, 'button-16'); assert.equal(new Set(Object.values(elite.bindings)).size, Object.keys(elite.bindings).length); });
@@ -21,3 +22,4 @@ test('automatic profile selection recognizes adaptive, handheld, wheel, and HOTA
   assert.equal(resolveControllerProfile({profileId: 'auto', deviceName: 'Logitech G923'}).id, 'logitech-wheel-layout');
   assert.equal(resolveControllerProfile({profileId: 'auto', deviceName: 'VKB Gladiator HOTAS'}).id, 'hotas-layout');
 });
+test('shared controller profile options exactly cover built-in profiles', () => { assert.deepEqual(CONTROLLER_PROFILE_OPTIONS, ['Auto-detect', ...BUILTIN_CONTROLLER_PROFILES.map(profile => profile.name)]); });
