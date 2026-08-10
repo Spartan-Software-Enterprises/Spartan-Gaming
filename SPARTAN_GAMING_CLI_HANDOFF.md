@@ -153,6 +153,15 @@ review; stay within the AWS credit limit.
 - The latest handoff commit `c624499` passed Android debug `31442696576`,
   cross-platform contracts `31442696525`, frontend distribution `31442696524`,
   and repository checks `31442696523`.
+- The latest handoff commit `318903a` passed Android debug `31442847621`,
+  cross-platform contracts `31442847662`, frontend distribution `31442847637`,
+  and repository checks `31442847610`.
+- Local verification on 2026-08-10 passed repository checks `431/431`, Android
+  shell checks `5/5`, and the isolated Werift H.264/Opus loopback test. The
+  broader `npm test` pretest currently has a Termux/ARM timing-sensitive
+  failure in that same loopback test (`timed out waiting for client media
+  packets`); the test passes when isolated and was not weakened. This remains
+  an open local verification issue, while the corresponding CI matrix is green.
 - The AWS full suite on `01ced66` passed 632 of 634 tests with 2 environment-
   gated skips and 0 failures; repository checks passed 431/431.
 - AWS Playwright 1.55.0 completed 22/22 navigations across 11 maintained
