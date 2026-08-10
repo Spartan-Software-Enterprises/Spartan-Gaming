@@ -83,7 +83,7 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- The published code state is `add5595` on `main`; local and AWS worktrees are
+- The published code state is `9d09590` on `main`; local and AWS worktrees are
   clean and synchronized with `origin/main`.
 - `npm run check`: repository checks pass on the current code state locally
   and on the AWS dev server.
@@ -122,13 +122,13 @@ review; stay within the AWS credit limit.
 
 ## Current change
 
-The current player increment adds a capability-safe Screen Wake Lock
-controller. It starts only for connected/reconnecting sessions when the
-existing mobile keep-awake setting is enabled, reacquires after visibility
-recovery, and releases on session end/pagehide. Unsupported or denied browser
-implementations fail closed. Regression coverage is in
-`src/frontend/player/wake-lock.test.mjs`; the local validation register now
-records the required physical-device and WebView checks.
+The current Android bridge increment binds native result delivery to the
+request/action pairs issued by each bridge instance. Unsolicited, stale, or
+wrong-action `spartan:android-result` events are ignored; matching results are
+delivered once and removed from the in-flight set. Focused Android/settings
+validation passed 12/12 locally, while the full local suite passed 634 tests
+with 630 passed, 4 skipped, and 0 failed; the AWS suite passed 634 tests with
+632 passed, 2 skipped, and 0 failed. The change is published at `9d09590`.
 
 The latest Electron increment completes the background-app workflow: enabling
 `general.backgroundApps` now creates a native tray entry with restore and quit
@@ -187,8 +187,7 @@ or text input. The bridge fails closed for missing, oversized, malformed, or
 unknown actions or non-object payloads and never exposes raw Android objects or
 arbitrary command/URL execution. The bridge also forwards only positive,
 allow-listed GameNative app IDs and store names to the native handoff. Focused
-bridge/runtime validation passed 16/16, and the full local suite passed 634
-tests with 632 passed, 2 skipped, and 0 failed. Requests carry correlation IDs;
+bridge/runtime validation passed 16/16. Requests carry correlation IDs;
 native GameNative payloads are revalidated before the Activity handler, and an
 optional native `ResultSink` can dispatch validated
 `spartan:android-result` events. Android SDK
