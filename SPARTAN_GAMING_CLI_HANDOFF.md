@@ -177,7 +177,8 @@ text-entry suite passed 3/3 locally; rerun it with the full repository suite
 before publishing the next handoff.
 
 The repository-owned `scripts/playwright/smoke.mjs` runner now makes the browser
-matrix reproducible with an externally installed Playwright module. The remote
+matrix reproducible with an externally installed Playwright module; invoke it
+directly when a pure JSON report is required. The remote
 Playwright pass initially exposed dashboard horizontal overflow at
 the 390x844 mobile viewport. Commit `40f9f65` wraps the dynamically added
 console-mode and workspace controls on small screens. Playwright 1.55.0 then

@@ -74,8 +74,8 @@ package signing.
 
 The latest remote Chromium/Playwright pass used Playwright 1.55.0 and headless
 Chromium on commit `40f9f65`, using the repository-owned
-`npm run playwright:smoke` runner with `SPARTAN_PLAYWRIGHT_MODULE` pointed at
-the temporary AWS installation. It covered 11 maintained routes at 1280x800 and
+`scripts/playwright/smoke.mjs` with `SPARTAN_PLAYWRIGHT_MODULE` pointed at the
+temporary AWS installation. It covered 11 maintained routes at 1280x800 and
 390x844, including dashboard, settings, player, diagnostics, adapters,
 emulation, host, workspaces, providers, and both controller tools. All 22
 navigations returned 200 with meaningful bodies, dashboard search and settings
