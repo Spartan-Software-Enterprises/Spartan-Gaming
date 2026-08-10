@@ -44,6 +44,7 @@ behavior must be exercised on the target device or operating system.
 | Electron fullscreen, quit guard, background behavior, power mode, and privacy controls | Contract-tested | Verify native window behavior, suspend/resume, GPU use, permissions, and shutdown on Windows/macOS/Linux |
 | Hardware display capture and system/microphone audio | Linux wrapper verified | Verify OS permission prompts, physical displays, audio devices, source selection, and teardown on every desktop OS |
 | WebGPU, hardware decode, AV1, HDR, high refresh, multi-display, and display targeting | Browser capability/policy contracts | Test real GPUs, monitors, HDR modes, refresh rates, fullscreen targets, and power/thermal behavior |
+| PWA install surface, launch display fallbacks, launcher shortcuts, and offline shell caching | Manifest and service-worker contracts tested; manifest is explicitly precached | Install from supported desktop/mobile browsers and verify icons, shortcut launch targets, display-mode fallbacks, update recovery, and offline startup |
 | Universal controller profiles, HID, rumble, gyro, touchpad, adaptive triggers, wheels, HOTAS, and multiple players | Shared normalization and negotiation tested | Exercise the controller bench and native driver paths with real devices |
 | Windows/macOS virtual gamepad injection | Package boundary tested only | Install, verify, exercise, uninstall, and recover the signed target driver |
 | Android touch layout, lifecycle, orientation, PiP, edge-to-edge, Game Mode, large-screen and foldable behavior | Shared Android policy tested | Build/install APKs and test phones, tablets, foldables, permissions, rotation, PiP, and resume flows |
@@ -62,6 +63,8 @@ security requirements for context isolation, sandboxing, permission handlers,
 restricted navigation, and current Electron releases.
 
 Research references: [Electron security](https://www.electronjs.org/docs/latest/tutorial/security),
+[PWA display modes](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/display_override),
+[PWA shortcuts](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/shortcuts),
 [Android PiP](https://developer.android.com/develop/ui/views/picture-in-picture),
 [Android large-screen quality](https://developer.android.com/docs/quality-guidelines/archive/adaptive/large-screen-app-quality),
 [Fire TV remote input](https://developer.amazon.com/docs/fire-tv/remote-input.html), and
