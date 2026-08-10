@@ -165,6 +165,14 @@ Linux, Proton, Steam-owned, and non-Steam choices, including bounded Steam app
 IDs and explicit `official-handoff-required`/`bridge-required` states. It does
 not execute Steam client control or claim real handoff readiness.
 
+The current session increment adds a shared power-aware quality policy. Explicit
+Battery saver mode, injected bounded battery telemetry, and charging state now
+produce consistent quality-profile and capability ceilings, including a
+960×540 emergency mode at critically low battery. Missing battery APIs fail
+closed to a normal policy; physical suspend, thermal, battery, and SteamOS power
+behavior remain unverified lab gates. Focused session/power validation passed
+59/59 locally.
+
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
 `scripts/frontend/serve.test.mjs`. Before pushing future work, run

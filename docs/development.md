@@ -231,3 +231,4 @@ These entries are validated like other public catalog records, require HTTPS,
 and resolve to an external browser launch plan. The frontend stores only the
 entry metadata and launch history; it does not download, proxy, redistribute,
 or inject scripts into third-party game content.
+Power-aware session ceilings are normalized in `src/frontend/session/power-policy.mjs` and applied before quality profiles and capabilities are advertised. Explicit Battery saver mode caps sessions at 1280×720/30 FPS/6 Mbps; uncharged devices at 20% or below receive the same cap, and devices at 10% or below receive a 960×540/30 FPS/3 Mbps emergency cap. Missing battery APIs are treated as normal power state, and charging suppresses automatic low-battery caps. This is a policy contract, not proof of platform battery behavior; physical SteamOS, Android, and Electron suspend/thermal validation remains a local-lab gate.
