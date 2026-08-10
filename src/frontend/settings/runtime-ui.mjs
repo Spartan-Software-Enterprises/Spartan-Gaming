@@ -22,6 +22,7 @@ export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
   const remoteNavigationIntervalMs = TV_NAVIGATION_INTERVALS[remoteNavigationSpeed] || TV_NAVIGATION_INTERVALS.Automatic;
   const remoteDeadzone = Math.max(0.15, Math.min(0.6, (Number(settings['television.remoteDeadzone']) || 35) / 100));
   const safeArea = Math.max(0, Math.min(10, Number(settings['television.safeArea']) || 0));
+  const autoHideTelevisionChrome = settings['television.autoHideChrome'] !== false;
   return Object.freeze({
     accent,
     theme,
@@ -49,7 +50,7 @@ export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
     screenReaderHints: settings['accessibility.screenReaderHints'] === true,
     colorVision: typeof settings['accessibility.colorVision'] === 'string' ? settings['accessibility.colorVision'] : 'None',
     showOverlay: settings['gaming.showOverlay'] !== false,
-    hideBrowserChrome: settings['gaming.hideBrowserChrome'] !== false,
+    hideBrowserChrome: settings['gaming.hideBrowserChrome'] !== false || (presentation.mode === 'television' && autoHideTelevisionChrome),
     overlayPosition: settings['gaming.overlayPosition'] || 'Top right',
     overlayOpacity: Number.isFinite(opacity) ? Math.max(20, Math.min(100, opacity)) : 92,
     television: Object.freeze({
@@ -59,7 +60,7 @@ export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
       focusWrap: settings['television.focusWrap'] !== false,
       showPointer: settings['television.showPointer'] === true,
       safeArea,
-      autoHideChrome: settings['television.autoHideChrome'] !== false,
+      autoHideChrome: autoHideTelevisionChrome,
     }),
   });
 }
@@ -97,6 +98,7 @@ html[data-spartan-navigation="remote-controller"] :focus-visible{outline-width:4
 html[data-spartan-device-mode="television"] .content,html[data-spartan-device-mode="television"] .main{max-width:1440px;padding-left:6vw;padding-right:6vw}
 html[data-spartan-device-mode="television"] .cards{grid-template-columns:repeat(4,minmax(0,1fr))}
 html[data-spartan-device-mode="television"] .hero h2{font-size:clamp(36px,4vw,58px)}
+html[data-spartan-device-mode="television"][data-spartan-tv-auto-hide-chrome] .player-topbar{display:none!important}
 html[data-spartan-device-mode="television"]{--spartan-tv-safe-area:5%}
 html[data-spartan-device-mode="television"] .content,html[data-spartan-device-mode="television"] .main{padding-left:var(--spartan-tv-safe-area);padding-right:var(--spartan-tv-safe-area)}
 html[data-spartan-device-mode="television"][data-spartan-tv-pointer="hidden"]{cursor:none}
@@ -121,6 +123,7 @@ export function applyRuntimeUiSettings(documentRef, settings = {}, {navigation =
   root.dataset.spartanEnginePolicy = resolved.enginePolicy;
   root.dataset.spartanColorVision = resolved.colorVision;
   root.dataset.spartanTvPointer = resolved.television.showPointer ? 'visible' : 'hidden';
+  if (resolved.television.autoHideChrome) root.dataset.spartanTvAutoHideChrome = ''; else delete root.dataset.spartanTvAutoHideChrome;
   root.style.setProperty('--spartan-tv-safe-area', `${resolved.television.safeArea}%`);
   if (resolved.screenReaderHints) root.dataset.spartanScreenReaderHints = ''; else delete root.dataset.spartanScreenReaderHints;
   root.dataset.spartanOverlay = resolved.showOverlay ? 'visible' : 'hidden';

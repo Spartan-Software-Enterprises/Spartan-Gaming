@@ -66,6 +66,10 @@ test('television settings configure safe area, pointer visibility, and navigatio
   assert.equal(root.dataset.spartanPlatform, 'roku');
   assert.equal(root.dataset.spartanTvPointer, 'visible');
   assert.equal(root.style.values.get('--spartan-tv-safe-area'), '8%');
+  assert.equal(root.dataset.spartanTvAutoHideChrome, '');
+  assert.equal(resolved.hideBrowserChrome, true);
+  const disabled = resolveRuntimeUiSettings({...settings, 'television.autoHideChrome': false, 'gaming.hideBrowserChrome': false}, {navigatorRef, viewport: {width: 1920}});
+  assert.equal(disabled.hideBrowserChrome, false);
 });
 
 test('runtime UI settings toggle the player chrome dataset', () => {
