@@ -70,7 +70,7 @@ const virtualGamepadPermission = virtualGamepadPermissionGranted({inputEnabled: 
 const hapticPermission = Boolean(inputEnabled && controllerPolicy.rumble && controllerPolicy.hapticsBackend !== 'Disabled' && environment.inputAdapter.rumble);
 const inputPermissions = {'remote-input': true, 'virtual-gamepad': virtualGamepadPermission, 'haptic-output': hapticPermission};
 const inputExecutor = inputEnabled && hostRuntime.bindings?.input && environment.readiness.osInput ? createNativeInputExecutor({platform: environment.platform, adapter: hostRuntime.bindings.input, permissions: inputPermissions, controllerPolicy}) : null;
-const rumbleBroadcast = inputExecutor ? createRumbleBroadcastController({adapter: inputExecutor.adapter}) : null;
+const rumbleBroadcast = inputExecutor ? createRumbleBroadcastController({adapter: inputExecutor.adapter, controllerPolicy}) : null;
 rumbleBroadcast?.attach();
 const gameLaunchEnabled = args.get('enable-game-launch') === true || args.get('enable-game-launch') === 'true';
 let configuredGameArgs = args.get('game-args-json') ? JSON.parse(String(args.get('game-args-json'))) : (args.get('game-arg') ? [String(args.get('game-arg'))] : []);
