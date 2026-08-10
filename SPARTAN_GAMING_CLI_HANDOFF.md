@@ -159,6 +159,11 @@ review; stay within the AWS credit limit.
 - The latest code commit `1bc3c42` passed Android debug `31443570936`,
   cross-platform contracts `31443570924`, frontend distribution `31443570963`,
   and repository checks `31443570926`.
+- The current Android-hosted Termux probe (`a2378cc`, 2026-08-10) reports
+  `/dev/uinput` unavailable/read-write-unverified; input and force-feedback
+  were therefore not run. This host also has no Docker, Redis, or coturn
+  executable, so it cannot produce production-service or Linux hardware-gate
+  evidence. These results are environment boundaries, not completion claims.
 - Local verification on 2026-08-10 passed repository checks `431/431`, Android
   shell checks `5/5`, and the isolated Werift H.264/Opus loopback test. The
   complete serial suite (`npm run test:serial`) passed `630/634` with 4
