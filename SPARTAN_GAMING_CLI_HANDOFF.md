@@ -136,6 +136,11 @@ review; stay within the AWS credit limit.
 - The latest handoff commit `10d9015` passed Android debug `31441735640`,
   cross-platform contracts `31441735627`, frontend distribution `31441735622`,
   and repository checks `31441735625`.
+- The Android SDK action maintenance commit `38df18b` passed Android debug
+  `31442023475`, cross-platform contracts `31442023495`, frontend distribution
+  `31442023507`, and repository checks `31442023498`. Both Android workflows
+  now use `android-actions/setup-android@v4`, the current Node 24-compatible
+  major, instead of the deprecated v3 action.
 - The AWS full suite on `01ced66` passed 632 of 634 tests with 2 environment-
   gated skips and 0 failures; repository checks passed 431/431.
 - AWS Playwright 1.55.0 completed 22/22 navigations across 11 maintained
