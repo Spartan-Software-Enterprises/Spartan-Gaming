@@ -83,16 +83,20 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- The published code state is `01ced66` on `main`; local and AWS worktrees are
-  clean and synchronized with `origin/main`.
+- The published code state is `1efa4da` on `main`; the local worktree is clean.
+  AWS was synchronized to `1efa4da` before the bounded release-signing probe;
+  its SSH service became temporarily unresponsive under the small-host Gradle
+  workload and the current remote state must be rechecked before claiming
+  synchronization.
 - `npm run check`: repository checks pass on the current code state locally
   and on the AWS dev server.
 - `npm test`: the current local run completed with 634 tests, 630 passed,
   4 skipped, and 0 failed. The AWS run completed with 634 tests, 632 passed,
   2 skipped, and 0 failed; the difference is environment-gated integration
   coverage, not a failure.
-- The Android shell contract passed 3/3 locally and on AWS. AWS now has Java
-  17, Gradle 8.11.1, and Android API 35/build-tools 35.0.0; the debug APK build
+- The Android shell contract passed 4/4 locally and 3/3 on the last AWS run.
+  AWS now has Java 17, Gradle 8.11.1, and Android API 35/build-tools 35.0.0;
+  the debug APK build
   passed at `01ced66` with `ANDROID_HOME=$HOME/.local/android-sdk` and produced
   a 1,628,083-byte APK with SHA-256
   `386b910893b8a2ab884d2ea7f17f7869910e00d60da49020cfbce5b93d3024ab`.
@@ -102,6 +106,12 @@ review; stay within the AWS credit limit.
   Release signing, permissions, WebView lifecycle, and physical device
   behavior remain open lab gates; Termux host checks run locally, but `adb`
   reports no separately authorized target device.
+- Android release signing is now an environment-only Gradle boundary that
+  rejects missing or partial operator values and never stores credentials in
+  source. The full local suite passed 634 tests with 630 passed, 4 skipped, and
+  0 failed after this change. AWS release-signing verification was attempted
+  with a temporary non-production keystore but was interrupted after the
+  instance became unresponsive; no production signature is claimed.
 - The AWS full suite on `01ced66` passed 632 of 634 tests with 2 environment-
   gated skips and 0 failures; repository checks passed 431/431.
 - AWS Playwright 1.55.0 completed 22/22 navigations across 11 maintained
@@ -142,6 +152,15 @@ delivered once and removed from the in-flight set. Focused Android/settings
 validation passed 12/12 locally, while the full local suite passed 634 tests
 with 630 passed, 4 skipped, and 0 failed; the AWS suite passed 634 tests with
 632 passed, 2 skipped, and 0 failed. The change is published at `9d09590`.
+
+The latest Android signing increment adds an environment-only `operatorRelease`
+Gradle signing configuration and a deferred `assembleRelease` guard. All four
+keystore, alias, and password values are required together; partial
+configuration fails during Gradle configuration and missing values fail at the
+release task. The Android shell contract is 4/4 locally at `1efa4da`. AWS
+debug and full-suite results remain valid from the preceding synchronized
+commit, while temporary release-signing verification needs a recovered AWS
+host rerun.
 
 The current Android application-shell increment adds `android/app/`, a
 Gradle/Kotlin WebView host that packages the shared frontend through
