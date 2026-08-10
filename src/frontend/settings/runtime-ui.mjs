@@ -5,6 +5,7 @@ import {syncRuntimeControllerNavigation} from '../input/navigation.mjs';
 const ACCENTS = Object.freeze({Cyan: '#50e1d1', Violet: '#9a84ff', Lime: '#b8ef65', Amber: '#f5c563', Red: '#ff8f9c'});
 const THEMES = Object.freeze({'Spartan Dark': 'dark', 'Spartan Light': 'light', System: 'system', 'OLED Black': 'oled'});
 const DENSITIES = Object.freeze({Comfortable: 'comfortable', Compact: 'compact', 'Controller-first': 'controller'});
+const TAB_LAYOUTS = Object.freeze({'Top tabs': 'top', 'Vertical tabs': 'vertical', 'Compact tabs': 'compact', 'Hidden in gaming mode': 'hidden-gaming'});
 
 export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
   const accent = ACCENTS[settings['appearance.accent']] || ACCENTS.Cyan;
@@ -19,6 +20,9 @@ export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
     accent,
     theme,
     density,
+    tabLayout: TAB_LAYOUTS[settings['appearance.tabLayout']] || 'top',
+    translucentChrome: settings['appearance.translucentChrome'] !== false,
+    showStatusBar: settings['appearance.showStatusBar'] === true,
     uiScale: Math.max(80, Math.min(140, Number(settings['appearance.uiScale']) || 100)),
     deviceMode: presentation.mode,
     navigation: presentation.navigation,
@@ -35,6 +39,7 @@ export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
     highContrast: settings['accessibility.highContrast'] === true,
     largeText: settings['accessibility.largeText'] === true,
     focusRing: settings['accessibility.focusRing'] !== false,
+    screenReaderHints: settings['accessibility.screenReaderHints'] === true,
     colorVision: typeof settings['accessibility.colorVision'] === 'string' ? settings['accessibility.colorVision'] : 'None',
     showOverlay: settings['gaming.showOverlay'] !== false,
     overlayPosition: settings['gaming.overlayPosition'] || 'Top right',
@@ -62,6 +67,12 @@ html[data-spartan-overlay-position="Bottom left"] .overlay-top{right:auto;top:au
 html[data-spartan-overlay-position="Bottom right"] .overlay-top{left:auto;top:auto;bottom:22px}
 html[data-spartan-density="compact"] .card,html[data-spartan-density="compact"] .panel,html[data-spartan-density="compact"] .setting-row{padding-top:12px;padding-bottom:12px}
 html[data-spartan-density="controller"] button,html[data-spartan-density="controller"] select,html[data-spartan-density="controller"] input{min-height:44px}
+html[data-spartan-tab-layout="vertical"] .sidebar{width:270px}
+html[data-spartan-tab-layout="compact"] .sidebar{width:190px;padding-left:12px;padding-right:12px}
+html[data-spartan-tab-layout="compact"] .main-nav{gap:3px;margin-top:38px}
+html[data-spartan-tab-layout="compact"] .nav-item{padding-top:8px;padding-bottom:8px;font-size:12px}
+html[data-spartan-status-bar="hidden"] .status-pill,html[data-spartan-status-bar="hidden"] .session-label{display:none!important}
+html[data-spartan-translucent-chrome] .sidebar,html[data-spartan-translucent-chrome] .topbar,html[data-spartan-translucent-chrome] .player-topbar{background:color-mix(in srgb,var(--panel,#171e26) 78%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 html[data-spartan-navigation="remote-controller"] button,html[data-spartan-navigation="remote-controller"] select,html[data-spartan-navigation="remote-controller"] input{min-height:52px;font-size:1.08em}
 html[data-spartan-navigation="remote-controller"] :focus-visible{outline-width:4px;outline-offset:5px}
 html[data-spartan-device-mode="television"] .content,html[data-spartan-device-mode="television"] .main{max-width:1440px;padding-left:6vw;padding-right:6vw}
@@ -77,11 +88,15 @@ export function applyRuntimeUiSettings(documentRef, settings = {}) {
   const root = documentRef.documentElement;
   root.dataset.spartanTheme = resolved.theme;
   root.dataset.spartanDensity = resolved.density;
+  root.dataset.spartanTabLayout = resolved.tabLayout;
+  root.dataset.spartanStatusBar = resolved.showStatusBar ? 'visible' : 'hidden';
+  if (resolved.translucentChrome) root.dataset.spartanTranslucentChrome = ''; else delete root.dataset.spartanTranslucentChrome;
   root.dataset.spartanDeviceMode = resolved.deviceMode;
   root.dataset.spartanNavigation = resolved.navigation;
   root.dataset.spartanPlatform = resolved.platform;
   root.dataset.spartanEnginePolicy = resolved.enginePolicy;
   root.dataset.spartanColorVision = resolved.colorVision;
+  if (resolved.screenReaderHints) root.dataset.spartanScreenReaderHints = ''; else delete root.dataset.spartanScreenReaderHints;
   root.dataset.spartanOverlay = resolved.showOverlay ? 'visible' : 'hidden';
   root.dataset.spartanOverlayPosition = resolved.overlayPosition;
   if (resolved.reduceMotion) root.dataset.spartanReduceMotion = ''; else delete root.dataset.spartanReduceMotion;
