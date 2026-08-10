@@ -1,9 +1,18 @@
 function origin(value) { try { return new URL(String(value)).origin; } catch { return ''; } }
+const PERMISSION_PROMPT_MODES = Object.freeze(['Ask every time', 'Ask per site', 'Block by default']);
 
 /** Normalize settings that can be applied to the Electron renderer at runtime. */
 export function normalizeElectronRuntimePolicy(settings = {}) {
   const powerMode = ['Balanced', 'Performance', 'Battery saver'].includes(settings?.powerMode) ? settings.powerMode : 'Balanced';
-  return Object.freeze({backgroundThrottling: settings?.backgroundThrottling !== false || powerMode === 'Battery saver', powerMode, doNotTrack: settings?.doNotTrack === true, blockThirdPartyCookies: settings?.blockThirdPartyCookies === true});
+  const permissionPrompts = PERMISSION_PROMPT_MODES.includes(settings?.permissionPrompts) ? settings.permissionPrompts : 'Ask per site';
+  return Object.freeze({backgroundThrottling: settings?.backgroundThrottling !== false || powerMode === 'Battery saver', powerMode, doNotTrack: settings?.doNotTrack === true, blockThirdPartyCookies: settings?.blockThirdPartyCookies === true, permissionPrompts});
+}
+
+/** Return a stored permission decision, or null when the UI must ask the user. */
+export function resolvePermissionDecision(policy = normalizeElectronRuntimePolicy(), {storedDecision} = {}) {
+  if (policy.permissionPrompts === 'Block by default') return false;
+  if (policy.permissionPrompts === 'Ask per site' && typeof storedDecision === 'boolean') return storedDecision;
+  return null;
 }
 
 export function isThirdPartyRequest({url, initiator} = {}) {

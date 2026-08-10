@@ -3,7 +3,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createFrontendServer} from '../../scripts/frontend/serve.mjs';
 import {isAllowedExternalUrl, isAllowedNavigation, isAllowedProviderUrl} from './security.mjs';
-import {applyElectronPrivacyHeaders, normalizeElectronRuntimePolicy} from './runtime-policy.mjs';
+import {applyElectronPrivacyHeaders, normalizeElectronRuntimePolicy, resolvePermissionDecision} from './runtime-policy.mjs';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 let frontend;
@@ -13,12 +13,25 @@ let quitGuardEnabled = true;
 let sessionActive = false;
 let quitting = false;
 let runtimePolicy = normalizeElectronRuntimePolicy();
-let privacySession;
+const privacySessions = new WeakSet();
+const permissionDecisions = new Map();
 
 function installPrivacyPolicy(session) {
-  if (privacySession === session) return;
-  privacySession = session;
+  if (!session || privacySessions.has(session)) return;
+  privacySessions.add(session);
   session.webRequest.onBeforeSendHeaders((details, callback) => callback({requestHeaders: applyElectronPrivacyHeaders(details.requestHeaders, details, runtimePolicy)}));
+  session.setPermissionRequestHandler((webContents, permission, callback, details = {}) => {
+    const requestingOrigin = (() => { try { return new URL(details.requestingUrl || webContents.getURL()).origin; } catch { return ''; } })();
+    const decisionKey = `${requestingOrigin}\n${permission}`;
+    const decision = resolvePermissionDecision(runtimePolicy, {storedDecision: permissionDecisions.get(decisionKey)});
+    if (decision !== null) { callback(decision); return; }
+    if (!windowRef || !requestingOrigin) { callback(false); return; }
+    void dialog.showMessageBox(windowRef, {type: 'question', buttons: ['Block', 'Allow'], defaultId: 0, cancelId: 0, title: 'Permission request', message: `${requestingOrigin} requests ${permission} access.`}).then(result => {
+      const allowed = result.response === 1;
+      if (runtimePolicy.permissionPrompts === 'Ask per site') permissionDecisions.set(decisionKey, allowed);
+      callback(allowed);
+    }).catch(() => callback(false));
+  });
 }
 
 function closeProviderView() {
@@ -34,6 +47,7 @@ function createProviderView(url, title = 'Provider Player') {
   if (!isAllowedProviderUrl(url)) throw new Error('Provider Player requires an HTTPS URL.');
   closeProviderView();
   providerView = new WebContentsView({webPreferences: {contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true, partition: 'persist:spartan-gaming-providers'}});
+  installPrivacyPolicy(providerView.webContents.session);
   providerView.webContents.setWindowOpenHandler(({url: popupUrl}) => { if (isAllowedProviderUrl(popupUrl)) { void providerView.webContents.loadURL(popupUrl); } else { void shell.openExternal(popupUrl); } return {action: 'deny'}; });
   providerView.webContents.on('will-navigate', event => { if (!isAllowedProviderUrl(event.url)) event.preventDefault(); });
   providerView.webContents.on('enter-full-screen', () => windowRef.webContents.send('spartan:fullscreen-changed', true));

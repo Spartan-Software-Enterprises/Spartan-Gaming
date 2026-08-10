@@ -28,6 +28,7 @@ const workspaceStore = createWorkspaceStore({storage: profileStorage});
 const communityCatalogStore = createCommunityProviderCatalogStore();
 const settings = createSettingsStore().read();
 const settingsStore = createSettingsStore();
+globalThis.spartanElectron?.applyRuntimeSettings?.({backgroundThrottling: settings['performance.backgroundThrottling'] !== false, powerMode: settings['performance.powerMode'], doNotTrack: settings['privacy.doNotTrack'] === true, blockThirdPartyCookies: settings['privacy.blockThirdPartyCookies'] === true, permissionPrompts: settings['privacy.permissionPrompts']});
 const recoveryHandoff = settings['general.restoreSession'] !== false ? readSessionRecoveryHandoff(sessionStorage) : null;
 const startupRoute = new URLSearchParams(globalThis.location?.search || '').get('startup') === '1' ? resolveStartupRoute(settings, {recovery: recoveryHandoff, lastLaunch: launchHistory.latest()}) : null;
 if (startupRoute && typeof globalThis.location?.replace === 'function') globalThis.location.replace(startupRoute);
