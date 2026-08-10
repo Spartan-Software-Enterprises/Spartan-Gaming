@@ -26,9 +26,12 @@ The repository includes `host/agent.mjs` as a dependency-free Node.js reference 
 Native package discovery uses the platform default package name. A packaged deployment may override it with `--native-package <package-name>` or `SPARTAN_NATIVE_PACKAGE`; the selected package must match the host platform and export the verified `createBindings` contract. Missing or malformed packages fail closed and leave the corresponding capability unconfigured.
 
 An operator-installed signed virtual-device package can be selected with
-`--virtual-gamepad-package` or `SPARTAN_VIRTUAL_GAMEPAD_PACKAGE`. It must
-export `createVirtualGamepad()` with the same platform and an `execute()`
-method. The host muxes only button/axis operations to that package and keeps
+`--virtual-gamepad-package` or `SPARTAN_VIRTUAL_GAMEPAD_PACKAGE`. Its signed
+manifest uses the `virtual-gamepad` package kind and its entrypoint exports
+`createVirtualGamepad()` with the same platform and an `execute()` method. The
+installed-adapter runtime verifies the manifest and file integrity before this
+factory is activated; an unverified direct module is unavailable by default and
+can only be enabled through an explicit development/test option. The host muxes only button/axis operations to that package and keeps
 keyboard, pointer, and haptic operations on the native adapter.
 
 Use `--virtual-gamepad-backend` with `Automatic`, `Linux uinput`, `Windows
