@@ -8,6 +8,8 @@ const productionCompose = fs.readFileSync('docker-compose.production.yml', 'utf8
 const nativeRollout = fs.readFileSync('.github/workflows/native-package-rollout.yml', 'utf8');
 const hostService = fs.readFileSync('deploy/host/spartan-host.service', 'utf8');
 const turnService = fs.readFileSync('deploy/turn/coturn.service', 'utf8');
+const macHostPlist = fs.readFileSync('deploy/host/macos/com.spartan.gaming.host.plist', 'utf8');
+const windowsHostReadme = fs.readFileSync('deploy/host/windows/README.md', 'utf8');
 
 test('signaling image is minimal, non-root, and health checked', () => {
   assert.match(dockerfile, /^FROM node:22-bookworm-slim/m);
@@ -72,4 +74,15 @@ test('TURN deployment template keeps relay startup hardened and credential-free'
   assert.match(turnService, /ProtectSystem=strict/);
   assert.match(turnService, /RestrictAddressFamilies=AF_INET AF_INET6/);
   assert.doesNotMatch(turnService, /SECRET|password|static-auth-secret/i);
+});
+
+test('desktop host deployment templates preserve opt-in capabilities across macOS and Windows', () => {
+  assert.match(macHostPlist, /com\.spartan\.gaming\.host/);
+  assert.match(macHostPlist, /<string>127\.0\.0\.1<\/string>/);
+  assert.match(macHostPlist, /<key>RunAtLoad<\/key>\s*<false\/>/);
+  assert.match(macHostPlist, /SPARTAN_HOST_CONFIGURED/);
+  assert.doesNotMatch(macHostPlist, /enable-input|SPARTAN_HOST_SIGNAL_TICKET|tls-key/);
+  assert.match(windowsHostReadme, /host:deployment-plan/);
+  assert.match(windowsHostReadme, /dedicated unprivileged account/);
+  assert.match(windowsHostReadme, /does not\s+create a virtual gamepad/);
 });
