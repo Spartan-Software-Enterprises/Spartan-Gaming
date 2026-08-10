@@ -61,6 +61,9 @@ through `postMessage`. The bridge accepts only the bounded actions
 `android.policy`, `android.game-mode.query`, `android.controllers.snapshot`,
 `android.text-input`, and `android.gamenative.launch`, rejects non-object
 payloads, and forwards valid requests to an Activity-owned `Handler`.
+Every request carries a bounded correlation ID. An optional `ResultSink` can
+emit `{requestId, action, accepted}` results for the Activity to dispatch as a
+`spartan:android-result` event to the WebView.
 
 The GameNative action carries only a positive numeric library app ID and one of
 `STEAM`, `EPIC`, `GOG`, or `AMAZON`; the Activity handler should delegate to

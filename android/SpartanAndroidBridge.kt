@@ -18,7 +18,12 @@ import org.json.JSONObject
  */
 class SpartanAndroidBridge(
     private val handler: Handler,
+    private val resultSink: ResultSink? = null,
 ) {
+    interface ResultSink {
+        fun emit(requestId: String, action: String, accepted: Boolean)
+    }
+
     interface Handler {
         fun onPolicy(payload: JSONObject): Boolean
         fun onGameModeQuery(): Boolean
@@ -33,8 +38,11 @@ class SpartanAndroidBridge(
         return try {
             val message = JSONObject(raw)
             if (message.optInt("version", -1) != 1) return false
+            val requestId = message.optString("requestId")
+            if (!REQUEST_ID_PATTERN.matches(requestId)) return false
             val payload = if (!message.has("payload")) JSONObject() else message.optJSONObject("payload") ?: return false
-            when (message.optString("action")) {
+            val action = message.optString("action")
+            val accepted = when (action) {
                 "android.policy" -> handler.onPolicy(payload)
                 "android.game-mode.query" -> handler.onGameModeQuery()
                 "android.controllers.snapshot" -> handler.onControllerInventoryQuery()
@@ -42,6 +50,8 @@ class SpartanAndroidBridge(
                 "android.gamenative.launch" -> handler.onGameNativeLaunch(payload)
                 else -> false
             }
+            resultSink?.emit(requestId, action, accepted)
+            accepted
         } catch (_: JSONException) {
             false
         } catch (_: RuntimeException) {
@@ -51,5 +61,6 @@ class SpartanAndroidBridge(
 
     companion object {
         const val MAX_MESSAGE_BYTES = 16 * 1024
+        private val REQUEST_ID_PATTERN = Regex("^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
     }
 }

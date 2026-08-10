@@ -59,7 +59,10 @@ test('runtime UI forwards a bounded Android policy request to the optional nativ
   const navigatorRef = {userAgent: 'Mozilla/5.0 (Linux; Android 15)', platform: 'Linux arm64'};
   const documentRef = {defaultView: {navigator: navigatorRef, innerWidth: 390, devicePixelRatio: 1, SpartanAndroid: {postMessage(value) { messages.push(JSON.parse(value)); return true; }}}, documentElement: root, head: {append(node) { nodes.set(node.id, node); }}, getElementById(id) { return nodes.get(id); }, createElement() { return {id: '', textContent: ''}; }};
   applyRuntimeUiSettings(documentRef, {'mobile.orientation': 'Landscape', 'mobile.gameMode': 'Performance'});
-  assert.deepEqual(messages, [{version: 1, action: 'android.policy', payload: {formFactor: 'phone', orientation: 'landscape', currentOrientation: 'unknown', keepScreenAwake: true, pictureInPicture: true, edgeToEdge: true, dataSaver: false, gameMode: 'Performance', touchLayout: 'automatic'}}]);
+  assert.equal(messages.length, 1);
+  assert.match(messages[0].requestId, /^and-/);
+  const {requestId, ...message} = messages[0];
+  assert.deepEqual(message, {version: 1, action: 'android.policy', payload: {formFactor: 'phone', orientation: 'landscape', currentOrientation: 'unknown', keepScreenAwake: true, pictureInPicture: true, edgeToEdge: true, dataSaver: false, gameMode: 'Performance', touchLayout: 'automatic'}});
 });
 
 test('television settings configure safe area, pointer visibility, and navigation policy', () => {
