@@ -176,7 +176,9 @@ IME behavior remain intentionally unverified platform work. The focused
 text-entry suite passed 3/3 locally; rerun it with the full repository suite
 before publishing the next handoff.
 
-The remote Playwright pass initially exposed dashboard horizontal overflow at
+The repository-owned `scripts/playwright/smoke.mjs` runner now makes the browser
+matrix reproducible with an externally installed Playwright module. The remote
+Playwright pass initially exposed dashboard horizontal overflow at
 the 390x844 mobile viewport. Commit `40f9f65` wraps the dynamically added
 console-mode and workspace controls on small screens. Playwright 1.55.0 then
 passed all 22 navigations across 11 maintained routes at desktop and mobile
