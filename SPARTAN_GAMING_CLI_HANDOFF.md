@@ -182,9 +182,12 @@ trackpad, gyro, rear-button, touchscreen, and text-entry requirements. Action
 negotiation and session capability negotiation now report missing hardware
 without claiming readiness, while the Gamepad/HID fallback remains available.
 The expanded controller/session suite passed 151/151 locally and on AWS. The
+current action vocabulary includes haptics and controller-only navigation in
+addition to trackpads, gyro, rear buttons, touchscreen, and text entry. The
 AWS full suite at `d44055c` completed with 621 tests: 619 passed, 2 skipped,
 and 0 failed. Physical Steam Deck controls, Steam Input bridge installation,
-and hardware-specific touchscreen/text-entry behavior remain lab gates.
+and hardware-specific touchscreen/text-entry/haptic/navigation behavior remain
+lab gates.
 
 The current SteamOS packaging increment adds a user-scope Flatpak filesystem
 contract and shell-free install, update, uninstall, and commit-pinned rollback

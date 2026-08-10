@@ -110,6 +110,7 @@ export const settingsCategories = [
       toggle('controllers.backButtons', 'Enable rear buttons', 'Forward Steam Deck, Xbox Elite, and compatible rear-paddle controls.'),
       toggle('controllers.touchscreen', 'Enable touchscreen input', 'Forward touchscreen taps and gestures for handheld navigation when supported.'),
       toggle('controllers.textEntry', 'Enable controller text entry', 'Allow supported handheld controllers to request on-screen text entry; the platform still controls the keyboard UI.', true),
+      toggle('controllers.controllerNavigation', 'Enable controller-only navigation', 'Allow gamepad focus navigation for Steam Deck, television, and other controller-first surfaces.', true),
       select('controllers.triggerMode', 'Trigger mode', 'Expose analog triggers, digital buttons, or both where supported.', ['Analog and digital', 'Analog only', 'Digital only'], 'Analog and digital'),
       range('controllers.steeringRange', 'Steering range', 'Virtual steering rotation for wheels and analog steering devices.', 90, 1080, 10, 900, '°'),
       toggle('controllers.splitInput', 'Allow split controller input', 'Permit two physical halves or devices to form one virtual controller.', false),

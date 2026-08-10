@@ -31,4 +31,8 @@ test('Steam Deck action negotiation exposes supported controls and explicit miss
   const deck = negotiateSteamInputActions({manifest, capabilities: ['trackpads', 'gyro', 'back-buttons', 'touchscreen', 'text-entry']});
   assert.ok(deck.supportedActions.includes('trackpad-right'));
   assert.ok(deck.supportedActions.includes('text-entry'));
+  assert.ok(deck.unavailableActions.some(action => action.id === 'haptic-feedback' && action.missing.includes('haptics')));
+  const complete = negotiateSteamInputActions({manifest, capabilities: ['trackpads', 'gyro', 'back-buttons', 'touchscreen', 'text-entry', 'haptics', 'controller-navigation']});
+  assert.ok(complete.supportedActions.includes('haptic-feedback'));
+  assert.ok(complete.supportedActions.includes('controller-navigation'));
 });

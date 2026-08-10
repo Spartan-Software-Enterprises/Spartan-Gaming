@@ -13,6 +13,8 @@ const ACTIONS = Object.freeze([
   Object.freeze({id: 'rear-right', label: 'Right rear button', type: 'button', requires: ['back-buttons']}),
   Object.freeze({id: 'touchscreen', label: 'Touchscreen', type: 'touch', requires: ['touchscreen']}),
   Object.freeze({id: 'text-entry', label: 'On-screen text entry', type: 'text', requires: ['text-entry']}),
+  Object.freeze({id: 'haptic-feedback', label: 'Haptic feedback', type: 'output', requires: ['haptics']}),
+  Object.freeze({id: 'controller-navigation', label: 'Controller-only navigation', type: 'navigation', requires: ['controller-navigation']}),
   Object.freeze({id: 'south', label: 'South face button', type: 'button'}),
   Object.freeze({id: 'east', label: 'East face button', type: 'button'}),
   Object.freeze({id: 'west', label: 'West face button', type: 'button'}),
