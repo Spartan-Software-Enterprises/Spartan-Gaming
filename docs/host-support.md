@@ -23,6 +23,11 @@ The repository includes `host/agent.mjs` as a dependency-free Node.js reference 
 
 Native package discovery uses the platform default package name. A packaged deployment may override it with `--native-package <package-name>` or `SPARTAN_NATIVE_PACKAGE`; the selected package must match the host platform and export the verified `createBindings` contract. Missing or malformed packages fail closed and leave the corresponding capability unconfigured.
 
+Host capability documents distinguish `input.gamepad` (a controller input
+path) from `input.virtualGamepad` (an OS-created virtual device). The latter
+is true only for a ready Linux uinput binding today; Windows/macOS keyboard,
+pointer, and haptic support does not imply virtual-gamepad injection.
+
 An operator with the optional `werift` package and an installed platform binding
 can run the executable media path with `--enable-native-media`. This mode keeps
 the same one-time pairing and launch-request checks, then bridges the accepted
