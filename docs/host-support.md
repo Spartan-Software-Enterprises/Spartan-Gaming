@@ -41,6 +41,14 @@ from a package name alone. The frontend Controller settings expose the same
 package and device fields so exported profiles can be translated into a
 user-owned host deployment plan.
 
+For repeatable supervisor configuration, pass `--config /path/to/host.json`
+to `host/agent.mjs` or include the same path in the shell-free deployment plan.
+The JSON contract covers host identity, bind/limits, native packages, media
+opt-ins, audio choices, TLS paths, origins, and all virtual-gamepad settings.
+It rejects unknown fields and secrets such as pairing codes or tickets; CLI
+flags override file values, while pairing and signaling credentials remain
+session-scoped.
+
 Host capability documents distinguish `input.gamepad` (a controller input
 path) from `input.virtualGamepad` (an OS-created virtual device). The latter
 is true only for a ready Linux uinput binding today; Windows/macOS keyboard,
