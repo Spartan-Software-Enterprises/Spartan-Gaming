@@ -83,7 +83,7 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- The published code state is `6e315ad` on `main`; local and AWS worktrees are
+- The published code state is `6fedc50` on `main`; local and AWS worktrees are
   clean and synchronized with `origin/main`.
 - `npm run check`: repository checks pass on the current code state locally
   and on the AWS dev server.
@@ -91,10 +91,12 @@ review; stay within the AWS credit limit.
   4 skipped, and 0 failed. The AWS run completed with 634 tests, 632 passed,
   2 skipped, and 0 failed; the difference is environment-gated integration
   coverage, not a failure.
-- The Android shell contract passed 2/2 locally and on AWS. Neither host has
-  Gradle, an Android wrapper, or an Android SDK, so APK compilation, signing,
-  permissions, WebView lifecycle, and physical device behavior remain open
-  lab gates.
+- The Android shell contract passed 2/2 locally and on AWS. AWS now has Java
+  17, Gradle 8.11.1, and Android API 35/build-tools 35.0.0; the debug APK build
+  passed at `8be92d1` and produced a 1,628,083-byte APK with SHA-256
+  `386b910893b8a2ab884d2ea7f17f7869910e00d60da49020cfbce5b93d3024ab`.
+  Release signing, permissions, WebView lifecycle, and physical device
+  behavior remain open lab gates; local `adb devices` reports no device.
 - AWS Playwright 1.55.0 completed 22/22 navigations across 11 maintained
   routes at desktop and mobile viewports on code commit `7c996e1`; all routes
   returned 200 with meaningful bodies and no horizontal overflow. The
@@ -138,9 +140,9 @@ The current Android application-shell increment adds `android/app/`, a
 Gradle/Kotlin WebView host that packages the shared frontend through
 `WebViewAssetLoader`, installs the bounded bridge for the Activity lifecycle,
 and routes GameNative/controller/Game Mode actions through native boundaries.
-The shell contract passed 2/2 locally and on AWS at `115d7ce`; APK build and
-device validation remain explicitly unverified because the available hosts do
-not contain Android SDK/Gradle tooling.
+The shell contract passed 2/2 locally and on AWS at `115d7ce`; AWS debug APK
+compilation was subsequently verified at `8be92d1`, while release signing and
+device validation remain explicitly open.
 
 The current Electron lifecycle increment adds single-instance enforcement and
 an allow-listed `spartan://launch?backend=<catalog-id>` protocol handoff.
