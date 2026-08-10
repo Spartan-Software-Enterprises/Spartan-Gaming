@@ -25,13 +25,15 @@ test('Linux native package accepts the shared frontend button and axis control v
   assert.deepEqual(calls, [['native', 'button-0'], ['native', 'axis-0']]);
 });
 
-test('Linux native package contract covers the complete standard Gamepad button index range', async () => {
+test('Linux native package contract covers standard and extended Gamepad button indexes', async () => {
   const source = await (await import('node:fs/promises')).readFile(new URL('./src/bindings.cpp', import.meta.url), 'utf8');
   assert.match(source, /BTN_TL2/);
   assert.match(source, /BTN_TR2/);
   assert.match(source, /BTN_THUMBL/);
   assert.match(source, /BTN_THUMBR/);
   assert.match(source, /BTN_DPAD_RIGHT/);
+  assert.match(source, /BTN_TRIGGER_HAPPY1/);
+  assert.match(source, /index <= 31/);
   assert.match(source, /strongMagnitude/);
   assert.match(source, /weakMagnitude/);
   assert.match(source, /button-/);

@@ -429,7 +429,8 @@ reports detected hardware encoders in its serializable capabilities. The
 compiled `@spartan-gaming/native-linux` package now adds a Node-API `uinput`
 virtual gamepad for normalized buttons, axes, and rumble effects. The binding
 accepts the shared frontend `button-N` and `axis-N` controls directly, including
-the standard trigger, stick-click, and d-pad button indexes. It is built with
+the standard trigger, stick-click, and d-pad button indexes plus extended
+button indexes 16-31 for paddles and other controller-specific controls. It is built with
 `npm run native:build-linux`, installed into the isolated native artifact, and
 verified in Linux CI. The rumble effect carries the same strong/weak magnitude
 distinction as the Windows XInput binding, falling back to the shared `value`

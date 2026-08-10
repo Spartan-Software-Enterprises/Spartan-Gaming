@@ -206,7 +206,8 @@ runtime plans.
 - Every touch button emits the shared native `button-N` vocabulary
   (`confirm`→`button-0`, `cancel`→`button-1`, `menu`→`button-9`,
   `pause`→`button-8`, shoulders `button-4`–`button-7`, stick clicks
-  `button-10`/`button-11`, and D-pad `button-12`–`button-15`), so touch
+  `button-10`/`button-11`, and D-pad `button-12`–`button-15`; extended
+  controller controls use `button-16`–`button-31`), so touch
   sessions inject into Linux uinput gamepads and future virtual-gamepad
   adapters without a separate frontend translation step.
 - Save RAM, save states, screenshots, clips, and rewind.
