@@ -191,6 +191,14 @@ The explicit SteamOS host profile in `host/steam-os.mjs` also exposes the shared
 
 Electron now bridges bounded native power telemetry through `desktop/electron/power-runtime.mjs`: suspend/resume, AC/battery, thermal, and CPU speed-limit events reach the renderer through the preload API, while active sessions use Electron's power-save blocker (`prevent-display-sleep` for normal/performance modes and `prevent-app-suspension` for Battery saver). This is runtime plumbing, not evidence of hardware-specific thermal or suspend behavior.
 
+Electron also enforces one running Spartan instance and accepts only the
+allow-listed `spartan://launch?backend=<catalog-id>` deep-link shape. A second
+instance or registered protocol activation restores the primary window and
+delivers a normalized catalog launch request through the isolated preload
+bridge; the dashboard queues it until catalogs are ready. Unknown schemes,
+extra query parameters, credentials, fragments, and arbitrary URLs are
+rejected. Packaged protocol registration remains release/lab validation work.
+
 The Android shell has a matching native Game Mode boundary in `android/gamemode/AndroidGameModeBridge.kt`. It queries `GameManager` on every resume for API 31+ and reports the observed mode without trying to change the system setting; the frontend intent remains query-on-resume and fails closed when unsupported.
 
 Android controller metadata is normalized by `src/frontend/input/android-controller.mjs` after the native `AndroidControllerInventory` bridge reports gamepad/joystick devices. The bridge keeps bounded IDs, names, vendor/product metadata, and approved haptics/motion/battery capabilities only; actual input events continue through the shared controller pipeline.

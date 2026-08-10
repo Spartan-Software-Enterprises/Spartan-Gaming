@@ -10,6 +10,8 @@ test('Electron package configuration targets every desktop operating system', as
   assert.match(config, /AppImage/);
   assert.match(config, /dmg/);
   assert.match(config, /nsis/);
+  assert.match(config, /schemes:/);
+  assert.match(config, /- spartan/);
   assert.match(config, /desktop\/electron/);
   assert.match(config, /src\/frontend/);
 });
@@ -22,6 +24,9 @@ test('Electron shell keeps quit confirmation tied to the active session setting'
   assert.match(main, /spartan:set-session-active/);
   assert.match(main, /A gaming session is active/);
   assert.match(main, /event\.preventDefault\(\)/);
+  assert.match(main, /requestSingleInstanceLock/);
+  assert.match(main, /spartan:deep-link/);
   assert.match(preload, /setQuitGuard\(enabled\)/);
   assert.match(preload, /setSessionActive\(active\)/);
+  assert.match(preload, /onDeepLink\(callback\)/);
 });

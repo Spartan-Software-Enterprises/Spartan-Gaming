@@ -6,6 +6,7 @@ import {isAllowedExternalUrl, isAllowedNavigation, isAllowedProviderUrl} from '.
 import {applyElectronPrivacyHeaders, normalizeElectronRuntimePolicy, resolvePermissionDecision, shouldQuitWhenWindowsClose} from './runtime-policy.mjs';
 import {createTrayMenuTemplate, shouldCreateTray} from './tray-policy.mjs';
 import {normalizePowerEvent, resolvePowerSaveBlockerType} from './power-runtime.mjs';
+import {findSpartanDeepLink} from './deep-links.mjs';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 let frontend;
@@ -20,6 +21,8 @@ let powerBlockerId = null;
 let powerBlockerType = null;
 const privacySessions = new WeakSet();
 const permissionDecisions = new Map();
+const hasSingleInstanceLock = app.requestSingleInstanceLock();
+let pendingDeepLink = findSpartanDeepLink(process.argv);
 
 function installPrivacyPolicy(session) {
   if (!session || privacySessions.has(session)) return;
@@ -67,6 +70,12 @@ function resizeProvider() { if (!providerView || !windowRef) return; const {widt
 
 function showMainWindow() { if (!windowRef) return; windowRef.show(); windowRef.focus(); }
 
+function deliverDeepLink(link) {
+  if (!link) return;
+  if (!windowRef?.webContents || windowRef.webContents.isLoading()) { pendingDeepLink = link; return; }
+  windowRef.webContents.send('spartan:deep-link', link);
+}
+
 function createTrayIcon() {
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#10151b"/><path d="M8 24 16 7l8 17-8-4-8 4Z" fill="#50e1d1"/></svg>';
   return nativeImage.createFromDataURL(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
@@ -109,9 +118,20 @@ async function createMainWindow() {
   windowRef.webContents.setWindowOpenHandler(({url}) => { if (isAllowedNavigation(url, {frontendOrigin: origin})) return {action: 'allow'}; try { void shell.openExternal(new URL(url).href); } catch {} return {action: 'deny'}; });
   windowRef.webContents.on('before-input-event', (_event, input) => { if (input.type === 'keyDown' && input.key === 'Escape') closeProviderView(); });
   await windowRef.loadURL(`${origin}/dashboard/?startup=1`);
+  deliverDeepLink(pendingDeepLink);
+  pendingDeepLink = null;
 }
 
-app.whenReady().then(async () => {
+if (!hasSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (_event, commandLine) => { showMainWindow(); deliverDeepLink(findSpartanDeepLink(commandLine)); });
+  app.on('open-url', (event, value) => { event.preventDefault(); showMainWindow(); deliverDeepLink(findSpartanDeepLink([value])); });
+}
+
+if (hasSingleInstanceLock) app.whenReady().then(async () => {
+  if (process.defaultApp && process.argv[1]) app.setAsDefaultProtocolClient('spartan', process.execPath, [path.resolve(process.argv[1])]);
+  else app.setAsDefaultProtocolClient('spartan');
   Menu.setApplicationMenu(Menu.buildFromTemplate([{label: 'Spartan Gaming', submenu: [{role: 'about'}, {type: 'separator'}, {role: 'quit'}]}, {label: 'View', submenu: [{role: 'togglefullscreen'}, {role: 'reload'}, {role: 'toggledevtools'}]}]));
   ipcMain.handle('spartan:open-external', (_event, url) => { if (!isAllowedExternalUrl(url)) throw new Error('External links require HTTPS or a loopback HTTP URL.'); return shell.openExternal(new URL(url).href); });
   ipcMain.handle('spartan:open-provider', (_event, {url, title}) => createProviderView(url, title));

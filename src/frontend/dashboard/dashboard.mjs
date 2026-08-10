@@ -38,6 +38,7 @@ let activeWorkspace = workspaceStore.active;
 let favoritesStore = createFavoritesStore({storage: profileStorage, workspaceId: activeWorkspace.id});
 const requestedFilter = new URLSearchParams(globalThis.location?.search || '').get('filter');
 const state = { catalog: [], adapters: null, compatibility: null, report: null, providerHealth: new Map(), filter: ['all', 'cloud', 'watch', 'browser', 'emulator', 'favorites', 'recent'].includes(requestedFilter) ? requestedFilter : 'all', search: '', favorites: new Set(favoritesStore.list()), recent: new Set(launchHistory.list().map(record => record.backendId)), lastLaunch: launchHistory.latest(), recovery: recoveryHandoff, providerProfiles: Object.fromEntries(createProviderProfileStore({storage: profileStorage}).list().map(profile => [profile.providerId, applyGlobalProviderPreferences({...profile, embedParent: globalThis.location?.hostname || ''}, settings)])) };
+let queuedDeepLink = null;
 document.querySelector('.filters')?.insertAdjacentHTML('beforeend', '<button class="filter" data-filter="watch">Watch &amp; stream</button>');
 document.querySelector('.filters')?.insertAdjacentHTML('beforeend', '<button class="filter" data-filter="browser">Browser games</button>');
 document.querySelector('.main-nav')?.insertAdjacentHTML('beforeend', '<button class="nav-item" data-section="browser">▣ <span>Browser games</span></button>');
@@ -115,6 +116,15 @@ function launchEntry(entry, plan) {
   if (plan.action === 'open-url' || plan.action === 'configure-api') { try { const handoff = launchExternalSurface(plan.url, {behavior: resolveWorkspaceLaunchBehavior(activeWorkspace, settings['gaming.launchBehavior']), open: window.open.bind(window), assign: window.location.assign.bind(window.location)}); showToast(`${entry.name}: ${handoff.mode === 'current-workspace' ? 'official service opened here' : 'official service opened'}.`); } catch (error) { showToast(error.message); } return; }
   const offer = beginSession({...entry, adapterMode: plan.mode}); if (offer) showToast(`${entry.name}: ${plan.action.replaceAll('-', ' ')}.`);
 }
+function handleDeepLink(link) {
+  if (!link?.version || link.action !== 'launch' || typeof link.backendId !== 'string') return;
+  if (!state.catalog.length || !state.adapters) { queuedDeepLink = link; return; }
+  const entry = state.catalog.find(item => item.id === link.backendId);
+  const plan = entry && state.adapters.get(entry.id)?.resolve();
+  if (!entry || !plan || plan.status === 'unsupported') { showToast(`Launch link unavailable: ${link.backendId}`); return; }
+  launchEntry(entry, plan);
+}
+function consumeQueuedDeepLink() { const link = queuedDeepLink; queuedDeepLink = null; if (link) handleDeepLink(link); }
 function beginSession(backend) {
   if (sessionManager.state !== 'idle' && sessionManager.state !== 'closed' && sessionManager.state !== 'error') { showToast('A session is already negotiating. Close it before launching another.'); return null; }
   if (sessionManager.state === 'closed' || sessionManager.state === 'error') sessionManager.reset();
@@ -152,6 +162,7 @@ async function loadCatalog() {
     rebuildAdapters();
     updateReadinessStatus();
     render();
+    consumeQueuedDeepLink();
     if (providerStartupPolicy.shouldProbe) { const providers = state.catalog.filter(entry => entry.backendType === 'provider'); providers.forEach(entry => state.providerHealth.set(entry.id, {status: 'checking'})); render(); checkProviderCatalog(providers).then(results => { results.forEach(item => state.providerHealth.set(item.providerId, item.result)); render(); }).catch(() => {}); }
     collectCapabilities().then(report => { state.report = report; state.compatibility = evaluateCatalog(state.catalog, report); updateReadinessStatus(); render(); }).catch(() => { state.report = {}; state.compatibility = evaluateCatalog(state.catalog, state.report); updateReadinessStatus(); render(); });
   } catch (error) { cards.innerHTML = '<div class="empty">The library could not load. Check the catalog files and try again.</div>'; console.error(error); }
@@ -188,6 +199,7 @@ document.querySelectorAll('[data-section]').forEach(button => button.addEventLis
 renderResume();
 renderConsoleMode();
 updateReadinessStatus();
+globalThis.spartanElectron?.onDeepLink?.(handleDeepLink);
 loadCatalog();
 window.addEventListener('online', updateReadinessStatus);
 window.addEventListener('offline', updateReadinessStatus);

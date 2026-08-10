@@ -13,6 +13,10 @@ files:
   - games/**
   - favicon.ico
 asar: true
+protocols:
+  - name: Spartan Gaming Launch
+    schemes:
+      - spartan
 linux:
   category: Game
   target:

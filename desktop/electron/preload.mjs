@@ -12,4 +12,5 @@ contextBridge.exposeInMainWorld('spartanElectron', Object.freeze({
   toggleFullscreen() { return ipcRenderer.invoke('spartan:toggle-fullscreen'); },
   onFullscreenChanged(callback) { const listener = (_event, value) => callback(value); ipcRenderer.on('spartan:fullscreen-changed', listener); return () => ipcRenderer.removeListener('spartan:fullscreen-changed', listener); },
   onPowerEvent(callback) { const listener = (_event, value) => callback(value); ipcRenderer.on('spartan:power-event', listener); return () => ipcRenderer.removeListener('spartan:power-event', listener); },
+  onDeepLink(callback) { if (typeof callback !== 'function') return () => {}; const listener = (_event, value) => callback(value); ipcRenderer.on('spartan:deep-link', listener); return () => ipcRenderer.removeListener('spartan:deep-link', listener); },
 }));

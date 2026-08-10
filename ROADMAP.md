@@ -39,6 +39,7 @@
 - [x] Manifest-verified browser adapter module loading with explicit consent, integrity, and signature checks.
 - [x] User-facing adapter and core readiness manager with signed-manifest import.
 - [x] External Chromium app-shell launcher with cross-platform binary resolution and local HTTP-origin orchestration.
+- [x] Electron single-instance lifecycle and safe `spartan://launch` catalog deep-link handoff (physical packaged-app registration remains release validation work).
 
 ## Milestone 2: streaming client
 
