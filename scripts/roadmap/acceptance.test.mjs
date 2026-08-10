@@ -8,7 +8,7 @@ import {assessRoadmapAcceptance, assessRoadmapAcceptanceWithSignedManifests} fro
 const repositoryRoot = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const acceptanceWorkflow = fs.readFileSync(path.join(repositoryRoot, '.github/workflows/roadmap-acceptance.yml'), 'utf8');
 
-const production = {status: 'healthy', required: ['service', 'broker', 'turn-credential-service'], primary: {status: 'healthy', broker: {status: 'ready'}}, turn: {status: 'ready'}};
+const production = {status: 'healthy', includeTurn: true, required: ['service', 'broker', 'turn-credential-service'], primary: {status: 'healthy', broker: {status: 'ready', backend: 'redis'}}, turn: {status: 'ready', network: {status: 'reachable', total: 1, reachable: 1}}};
 const hardware = platform => ({platform, status: 'ready', package: {state: 'ready'}, hardware: {state: 'ready'}, execution: {state: 'ready', capture: 'verified', audio: 'verified', input: 'verified', haptics: 'verified'}});
 const virtual = platform => ({platform, status: 'ready', capabilities: {execute: true}, exercise: {state: 'verified'}});
 const signed = platform => ({platform, status: 'verified'});
@@ -16,6 +16,12 @@ const signed = platform => ({platform, status: 'verified'});
 test('roadmap acceptance stays incomplete and names every missing external gate', () => {
   const result = assessRoadmapAcceptance({productionReport: {status: 'healthy'}, hardwareReports: [], virtualGamepadReports: [], signedPackageReports: []});
   assert.equal(result.status, 'incomplete'); assert.deepEqual(result.blockers, ['production-services', 'native-hardware', 'desktop-virtual-gamepads', 'external-package-signing']);
+});
+
+test('roadmap acceptance does not accept an in-memory broker or unprobed TURN relay', () => {
+  const report = {...production, primary: {status: 'healthy', broker: {status: 'ready', backend: 'memory'}}, turn: {status: 'ready'}};
+  const result = assessRoadmapAcceptance({productionReport: report});
+  assert.equal(result.gates.find(gate => gate.id === 'production-services').status, 'missing');
 });
 
 test('roadmap acceptance completes only with all production, hardware, driver, and signing evidence', () => {

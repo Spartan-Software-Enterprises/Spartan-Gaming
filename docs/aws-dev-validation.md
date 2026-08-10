@@ -66,8 +66,9 @@ The report is retained outside Git at
 `~/.config/spartan-dev/evidence/production/rollout.json`.
 
 Running `scripts/roadmap/acceptance.mjs` with that rollout report verifies only
-the `production-services` contract in this development environment. The full
-acceptance result remains `incomplete` because no real Windows/macOS/Linux
+the `production-services` contract when the report includes the Redis broker
+backend and reachable TURN network probe. The full acceptance result remains
+`incomplete` because no real Windows/macOS/Linux
 hardware reports, desktop virtual-gamepad driver exercises, or signed package
 reports were supplied.
 

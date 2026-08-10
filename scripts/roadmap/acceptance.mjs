@@ -13,8 +13,10 @@ function reportPlatform(report) { return platform(report?.platform); }
 
 function productionGate(report) {
   const required = Array.isArray(report?.required) ? report.required : [];
-  const ready = report?.status === 'healthy' && report?.primary?.status === 'healthy' && report?.primary?.broker?.status === 'ready' && required.includes('broker') && report?.turn?.status === 'ready' && required.includes('turn-credential-service');
-  return Object.freeze({id: 'production-services', status: ready ? 'verified' : 'missing', evidence: ready ? {broker: 'ready', turnCredentials: 'ready'} : null});
+  const brokerReady = report?.primary?.broker?.status === 'ready' && report.primary.broker.backend === 'redis';
+  const turnReady = report?.turn?.status === 'ready' && report?.turn?.network?.status === 'reachable';
+  const ready = report?.status === 'healthy' && report?.primary?.status === 'healthy' && brokerReady && required.includes('broker') && report?.includeTurn === true && turnReady && required.includes('turn-credential-service');
+  return Object.freeze({id: 'production-services', status: ready ? 'verified' : 'missing', evidence: ready ? {broker: 'ready', brokerBackend: 'redis', turnCredentials: 'ready', turnNetwork: 'reachable'} : null});
 }
 
 function hardwareGate(reports) {
