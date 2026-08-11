@@ -62,6 +62,20 @@ lacking a kernel or device path capable of force feedback.
 
 ## Current development evidence
 
+On 2026-08-11, the Amazon Linux host built the final `6877b75` Electron
+desktop package configuration after installing the bounded packaging
+prerequisites `ruby` and `libxcrypt-compat` required by Electron Builder's
+bundled FPM on Amazon Linux. `npm run electron:test` passed all 16 Electron
+contract tests. `npm run desktop:package` produced both
+`Spartan-Gaming-0.1.0-linux-x86_64.AppImage` (120,320,592 bytes) and
+`Spartan-Gaming-0.1.0-linux-amd64.deb` (93,250,768 bytes), plus the Linux
+update manifest. The Debian payload contains the synchronized
+`com.spartan.gaming.desktop` entry with `StartupWMClass=com.spartan.gaming`,
+the `spartan://` handler, and the expected package metadata. An Xvfb launch
+opened the unpacked Electron process, but this headless cloud probe does not
+exercise interactive windows, real displays, audio, input, haptics, or
+desktop-environment integration.
+
 The configured Amazon Linux 2023 development host has been synchronized with
 `main` and has successfully run the repository dependency install, Linux
 native package build, executable `/dev/uinput` button/axis sequence, and the
