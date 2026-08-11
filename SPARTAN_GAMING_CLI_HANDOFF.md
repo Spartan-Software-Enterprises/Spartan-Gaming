@@ -35,6 +35,28 @@ Inspect `AGENTS.md` or `CLAUDE.md` if either is added in a future checkout.
 
 ## Latest continuation snapshot
 
+- The current unpublished increment makes `advanced.developerMode` functional
+  in the primary Electron application. It gates a dynamically rebuilt DevTools
+  menu, F12 and Command/Control+Shift+I, and a real Settings action. Turning it
+  off immediately closes an open inspector and removes the menu entry. The
+  implementation targets only the primary `spartan-app://app` WebContents;
+  provider login, OAuth child, and player surfaces are never selected.
+- Local repository validation passes 439/439 and the serialized suite passes
+  638 of 642 with the same four expected Termux/platform skips. AWS passes the
+  same 439/439 repository check and 640 of 642 serialized tests with only the
+  expected Windows/macOS skips. Its Xvfb Electron matrix matches all 44 Linux
+  x64 baselines and completes ten interactions, including process-level
+  Developer Mode menu/open/revoke assertions. The dedicated Developer Mode
+  screenshot was inspected with no clipping, overlap, or horizontal overflow.
+- AWS Electron Builder produced a 120,279,029-byte AppImage and a
+  93,203,464-byte Debian package. The packaged ASAR contains the Developer Mode
+  policy, CommonJS preload bridge, and Settings implementation. A complete
+  staged CodeRabbit review explicitly covered all 19 intended files, including
+  both new policy files, and returned zero findings.
+- Before publishing this increment, still run final formatting and repository
+  checks, then update this entry with the resulting commit and GitHub Actions
+  evidence.
+
 - The prior visual-matrix baseline was published through `5ef5e49`. The primary desktop runtime remains a
   standalone Electron application loading bundled assets from
   `spartan-app://app`; production startup opens no frontend HTTP server.

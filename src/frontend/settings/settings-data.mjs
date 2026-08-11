@@ -1432,7 +1432,7 @@ export const settingsCategories = [
       toggle(
         'advanced.developerMode',
         'Developer mode',
-        'Expose experimental flags, adapter inspection, and debugging tools.',
+        'Expose primary-window debugging tools and desktop developer shortcuts. Provider login and player surfaces remain isolated.',
       ),
       toggle(
         'advanced.experimentalWebTransport',
@@ -1491,9 +1491,9 @@ export const settingsCategories = [
       ),
       action(
         'advanced.flags',
-        'Open experimental flags',
-        'Review feature flags that may reduce stability or compatibility.',
-        'Open flags',
+        'Open developer tools',
+        'Inspect the local Spartan Gaming application renderer. Developer mode must be enabled first.',
+        'Open developer tools',
       ),
     ],
   },

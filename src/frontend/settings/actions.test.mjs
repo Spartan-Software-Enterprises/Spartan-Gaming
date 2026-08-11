@@ -23,3 +23,7 @@ test('settings navigation and external actions stay within explicit destinations
 test('provider session cleanup is an explicit state-changing action', () => {
   assert.equal(resolveSettingsAction('providers.clearSessions').kind, 'clear-provider-sessions');
 });
+
+test('developer tools are an explicit Electron action instead of a category loop', () => {
+  assert.deepEqual(resolveSettingsAction('advanced.flags'), { kind: 'developer-tools' });
+});

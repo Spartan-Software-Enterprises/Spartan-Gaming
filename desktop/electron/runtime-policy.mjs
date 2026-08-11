@@ -22,6 +22,7 @@ export function normalizeElectronRuntimePolicy(settings = {}) {
     ? settings.permissionPrompts
     : 'Ask per site';
   return Object.freeze({
+    developerMode: settings?.developerMode === true,
     backgroundApps: settings?.backgroundApps === true,
     globalShortcut: normalizeGlobalShortcut(settings?.globalShortcut),
     backgroundThrottling: settings?.backgroundThrottling !== false || powerMode === 'Battery saver',
