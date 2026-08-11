@@ -65,9 +65,10 @@ Inspect `AGENTS.md` or `CLAUDE.md` if either is added in a future checkout.
   and balanced-brace media-block extraction. The final clean re-review hit a
   29-minute free CLI rate limit before analysis, so no clean final result is
   claimed.
-- The increment is not committed or published yet. Run final validation,
-  commit/push, and GitHub Actions checks before replacing this sentence with
-  published evidence.
+- The update increment is published on `main` as `c4d4bb7`. GitHub Actions is
+  green: repository checks `31467798019`, frontend distribution `31467798027`,
+  cross-platform contracts `31467798003`, and Android debug shell
+  `31467798009` all succeeded for that commit.
 
 - The prior visual-matrix baseline was published through `5ef5e49`. The primary desktop runtime remains a
   standalone Electron application loading bundled assets from
