@@ -290,6 +290,18 @@ and download-source network boundary. `New session` is the no-resume startup
 choice; the startup resolver still accepts the legacy `New tab` value from an
 older profile and safely maps it to the same local dashboard behavior.
 
+Electron startup-only settings are stored separately from renderer profile
+state in the application user-data directory. `performance.hardwareAcceleration`
+is normalized to a boolean policy, written atomically with owner-only file mode,
+and applied from `startup-policy.json` before Electron's ready event. Changing
+the setting reports that a restart is required; missing or malformed policy
+files safely retain hardware acceleration. The file contains no credentials.
+The primary window keeps `sandbox: true` and context isolation enabled. Its
+preload is CommonJS (`desktop/electron/preload.cjs`) because Electron runs
+sandboxed preloads as plain JavaScript without ESM import support; using an ESM
+preload silently removes the renderer bridge and is covered by Electron and
+Playwright contracts.
+
 Transport adapters are covered by `src/frontend/transport/transport.test.mjs` with injected WebSocket and RTCPeerConnection fakes, so signaling and offer/answer behavior can be verified without a live host or relay.
 
 Local capture primitives are in `src/frontend/capture/capture.mjs`. Screenshots use a video frame and Canvas; recordings use MediaRecorder with WebM MIME fallback. No capture data is uploaded by the frontend.

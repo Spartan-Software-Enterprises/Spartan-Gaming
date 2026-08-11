@@ -10,6 +10,7 @@ test('Electron runtime settings reflect persisted performance and privacy choice
     resolveElectronRuntimeSettings({
       'general.backgroundApps': true,
       'general.globalShortcut': 'CommandOrControl+Shift+G',
+      'performance.hardwareAcceleration': false,
       'performance.backgroundThrottling': false,
       'performance.powerMode': 'Performance',
       'privacy.doNotTrack': true,
@@ -17,6 +18,7 @@ test('Electron runtime settings reflect persisted performance and privacy choice
       'privacy.permissionPrompts': 'Ask every time',
     }),
     {
+      hardwareAcceleration: false,
       backgroundApps: true,
       globalShortcut: 'CommandOrControl+Shift+G',
       backgroundThrottling: false,
@@ -30,6 +32,7 @@ test('Electron runtime settings reflect persisted performance and privacy choice
 
 test('Electron runtime settings default safely when values are absent', () => {
   assert.deepEqual(resolveElectronRuntimeSettings({}), {
+    hardwareAcceleration: true,
     backgroundApps: false,
     globalShortcut: undefined,
     backgroundThrottling: true,
@@ -41,6 +44,10 @@ test('Electron runtime settings default safely when values are absent', () => {
 });
 
 test('Electron runtime settings describe global shortcut registration outcomes', () => {
+  assert.equal(
+    describeElectronRuntimeResult({ startupPolicy: { requiresRestart: true } }),
+    'Saved locally; restart Spartan Gaming to apply hardware acceleration changes.',
+  );
   assert.equal(
     describeElectronRuntimeResult({
       globalShortcutStatus: { status: 'registered', accelerator: 'CommandOrControl+Shift+G' },

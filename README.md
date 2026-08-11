@@ -74,7 +74,7 @@ Production relay services, public TLS, TURN capacity, signing-key custody, and n
 
 ### Settings for the whole system
 
-The Settings control center covers standalone application behavior, gaming, streaming, controllers, emulation, providers, performance and power, privacy, accessibility, profiles/workspaces, updates, Android policy, SteamOS/Proton launch preferences, host transport, and device presentation. Preferences remain local unless a future sync mechanism is deliberately configured.
+The Settings control center covers standalone application behavior, gaming, streaming, controllers, emulation, providers, performance and power, privacy, accessibility, profiles/workspaces, updates, Android policy, SteamOS/Proton launch preferences, host transport, and device presentation. Preferences remain local unless a future sync mechanism is deliberately configured. Electron hardware acceleration is a real next-launch setting: Spartan persists the bounded choice locally, reports when a restart is required, and applies the software-rendering fallback before Electron becomes ready.
 
 ## Device-universal direction
 

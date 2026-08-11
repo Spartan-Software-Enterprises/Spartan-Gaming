@@ -23,21 +23,34 @@ let activeCategory = settingsCategories.some((category) => category.id === reque
   ? requestedCategory
   : 'general';
 let query = '';
+let runtimeSaveSequence = 0;
 
 function saveState() {
   Object.assign(state, settingsStore.save(state));
   applyRuntimeUiSettings(document, state);
+  const runtimeSettings = resolveElectronRuntimeSettings(state);
   const runtimeResult = globalThis.spartanElectron?.applyRuntimeSettings?.(
-    resolveElectronRuntimeSettings(state),
+    JSON.stringify(runtimeSettings),
   );
+  const saveSequence = ++runtimeSaveSequence;
   const status = document.querySelector('[data-save-status]');
   if (status) {
     status.textContent = 'Saved locally';
     void Promise.resolve(runtimeResult)
-      .then((result) => {
-        status.textContent = describeElectronRuntimeResult(result);
+      .then((serializedResult) => {
+        if (saveSequence !== runtimeSaveSequence) return;
+        const result =
+          typeof serializedResult === 'string' ? JSON.parse(serializedResult) : serializedResult;
+        const startupPolicy = result?.startupPolicy;
+        document.documentElement.dataset.spartanHardwareAcceleration =
+          startupPolicy?.hardwareAcceleration === false ? 'disabled' : 'enabled';
+        document.documentElement.dataset.spartanRestartRequired = startupPolicy?.requiresRestart
+          ? 'true'
+          : 'false';
+        status.textContent = describeElectronRuntimeResult({ ...result, startupPolicy });
       })
       .catch(() => {
+        if (saveSequence !== runtimeSaveSequence) return;
         status.textContent = 'Saved locally; desktop runtime update failed.';
       });
     setTimeout(() => {
@@ -162,8 +175,12 @@ function bindControls() {
       renderContent();
       saveState();
     };
-    control.addEventListener(control.matches('input[type="range"]') ? 'input' : 'change', update);
-    if (control.classList.contains('toggle')) control.addEventListener('click', update);
+    const eventName = control.classList.contains('toggle')
+      ? 'click'
+      : control.matches('input[type="range"]')
+        ? 'input'
+        : 'change';
+    control.addEventListener(eventName, update);
   });
   document.querySelectorAll('[data-action]').forEach((button) =>
     button.addEventListener('click', async () => {
@@ -296,7 +313,8 @@ document.querySelector('[data-import-file]').addEventListener('change', async (e
   try {
     Object.assign(state, settingsStore.import(await file.text()));
     applyRuntimeUiSettings(document, state);
-    globalThis.spartanElectron?.applyRuntimeSettings?.(resolveElectronRuntimeSettings(state));
+    const runtimeSettings = resolveElectronRuntimeSettings(state);
+    globalThis.spartanElectron?.applyRuntimeSettings?.(JSON.stringify(runtimeSettings));
     render();
     document.querySelector('[data-save-status]').textContent = 'Imported and saved';
   } catch (error) {
@@ -306,4 +324,5 @@ document.querySelector('[data-import-file]').addEventListener('change', async (e
 });
 
 render();
-globalThis.spartanElectron?.applyRuntimeSettings?.(resolveElectronRuntimeSettings(state));
+const initialRuntimeSettings = resolveElectronRuntimeSettings(state);
+globalThis.spartanElectron?.applyRuntimeSettings?.(JSON.stringify(initialRuntimeSettings));

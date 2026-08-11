@@ -83,6 +83,7 @@ async function configureLayout(page, layout) {
           'appearance.reduceMotion': true,
           'accessibility.reduceMotion': true,
           'general.askBeforeQuit': false,
+          'gaming.hideBrowserChrome': true,
           'television.showPointer': true,
         }),
       );
@@ -91,7 +92,7 @@ async function configureLayout(page, layout) {
   );
 }
 
-async function checkLayoutInteraction(page, layout, output) {
+async function checkLayoutInteraction(page, layout, output, userDataDirectory) {
   await page.goto(`${appOrigin}/dashboard/`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(150);
   const search = page.locator('input[type="search"]');
@@ -140,6 +141,46 @@ async function checkLayoutInteraction(page, layout, output) {
     if ((await shortcut.inputValue()) !== 'CommandOrControl+Shift+G')
       throw new Error('desktop shortcut setting did not persist after reload');
     interactions.push('desktop:global-shortcut-setting');
+
+    await page.locator('[data-category="performance"]').click();
+    const hardwareAcceleration = page.locator('[data-key="performance.hardwareAcceleration"]');
+    if ((await hardwareAcceleration.getAttribute('aria-checked')) !== 'true')
+      throw new Error('desktop hardware acceleration setting did not start enabled');
+    await hardwareAcceleration.click();
+    await page.waitForTimeout(500);
+    const startupUi = await page.evaluate(() => ({
+      hardwareAcceleration: document.documentElement.dataset.spartanHardwareAcceleration,
+      restartRequired: document.documentElement.dataset.spartanRestartRequired,
+      status: document.querySelector('[data-save-status]')?.textContent?.trim(),
+      storedValue: JSON.parse(
+        localStorage.getItem('spartan-gaming.profile.gaming.spartan-gaming.settings.v1') || '{}',
+      )['performance.hardwareAcceleration'],
+    }));
+    if (startupUi.hardwareAcceleration !== 'disabled')
+      throw new Error(
+        `desktop hardware acceleration setting returned ${JSON.stringify(startupUi)}`,
+      );
+    const restartRequired = startupUi.restartRequired;
+    if (restartRequired !== 'true')
+      throw new Error(
+        `desktop hardware acceleration setting returned ${JSON.stringify(startupUi)}`,
+      );
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.locator('[data-category="performance"]').click();
+    if ((await hardwareAcceleration.getAttribute('aria-checked')) !== 'false')
+      throw new Error('desktop hardware acceleration setting did not persist after reload');
+    const startupPolicy = JSON.parse(
+      await readFile(path.join(userDataDirectory, 'startup-policy.json'), 'utf8'),
+    );
+    if (startupPolicy.hardwareAcceleration !== false)
+      throw new Error('desktop hardware acceleration setting did not persist for the next launch');
+    interactions.push('desktop:hardware-acceleration-setting');
+    await hardwareAcceleration.click();
+    await page.waitForFunction(
+      () =>
+        document.documentElement.dataset.spartanHardwareAcceleration === 'enabled' &&
+        document.documentElement.dataset.spartanRestartRequired === 'false',
+    );
 
     await page.locator('[data-category="controllers"]').click();
     await page.locator('[data-key="controllers.playerSlots"]').selectOption('2');
@@ -242,7 +283,7 @@ export async function runElectronVisualSmoke({
           }),
         );
       }
-      interactions.push(...(await checkLayoutInteraction(page, layout, output)));
+      interactions.push(...(await checkLayoutInteraction(page, layout, output, userDataDirectory)));
     }
 
     const candidate = Object.freeze({

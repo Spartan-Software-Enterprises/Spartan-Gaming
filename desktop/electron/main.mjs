@@ -44,8 +44,19 @@ import {
   providerSessionPartitions,
   resolveProviderPartition,
 } from './provider-session.mjs';
+import {
+  applyElectronStartupPolicy,
+  describeElectronStartupPolicy,
+  persistElectronStartupPolicy,
+  readElectronStartupPolicy,
+} from './startup-policy.mjs';
 
 protocol.registerSchemesAsPrivileged([APP_PROTOCOL_PRIVILEGES]);
+const startupPolicyPath = path.join(app.getPath('userData'), 'startup-policy.json');
+const startupPolicyAtLaunch = applyElectronStartupPolicy(
+  app,
+  readElectronStartupPolicy(startupPolicyPath),
+);
 if (process.platform === 'linux')
   app.commandLine.appendSwitch('enable-features', 'GlobalShortcutsPortal');
 
@@ -327,7 +338,7 @@ async function createMainWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
-      preload: path.join(repositoryRoot, 'desktop/electron/preload.mjs'),
+      preload: path.join(repositoryRoot, 'desktop/electron/preload.cjs'),
     },
   });
   installPrivacyPolicy(windowRef.webContents.session);
@@ -432,16 +443,23 @@ if (hasSingleInstanceLock)
       syncPowerSaveBlocker();
       return sessionActive;
     });
-    ipcMain.handle('spartan:apply-runtime-settings', (event, settings) => {
+    ipcMain.handle('spartan:apply-runtime-settings', async (event, serializedSettings) => {
       if (event.sender !== windowRef.webContents)
         throw new Error('runtime settings may only be applied by the primary window');
+      if (typeof serializedSettings !== 'string' || serializedSettings.length > 4096)
+        throw new TypeError('runtime settings must be bounded JSON');
+      const settings = JSON.parse(serializedSettings);
+      if (!settings || typeof settings !== 'object' || Array.isArray(settings))
+        throw new TypeError('runtime settings must be an object');
       runtimePolicy = normalizeElectronRuntimePolicy(settings);
       event.sender.setBackgroundThrottling(runtimePolicy.backgroundThrottling);
       syncPowerSaveBlocker();
       if (runtimePolicy.backgroundApps) syncTray();
       else destroyTray();
-      return Object.freeze({
+      const startupPolicy = await persistElectronStartupPolicy(startupPolicyPath, settings);
+      return JSON.stringify({
         ...runtimePolicy,
+        startupPolicy: describeElectronStartupPolicy(startupPolicy, startupPolicyAtLaunch),
         globalShortcutStatus: shortcutController.sync(runtimePolicy.globalShortcut),
       });
     });

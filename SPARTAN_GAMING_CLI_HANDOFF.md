@@ -556,6 +556,31 @@ rebuilt successfully. No full desktop environment was required beyond Xvfb.
 CodeRabbit reviewed all 10 changed files in this increment and returned zero
 findings.
 
+The current desktop performance increment makes
+`performance.hardwareAcceleration` operational in Electron. The renderer sends
+the normalized choice to the main process, which atomically persists a bounded
+startup policy in the Electron user-data directory and reports when the active
+process must restart. On the next launch the policy is read and software
+rendering is selected before Electron becomes ready; missing, malformed, and
+non-boolean values retain the accelerated default. Focused startup-policy and
+renderer-policy validation passes 7/7, and the expanded Electron contract suite
+passes 34/34 after adding concurrent-write coverage. AWS visual testing exposed that the former ESM preload never ran
+inside the sandboxed renderer; Electron's documented constraint requires plain
+JavaScript/CommonJS there. The bridge now uses `preload.cjs` without weakening
+sandboxing or context isolation. AWS subsequently matched all 44 visual
+snapshots and exercised eight maintained interactions, including toggling
+hardware acceleration, observing restart-required state, reloading the saved
+profile, and reading the bounded next-launch policy from disk.
+Local repository checks pass 437/437 and the serialized suite passes 637 of 641
+with four expected host skips; AWS passes 639 of 641 with two expected platform
+skips and rebuilt the unpacked Linux x64 application. CodeRabbit identified one
+valid concurrent-write race; startup policy writes are now queued per file with
+cryptographically random temporary names, and the follow-up review returned
+zero findings across all 17 changed files.
+The visual harness now pins hidden in-session chrome explicitly for every
+layout so the mobile-player baseline cannot inherit state from desktop settings
+interactions.
+
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
 `scripts/frontend/serve.test.mjs`. Before pushing future work, run
