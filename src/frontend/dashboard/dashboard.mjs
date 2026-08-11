@@ -22,7 +22,7 @@ import {
   createWorkspaceStore,
   resolveWorkspaceLaunchBehavior,
 } from '../workspaces/workspaces.mjs';
-import { createFavoritesStore, createRomLibraryStore } from './library-state.mjs';
+import { createFavoritesStore, createRomLibraryStore, detectRomSystem, detectRomMime } from './library-state.mjs';
 import {
   createCommunityProviderCatalogStore,
   mergeCommunityProviders,
@@ -114,7 +114,17 @@ document
     '<button class="filter" data-filter="browser">Browser games</button>',
   );
 document
-  .querySelector('.main-nav')
+  .querySelector('.filters')
+  ?.insertAdjacentHTML(
+    'beforeend',
+    '<button class="filter" data-filter="rom-library">ROM Library</button>',
+  );
+document
+  .querySelector('.topbar')
+  ?.insertAdjacentHTML(
+    'beforeend',
+    '<button class="rom-import" data-action="import-roms" aria-label="Import ROM files">▼ Import ROMs</button>',
+  );
   ?.insertAdjacentHTML(
     'beforeend',
     '<button class="nav-item" data-section="browser">▣ <span>Browser games</span></button>',
@@ -596,7 +606,48 @@ document.addEventListener('click', (event) => {
     }
     launchEntry(entry, plan);
   }
+  const importButton = event.target.closest('[data-action="import-roms"]');
+  if (importButton) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = '.zip,.smc,.sfc,.nes,.gba,.gb,.gbc,.n64,.z64,.iso,.cue,.bin,.chd,.wbfs,.gcm,.cso,.nds,.3ds,.a26,.vec,.smd,.md,.sms,.gg,.pce,.ws,.rom';
+    input.onchange = () => {
+      const files = Array.from(input.files || []);
+      if (files.length) {
+        const selectedRoms = files.map((file) => {
+          const path = `/imported/${file.name}`;
+          const system = detectRomSystem(file.name);
+          const name = file.name.split('.').shift();
+          const extension = file.name.split('.').pop().toLowerCase();
+          const mime = file.type || detectRomMime(file.name);
+          return {
+            romPath: path,
+            system,
+            extension,
+            name,
+            mime,
+          };
+        });
+        state.romLibrary.importFromPaths(selectedRoms);
+        showToast(`Imported ${selectedRoms.length} ROM(s)`);
+        render();
+      }
+    };
+    input.click();
+    return;
+  }
 });
+document.querySelector('[data-provider-close]').addEventListener('click', closeProviderSurface);
+        state.romLibrary.importFromPaths(selectedRoms);
+        showToast(`Imported ${selectedRoms.length} ROM(s)`);
+        render();
+      },
+    });
+    return;
+  }
+});
+document.querySelector('[data-provider-close]').addEventListener('click', closeProviderSurface);
 document.querySelector('[data-provider-close]').addEventListener('click', closeProviderSurface);
 providerDialog.addEventListener('close', () => {
   document.querySelector('[data-provider-frame]').src = 'about:blank';

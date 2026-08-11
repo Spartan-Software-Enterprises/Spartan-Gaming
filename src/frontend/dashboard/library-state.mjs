@@ -221,3 +221,10 @@ export function createRomLibraryStore({
     },
   });
 }
+
+export {
+  validRomRecord,
+  normalizeRomRecord,
+  detectRomSystem,
+  detectRomMime,
+};

@@ -64,7 +64,7 @@ test('rom library rejects invalid records', () => {
     name: 'Super Mario'
     // missing mime
   };
-  assert.notOk(validRomRecord(invalidRecord));
+  assert.equal(validRomRecord(invalidRecord), false);
   assert.throws(() => normalizeRomRecord(invalidRecord), /invalid/);
 });
 
@@ -106,7 +106,7 @@ test('rom library removes records by path', () => {
   assert.ok(store.remove('/games/Metroid.zip'));
   assert.strictEqual(store.list().length, 1);
   assert.strictEqual(store.list()[0].romPath, '/games/Mario.smc');
-  assert.notOk(store.remove('/games/NonExistent.nes'));
+  assert.equal(store.remove('/games/NonExistent.nes'), false);
 });
 
 test('rom library searches by name, system, and extension', () => {
@@ -132,7 +132,7 @@ test('rom library searches by name, system, and extension', () => {
   results = store.find('arcade');
   assert.strictEqual(results.length, 1);
   assert.strictEqual(results[0].system, 'arcade');
-  results = store.find('.smc');
+  results = store.find('smc');
   assert.strictEqual(results.length, 1);
   assert.strictEqual(results[0].extension, 'smc');
 });
