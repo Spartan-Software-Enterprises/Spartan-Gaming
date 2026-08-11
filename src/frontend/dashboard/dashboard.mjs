@@ -47,7 +47,8 @@ const workspaceStore = createWorkspaceStore({ storage: profileStorage });
 const communityCatalogStore = createCommunityProviderCatalogStore();
 const settings = createSettingsStore().read();
 const settingsStore = createSettingsStore();
-globalThis.spartanElectron?.applyRuntimeSettings?.(resolveElectronRuntimeSettings(settings));
+const electronRuntimeSettings = resolveElectronRuntimeSettings(settings);
+globalThis.spartanElectron?.applyRuntimeSettings?.(JSON.stringify(electronRuntimeSettings));
 const providerStartupPolicy = resolveProviderStartupPolicy(settings);
 const recoveryHandoff =
   settings['general.restoreSession'] !== false ? readSessionRecoveryHandoff(sessionStorage) : null;

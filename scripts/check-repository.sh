@@ -246,9 +246,11 @@ required_files=(
   src/frontend/host/browser-studio.test.mjs
   src/frontend/player/index.html
   desktop/electron/main.mjs
-  desktop/electron/preload.mjs
+  desktop/electron/preload.cjs
   desktop/electron/security.mjs
   desktop/electron/runtime-policy.mjs
+  desktop/electron/startup-policy.mjs
+  desktop/electron/startup-policy.test.mjs
   desktop/electron/provider-session.mjs
   desktop/electron/provider-session.test.mjs
   desktop/electron/power-runtime.mjs
@@ -466,9 +468,10 @@ node --check host/rumble-passthrough.mjs
 node --check host/audio.mjs
 node --check src/frontend/player/player.mjs
 node --check desktop/electron/main.mjs
-node --check desktop/electron/preload.mjs
+node --check desktop/electron/preload.cjs
 node --check desktop/electron/security.mjs
 node --check desktop/electron/runtime-policy.mjs
+node --check desktop/electron/startup-policy.mjs
 node --check desktop/electron/provider-session.mjs
 node --check desktop/electron/power-runtime.mjs
 node --check desktop/electron/tray-policy.mjs
@@ -533,7 +536,7 @@ node --test src/frontend/input/steam-input.test.mjs
 node --test src/frontend/settings/control.test.mjs
 node --test src/frontend/adapters/manifest-registry.test.mjs
 node --test src/frontend/player/volume.test.mjs
-node --test desktop/electron/security.test.mjs desktop/electron/runtime-policy.test.mjs desktop/electron/provider-session.test.mjs desktop/electron/power-runtime.test.mjs desktop/electron/tray-policy.test.mjs desktop/electron-builder.test.mjs
+node --test desktop/electron/security.test.mjs desktop/electron/runtime-policy.test.mjs desktop/electron/startup-policy.test.mjs desktop/electron/provider-session.test.mjs desktop/electron/power-runtime.test.mjs desktop/electron/tray-policy.test.mjs desktop/electron-builder.test.mjs
 node --test scripts/roadmap/acceptance.test.mjs scripts/chromium/config.test.mjs scripts/chromium/build.test.mjs scripts/chromium/bootstrap.test.mjs scripts/frontend/build.test.mjs scripts/lan-demo.test.mjs signaling/agent.test.mjs signaling/broker.test.mjs host/signaling.test.mjs host/session.test.mjs host/audio.test.mjs host/input.test.mjs host/rumble-passthrough.test.mjs host/publisher.test.mjs host/pairing.test.mjs host/capabilities.test.mjs host/adapters.test.mjs host/environment.test.mjs host/media.test.mjs src/frontend/catalog.test.mjs src/frontend/dashboard/routes.test.mjs src/frontend/launch/intent.test.mjs src/frontend/launch/history.test.mjs src/frontend/settings/profile.test.mjs src/frontend/settings/actions.test.mjs src/frontend/session/preferences.test.mjs src/frontend/session/power-policy.test.mjs src/frontend/input/policy.test.mjs src/frontend/input/haptics.test.mjs src/frontend/input/pointer.test.mjs src/frontend/host/readiness.test.mjs src/frontend/settings/settings.test.mjs src/frontend/session/session.test.mjs src/frontend/session/quality.test.mjs src/frontend/session/recovery.test.mjs src/frontend/session/runtime.test.mjs src/frontend/session/telemetry.test.mjs src/frontend/input/input.test.mjs src/frontend/input/profiles.test.mjs src/frontend/input/inspector.test.mjs src/frontend/input/navigation.test.mjs src/frontend/compatibility/harness.test.mjs src/frontend/providers/integration.test.mjs src/frontend/providers/health.test.mjs src/frontend/providers/profiles.test.mjs src/frontend/adapters/adapters.test.mjs src/frontend/host/host.test.mjs src/frontend/player/player-state.test.mjs src/frontend/player/immersive.test.mjs src/frontend/player/wake-lock.test.mjs src/frontend/player/media.test.mjs src/frontend/player/media-session.test.mjs src/frontend/player/transport-config.test.mjs src/frontend/player/connection.test.mjs src/frontend/workspaces/workspaces.test.mjs src/frontend/diagnostics/capabilities.test.mjs src/frontend/diagnostics/focus.test.mjs src/frontend/transport/ice.test.mjs src/frontend/transport/policy.test.mjs src/frontend/transport/transport.test.mjs src/frontend/capture/capture.test.mjs src/frontend/emulation/integration.test.mjs src/frontend/emulation/emulation.test.mjs src/frontend/emulation/runtime-profiles.test.mjs src/frontend/readiness/status.test.mjs src/frontend/pwa/cache.test.mjs src/frontend/pwa/install.test.mjs src/frontend/host/browser-studio.test.mjs
 
 if command -v git >/dev/null 2>&1; then

@@ -11,6 +11,8 @@ export function normalizeGlobalShortcut(value) {
 }
 
 export function describeElectronRuntimeResult(result) {
+  if (result?.startupPolicy?.requiresRestart)
+    return 'Saved locally; restart Spartan Gaming to apply hardware acceleration changes.';
   const shortcut = result?.globalShortcutStatus;
   if (shortcut?.status === 'unavailable')
     return 'Saved locally; desktop shortcut is unavailable or already in use.';
@@ -21,6 +23,7 @@ export function describeElectronRuntimeResult(result) {
 /** Convert persisted settings into the bounded Electron runtime policy payload. */
 export function resolveElectronRuntimeSettings(settings = {}) {
   return Object.freeze({
+    hardwareAcceleration: settings['performance.hardwareAcceleration'] !== false,
     backgroundApps: settings['general.backgroundApps'] === true,
     globalShortcut: settings['general.globalShortcut'],
     backgroundThrottling: settings['performance.backgroundThrottling'] !== false,

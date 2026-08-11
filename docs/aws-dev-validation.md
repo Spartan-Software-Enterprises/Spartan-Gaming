@@ -294,3 +294,20 @@ x64 Electron application successfully. Xvfb remains sufficient for this
 automated desktop matrix; a full desktop environment is not currently needed.
 CodeRabbit reviewed all 10 changed files in this increment and returned zero
 findings.
+
+The 2026-08-11 Electron startup-policy run corrected the primary window preload
+from unsupported sandboxed ESM to CommonJS while retaining `sandbox: true` and
+context isolation. The Xvfb matrix then matched all 44 Linux x64 snapshots and
+completed eight interactions. The new performance interaction changed hardware
+acceleration through the real preload/IPC bridge, received restart-required
+state, verified profile persistence after reload, inspected the bounded policy
+file in the temporary Electron user-data directory, and restored the launch
+value before continuing the layout matrix.
+AWS also passed the 34/34 Electron contract suite and rebuilt the unpacked Linux
+x64 application. CodeRabbit's initial review found a concurrent startup-policy
+write race. The corrected implementation serializes writes per policy file,
+uses cryptographically random temporary names, and passes a false-then-true
+concurrency test; the follow-up review returned zero findings across all 17
+changed files.
+The harness explicitly pins hidden in-session chrome for every release layout,
+preventing the mobile-player baseline from inheriting desktop interaction state.
