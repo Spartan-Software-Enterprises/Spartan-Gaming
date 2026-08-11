@@ -70,6 +70,7 @@ export function createProductionRolloutPlan({composeExecutable: executable = 'do
   const normalizedEnvFile = envFile ? absolute(envFile, 'envFile') : null;
   const health = healthUrl(healthEndpoint, 'healthEndpoint');
   const adminHealth = adminHealthEndpoint ? healthUrl(adminHealthEndpoint, 'adminHealthEndpoint') : null;
+  if (requireTurnCredentials && !adminHealth) throw new TypeError('adminHealthEndpoint is required when TURN credential verification is required');
   const base = {composeExecutable: normalizedExecutable, composeFile: normalizedComposeFile, project: normalizedProject, envFile: normalizedEnvFile, includeTurn: Boolean(includeTurn)};
   return Object.freeze({status: 'planned', compose: Object.freeze({preflight: composeArgs({...base, action: 'config'}), up: composeArgs({...base, action: 'up'})}), health: Object.freeze({endpoint: health, adminEndpoint: adminHealth, required: Object.freeze(['service', ...(requireBroker ? ['broker'] : []), ...(requireTurnCredentials ? ['turn-credential-service'] : [])])}), security: Object.freeze({shell: false, credentials: 'external-secret-files', turn: Boolean(includeTurn), operatorConfirmationRequired: true})});
 }
@@ -112,6 +113,8 @@ async function checkTurnCredentials(endpoint, {adminSecret, fetchImpl = fetch, c
 export async function executeProductionRollout(plan, {runner = defaultRunner, fetchImpl = fetch, checkAdmin = false, checkTurn = false, checkTurnNetwork = false, turnConnector = connectTurnEndpoint, adminSecret, timeoutMs = 10_000} = {}) {
   if (!plan || plan.status !== 'planned' || !plan.compose?.preflight || !plan.compose?.up) throw new TypeError('a valid production rollout plan is required');
   if (typeof runner !== 'function') throw new TypeError('runner must be a function');
+  if (checkAdmin && !plan.health.adminEndpoint) throw new TypeError('admin health endpoint is required when admin checks are enabled');
+  if (checkTurn && !plan.health.adminEndpoint) throw new TypeError('admin health endpoint is required when TURN checks are enabled');
   await runner(plan.compose.preflight); await runner(plan.compose.up);
   const primary = await checkHealth(plan.health.endpoint, {fetchImpl, timeoutMs});
   if (plan.health.required.includes('broker') && primary.broker?.status !== 'ready') throw new Error('production broker health is not ready');
