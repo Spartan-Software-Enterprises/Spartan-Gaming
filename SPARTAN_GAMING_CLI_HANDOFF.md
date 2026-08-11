@@ -159,6 +159,11 @@ review; stay within the AWS credit limit.
 - The latest code commit `1bc3c42` passed Android debug `31443570936`,
   cross-platform contracts `31443570924`, frontend distribution `31443570963`,
   and repository checks `31443570926`.
+- The latest code commit `4764d23` passed Android debug `31444753526`,
+  cross-platform contracts `31444753488`, frontend distribution `31444753530`,
+  and repository checks `31444753540`. Its roadmap acceptance ledger now
+  rejects duplicate platform or SteamOS evidence identities instead of
+  silently allowing later reports to overwrite earlier ones.
 - The current Android-hosted Termux probe (`a2378cc`, 2026-08-10) reports
   `/dev/uinput` unavailable/read-write-unverified; input and force-feedback
   were therefore not run. This host also has no Docker, Redis, or coturn
