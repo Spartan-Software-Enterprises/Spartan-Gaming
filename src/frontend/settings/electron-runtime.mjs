@@ -47,7 +47,6 @@ export function describeElectronUpdateStatus(result) {
 export function resolveElectronRuntimeSettings(settings = {}) {
   return Object.freeze({
     developerMode: settings['advanced.developerMode'] === true,
-    hardwareAcceleration: settings['performance.hardwareAcceleration'] !== false,
     gpuPreference: ['Automatic', 'Power saving GPU', 'High performance GPU'].includes(
       settings['performance.gpuPreference'],
     )
