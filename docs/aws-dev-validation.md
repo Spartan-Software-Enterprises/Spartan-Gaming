@@ -112,6 +112,14 @@ partition policy and Electron wiring on Linux; it does not substitute for real
 provider sign-in, restart persistence, session-expiry recovery, or account
 switching evidence.
 
+The follow-up provider auto-detection increment passed 30/30 Electron
+contracts on the Amazon Linux host. The full serial suite passed 639 of 641
+tests with 2 expected platform skips and 0 failures; the Xvfb Electron matrix
+again matched 44/44 baselines across all four layouts and seven interactions.
+The synchronized tree also rebuilt the unpacked Linux application. This proves
+the bounded provider-activity and shared power-policy contracts on Linux, not a
+real external provider stream or hardware power/suspend behavior.
+
 The same synchronized tree also completed `npm run desktop:package -- --dir`
 and launched the unpacked `Spartan-Gaming` executable under Xvfb for the
 bounded startup probe. `xdg-utils` and `desktop-file-utils` are installed so

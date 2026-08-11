@@ -40,6 +40,7 @@
 - [x] Capability-aware launch plans with explicit readiness, troubleshooting, and next actions.
 - [x] Provider profiles for supported cloud, remote-play, and streaming services.
 - [x] Profile-scoped Electron provider sessions with an explicit shared-account compatibility setting, same-partition OAuth children, and all-partition logout cleanup (real-service sign-in and recovery remain a public-release gate).
+- [x] Settings-controlled provider-session auto-detection for successfully loaded approved Electron views, including application power activity and crash/close cleanup without remote-page injection.
 - [x] Emulator/core profiles for libretro, Dolphin, PCSX2, RPCS3, PPSSPP, DuckStation, Cemu, Vita3K, melonDS, Azahar, MAME, Flycast, xemu, and ScummVM.
 - [x] Browser-WASM/libretro runtime lifecycle contract with user-selected file gating.
 - [x] Emulation Center browser-adapter registration point with lifecycle controls.

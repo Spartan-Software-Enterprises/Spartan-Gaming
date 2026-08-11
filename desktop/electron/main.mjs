@@ -25,7 +25,11 @@ import {
   shouldQuitWhenWindowsClose,
 } from './runtime-policy.mjs';
 import { createTrayMenuTemplate, shouldCreateTray } from './tray-policy.mjs';
-import { normalizePowerEvent, resolvePowerSaveBlockerType } from './power-runtime.mjs';
+import {
+  normalizePowerEvent,
+  resolveApplicationSessionActive,
+  resolvePowerSaveBlockerType,
+} from './power-runtime.mjs';
 import { findSpartanDeepLink } from './deep-links.mjs';
 import { createGlobalShortcutController } from './global-shortcut.mjs';
 import {
@@ -35,7 +39,11 @@ import {
   createBundledAppProtocolHandler,
 } from './app-protocol.mjs';
 import { createApprovedNetworkPolicy } from './network-policy.mjs';
-import { providerSessionPartitions, resolveProviderPartition } from './provider-session.mjs';
+import {
+  normalizeProviderSessionOptions,
+  providerSessionPartitions,
+  resolveProviderPartition,
+} from './provider-session.mjs';
 
 protocol.registerSchemesAsPrivileged([APP_PROTOCOL_PRIVILEGES]);
 if (process.platform === 'linux')
@@ -48,6 +56,7 @@ const providerChildWindows = new Set();
 let trayRef;
 let quitGuardEnabled = true;
 let sessionActive = false;
+let providerSessionActive = false;
 let quitting = false;
 let runtimePolicy = normalizeElectronRuntimePolicy();
 let powerBlockerId = null;
@@ -124,6 +133,8 @@ function closeProviderView() {
     closed = true;
   }
   providerChildWindows.clear();
+  providerSessionActive = false;
+  syncPowerSaveBlocker();
   if (!providerView) return closed;
   windowRef.contentView.removeChildView(providerView);
   providerView.webContents.close();
@@ -136,9 +147,22 @@ function createProviderView(url, title = 'Provider Player', sessionOptions = {})
   if (!networkPolicy.allowsProviderLaunch(url))
     throw new Error('Provider Player accepts only cataloged gaming-service URLs.');
   closeProviderView();
-  const partition = resolveProviderPartition(sessionOptions);
+  const normalizedSessionOptions = normalizeProviderSessionOptions(sessionOptions);
+  const partition = resolveProviderPartition(normalizedSessionOptions);
   providerView = new WebContentsView({ webPreferences: providerWebPreferences(partition) });
   configureProviderWebContents(providerView.webContents, partition);
+  const providerContents = providerView.webContents;
+  providerContents.on('did-finish-load', () => {
+    if (providerView?.webContents !== providerContents || !normalizedSessionOptions.autoDetect)
+      return;
+    providerSessionActive = true;
+    syncPowerSaveBlocker();
+  });
+  providerContents.on('render-process-gone', () => {
+    if (providerView?.webContents !== providerContents) return;
+    providerSessionActive = false;
+    syncPowerSaveBlocker();
+  });
   providerView.webContents.on('enter-full-screen', () =>
     windowRef.webContents.send('spartan:fullscreen-changed', true),
   );
@@ -226,9 +250,16 @@ function destroyTray() {
   trayRef = null;
 }
 
+function applicationSessionActive() {
+  return resolveApplicationSessionActive({
+    gameSession: sessionActive,
+    providerSession: providerSessionActive,
+  });
+}
+
 function syncPowerSaveBlocker() {
   const desired = resolvePowerSaveBlockerType({
-    active: sessionActive,
+    active: applicationSessionActive(),
     powerMode: runtimePolicy.powerMode,
   });
   if (desired === powerBlockerType && powerBlockerId !== null) return;
@@ -435,7 +466,7 @@ app.on('window-all-closed', () => {
     app.quit();
 });
 app.on('before-quit', (event) => {
-  if (!quitting && quitGuardEnabled && (sessionActive || Boolean(providerView))) {
+  if (!quitting && quitGuardEnabled && applicationSessionActive()) {
     event.preventDefault();
     void dialog
       .showMessageBox(windowRef, {

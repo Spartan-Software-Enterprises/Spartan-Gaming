@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   normalizePowerEvent,
   normalizePowerRuntimeState,
+  resolveApplicationSessionActive,
   resolvePowerSaveBlockerType,
 } from './power-runtime.mjs';
 
@@ -35,6 +36,16 @@ test('power save blocker follows active session and battery policy', () => {
   assert.equal(
     resolvePowerSaveBlockerType({ active: true, powerMode: 'Battery saver' }),
     'prevent-app-suspension',
+  );
+});
+
+test('application activity includes auto-detected provider sessions', () => {
+  assert.equal(resolveApplicationSessionActive(), false);
+  assert.equal(resolveApplicationSessionActive({ gameSession: true }), true);
+  assert.equal(resolveApplicationSessionActive({ providerSession: true }), true);
+  assert.equal(
+    resolveApplicationSessionActive({ gameSession: false, providerSession: false }),
+    false,
   );
 });
 

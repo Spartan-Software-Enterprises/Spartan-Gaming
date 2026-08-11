@@ -243,6 +243,7 @@ function openProviderSurface(entry, plan) {
       .openProvider(plan.url, entry.name, {
         profileId: profileStorage.profileId,
         isolateAccounts: settings['providers.isolateAccounts'] !== false,
+        autoDetect: settings['providers.autoDetect'] !== false,
       })
       .catch((error) => showToast(error.message));
     showToast(`${entry.name}: official player opened.`);

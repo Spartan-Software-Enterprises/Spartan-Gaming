@@ -33,6 +33,15 @@ provider-owned OAuth children. Logout then clears storage, HTTP authentication,
 and cache data from the shared partition and every profile partition so
 changing the setting cannot strand a signed-in account.
 
+Settings -> Providers -> Detect provider sessions is passed into each launch as
+a bounded boolean. When enabled, a successfully loaded approved provider view
+participates in the same application-activity decision as a connected Spartan
+game session, so the selected power policy can prevent display sleep. Closing
+the view, switching surfaces, logging out, or losing its renderer removes that
+activity. Disabling detection does not block provider launch and does not inject
+Spartan code into the remote page; it only prevents automatic activity
+inference.
+
 Use `npm run electron:test` for focused runtime contracts and
 `npm run desktop:package` for platform development artifacts. The package must
 include `desktop/electron/**`, `src/frontend/**`, and local catalogs; it must not
