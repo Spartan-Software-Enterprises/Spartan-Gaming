@@ -35,6 +35,7 @@
 - [x] Capability-aware Keyboard Lock and Pointer Lock controls with graceful permission fallback.
 - [x] Stream and system diagnostics page.
 - [x] Windows, macOS, and Linux development builds (Electron unpacked artifacts are built and contract-tested by the cross-platform CI matrix; signed release installers remain a separate release step).
+- [x] Branded scalable Electron package icon source for Linux, Windows, and macOS development artifacts.
 - [x] Plan-first Windows/macOS/Linux development-build matrix with isolated artifact metadata (compiled binaries remain external-checkout work).
 - [x] Unified frontend catalog and launcher model.
 - [x] Capability-aware launch plans with explicit readiness, troubleshooting, and next actions.
@@ -43,6 +44,7 @@
 - [x] Settings-controlled provider-session auto-detection for successfully loaded approved Electron views, including application power activity and crash/close cleanup without remote-page injection.
 - [x] Standalone settings terminology and schema cleanup (removed the obsolete general-web-search/address-bar control, replaced the startup `New tab` choice with `New session`, and retained legacy-profile routing compatibility).
 - [x] Restart-safe Electron hardware-acceleration policy with bounded local persistence, safe malformed-file fallback, and an explicit next-launch status in Settings.
+- [x] Opt-in local Electron crash and verbose diagnostics with startup-safe policy persistence, bounded retention, queued atomic writes, credential/identity redaction, export and immediate cleanup controls, and real-process Playwright coverage.
 - [x] Emulator/core profiles for libretro, Dolphin, PCSX2, RPCS3, PPSSPP, DuckStation, Cemu, Vita3K, melonDS, Azahar, MAME, Flycast, xemu, and ScummVM.
 - [x] Browser-WASM/libretro runtime lifecycle contract with user-selected file gating.
 - [x] Emulation Center browser-adapter registration point with lifecycle controls.

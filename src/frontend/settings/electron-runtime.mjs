@@ -24,6 +24,9 @@ export function describeElectronRuntimeResult(result) {
 export function resolveElectronRuntimeSettings(settings = {}) {
   return Object.freeze({
     hardwareAcceleration: settings['performance.hardwareAcceleration'] !== false,
+    crashReports: settings['performance.crashReports'] === true,
+    verboseLogs: settings['advanced.verboseLogs'] === true,
+    logRetention: settings['advanced.logRetention'],
     backgroundApps: settings['general.backgroundApps'] === true,
     globalShortcut: settings['general.globalShortcut'],
     backgroundThrottling: settings['performance.backgroundThrottling'] !== false,

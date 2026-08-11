@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { defaultSettings, settingsCategories } from './settings-data.mjs';
 import { normalizeControllerPolicy } from '../input/controller-policy.mjs';
 import './control.test.mjs';
@@ -54,4 +57,12 @@ test('controller settings options are accepted by the shared policy normalizer',
     .settings.find((item) => item.key === 'controllers.defaultProfile');
   for (const profile of setting.options)
     assert.equal(normalizeControllerPolicy({ defaultProfile: profile }).defaultProfile, profile);
+});
+
+test('active setting toggles keep their label beside the thumb', async () => {
+  const directory = path.dirname(fileURLToPath(import.meta.url));
+  const stylesheet = await readFile(path.join(directory, 'settings.css'), 'utf8');
+  assert.match(stylesheet, /\.toggle\s*\{[^}]*min-width:\s*72px/s);
+  assert.match(stylesheet, /\.toggle\.is-on\s*\{[^}]*flex-direction:\s*row-reverse/s);
+  assert.doesNotMatch(stylesheet, /\.toggle\.is-on span\s*\{[^}]*transform:/s);
 });

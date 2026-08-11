@@ -241,6 +241,37 @@ function bindControls() {
         }
         return;
       }
+      if (action.kind === 'export-diagnostics') {
+        const status = document.querySelector('[data-save-status]');
+        if (!globalThis.spartanElectron?.exportDiagnostics) {
+          window.location.assign('../diagnostics/index.html');
+          return;
+        }
+        try {
+          const result = await globalThis.spartanElectron.exportDiagnostics();
+          if (status)
+            status.textContent = result?.canceled
+              ? 'Diagnostics export canceled.'
+              : `Exported ${result?.entryCount ?? 0} local diagnostic entries.`;
+        } catch (error) {
+          if (status) status.textContent = `Diagnostics export failed: ${error.message}`;
+        }
+        return;
+      }
+      if (action.kind === 'clear-diagnostics') {
+        const status = document.querySelector('[data-save-status]');
+        if (!globalThis.spartanElectron?.clearDiagnostics) {
+          if (status) status.textContent = 'No Electron diagnostic log is available in this build.';
+          return;
+        }
+        try {
+          await globalThis.spartanElectron.clearDiagnostics();
+          if (status) status.textContent = 'Local Electron diagnostics cleared.';
+        } catch (error) {
+          if (status) status.textContent = `Diagnostics cleanup failed: ${error.message}`;
+        }
+        return;
+      }
       const status = document.querySelector('[data-save-status]');
       if (status && action.kind === 'status') {
         status.textContent = action.message;

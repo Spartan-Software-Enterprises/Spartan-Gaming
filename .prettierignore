@@ -3,6 +3,7 @@
 .worktrees
 android/.gradle
 android/app/build
+desktop/build-resources/icon.svg
 dist-electron
 node_modules
 out

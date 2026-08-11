@@ -1,6 +1,6 @@
 # Spartan Gaming agent handoff
 
-Updated: 2026-08-10
+Updated: 2026-08-11
 
 This is the durable continuation point for Codex, OpenCode, and other CLI
 agents. Read it before changing the repository, then verify Git state because
@@ -87,6 +87,40 @@ Inspect `AGENTS.md` or `CLAUDE.md` if either is added in a future checkout.
   TV/controller testing, macOS only where existing desktop CI contracts require
   it, signed installers and updates, real provider login/recovery flows,
   accessibility, performance, long-session recovery, and platform certification.
+- The current Electron diagnostics increment replaces the unsupported “Send
+  crash reports” promise with opt-in local crash records and functional local
+  verbose logs. The startup policy persists crash/log/retention choices;
+  queued atomic storage prunes expired entries even while recording is off,
+  flushes before export, and supports immediate cleanup. Exports redact URLs,
+  authorization and credential-shaped values, email-shaped identifiers,
+  addresses, and user paths; provider-page console output is never captured.
+- AWS Electron contracts pass 41/41. The real Xvfb matrix matches all 44
+  existing Linux x64 baselines and completes nine interactions, including an
+  actual renderer console event, on-disk redaction/policy checks, and cleanup.
+  The dedicated diagnostics-settings screenshot was inspected after correcting
+  a clipped active-toggle label; desktop, handheld, and mobile settings views
+  now place the visible `On` label beside the thumb without overflow.
+- Final local formatting and repository checks pass; the repository check is
+  438/438. The local serialized suite passes 638 of 642 with four expected
+  Termux/platform skips. AWS passes the same 438/438 repository check and 640
+  of 642 serialized tests with only the expected Windows/macOS skips.
+- AWS rebuilt the complete Linux package set: a 120,348,741-byte AppImage and
+  93,273,544-byte Debian package. The packaged ASAR contains the diagnostics
+  module, CommonJS preload, and corrected Settings stylesheet. A follow-up
+  AppImage build discovered the new scalable Spartan icon and emitted no
+  default-icon warning.
+- CodeRabbit's first review found four valid issues: retention needed an
+  independent queued prune, export needed to flush pending writes, the
+  Authorization redactor could leave a Bearer suffix, and Playwright used
+  timing sleeps. All four are fixed and focused tests pass; run a final review
+  after documentation and broad validation before publication. That final
+  review was attempted across the complete staged increment but the free CLI
+  returned an 18-minute rate limit before analysis, so no clean follow-up is
+  claimed.
+- The final Linux package run exposed Electron's default-icon warning. The
+  existing Spartan SVG mark now lives at
+  `desktop/build-resources/icon.svg`, where Electron Builder can convert the
+  same scalable source for Linux, Windows, and macOS development artifacts.
 
 ## Remote development server
 
@@ -580,6 +614,12 @@ zero findings across all 17 changed files.
 The visual harness now pins hidden in-session chrome explicitly for every
 layout so the mobile-player baseline cannot inherit state from desktop settings
 interactions.
+
+The next practical desktop-settings work remains the unsupported/inert settings
+inventory, beginning with a carefully bounded GPU preference/process-model
+contract or local-only developer tooling. Do not implement remote product
+telemetry or a generic update service without an explicit standalone endpoint,
+signed artifact model, rollback evidence, and network-boundary review.
 
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and

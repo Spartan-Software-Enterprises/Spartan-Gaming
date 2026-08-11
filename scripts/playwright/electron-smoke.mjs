@@ -63,6 +63,32 @@ async function readBaseline(baselinePath) {
   }
 }
 
+async function readJsonAfterWrite(filePath, predicate = () => true, attempts = 20) {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      const value = JSON.parse(await readFile(filePath, 'utf8'));
+      if (predicate(value)) return value;
+    } catch (error) {
+      if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+  }
+  throw new Error(`timed out waiting for JSON file ${filePath}`);
+}
+
+async function waitForMissingFile(filePath, attempts = 20) {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      await readFile(filePath, 'utf8');
+    } catch (error) {
+      if (error.code === 'ENOENT') return;
+      throw error;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error(`timed out waiting for file removal ${filePath}`);
+}
+
 async function configureLayout(page, layout) {
   await page.setViewportSize({ width: layout.width, height: layout.height });
   await page.goto(`${appOrigin}/dashboard/`, { waitUntil: 'domcontentloaded' });
@@ -181,6 +207,67 @@ async function checkLayoutInteraction(page, layout, output, userDataDirectory) {
         document.documentElement.dataset.spartanHardwareAcceleration === 'enabled' &&
         document.documentElement.dataset.spartanRestartRequired === 'false',
     );
+
+    const crashReports = page.locator('[data-key="performance.crashReports"]');
+    await crashReports.click();
+    await page.locator('[data-category="advanced"]').click();
+    const verboseLogs = page.locator('[data-key="advanced.verboseLogs"]');
+    const logRetention = page.locator('[data-key="advanced.logRetention"]');
+    await verboseLogs.click();
+    await logRetention.selectOption('1 day');
+    const startupPolicyPath = path.join(userDataDirectory, 'startup-policy.json');
+    const diagnosticsPolicy = await readJsonAfterWrite(
+      startupPolicyPath,
+      (policy) =>
+        policy.crashReports === true &&
+        policy.verboseLogs === true &&
+        policy.logRetention === '1 day',
+    );
+    await page.evaluate(() =>
+      console.warn(
+        'diagnostic interaction token=playwright-secret https://private.example.test/session',
+      ),
+    );
+    const diagnosticLogPath = path.join(userDataDirectory, 'diagnostics', 'events.json');
+    const diagnosticEntries = await readJsonAfterWrite(
+      diagnosticLogPath,
+      (entries) =>
+        Array.isArray(entries) &&
+        entries.some(
+          (entry) => entry.type === 'console' && /diagnostic interaction/.test(entry.message),
+        ),
+    );
+    const interactionEntry = diagnosticEntries.find(
+      (entry) => entry.type === 'console' && /diagnostic interaction/.test(entry.message),
+    );
+    if (
+      !interactionEntry ||
+      !interactionEntry.message.includes('token=[redacted]') ||
+      !interactionEntry.message.includes('[redacted-url]') ||
+      interactionEntry.message.includes('playwright-secret') ||
+      interactionEntry.message.includes('private.example.test')
+    )
+      throw new Error('desktop diagnostics did not redact the runtime entry');
+    if (
+      diagnosticsPolicy.crashReports !== true ||
+      diagnosticsPolicy.verboseLogs !== true ||
+      diagnosticsPolicy.logRetention !== '1 day'
+    )
+      throw new Error(
+        `desktop diagnostics policy did not persist: ${JSON.stringify(diagnosticsPolicy)}`,
+      );
+    await page.screenshot({
+      path: path.join(output, 'desktop-local-diagnostics-interaction.png'),
+      fullPage: true,
+      animations: 'disabled',
+    });
+    await page.locator('[data-action="advanced.clearDiagnostics"]').click();
+    await waitForMissingFile(diagnosticLogPath);
+    await verboseLogs.click();
+    await logRetention.selectOption('7 days');
+    await page.locator('[data-category="performance"]').click();
+    await crashReports.click();
+    interactions.push('desktop:local-diagnostics-settings');
 
     await page.locator('[data-category="controllers"]').click();
     await page.locator('[data-key="controllers.playerSlots"]').selectOption('2');

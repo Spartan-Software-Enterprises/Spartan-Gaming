@@ -11,6 +11,9 @@ test('Electron runtime settings reflect persisted performance and privacy choice
       'general.backgroundApps': true,
       'general.globalShortcut': 'CommandOrControl+Shift+G',
       'performance.hardwareAcceleration': false,
+      'performance.crashReports': true,
+      'advanced.verboseLogs': true,
+      'advanced.logRetention': '30 days',
       'performance.backgroundThrottling': false,
       'performance.powerMode': 'Performance',
       'privacy.doNotTrack': true,
@@ -19,6 +22,9 @@ test('Electron runtime settings reflect persisted performance and privacy choice
     }),
     {
       hardwareAcceleration: false,
+      crashReports: true,
+      verboseLogs: true,
+      logRetention: '30 days',
       backgroundApps: true,
       globalShortcut: 'CommandOrControl+Shift+G',
       backgroundThrottling: false,
@@ -33,6 +39,9 @@ test('Electron runtime settings reflect persisted performance and privacy choice
 test('Electron runtime settings default safely when values are absent', () => {
   assert.deepEqual(resolveElectronRuntimeSettings({}), {
     hardwareAcceleration: true,
+    crashReports: false,
+    verboseLogs: false,
+    logRetention: undefined,
     backgroundApps: false,
     globalShortcut: undefined,
     backgroundThrottling: true,

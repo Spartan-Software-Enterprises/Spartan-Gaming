@@ -14,7 +14,7 @@ import {
   powerMonitor,
   powerSaveBlocker,
 } from 'electron';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isAllowedNavigation } from './security.mjs';
@@ -50,6 +50,17 @@ import {
   persistElectronStartupPolicy,
   readElectronStartupPolicy,
 } from './startup-policy.mjs';
+import {
+  appendElectronDiagnosticEntry,
+  clearElectronDiagnosticLog,
+  createElectronDiagnosticEntry,
+  createElectronDiagnosticReport,
+  flushElectronDiagnosticLog,
+  normalizeElectronConsoleMessage,
+  normalizeElectronDiagnosticsPolicy,
+  pruneElectronDiagnosticLog,
+  shouldRecordProcessFailure,
+} from './diagnostic-log.mjs';
 
 protocol.registerSchemesAsPrivileged([APP_PROTOCOL_PRIVILEGES]);
 const startupPolicyPath = path.join(app.getPath('userData'), 'startup-policy.json');
@@ -57,6 +68,7 @@ const startupPolicyAtLaunch = applyElectronStartupPolicy(
   app,
   readElectronStartupPolicy(startupPolicyPath),
 );
+const diagnosticLogPath = path.join(app.getPath('userData'), 'diagnostics', 'events.json');
 if (process.platform === 'linux')
   app.commandLine.appendSwitch('enable-features', 'GlobalShortcutsPortal');
 
@@ -70,6 +82,8 @@ let sessionActive = false;
 let providerSessionActive = false;
 let quitting = false;
 let runtimePolicy = normalizeElectronRuntimePolicy();
+let diagnosticsPolicy = normalizeElectronDiagnosticsPolicy(startupPolicyAtLaunch);
+void pruneElectronDiagnosticLog(diagnosticLogPath, diagnosticsPolicy).catch(() => {});
 let powerBlockerId = null;
 let powerBlockerType = null;
 const privacySessions = new WeakSet();
@@ -77,6 +91,15 @@ const permissionDecisions = new Map();
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 let pendingDeepLink = findSpartanDeepLink(process.argv);
 let networkPolicy = createApprovedNetworkPolicy();
+
+function recordDiagnostic(type, details) {
+  const entry = createElectronDiagnosticEntry(type, details);
+  void appendElectronDiagnosticEntry(diagnosticLogPath, diagnosticsPolicy, entry).catch(() => {});
+}
+
+function recordProcessFailure(type, details) {
+  if (shouldRecordProcessFailure(details?.reason)) recordDiagnostic(type, details);
+}
 
 async function loadApprovedNetworkPolicy() {
   const [providerCatalog, gameCatalog] = await Promise.all([
@@ -169,8 +192,9 @@ function createProviderView(url, title = 'Provider Player', sessionOptions = {})
     providerSessionActive = true;
     syncPowerSaveBlocker();
   });
-  providerContents.on('render-process-gone', () => {
+  providerContents.on('render-process-gone', (_event, details) => {
     if (providerView?.webContents !== providerContents) return;
+    recordProcessFailure('renderer-crash', { ...details, scope: 'provider' });
     providerSessionActive = false;
     syncPowerSaveBlocker();
   });
@@ -342,6 +366,12 @@ async function createMainWindow() {
     },
   });
   installPrivacyPolicy(windowRef.webContents.session);
+  windowRef.webContents.on('render-process-gone', (_event, details) =>
+    recordProcessFailure('renderer-crash', { ...details, scope: 'application' }),
+  );
+  windowRef.webContents.on('console-message', (...details) => {
+    recordDiagnostic('console', normalizeElectronConsoleMessage(...details));
+  });
   windowRef.on('resize', resizeProvider);
   windowRef.webContents.on('will-navigate', (event) => {
     if (!isAllowedNavigation(event.url, { appOrigin: APP_ORIGIN })) event.preventDefault();
@@ -452,6 +482,13 @@ if (hasSingleInstanceLock)
       if (!settings || typeof settings !== 'object' || Array.isArray(settings))
         throw new TypeError('runtime settings must be an object');
       runtimePolicy = normalizeElectronRuntimePolicy(settings);
+      const nextDiagnosticsPolicy = normalizeElectronDiagnosticsPolicy(settings);
+      const diagnosticsPolicyChanged = Object.keys(nextDiagnosticsPolicy).some(
+        (key) => nextDiagnosticsPolicy[key] !== diagnosticsPolicy[key],
+      );
+      diagnosticsPolicy = nextDiagnosticsPolicy;
+      if (diagnosticsPolicyChanged)
+        await pruneElectronDiagnosticLog(diagnosticLogPath, diagnosticsPolicy);
       event.sender.setBackgroundThrottling(runtimePolicy.backgroundThrottling);
       syncPowerSaveBlocker();
       if (runtimePolicy.backgroundApps) syncTray();
@@ -462,6 +499,30 @@ if (hasSingleInstanceLock)
         startupPolicy: describeElectronStartupPolicy(startupPolicy, startupPolicyAtLaunch),
         globalShortcutStatus: shortcutController.sync(runtimePolicy.globalShortcut),
       });
+    });
+    ipcMain.handle('spartan:export-diagnostics', async (event) => {
+      if (event.sender !== windowRef.webContents)
+        throw new Error('diagnostics may only be exported by the primary window');
+      const result = await dialog.showSaveDialog(windowRef, {
+        title: 'Export Spartan Gaming diagnostics',
+        defaultPath: `spartan-gaming-diagnostics-${new Date().toISOString().slice(0, 10)}.json`,
+        filters: [{ name: 'JSON diagnostics', extensions: ['json'] }],
+      });
+      if (result.canceled || !result.filePath) return Object.freeze({ canceled: true });
+      await flushElectronDiagnosticLog(diagnosticLogPath);
+      const report = createElectronDiagnosticReport(diagnosticLogPath, {
+        appVersion: app.getVersion(),
+        platform: process.platform,
+        policy: diagnosticsPolicy,
+      });
+      await writeFile(result.filePath, `${JSON.stringify(report, null, 2)}\n`, { mode: 0o600 });
+      return Object.freeze({ canceled: false, entryCount: report.entries.length });
+    });
+    ipcMain.handle('spartan:clear-diagnostics', async (event) => {
+      if (event.sender !== windowRef.webContents)
+        throw new Error('diagnostics may only be cleared by the primary window');
+      await clearElectronDiagnosticLog(diagnosticLogPath);
+      return Object.freeze({ cleared: true });
     });
     installPowerMonitoring();
     ipcMain.handle('spartan:toggle-fullscreen', () => {
@@ -483,6 +544,9 @@ app.on('window-all-closed', () => {
   )
     app.quit();
 });
+app.on('child-process-gone', (_event, details) =>
+  recordProcessFailure('child-process-crash', details),
+);
 app.on('before-quit', (event) => {
   if (!quitting && quitGuardEnabled && applicationSessionActive()) {
     event.preventDefault();

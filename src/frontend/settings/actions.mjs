@@ -18,7 +18,8 @@ export const SETTINGS_ACTIONS = Object.freeze({
   'sync.exportSettings': Object.freeze({ kind: 'export-settings' }),
   'sync.importSettings': Object.freeze({ kind: 'import-settings' }),
   'accessibility.remapShortcuts': route('../input/profiles.html?focus=shortcuts'),
-  'advanced.exportDiagnostics': route('../diagnostics/index.html'),
+  'advanced.exportDiagnostics': Object.freeze({ kind: 'export-diagnostics' }),
+  'advanced.clearDiagnostics': Object.freeze({ kind: 'clear-diagnostics' }),
   'advanced.flags': Object.freeze({ kind: 'category', category: 'advanced' }),
   'updates.checkNow': Object.freeze({
     kind: 'status',

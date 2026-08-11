@@ -30,6 +30,7 @@ The dashboard combines provider, emulator, and browser-game catalogs with search
 The primary desktop app is packaged as one application. Its interface, catalogs, settings, diagnostics, controller tools, and local workflows are bundled with the executable—there is no loopback frontend server and no website to connect to before Spartan Gaming can start. It includes:
 
 - A single-instance lifecycle with guarded `spartan://launch` deep links.
+- Branded scalable application artwork for Linux, Windows, and macOS development packages.
 - Sandboxed, isolated provider views with HTTPS-only navigation policy.
 - In-app provider sign-in and OAuth windows with approved authentication domains. Each local gaming profile receives its own persistent provider session by default; a Settings compatibility option can deliberately share accounts across profiles, and logout clears every managed partition.
 - Tray and background-app behavior controlled by Settings.
@@ -74,7 +75,7 @@ Production relay services, public TLS, TURN capacity, signing-key custody, and n
 
 ### Settings for the whole system
 
-The Settings control center covers standalone application behavior, gaming, streaming, controllers, emulation, providers, performance and power, privacy, accessibility, profiles/workspaces, updates, Android policy, SteamOS/Proton launch preferences, host transport, and device presentation. Preferences remain local unless a future sync mechanism is deliberately configured. Electron hardware acceleration is a real next-launch setting: Spartan persists the bounded choice locally, reports when a restart is required, and applies the software-rendering fallback before Electron becomes ready.
+The Settings control center covers standalone application behavior, gaming, streaming, controllers, emulation, providers, performance and power, privacy, accessibility, profiles/workspaces, updates, Android policy, SteamOS/Proton launch preferences, host transport, and device presentation. Preferences remain local unless a future sync mechanism is deliberately configured. Electron hardware acceleration is a real next-launch setting: Spartan persists the bounded choice locally, reports when a restart is required, and applies the software-rendering fallback before Electron becomes ready. Optional Electron crash records and verbose application logs also stay on the device: retention is bounded, exported bundles redact provider URLs, addresses, paths, account identifiers, and credential-shaped text, and Settings can erase the entire log immediately. Spartan does not upload these diagnostics.
 
 ## Device-universal direction
 
@@ -113,7 +114,7 @@ npm run desktop:package
 
 `npm run electron` launches the bundled application directly. It does not start a local HTTP service. `npm run desktop:package` creates platform development artifacts that contain the application UI and local catalogs.
 
-`npm run playwright:electron` launches the real Electron main process, verifies the private `spartan-app://app` origin, and checks all 11 maintained routes at desktop, Steam Deck-sized handheld, phone, and television layouts. The isolated-state run captures 44 screenshots, verifies each forced presentation/navigation mode, rejects horizontal overflow, exercises dashboard search at every layout, checks television remote focus and a persisted desktop setting, and compares perceptual fingerprints with the reviewed Linux/Xvfb baseline. `npm run playwright:electron:candidate` generates an unapproved candidate under `out/` for deliberate visual changes; inspect it before replacing a baseline.
+`npm run playwright:electron` launches the real Electron main process, verifies the private `spartan-app://app` origin, and checks all 11 maintained routes at desktop, Steam Deck-sized handheld, phone, and television layouts. The isolated-state run captures 44 screenshots, verifies each forced presentation/navigation mode, rejects horizontal overflow, and exercises nine interactions: dashboard search at every layout, television remote focus, desktop shortcut and hardware-policy persistence, local diagnostic capture/redaction/cleanup, and controller-tester policy. It compares perceptual fingerprints with the reviewed Linux/Xvfb baseline and emits a dedicated diagnostics-settings artifact for direct inspection. `npm run playwright:electron:candidate` generates an unapproved candidate under `out/` for deliberate visual changes; inspect it before replacing a baseline.
 
 ## Explore the current interfaces
 

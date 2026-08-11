@@ -1116,8 +1116,8 @@ export const settingsCategories = [
       ),
       toggle(
         'performance.crashReports',
-        'Send crash reports',
-        'Share minimal crash diagnostics to improve stability.',
+        'Keep local crash reports',
+        'Record bounded Electron renderer and child-process failures locally; nothing is uploaded.',
       ),
       action(
         'performance.taskManager',
@@ -1480,8 +1480,14 @@ export const settingsCategories = [
       action(
         'advanced.exportDiagnostics',
         'Export diagnostics bundle',
-        'Create a redacted bundle of compatibility, logs, and active settings.',
+        'Create a redacted local Electron diagnostics bundle without credentials or provider URLs.',
         'Export bundle',
+      ),
+      action(
+        'advanced.clearDiagnostics',
+        'Clear local diagnostics',
+        'Remove every locally retained Electron crash and verbose-log entry.',
+        'Clear diagnostics',
       ),
       action(
         'advanced.flags',

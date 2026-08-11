@@ -302,6 +302,23 @@ sandboxed preloads as plain JavaScript without ESM import support; using an ESM
 preload silently removes the renderer bridge and is covered by Electron and
 Playwright contracts.
 
+The same startup policy carries only the global local-diagnostics choices:
+opt-in renderer/child-process crash records, opt-in application-renderer
+console detail, and a one-, seven-, thirty-day or manual-cleanup retention
+period. `desktop/electron/diagnostic-log.mjs` keeps at most 500 normalized
+entries in the Electron user-data directory, serializes prune/write/clear
+operations per file, flushes pending entries before export, and writes with
+owner-only permissions. Provider renderer console output is never collected.
+Exports omit source URLs and redact URLs, email-shaped identifiers, IP
+addresses, user paths, authorization headers, and credential-shaped values.
+Settings can clear the log immediately; Spartan has no diagnostics upload
+endpoint.
+
+Electron Builder discovers the shared scalable package mark at
+`desktop/build-resources/icon.svg`. Keep that source platform-neutral so Linux,
+Windows, and macOS development packaging can derive their native icon formats
+without maintaining divergent artwork.
+
 Transport adapters are covered by `src/frontend/transport/transport.test.mjs` with injected WebSocket and RTCPeerConnection fakes, so signaling and offer/answer behavior can be verified without a live host or relay.
 
 Local capture primitives are in `src/frontend/capture/capture.mjs`. Screenshots use a video frame and Canvas; recordings use MediaRecorder with WebM MIME fallback. No capture data is uploaded by the frontend.

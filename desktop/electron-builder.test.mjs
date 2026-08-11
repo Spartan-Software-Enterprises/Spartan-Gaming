@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 test('Electron package configuration targets every desktop operating system', async () => {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
   const config = await readFile(path.join(root, 'desktop/electron-builder.yml'), 'utf8');
+  const icon = await readFile(path.join(root, 'desktop/build-resources/icon.svg'), 'utf8');
   assert.match(config, /AppImage/);
   assert.match(config, /dmg/);
   assert.match(config, /nsis/);
@@ -19,6 +20,8 @@ test('Electron package configuration targets every desktop operating system', as
   assert.match(config, /desktop\/electron/);
   assert.match(config, /src\/frontend/);
   assert.doesNotMatch(config, /scripts\/frontend/);
+  assert.match(icon, /<svg[^>]+viewBox="0 0 64 64"/);
+  assert.match(icon, /Spartan Gaming/);
 });
 
 test('Electron shell keeps quit confirmation tied to the active session setting', async () => {
@@ -54,4 +57,8 @@ test('Electron shell keeps quit confirmation tied to the active session setting'
   assert.match(preload, /onDeepLink\(callback\)/);
   assert.match(main, /spartan:clear-provider-logins/);
   assert.match(preload, /clearProviderLogins\(\)/);
+  assert.match(main, /spartan:export-diagnostics/);
+  assert.match(main, /spartan:clear-diagnostics/);
+  assert.match(preload, /exportDiagnostics\(\)/);
+  assert.match(preload, /clearDiagnostics\(\)/);
 });
