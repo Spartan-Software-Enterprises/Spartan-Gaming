@@ -22,7 +22,7 @@ import {
   createWorkspaceStore,
   resolveWorkspaceLaunchBehavior,
 } from '../workspaces/workspaces.mjs';
-import { createFavoritesStore } from './library-state.mjs';
+import { createFavoritesStore, createRomLibraryStore } from './library-state.mjs';
 import {
   createCommunityProviderCatalogStore,
   mergeCommunityProviders,
@@ -55,14 +55,18 @@ const recoveryHandoff =
 const startupRoute =
   new URLSearchParams(globalThis.location?.search || '').get('startup') === '1'
     ? resolveStartupRoute(settings, {
-        recovery: recoveryHandoff,
-        lastLaunch: launchHistory.latest(),
-      })
+          recovery: recoveryHandoff,
+          lastLaunch: launchHistory.latest(),
+        })
     : null;
 if (startupRoute && typeof globalThis.location?.replace === 'function')
   globalThis.location.replace(startupRoute);
 let activeWorkspace = workspaceStore.active;
 let favoritesStore = createFavoritesStore({
+  storage: profileStorage,
+  workspaceId: activeWorkspace.id,
+});
+const romLibraryStore = createRomLibraryStore({
   storage: profileStorage,
   workspaceId: activeWorkspace.id,
 });
@@ -73,7 +77,7 @@ const state = {
   compatibility: null,
   report: null,
   providerHealth: new Map(),
-  filter: ['all', 'cloud', 'watch', 'browser', 'emulator', 'favorites', 'recent'].includes(
+  filter: ['all', 'cloud', 'watch', 'browser', 'emulator', 'favorites', 'recent', 'rom-library'].includes(
     requestedFilter,
   )
     ? requestedFilter
@@ -94,6 +98,7 @@ const state = {
         ),
       ]),
   ),
+  romLibrary: romLibraryStore,
 };
 let queuedDeepLink = null;
 document
