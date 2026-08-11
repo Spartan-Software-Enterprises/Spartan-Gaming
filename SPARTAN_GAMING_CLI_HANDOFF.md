@@ -539,6 +539,23 @@ exercised all seven maintained interactions, and rebuilt the unpacked Linux app.
 CodeRabbit reviewed all 13 changed files in this increment and returned zero
 findings.
 
+The current standalone-settings cleanup removes the obsolete
+`general.defaultSearch` control, which promised a generic address bar and web
+search outside Spartan's approved standalone network boundary. General settings
+now use application/workspace/profile terminology, and the visible `New tab`
+startup choice is `New session`. The startup resolver retains `New tab` as a
+legacy input so older profiles continue to open the local dashboard without
+resuming a prior session. Focused settings/profile/startup validation passed
+14/14 locally. Local repository checks passed 437/437, and the local serialized
+suite passed 637 of 641 with four expected host skips. AWS passed the focused
+suite 14/14 and the serialized suite 639 of 641 with two expected platform
+skips. After direct inspection of the four intended settings-screen changes,
+the refreshed Linux x64 baseline matched all 44 snapshots and all seven
+maintained interactions; the unpacked Linux x64 Electron application also
+rebuilt successfully. No full desktop environment was required beyond Xvfb.
+CodeRabbit reviewed all 10 changed files in this increment and returned zero
+findings.
+
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
 `scripts/frontend/serve.test.mjs`. Before pushing future work, run

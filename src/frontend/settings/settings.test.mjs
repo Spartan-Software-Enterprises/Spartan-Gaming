@@ -8,6 +8,7 @@ test('settings registry has unique keys and defaults', () => {
   const settings = settingsCategories.flatMap((category) => category.settings);
   const keys = settings.map((setting) => setting.key);
   assert.equal(new Set(keys).size, keys.length);
+  assert.equal(keys.includes('general.defaultSearch'), false);
   assert.ok(settings.length >= 80);
   for (const setting of settings.filter((item) => item.type !== 'action')) {
     assert.ok(setting.key in defaultSettings, `${setting.key} is missing a default`);

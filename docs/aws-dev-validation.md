@@ -281,3 +281,16 @@ and the required device capabilities are exercised successfully. It cannot
 provide Windows or macOS virtual-device-driver evidence. Production rollout
 also requires operator-managed secret files, TLS, Redis, TURN, and external
 package-signing custody; none should be fabricated on this validation host.
+
+The 2026-08-10 standalone-settings validation passed the focused
+settings/profile/startup suite 14/14 and the serialized repository suite 639 of
+641 with two expected platform skips. The intended removal of the obsolete
+generic-search control changed the settings screenshots; handheld, mobile,
+television, and desktop candidates were inspected directly for readable
+reflow, clipping, and overflow before updating only those four baseline
+fingerprints. A second Xvfb run then matched all 44 Linux x64 snapshots,
+exercised all seven maintained interactions, and rebuilt the unpacked Linux
+x64 Electron application successfully. Xvfb remains sufficient for this
+automated desktop matrix; a full desktop environment is not currently needed.
+CodeRabbit reviewed all 10 changed files in this increment and returned zero
+findings.

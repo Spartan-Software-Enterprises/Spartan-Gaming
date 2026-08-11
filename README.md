@@ -74,7 +74,7 @@ Production relay services, public TLS, TURN capacity, signing-key custody, and n
 
 ### Settings for the whole system
 
-The Settings control center covers browser behavior, gaming, streaming, controllers, emulation, providers, performance and power, privacy, accessibility, profiles/workspaces, updates, Android policy, SteamOS/Proton launch preferences, host transport, and device presentation. Preferences remain local unless a future sync mechanism is deliberately configured.
+The Settings control center covers standalone application behavior, gaming, streaming, controllers, emulation, providers, performance and power, privacy, accessibility, profiles/workspaces, updates, Android policy, SteamOS/Proton launch preferences, host transport, and device presentation. Preferences remain local unless a future sync mechanism is deliberately configured.
 
 ## Device-universal direction
 

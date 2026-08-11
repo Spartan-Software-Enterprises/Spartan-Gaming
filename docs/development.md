@@ -283,6 +283,13 @@ Dashboard favorites are stored by active workspace through `src/frontend/dashboa
 
 Provider preferences are managed at `src/frontend/providers/index.html`. `src/frontend/providers/profiles.mjs` stores only account labels, region hints, quality, launch mode, fullscreen preference, and private notes; it intentionally has no credential or cookie fields. `src/frontend/providers/community-catalog.mjs` provides a local, HTTPS-only community metadata overlay; entries are untrusted C/D records and cannot replace built-in providers. External provider/API handoffs open the official surface directly and do not create a false Spartan session; only user-owned host and future native/session adapters enter the Spartan session lifecycle. `src/frontend/session/preferences.mjs` carries the shared media contract into those runtimes, including preferred codec ordering, game/chat volume, spatial/mono audio intent, explicit microphone/noise-suppression policy, and active workspace quality/controller/overlay defaults.
 
+The General settings schema describes the standalone application rather than a
+generic browser. It intentionally has no address-bar or web-search-provider
+control because arbitrary search navigation is outside the approved provider
+and download-source network boundary. `New session` is the no-resume startup
+choice; the startup resolver still accepts the legacy `New tab` value from an
+older profile and safely maps it to the same local dashboard behavior.
+
 Transport adapters are covered by `src/frontend/transport/transport.test.mjs` with injected WebSocket and RTCPeerConnection fakes, so signaling and offer/answer behavior can be verified without a live host or relay.
 
 Local capture primitives are in `src/frontend/capture/capture.mjs`. Screenshots use a video frame and Canvas; recordings use MediaRecorder with WebM MIME fallback. No capture data is uploaded by the frontend.
