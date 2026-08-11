@@ -1,11 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  createFavoritesStore,
-  createRomLibraryStore,
-  validRomRecord,
-  normalizeRomRecord
-} from './library-state.mjs';
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import { createFavoritesStore, createRomLibraryStore, validRomRecord, normalizeRomRecord, scanFolderForRoms } from './library-state.mjs';
 
 function storage() {
   const values = new Map();
@@ -169,4 +167,43 @@ test('rom library clears storage', () => {
   assert.strictEqual(store.list().length, 1);
   store.clear();
   assert.strictEqual(store.list().length, 0);
+});
+
+test('scan folder for roms finds valid files', async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rom-scan-'));
+  fs.writeFileSync(path.join(tempDir, 'game.smc'), '');
+  fs.writeFileSync(path.join(tempDir, 'rom.zip'), '');
+  fs.writeFileSync(path.join(tempDir, 'readme.txt'), '');
+  const results = await scanFolderForRoms(tempDir);
+  assert.strictEqual(results.length, 2);
+  assert.ok(results.some(r => r.endsWith('game.smc')));
+  assert.ok(results.some(r => r.endsWith('rom.zip')));
+  fs.rmSync(tempDir, { recursive: true, force: true });
+});
+
+test('scan folder for roms handles nested directories', async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rom-scan-nested-'));
+  const subDir = path.join(tempDir, 'subdir');
+  fs.mkdirSync(subDir);
+  fs.writeFileSync(path.join(tempDir, 'top.gba'), '');
+  fs.writeFileSync(path.join(subDir, 'nested.nes'), '');
+  const results = await scanFolderForRoms(tempDir);
+  assert.strictEqual(results.length, 2);
+  assert.ok(results.some(r => r.endsWith('top.gba')));
+  assert.ok(results.some(r => r.endsWith('nested.nes')));
+  fs.rmSync(tempDir, { recursive: true, force: true });
+});
+
+test('scan folder for roms returns empty array when no roms found', async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rom-scan-empty-'));
+  fs.writeFileSync(path.join(tempDir, 'readme.txt'), '');
+  const results = await scanFolderForRoms(tempDir);
+  assert.strictEqual(results.length, 0);
+  fs.rmSync(tempDir, { recursive: true, force: true });
+});
+
+test('scan folder for roms rejects invalid paths', async () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rom-scan-err-'));
+  fs.rmSync(tempDir, { recursive: true, force: true });
+  await assert.rejects(scanFolderForRoms(tempDir), /ENOENT/);
 });
