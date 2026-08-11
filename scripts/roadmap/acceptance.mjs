@@ -10,6 +10,7 @@ function platform(value) { const result = ALIASES[String(value || '').toLowerCas
 function text(value) { return typeof value === 'string' ? value.trim() : ''; }
 function readJson(value, name) { if (!value || typeof value !== 'object' || Array.isArray(value)) throw new TypeError(`${name} must be an object`); return value; }
 function reportPlatform(report) { return platform(report?.platform); }
+function rejectDuplicateReports(reports, identity, name) { const seen = new Set(); for (const report of reports) { const value = identity(report); if (!value) continue; if (seen.has(value)) throw new Error(`${name} contains duplicate evidence for ${value}`); seen.add(value); } }
 
 function productionGate(report) {
   const required = Array.isArray(report?.required) ? report.required : [];
@@ -60,10 +61,18 @@ function steamOsGate(reports) {
 /** Assess the external evidence required before the final roadmap boxes may be checked. */
 export function assessRoadmapAcceptance({productionReport, hardwareReports = [], virtualGamepadReports = [], signedPackageReports = [], steamOsReports = []} = {}) {
   const production = productionGate(readJson(productionReport, 'productionReport'));
-  const hardware = hardwareGate(hardwareReports.map(report => readJson(report, 'hardware report')));
-  const virtualGamepads = virtualDriverGate(virtualGamepadReports.map(report => readJson(report, 'virtual-gamepad report')));
-  const signing = signingGate(signedPackageReports.map(report => readJson(report, 'signed-package report')));
-  const steamOs = steamOsGate(steamOsReports.map(report => readJson(report, 'SteamOS hardware report')));
+  const hardwareEvidence = hardwareReports.map(report => readJson(report, 'hardware report'));
+  const virtualEvidence = virtualGamepadReports.map(report => readJson(report, 'virtual-gamepad report'));
+  const signingEvidence = signedPackageReports.map(report => readJson(report, 'signed-package report'));
+  const steamEvidence = steamOsReports.map(report => readJson(report, 'SteamOS hardware report'));
+  rejectDuplicateReports(hardwareEvidence, reportPlatform, 'hardware reports');
+  rejectDuplicateReports(virtualEvidence, reportPlatform, 'virtual-gamepad reports');
+  rejectDuplicateReports(signingEvidence, reportPlatform, 'signed-package reports');
+  rejectDuplicateReports(steamEvidence, report => steamOsTarget(report?.target), 'SteamOS reports');
+  const hardware = hardwareGate(hardwareEvidence);
+  const virtualGamepads = virtualDriverGate(virtualEvidence);
+  const signing = signingGate(signingEvidence);
+  const steamOs = steamOsGate(steamEvidence);
   const gates = Object.freeze([production, hardware, virtualGamepads, signing, steamOs]);
   return Object.freeze({version: 1, kind: 'roadmap-acceptance', status: gates.every(gate => gate.status === 'verified') ? 'complete' : 'incomplete', gates, blockers: Object.freeze(gates.filter(gate => gate.status !== 'verified').map(gate => gate.id))});
 }

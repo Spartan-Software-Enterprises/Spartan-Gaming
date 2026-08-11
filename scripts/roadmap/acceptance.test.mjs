@@ -44,6 +44,13 @@ test('roadmap acceptance rejects capability-only hardware and driver observation
   assert.deepEqual(result.gates.find(gate => gate.id === 'desktop-virtual-gamepads').missing, ['win32', 'darwin']);
 });
 
+test('roadmap acceptance fails closed on duplicate evidence identities', () => {
+  assert.throws(() => assessRoadmapAcceptance({productionReport: production, hardwareReports: [hardware('linux'), hardware('linux')]}), /hardware reports contains duplicate evidence for linux/);
+  assert.throws(() => assessRoadmapAcceptance({productionReport: production, virtualGamepadReports: [virtual('win32'), virtual('windows')]}), /virtual-gamepad reports contains duplicate evidence for win32/);
+  assert.throws(() => assessRoadmapAcceptance({productionReport: production, signedPackageReports: [signed('darwin'), signed('macos')]}), /signed-package reports contains duplicate evidence for darwin/);
+  assert.throws(() => assessRoadmapAcceptance({productionReport: production, steamOsReports: [steamOs('steam-deck'), steamOs('deck')]}), /SteamOS reports contains duplicate evidence for steam-deck/);
+});
+
 test('roadmap acceptance completes only with all production, hardware, driver, and signing evidence', () => {
   const result = assessRoadmapAcceptance({productionReport: production, hardwareReports: [hardware('linux'), hardware('win32'), hardware('darwin')], virtualGamepadReports: [virtual('win32'), virtual('darwin')], signedPackageReports: [signed('linux'), signed('win32'), signed('darwin')], steamOsReports: [steamOs('steam-deck'), steamOs('steam-machine')]});
   assert.equal(result.status, 'complete'); assert.deepEqual(result.blockers, []); assert.ok(result.gates.every(gate => gate.status === 'verified'));
