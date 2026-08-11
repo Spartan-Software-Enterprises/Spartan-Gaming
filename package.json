@@ -10,7 +10,7 @@
   "type": "module",
   "scripts": {
     "electron": "electron desktop/electron/main.mjs",
-    "electron:test": "node --test desktop/electron/security.test.mjs desktop/electron/runtime-policy.test.mjs desktop/electron/power-runtime.test.mjs desktop/electron/tray-policy.test.mjs desktop/electron/deep-links.test.mjs desktop/electron-builder.test.mjs",
+    "electron:test": "node --test desktop/electron/app-protocol.test.mjs desktop/electron/network-policy.test.mjs desktop/electron/security.test.mjs desktop/electron/runtime-policy.test.mjs desktop/electron/power-runtime.test.mjs desktop/electron/tray-policy.test.mjs desktop/electron/deep-links.test.mjs desktop/electron/global-shortcut.test.mjs desktop/electron-builder.test.mjs",
     "desktop:package": "electron-builder --config desktop/electron-builder.yml",
     "pretest": "node --test --test-force-exit android/shell.test.mjs host/agent.integration.test.mjs host/process.integration.test.mjs host/native-media.integration.test.mjs host/publisher.integration.test.mjs host/remote-session.integration.test.mjs host/webrtc.test.mjs signaling/agent.integration.test.mjs signaling/agent.test.mjs host/signaling.test.mjs host/session.test.mjs host/reference-launch.test.mjs src/frontend/settings/actions.test.mjs src/frontend/diagnostics/focus.test.mjs src/frontend/dashboard/routes.test.mjs src/frontend/platform/device-mode.test.mjs src/frontend/display/policy.test.mjs",
     "test:settings-control": "node --test src/frontend/settings/control.test.mjs",

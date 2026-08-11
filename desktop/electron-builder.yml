@@ -7,7 +7,6 @@ directories:
   buildResources: desktop/build-resources
 files:
   - desktop/electron/**
-  - scripts/frontend/**
   - src/frontend/**
   - providers/**
   - emulators/**

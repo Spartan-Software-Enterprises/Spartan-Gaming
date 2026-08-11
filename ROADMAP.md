@@ -9,11 +9,11 @@
 - [x] Define browser/server/host repository boundaries.
 - [x] Publish initial contributor setup contract for Linux, Windows, and macOS.
 
-## Milestone 1: browser shell
+## Milestone 1: standalone application shell
 
 - [x] Gaming dashboard and library shell with catalog search, filters, favorites, and launch handoffs.
-- [x] Installable PWA shell with offline-safe frontend and public catalog caching.
-- [x] Cross-platform dependency-free frontend development server with safe static routing and browser security headers.
+- [x] Bundled offline-capable application shell with private `spartan-app://` asset loading and no loopback frontend server dependency (the PWA path remains test-only compatibility infrastructure).
+- [x] Cross-platform dependency-free shared-UI test harness with safe static routing and browser security headers; it is excluded from the standalone Electron package.
 - [x] Reproducible static frontend distribution build with canonical entrypoint and catalog manifest.
 - [x] Windows, macOS, and Linux frontend distribution artifact workflow.
 - [x] Session player shell with stream target, overlays, quality state, controller hooks, and diagnostics.

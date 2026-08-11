@@ -18,6 +18,7 @@ test('Electron package configuration targets every desktop operating system', as
   assert.match(config, /syncDesktopName: true/);
   assert.match(config, /desktop\/electron/);
   assert.match(config, /src\/frontend/);
+  assert.doesNotMatch(config, /scripts\/frontend/);
 });
 
 test('Electron shell keeps quit confirmation tied to the active session setting', async () => {
@@ -30,6 +31,8 @@ test('Electron shell keeps quit confirmation tied to the active session setting'
   assert.match(main, /event\.preventDefault\(\)/);
   assert.match(main, /requestSingleInstanceLock/);
   assert.match(main, /spartan:deep-link/);
+  assert.match(main, /createBundledAppProtocolHandler/);
+  assert.doesNotMatch(main, /createFrontendServer/);
   assert.match(preload, /setQuitGuard\(enabled\)/);
   assert.match(preload, /setSessionActive\(active\)/);
   assert.match(preload, /onDeepLink\(callback\)/);

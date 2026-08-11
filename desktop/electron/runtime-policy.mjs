@@ -1,3 +1,5 @@
+import {normalizeGlobalShortcut} from '../../src/frontend/settings/electron-runtime.mjs';
+
 function origin(value) { try { return new URL(String(value)).origin; } catch { return ''; } }
 const PERMISSION_PROMPT_MODES = Object.freeze(['Ask every time', 'Ask per site', 'Block by default']);
 
@@ -5,7 +7,7 @@ const PERMISSION_PROMPT_MODES = Object.freeze(['Ask every time', 'Ask per site',
 export function normalizeElectronRuntimePolicy(settings = {}) {
   const powerMode = ['Balanced', 'Performance', 'Battery saver'].includes(settings?.powerMode) ? settings.powerMode : 'Balanced';
   const permissionPrompts = PERMISSION_PROMPT_MODES.includes(settings?.permissionPrompts) ? settings.permissionPrompts : 'Ask per site';
-  return Object.freeze({backgroundApps: settings?.backgroundApps === true, backgroundThrottling: settings?.backgroundThrottling !== false || powerMode === 'Battery saver', powerMode, doNotTrack: settings?.doNotTrack === true, blockThirdPartyCookies: settings?.blockThirdPartyCookies === true, permissionPrompts});
+  return Object.freeze({backgroundApps: settings?.backgroundApps === true, globalShortcut: normalizeGlobalShortcut(settings?.globalShortcut), backgroundThrottling: settings?.backgroundThrottling !== false || powerMode === 'Battery saver', powerMode, doNotTrack: settings?.doNotTrack === true, blockThirdPartyCookies: settings?.blockThirdPartyCookies === true, permissionPrompts});
 }
 
 export function shouldQuitWhenWindowsClose({platform = process.platform, backgroundApps = false} = {}) { return platform !== 'darwin' && backgroundApps !== true; }

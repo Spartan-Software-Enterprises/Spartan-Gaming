@@ -6,7 +6,7 @@ import {applyRuntimeUiSettings} from './runtime-ui.mjs';
 import {clearProviderSessionState} from '../providers/session-cleanup.mjs';
 import {createHostConfigFromSettings, detectHostPlatform} from '../host/config.mjs';
 import {renderSettingControl} from './control.mjs';
-import {resolveElectronRuntimeSettings} from './electron-runtime.mjs';
+import {describeElectronRuntimeResult, resolveElectronRuntimeSettings} from './electron-runtime.mjs';
 import {createControllerProfileStore} from '../input/profiles.mjs';
 import {createActiveProfileStorage} from '../profiles/storage.mjs';
 
@@ -20,10 +20,11 @@ let query = '';
 function saveState() {
   Object.assign(state, settingsStore.save(state));
   applyRuntimeUiSettings(document, state);
-  globalThis.spartanElectron?.applyRuntimeSettings?.(resolveElectronRuntimeSettings(state));
+  const runtimeResult = globalThis.spartanElectron?.applyRuntimeSettings?.(resolveElectronRuntimeSettings(state));
   const status = document.querySelector('[data-save-status]');
   if (status) {
     status.textContent = 'Saved locally';
+    void Promise.resolve(runtimeResult).then(result => { status.textContent = describeElectronRuntimeResult(result); }).catch(() => { status.textContent = 'Saved locally; desktop runtime update failed.'; });
     setTimeout(() => { status.textContent = 'All changes saved'; }, 1400);
   }
 }
@@ -92,9 +93,9 @@ function bindControls() {
       const setting = renderedCategories().flatMap((category) => category.settings).find((item) => item.key === control.dataset.key);
       if (!setting) return;
       state[setting.key] = setting.type === 'toggle' ? !state[setting.key] : setting.type === 'range' ? Number(control.value) : control.value;
-      saveState();
-      if (setting.key === 'sync.activeProfile') { window.location.reload(); return; }
+      if (setting.key === 'sync.activeProfile') { saveState(); window.location.reload(); return; }
       renderContent();
+      saveState();
     };
     control.addEventListener(control.matches('input[type="range"]') ? 'input' : 'change', update);
     if (control.classList.contains('toggle')) control.addEventListener('click', update);
@@ -102,9 +103,9 @@ function bindControls() {
   document.querySelectorAll('[data-action]').forEach((button) => button.addEventListener('click', () => {
     const action = resolveSettingsAction(button.dataset.action);
     if (!action) return;
-    if (action.kind === 'reset') { Object.assign(state, settingsStore.reset()); saveState(); render(); return; }
+    if (action.kind === 'reset') { Object.assign(state, settingsStore.reset()); render(); saveState(); return; }
     if (action.kind === 'navigate') { window.location.assign(action.href); return; }
-    if (action.kind === 'external') { window.open(action.href, '_blank', 'noopener,noreferrer'); return; }
+    if (action.kind === 'external') { if (globalThis.spartanElectron?.openExternal) void globalThis.spartanElectron.openExternal(action.href).catch(error => { const status = document.querySelector('[data-save-status]'); if (status) status.textContent = error.message; }); else window.open(action.href, '_blank', 'noopener,noreferrer'); return; }
     if (action.kind === 'category') { activeCategory = action.category; query = ''; document.querySelector('[data-search]').value = ''; render(); return; }
     if (action.kind === 'export-settings') { downloadSettings(); return; }
     if (action.kind === 'export-host-config') { downloadHostConfig(); return; }
