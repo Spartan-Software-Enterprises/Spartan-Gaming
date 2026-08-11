@@ -101,6 +101,23 @@ opened the unpacked Electron process, but this headless cloud probe does not
 exercise interactive windows, real displays, audio, input, haptics, or
 desktop-environment integration.
 
+On 2026-08-11, the provider-session isolation increment was synchronized to
+the same Amazon Linux host before publication. `npm run electron:test` passed
+29/29 contracts. Running `npm run playwright:electron` through Xvfb exercised
+all 44 maintained desktop, handheld, mobile, and television route snapshots,
+all seven maintained interactions, and matched the committed Linux baseline
+44/44 with no horizontal overflow. `npm run test:serial` passed 639 of 641
+tests with 2 expected platform skips and 0 failures. This verifies the bounded
+partition policy and Electron wiring on Linux; it does not substitute for real
+provider sign-in, restart persistence, session-expiry recovery, or account
+switching evidence.
+
+The same synchronized tree also completed `npm run desktop:package -- --dir`
+and launched the unpacked `Spartan-Gaming` executable under Xvfb for the
+bounded startup probe. `xdg-utils` and `desktop-file-utils` are installed so
+the packaged app can exercise Linux desktop/protocol registration helpers;
+the server still uses a virtual display rather than a full desktop session.
+
 The configured Amazon Linux 2023 development host has been synchronized with
 `main` and has successfully run the repository dependency install, Linux
 native package build, executable `/dev/uinput` button/axis sequence, and the
@@ -203,8 +220,9 @@ redacted. Rotate the key or service secrets through the operator's secret
 store if exposure is suspected.
 
 The installed toolchain is Git, Rust/Cargo, GCC, CMake, Node.js/npm, Python,
-Docker, Xvfb, ImageMagick, dbus-x11, and the Amazon Linux GUI/media dependencies
-needed by Chromium and Electron. Playwright 1.62.1 is pinned in the repository;
+Docker, Xvfb, ImageMagick, dbus-x11, xdg-utils, desktop-file-utils, and the
+Amazon Linux GUI/media dependencies needed by Chromium and Electron. Playwright
+1.62.1 is pinned in the repository;
 an older Playwright 1.55.0 installation remains available only for the legacy
 browser smoke harness. The development services are Redis,
 signaling, and TURN;

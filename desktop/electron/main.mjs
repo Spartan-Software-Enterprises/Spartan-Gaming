@@ -35,6 +35,7 @@ import {
   createBundledAppProtocolHandler,
 } from './app-protocol.mjs';
 import { createApprovedNetworkPolicy } from './network-policy.mjs';
+import { providerSessionPartitions, resolveProviderPartition } from './provider-session.mjs';
 
 protocol.registerSchemesAsPrivileged([APP_PROTOCOL_PRIVILEGES]);
 if (process.platform === 'linux')
@@ -43,6 +44,7 @@ if (process.platform === 'linux')
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 let windowRef;
 let providerView;
+const providerChildWindows = new Set();
 let trayRef;
 let quitGuardEnabled = true;
 let sessionActive = false;
@@ -52,7 +54,6 @@ let powerBlockerId = null;
 let powerBlockerType = null;
 const privacySessions = new WeakSet();
 const permissionDecisions = new Map();
-const providerPartition = 'persist:spartan-gaming-providers';
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 let pendingDeepLink = findSpartanDeepLink(process.argv);
 let networkPolicy = createApprovedNetworkPolicy();
@@ -69,15 +70,15 @@ async function loadApprovedNetworkPolicy() {
   });
 }
 
-function installPrivacyPolicy(session) {
-  if (!session || privacySessions.has(session)) return;
-  privacySessions.add(session);
-  session.webRequest.onBeforeSendHeaders((details, callback) =>
+function installPrivacyPolicy(electronSession, decisionScope = 'application') {
+  if (!electronSession || privacySessions.has(electronSession)) return;
+  privacySessions.add(electronSession);
+  electronSession.webRequest.onBeforeSendHeaders((details, callback) =>
     callback({
       requestHeaders: applyElectronPrivacyHeaders(details.requestHeaders, details, runtimePolicy),
     }),
   );
-  session.setPermissionRequestHandler((webContents, permission, callback, details = {}) => {
+  electronSession.setPermissionRequestHandler((webContents, permission, callback, details = {}) => {
     const requestingOrigin = (() => {
       try {
         return new URL(details.requestingUrl || webContents.getURL()).origin;
@@ -85,7 +86,7 @@ function installPrivacyPolicy(session) {
         return '';
       }
     })();
-    const decisionKey = `${requestingOrigin}\n${permission}`;
+    const decisionKey = `${decisionScope}\n${requestingOrigin}\n${permission}`;
     const decision = resolvePermissionDecision(runtimePolicy, {
       storedDecision: permissionDecisions.get(decisionKey),
     });
@@ -117,7 +118,13 @@ function installPrivacyPolicy(session) {
 }
 
 function closeProviderView() {
-  if (!providerView) return false;
+  let closed = false;
+  for (const childWindow of providerChildWindows) {
+    if (!childWindow.isDestroyed()) childWindow.destroy();
+    closed = true;
+  }
+  providerChildWindows.clear();
+  if (!providerView) return closed;
   windowRef.contentView.removeChildView(providerView);
   providerView.webContents.close();
   providerView = null;
@@ -125,12 +132,13 @@ function closeProviderView() {
   return true;
 }
 
-function createProviderView(url, title = 'Provider Player') {
+function createProviderView(url, title = 'Provider Player', sessionOptions = {}) {
   if (!networkPolicy.allowsProviderLaunch(url))
     throw new Error('Provider Player accepts only cataloged gaming-service URLs.');
   closeProviderView();
-  providerView = new WebContentsView({ webPreferences: providerWebPreferences() });
-  configureProviderWebContents(providerView.webContents);
+  const partition = resolveProviderPartition(sessionOptions);
+  providerView = new WebContentsView({ webPreferences: providerWebPreferences(partition) });
+  configureProviderWebContents(providerView.webContents, partition);
   providerView.webContents.on('enter-full-screen', () =>
     windowRef.webContents.send('spartan:fullscreen-changed', true),
   );
@@ -143,18 +151,18 @@ function createProviderView(url, title = 'Provider Player') {
   windowRef.setTitle(`Spartan Gaming — ${title}`);
 }
 
-function providerWebPreferences() {
+function providerWebPreferences(partition) {
   return {
     contextIsolation: true,
     nodeIntegration: false,
     sandbox: true,
     webSecurity: true,
-    partition: providerPartition,
+    partition,
   };
 }
 
-function configureProviderWebContents(contents) {
-  installPrivacyPolicy(contents.session);
+function configureProviderWebContents(contents, partition) {
+  installPrivacyPolicy(contents.session, partition);
   contents.on('will-navigate', (event) => {
     if (!networkPolicy.allowsServiceUrl(event.url)) event.preventDefault();
   });
@@ -167,14 +175,16 @@ function configureProviderWebContents(contents) {
             height: 760,
             autoHideMenuBar: true,
             backgroundColor: '#10151b',
-            webPreferences: providerWebPreferences(),
+            webPreferences: providerWebPreferences(partition),
           },
         }
       : { action: 'deny' },
   );
-  contents.on('did-create-window', (childWindow) =>
-    configureProviderWebContents(childWindow.webContents),
-  );
+  contents.on('did-create-window', (childWindow) => {
+    providerChildWindows.add(childWindow);
+    childWindow.once('closed', () => providerChildWindows.delete(childWindow));
+    configureProviderWebContents(childWindow.webContents, partition);
+  });
 }
 
 function resizeProvider() {
@@ -349,26 +359,35 @@ if (hasSingleInstanceLock)
         );
       return shell.openExternal(new URL(url).href);
     });
-    ipcMain.handle('spartan:open-provider', (_event, { url, title }) =>
-      createProviderView(url, title),
-    );
+    ipcMain.handle('spartan:open-provider', (event, request = {}) => {
+      if (event.sender !== windowRef.webContents)
+        throw new Error('provider views may only be opened by the primary window');
+      const { url, title, sessionOptions } = request;
+      return createProviderView(url, title, sessionOptions);
+    });
     ipcMain.handle('spartan:close-provider', closeProviderView);
     ipcMain.handle('spartan:clear-provider-logins', async (event) => {
       if (event.sender !== windowRef.webContents)
         throw new Error('provider logins may only be cleared by the primary window');
       closeProviderView();
-      const providerSession = session.fromPartition(providerPartition);
-      await providerSession.clearStorageData({
-        storages: [
-          'cookies',
-          'filesystem',
-          'indexdb',
-          'localstorage',
-          'serviceworkers',
-          'cachestorage',
-        ],
-      });
-      await providerSession.clearCache();
+      await Promise.all(
+        providerSessionPartitions().map(async (partition) => {
+          const providerSession = session.fromPartition(partition);
+          await providerSession.clearStorageData({
+            storages: [
+              'cookies',
+              'filesystem',
+              'indexdb',
+              'localstorage',
+              'serviceworkers',
+              'cachestorage',
+            ],
+          });
+          await providerSession.clearCache();
+          await providerSession.clearAuthCache();
+        }),
+      );
+      permissionDecisions.clear();
       return Object.freeze({ cleared: true });
     });
     ipcMain.handle('spartan:set-quit-guard', (_event, enabled) => {

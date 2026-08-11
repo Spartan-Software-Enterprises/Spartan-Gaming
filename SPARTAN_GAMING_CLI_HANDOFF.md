@@ -502,6 +502,28 @@ report plus missing native-hardware, Windows/macOS virtual-gamepad,
 external-signing, and both physical SteamOS reports. No secret values are
 stored in the report or this handoff.
 
+The current provider-session increment makes Settings -> Providers -> Isolate
+provider accounts operational in the Electron shell. Provider launches use a
+bounded persistent partition for the active Gaming, Family, Guest, or Default
+profile; the disabled setting retains the existing shared compatibility
+partition. Approved OAuth child windows inherit the same partition, permission
+decisions are partition-scoped, and surface changes or logout close
+provider-owned OAuth children. Logout clears storage, HTTP authentication, and
+cache data from every managed partition. Unit and Electron contract tests cover
+policy normalization and cleanup. Local repository checks passed, the local serial
+suite passed 637 of 641 tests with 4 expected host skips, and AWS passed 29/29
+Electron contracts plus 639 of 641 serial tests with 2 expected platform skips.
+The AWS Xvfb Electron run exercised seven interactions and matched all 44
+committed route/layout baselines. This does not close the real-service sign-in,
+restart-persistence, expiry, recovery, or account-switching acceptance gate.
+
+CodeRabbit reviewed every tracked file in this increment and returned zero
+findings. Its uncommitted-file mode omitted the two new provider-session files;
+after they were staged, the immediate follow-up was blocked by the free CLI's
+16-minute rolling rate limit. Those files were separately covered by focused
+tests and manual review, including canonical profile-list reuse and OAuth-child
+lifecycle cleanup.
+
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
 `scripts/frontend/serve.test.mjs`. Before pushing future work, run

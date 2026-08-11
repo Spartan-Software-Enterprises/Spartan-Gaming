@@ -25,6 +25,10 @@ test('Electron shell keeps quit confirmation tied to the active session setting'
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
   const main = await readFile(path.join(root, 'desktop/electron/main.mjs'), 'utf8');
   const preload = await readFile(path.join(root, 'desktop/electron/preload.mjs'), 'utf8');
+  const providerSession = await readFile(
+    path.join(root, 'desktop/electron/provider-session.mjs'),
+    'utf8',
+  );
   assert.match(main, /spartan:set-quit-guard/);
   assert.match(main, /spartan:set-session-active/);
   assert.match(main, /A gaming session is active/);
@@ -33,7 +37,11 @@ test('Electron shell keeps quit confirmation tied to the active session setting'
   assert.match(main, /spartan:deep-link/);
   assert.match(main, /createBundledAppProtocolHandler/);
   assert.doesNotMatch(main, /createFrontendServer/);
-  assert.match(main, /persist:spartan-gaming-providers/);
+  assert.match(main, /resolveProviderPartition/);
+  assert.match(main, /providerSessionPartitions/);
+  assert.match(main, /providerChildWindows/);
+  assert.match(main, /clearAuthCache/);
+  assert.match(providerSession, /persist:spartan-gaming-providers/);
   assert.match(main, /did-create-window/);
   assert.match(preload, /setQuitGuard\(enabled\)/);
   assert.match(preload, /setSessionActive\(active\)/);
