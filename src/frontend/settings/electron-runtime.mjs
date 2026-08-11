@@ -23,6 +23,7 @@ export function describeElectronRuntimeResult(result) {
 /** Convert persisted settings into the bounded Electron runtime policy payload. */
 export function resolveElectronRuntimeSettings(settings = {}) {
   return Object.freeze({
+    developerMode: settings['advanced.developerMode'] === true,
     hardwareAcceleration: settings['performance.hardwareAcceleration'] !== false,
     crashReports: settings['performance.crashReports'] === true,
     verboseLogs: settings['advanced.verboseLogs'] === true,

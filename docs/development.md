@@ -314,6 +314,15 @@ addresses, user paths, authorization headers, and credential-shaped values.
 Settings can clear the log immediately; Spartan has no diagnostics upload
 endpoint.
 
+`advanced.developerMode` is a live Electron policy rather than a decorative
+flag. It is disabled by default. When enabled, the main process rebuilds the
+application menu with an explicit primary-window DevTools command and accepts
+F12 or Command/Control+Shift+I from that same application renderer. The
+sandboxed preload exposes one bounded Settings action. Disabling the setting
+closes an open inspector and removes its menu command immediately. These paths
+never use Electron's focused-view `toggledevtools` role, so an approved provider
+login, OAuth child, or player view cannot become the accidental debug target.
+
 Electron Builder discovers the shared scalable package mark at
 `desktop/build-resources/icon.svg`. Keep that source platform-neutral so Linux,
 Windows, and macOS development packaging can derive their native icon formats

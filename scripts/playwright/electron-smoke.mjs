@@ -89,6 +89,20 @@ async function waitForMissingFile(filePath, attempts = 20) {
   throw new Error(`timed out waiting for file removal ${filePath}`);
 }
 
+async function waitForApplicationDeveloperTools(application, expected, attempts = 40) {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const opened = await application.evaluate(({ BrowserWindow }) => {
+      const mainWindow = BrowserWindow.getAllWindows().find((window) =>
+        window.webContents.getURL().startsWith('spartan-app://app/'),
+      );
+      return mainWindow?.webContents.isDevToolsOpened() === true;
+    });
+    if (opened === expected) return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error(`timed out waiting for application DevTools to ${expected ? 'open' : 'close'}`);
+}
+
 async function configureLayout(page, layout) {
   await page.setViewportSize({ width: layout.width, height: layout.height });
   await page.goto(`${appOrigin}/dashboard/`, { waitUntil: 'domcontentloaded' });
@@ -118,7 +132,7 @@ async function configureLayout(page, layout) {
   );
 }
 
-async function checkLayoutInteraction(page, layout, output, userDataDirectory) {
+async function checkLayoutInteraction(page, layout, output, userDataDirectory, application) {
   await page.goto(`${appOrigin}/dashboard/`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(150);
   const search = page.locator('input[type="search"]');
@@ -269,6 +283,59 @@ async function checkLayoutInteraction(page, layout, output, userDataDirectory) {
     await crashReports.click();
     interactions.push('desktop:local-diagnostics-settings');
 
+    await page.locator('[data-category="advanced"]').click();
+    const developerMode = page.locator('[data-key="advanced.developerMode"]');
+    const developerToolsAction = page.locator('[data-action="advanced.flags"]');
+    if ((await developerMode.getAttribute('aria-checked')) !== 'false')
+      throw new Error('desktop developer mode did not start disabled');
+    await developerToolsAction.click();
+    await page.waitForFunction(() =>
+      /enable developer mode/i.test(
+        document.querySelector('[data-save-status]')?.textContent || '',
+      ),
+    );
+    await developerMode.click();
+    await page.waitForFunction(() =>
+      /saved|changes saved/i.test(document.querySelector('[data-save-status]')?.textContent || ''),
+    );
+    const menuExposed = await application.evaluate(({ BrowserWindow, Menu }) => {
+      const mainWindow = BrowserWindow.getAllWindows().find((window) =>
+        window.webContents.getURL().startsWith('spartan-app://app/'),
+      );
+      return Boolean(
+        mainWindow && Menu.getApplicationMenu()?.getMenuItemById('spartan-developer-tools'),
+      );
+    });
+    if (!menuExposed) throw new Error('desktop developer mode did not expose its application menu');
+    await page.screenshot({
+      path: path.join(output, 'desktop-developer-mode-interaction.png'),
+      fullPage: true,
+      animations: 'disabled',
+    });
+    await developerToolsAction.click();
+    await page.waitForFunction(() =>
+      /developer tools opened/i.test(
+        document.querySelector('[data-save-status]')?.textContent || '',
+      ),
+    );
+    await waitForApplicationDeveloperTools(application, true);
+    await developerMode.click();
+    await waitForApplicationDeveloperTools(application, false);
+    const disabledRuntime = await application.evaluate(({ BrowserWindow, Menu }) => {
+      const mainWindow = BrowserWindow.getAllWindows().find((window) =>
+        window.webContents.getURL().startsWith('spartan-app://app/'),
+      );
+      return {
+        devToolsOpened: mainWindow?.webContents.isDevToolsOpened() === true,
+        menuExposed: Boolean(Menu.getApplicationMenu()?.getMenuItemById('spartan-developer-tools')),
+      };
+    });
+    if (disabledRuntime.devToolsOpened || disabledRuntime.menuExposed)
+      throw new Error(
+        `desktop developer mode did not revoke runtime access: ${JSON.stringify(disabledRuntime)}`,
+      );
+    interactions.push('desktop:developer-mode-tools');
+
     await page.locator('[data-category="controllers"]').click();
     await page.locator('[data-key="controllers.playerSlots"]').selectOption('2');
     await page.locator('[data-key="controllers.deadzone"]').fill('20');
@@ -370,7 +437,9 @@ export async function runElectronVisualSmoke({
           }),
         );
       }
-      interactions.push(...(await checkLayoutInteraction(page, layout, output, userDataDirectory)));
+      interactions.push(
+        ...(await checkLayoutInteraction(page, layout, output, userDataDirectory, application)),
+      );
     }
 
     const candidate = Object.freeze({

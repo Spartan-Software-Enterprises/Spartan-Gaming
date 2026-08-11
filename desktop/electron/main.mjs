@@ -61,6 +61,12 @@ import {
   pruneElectronDiagnosticLog,
   shouldRecordProcessFailure,
 } from './diagnostic-log.mjs';
+import {
+  closeDeveloperToolsWhenDisabled,
+  createApplicationMenuTemplate,
+  isDeveloperToolsShortcut,
+  toggleDeveloperTools,
+} from './developer-tools-policy.mjs';
 
 protocol.registerSchemesAsPrivileged([APP_PROTOCOL_PRIVILEGES]);
 const startupPolicyPath = path.join(app.getPath('userData'), 'startup-policy.json');
@@ -258,6 +264,21 @@ function showMainWindow() {
   windowRef.focus();
 }
 
+function toggleApplicationDeveloperTools() {
+  return toggleDeveloperTools(windowRef?.webContents, runtimePolicy.developerMode);
+}
+
+function syncApplicationMenu() {
+  Menu.setApplicationMenu(
+    Menu.buildFromTemplate(
+      createApplicationMenuTemplate({
+        developerMode: runtimePolicy.developerMode,
+        onToggleDevTools: toggleApplicationDeveloperTools,
+      }),
+    ),
+  );
+}
+
 const shortcutController = createGlobalShortcutController({
   registry: globalShortcut,
   onActivate: showMainWindow,
@@ -377,8 +398,12 @@ async function createMainWindow() {
     if (!isAllowedNavigation(event.url, { appOrigin: APP_ORIGIN })) event.preventDefault();
   });
   windowRef.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-  windowRef.webContents.on('before-input-event', (_event, input) => {
+  windowRef.webContents.on('before-input-event', (event, input) => {
     if (input.type === 'keyDown' && input.key === 'Escape') closeProviderView();
+    if (isDeveloperToolsShortcut(input)) {
+      event.preventDefault();
+      toggleApplicationDeveloperTools();
+    }
   });
   await windowRef.loadURL(`${APP_ORIGIN}/dashboard/?startup=1`);
   deliverDeepLink(pendingDeepLink);
@@ -412,18 +437,7 @@ if (hasSingleInstanceLock)
     if (process.defaultApp && process.argv[1])
       app.setAsDefaultProtocolClient('spartan', process.execPath, [path.resolve(process.argv[1])]);
     else app.setAsDefaultProtocolClient('spartan');
-    Menu.setApplicationMenu(
-      Menu.buildFromTemplate([
-        {
-          label: 'Spartan Gaming',
-          submenu: [{ role: 'about' }, { type: 'separator' }, { role: 'quit' }],
-        },
-        {
-          label: 'View',
-          submenu: [{ role: 'togglefullscreen' }, { role: 'reload' }, { role: 'toggledevtools' }],
-        },
-      ]),
-    );
+    syncApplicationMenu();
     ipcMain.handle('spartan:open-external', (_event, url) => {
       if (!networkPolicy.allowsExternalUrl(url))
         throw new Error(
@@ -482,6 +496,8 @@ if (hasSingleInstanceLock)
       if (!settings || typeof settings !== 'object' || Array.isArray(settings))
         throw new TypeError('runtime settings must be an object');
       runtimePolicy = normalizeElectronRuntimePolicy(settings);
+      closeDeveloperToolsWhenDisabled(event.sender, runtimePolicy.developerMode);
+      syncApplicationMenu();
       const nextDiagnosticsPolicy = normalizeElectronDiagnosticsPolicy(settings);
       const diagnosticsPolicyChanged = Object.keys(nextDiagnosticsPolicy).some(
         (key) => nextDiagnosticsPolicy[key] !== diagnosticsPolicy[key],
@@ -523,6 +539,11 @@ if (hasSingleInstanceLock)
         throw new Error('diagnostics may only be cleared by the primary window');
       await clearElectronDiagnosticLog(diagnosticLogPath);
       return Object.freeze({ cleared: true });
+    });
+    ipcMain.handle('spartan:toggle-developer-tools', (event) => {
+      if (event.sender !== windowRef.webContents)
+        throw new Error('developer tools may only be controlled by the primary window');
+      return toggleApplicationDeveloperTools();
     });
     installPowerMonitoring();
     ipcMain.handle('spartan:toggle-fullscreen', () => {

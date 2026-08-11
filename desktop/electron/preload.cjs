@@ -32,6 +32,9 @@ contextBridge.exposeInMainWorld(
     clearDiagnostics() {
       return ipcRenderer.invoke('spartan:clear-diagnostics');
     },
+    toggleDeveloperTools() {
+      return ipcRenderer.invoke('spartan:toggle-developer-tools');
+    },
     toggleFullscreen() {
       return ipcRenderer.invoke('spartan:toggle-fullscreen');
     },

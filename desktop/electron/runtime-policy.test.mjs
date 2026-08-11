@@ -10,6 +10,7 @@ import {
 
 test('Electron runtime policy defaults to throttling and accepts the explicit performance setting', () => {
   assert.deepEqual(normalizeElectronRuntimePolicy(), {
+    developerMode: false,
     backgroundApps: false,
     globalShortcut: null,
     backgroundThrottling: true,
@@ -20,6 +21,7 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
   });
   assert.deepEqual(
     normalizeElectronRuntimePolicy({
+      developerMode: true,
       backgroundApps: true,
       globalShortcut: 'CommandOrControl+Shift+G',
       backgroundThrottling: false,
@@ -29,6 +31,7 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
       permissionPrompts: 'Ask every time',
     }),
     {
+      developerMode: true,
       backgroundApps: true,
       globalShortcut: 'CommandOrControl+Shift+G',
       backgroundThrottling: false,
@@ -41,6 +44,7 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
   assert.deepEqual(
     normalizeElectronRuntimePolicy({ backgroundThrottling: false, powerMode: 'Battery saver' }),
     {
+      developerMode: false,
       backgroundApps: false,
       globalShortcut: null,
       backgroundThrottling: true,
@@ -52,6 +56,7 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
   );
   assert.deepEqual(
     normalizeElectronRuntimePolicy({
+      developerMode: 'true',
       backgroundApps: 'true',
       globalShortcut: 'F1',
       backgroundThrottling: 'false',
@@ -60,6 +65,7 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
       permissionPrompts: 'unsupported',
     }),
     {
+      developerMode: false,
       backgroundApps: false,
       globalShortcut: null,
       backgroundThrottling: true,

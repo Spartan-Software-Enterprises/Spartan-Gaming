@@ -272,6 +272,26 @@ function bindControls() {
         }
         return;
       }
+      if (action.kind === 'developer-tools') {
+        const status = document.querySelector('[data-save-status]');
+        if (!globalThis.spartanElectron?.toggleDeveloperTools) {
+          if (status)
+            status.textContent = 'Developer tools are available only in the Electron desktop app.';
+          return;
+        }
+        try {
+          const result = await globalThis.spartanElectron.toggleDeveloperTools();
+          if (status)
+            status.textContent = result?.opened
+              ? 'Developer tools opened for the Spartan Gaming application.'
+              : result?.reason === 'disabled'
+                ? 'Enable developer mode before opening developer tools.'
+                : 'Developer tools closed.';
+        } catch (error) {
+          if (status) status.textContent = `Developer tools failed: ${error.message}`;
+        }
+        return;
+      }
       const status = document.querySelector('[data-save-status]');
       if (status && action.kind === 'status') {
         status.textContent = action.message;

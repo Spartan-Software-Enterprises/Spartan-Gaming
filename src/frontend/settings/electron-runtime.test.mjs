@@ -8,6 +8,7 @@ import {
 test('Electron runtime settings reflect persisted performance and privacy choices', () => {
   assert.deepEqual(
     resolveElectronRuntimeSettings({
+      'advanced.developerMode': true,
       'general.backgroundApps': true,
       'general.globalShortcut': 'CommandOrControl+Shift+G',
       'performance.hardwareAcceleration': false,
@@ -21,6 +22,7 @@ test('Electron runtime settings reflect persisted performance and privacy choice
       'privacy.permissionPrompts': 'Ask every time',
     }),
     {
+      developerMode: true,
       hardwareAcceleration: false,
       crashReports: true,
       verboseLogs: true,
@@ -38,6 +40,7 @@ test('Electron runtime settings reflect persisted performance and privacy choice
 
 test('Electron runtime settings default safely when values are absent', () => {
   assert.deepEqual(resolveElectronRuntimeSettings({}), {
+    developerMode: false,
     hardwareAcceleration: true,
     crashReports: false,
     verboseLogs: false,

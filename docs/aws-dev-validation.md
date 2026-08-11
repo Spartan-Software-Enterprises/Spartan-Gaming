@@ -333,3 +333,22 @@ Electron icon warning; after adding the existing Spartan mark as
 the warning. The SVG is Electron Builder's shared scalable source for Linux,
 Windows, and macOS development artifacts; signed/installed icon inspection on
 each real platform remains part of release validation.
+
+The 2026-08-11 Developer Mode increment used the existing Xvfb environment; a
+full desktop installation was not required. The synchronized AWS repository
+check passed 439/439. The Electron matrix matched all 44 Linux x64 perceptual
+baselines and completed ten interactions, including enabling Developer Mode,
+observing its primary-window application-menu command, opening the application
+renderer DevTools through the sandboxed Settings bridge, then disabling the
+setting and observing both the inspector and menu command disappear. The
+dedicated full-page Settings screenshot was inspected directly and showed a
+readable active toggle, description, and action without clipping or horizontal
+overflow. Provider views remain excluded by targeting only the primary
+window's WebContents.
+The serialized AWS suite passed 640 of 642 with only the expected Windows and
+macOS package-contract skips. Electron Builder produced a 120,279,029-byte
+AppImage and a 93,203,464-byte Debian package. Inspection of the packaged ASAR
+confirmed that the Developer Mode policy module, CommonJS preload bridge, and
+Settings implementation are present.
+A complete staged CodeRabbit review explicitly included all 19 increment files,
+including both new Developer Mode policy files, and returned zero findings.
