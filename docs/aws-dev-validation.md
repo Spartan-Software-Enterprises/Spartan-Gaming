@@ -62,6 +62,21 @@ lacking a kernel or device path capable of force feedback.
 
 ## Current development evidence
 
+On commit `e988303`, the Amazon Linux host ran the standalone Electron visual
+smoke under Xvfb at 1440x900. The real Electron main process loaded the private
+`spartan-app://app` origin without a frontend HTTP server, rendered all 11
+maintained routes with meaningful bodies and no horizontal overflow, exercised
+dashboard search and the global-shortcut setting, and saved route and
+interaction screenshots under
+`/home/ec2-user/Spartan-Gaming/out/playwright/electron`. A generated contact
+sheet was visually inspected; no blank route, broken styling, or obvious
+clipping was observed. This is virtual-display Linux evidence, not physical
+display, controller, audio, haptics, or other-platform approval.
+
+The visual host has `Xvfb`, `ImageMagick`, and `dbus-x11` installed. No desktop,
+VNC, RDP, or public application port is required; Xvfb is the minimal display
+layer for repeatable Electron screenshots.
+
 On 2026-08-11, the Amazon Linux host built the final `6877b75` Electron
 desktop package configuration after installing the bounded packaging
 prerequisites `ruby` and `libxcrypt-compat` required by Electron Builder's
@@ -116,7 +131,7 @@ The standalone Electron application has a separate visual smoke command that
 never starts the frontend test server:
 
 ```bash
-xvfb-run -a npm run playwright:electron
+xvfb-run -a --server-args="-screen 0 1440x900x24" npm run playwright:electron
 ```
 
 It launches the real Electron main process, requires the private
@@ -165,9 +180,10 @@ redacted. Rotate the key or service secrets through the operator's secret
 store if exposure is suspected.
 
 The installed toolchain is Git, Rust/Cargo, GCC, CMake, Node.js/npm, Python,
-Docker, and the Amazon Linux GUI/media dependencies needed by headless
-Chromium. Playwright 1.55.0 is installed temporarily for the protected smoke
-run, outside the project checkout. The development services are Redis,
+Docker, Xvfb, ImageMagick, dbus-x11, and the Amazon Linux GUI/media dependencies
+needed by Chromium and Electron. Playwright 1.62.1 is pinned in the repository;
+an older Playwright 1.55.0 installation remains available only for the legacy
+browser smoke harness. The development services are Redis,
 signaling, and TURN;
 no public game ports are opened.
 The report is retained outside Git at

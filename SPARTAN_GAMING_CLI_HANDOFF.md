@@ -33,19 +33,55 @@ Use the remote development host for expensive or platform-sensitive checks.
 Keep temporary Playwright reports and screenshots outside the repository.
 Inspect `AGENTS.md` or `CLAUDE.md` if either is added in a future checkout.
 
+## Latest continuation snapshot
+
+- `main` is published through `42649f6`. The primary desktop runtime is a
+  standalone Electron application that loads bundled assets from
+  `spartan-app://app`; production startup does not open a loopback HTTP server.
+- `7775f72` introduced the private bundled application protocol, offline cold
+  shell, bounded desktop global shortcut, and standalone-product documentation.
+- `3043793` added persistent in-app provider login sessions and the Settings
+  action that clears provider cookies, site storage, cache, and Spartan launch
+  handoffs.
+- `96798e9` pinned Prettier 3.9.6, formatted the repository, enforced
+  `npm run format:check` in CI, and recorded the public-release acceptance
+  matrix.
+- `e988303` pinned Playwright 1.62.1 and added
+  `npm run playwright:electron`, which drives the real Electron main process
+  without a frontend HTTP server.
+- `42649f6` made deployment YAML contracts independent of Prettier's quote
+  style. Local deployment tests passed 19/19; the complete serialized suite
+  passed 638 tests with 634 passed, 4 expected environment skips, and 0 failed.
+- GitHub Actions is green on `42649f6`: repository checks `31450972045`,
+  frontend distribution `31450972054`, cross-platform contracts `31450972062`,
+  and Android debug shell `31450972063` all succeeded.
+- On AWS at `e988303`, Electron contracts passed 21/21, Linux unpacked packaging
+  succeeded, and the Xvfb visual smoke rendered all 11 maintained routes plus
+  two interactions at 1440x900. Every route had meaningful content and no
+  horizontal overflow; the contact sheet showed no blank or obviously broken
+  surface. Screenshots remain outside Git under
+  `/home/ec2-user/Spartan-Gaming/out/playwright/electron`.
+- CodeRabbit CLI 0.7.2 is authenticated on the AWS host, but three bounded
+  review attempts ended before a completed result was returned. Do not claim a
+  clean CodeRabbit review until the service completes one.
+- Remaining release gates include physical Windows/Linux/SteamOS/Android/Fire
+  TV/controller testing, macOS only where existing desktop CI contracts require
+  it, signed installers and updates, real provider login/recovery flows,
+  accessibility, performance, long-session recovery, and platform certification.
+
 ## Remote development server
 
-| Field      | Value                                               |
-| ---------- | --------------------------------------------------- |
-| Type       | `t3.small`                                          |
-| OS         | Amazon Linux 2023                                   |
-| Region     | `us-east-1`                                         |
-| Address    | Resolve from protected infrastructure configuration |
-| Disk       | 30 GiB encrypted gp3                                |
-| SSH access | Restricted operator access                          |
-| Checkout   | `~/Spartan-Gaming`                                  |
-| Frontend   | `127.0.0.1:4173`, not publicly exposed              |
-| Evidence   | `~/.config/spartan-dev/evidence`                    |
+| Field      | Value                                                   |
+| ---------- | ------------------------------------------------------- |
+| Type       | `t3.small`                                              |
+| OS         | Amazon Linux 2023                                       |
+| Region     | `us-east-1`                                             |
+| Address    | `100.59.33.221` observed 2026-08-10; resolve before use |
+| Disk       | 30 GiB encrypted gp3                                    |
+| SSH access | Restricted operator access                              |
+| Checkout   | `~/Spartan-Gaming`                                      |
+| Runtime    | Standalone Electron; no production frontend server      |
+| Evidence   | `~/.config/spartan-dev/evidence`                        |
 
     # Resolve the current host address from the private AWS inventory/runbook.
     ssh -i ~/.ssh/spartan-dev ec2-user@<current-dev-host>
@@ -76,18 +112,20 @@ runbook/configuration. Never replace this with a password prompt or commit the
 private key itself.
 
 Remote tooling includes Git, Rust/Cargo, GCC, CMake, Node.js/npm, Python,
-Docker, Playwright 1.55.0, Chromium headless, and the Linux packages required
-by Chromium. Existing development services are Redis, signaling, and TURN.
+Docker, Playwright 1.62.1, Chromium, Electron, Xvfb, ImageMagick, dbus-x11, and
+the Linux packages required by Chromium/Electron. Existing development services
+are Redis, signaling, and TURN.
 Do not create, resize, or replace AWS resources without an explicit cost
 review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- The published code state is `4548845` on `main`; the local worktree is clean.
-  AWS was synchronized to `1efa4da` before the bounded release-signing probe;
-  its SSH service became temporarily unresponsive under the small-host Gradle
-  workload and the current remote state must be rechecked before claiming
-  synchronization.
+- The published code state is `42649f6` on `main`; verify the worktree before
+  continuing. The latest four GitHub workflows for this code commit succeeded
+  and are identified in the continuation snapshot; recheck with `gh run list`
+  if the branch has advanced.
+  AWS is synchronized to `42649f6`, its worktree is clean, and its focused
+  deployment suite passes 19/19.
 - `npm run check`: repository checks pass on the current code state locally
   and on the AWS dev server.
 - `npm test`: the current local run completed with 634 tests, 630 passed,
@@ -223,11 +261,23 @@ review; stay within the AWS credit limit.
 - Roadmap acceptance remains incomplete for real Windows/macOS/Linux hardware,
   Windows/macOS virtual gamepad drivers, external package signing, production
   activation, and physical SteamOS Deck/desktop validation.
-- CodeRabbit review was not completed because the local `coderabbit` binary is
-  unusable on the ARM64 Termux host. Install and authenticate the official CLI
-  before claiming a CodeRabbit review.
+- CodeRabbit review was not completed. The local ARM64 binary is unusable; the
+  AWS CLI is installed and authenticated, but three attempts ended without a
+  completed review result. Retry on AWS before claiming CodeRabbit approval.
 
 ## Current change
+
+The current standalone-desktop increment is published through `42649f6`.
+Electron now loads its bundled application over the private
+`spartan-app://app` protocol with no production frontend server, keeps provider
+login state in a persistent in-app partition, exposes bounded shortcut and
+provider-session controls, enforces pinned Prettier formatting, and has an
+Electron-native Playwright visual harness. Local Electron contracts passed
+21/21; the full serialized suite passed 638 tests with 634 passed, 4 expected
+environment skips, and 0 failed. AWS rendered 11 maintained routes and two
+interactions at 1440x900 with meaningful content and no horizontal overflow.
+Physical platform, input, provider, signing, updater, and long-session release
+gates remain open.
 
 The current Android bridge increment binds native result delivery to the
 request/action pairs issued by each bridge instance. Unsolicited, stale, or
