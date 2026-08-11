@@ -9,6 +9,7 @@ export function normalizeProviderSessionOptions(options = {}) {
   return Object.freeze({
     profileId,
     isolateAccounts: options?.isolateAccounts !== false,
+    autoDetect: options?.autoDetect !== false,
   });
 }
 

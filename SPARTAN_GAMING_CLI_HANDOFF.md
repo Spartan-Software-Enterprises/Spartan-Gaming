@@ -524,6 +524,21 @@ after they were staged, the immediate follow-up was blocked by the free CLI's
 tests and manual review, including canonical profile-list reuse and OAuth-child
 lifecycle cleanup.
 
+The next desktop-settings increment makes Settings -> Providers -> Detect
+provider sessions operational. The dashboard sends the normalized setting with
+each provider launch. A successfully loaded approved provider view contributes
+to Electron's application-activity and power-save-blocker policy when detection
+is enabled; close, logout, surface replacement, and renderer-loss paths clear
+that state. Detection never injects an overlay into a remote provider page, and
+disabling it does not prevent a user-directed provider launch. Focused policy,
+power, and Electron shell tests cover the enabled and disabled contracts. Local
+repository checks passed; the local serial suite passed 637 of 641 tests with 4
+expected environment skips. AWS passed 30/30 Electron contracts and 639 of 641
+serial tests with 2 expected platform skips, matched 44/44 visual baselines,
+exercised all seven maintained interactions, and rebuilt the unpacked Linux app.
+CodeRabbit reviewed all 13 changed files in this increment and returned zero
+findings.
+
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and
 `scripts/frontend/serve.test.mjs`. Before pushing future work, run

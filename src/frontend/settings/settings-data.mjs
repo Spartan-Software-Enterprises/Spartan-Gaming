@@ -780,7 +780,7 @@ export const settingsCategories = [
       toggle(
         'providers.autoDetect',
         'Detect provider sessions',
-        'Recognize active supported provider sessions and attach the Spartan overlay.',
+        'Treat loaded supported provider views as active sessions for power and quit behavior.',
         true,
       ),
       toggle(

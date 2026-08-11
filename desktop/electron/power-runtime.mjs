@@ -25,6 +25,13 @@ export function resolvePowerSaveBlockerType({ active = false, powerMode = 'Balan
   return powerMode === 'Battery saver' ? 'prevent-app-suspension' : 'prevent-display-sleep';
 }
 
+export function resolveApplicationSessionActive({
+  gameSession = false,
+  providerSession = false,
+} = {}) {
+  return gameSession === true || providerSession === true;
+}
+
 export function normalizePowerEvent(type, details = {}) {
   const name = typeof type === 'string' && type.trim() ? type.trim() : 'unknown';
   const payload = { type: name };

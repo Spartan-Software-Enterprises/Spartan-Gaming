@@ -12,6 +12,7 @@ test('provider sessions isolate supported local profiles by default', () => {
   assert.deepEqual(normalizeProviderSessionOptions({ profileId: 'family' }), {
     profileId: 'family',
     isolateAccounts: true,
+    autoDetect: true,
   });
   assert.equal(
     resolveProviderPartition({ profileId: 'family' }),
@@ -28,9 +29,10 @@ test('provider sessions retain the shared compatibility partition when isolation
     resolveProviderPartition({ profileId: 'family', isolateAccounts: false }),
     SHARED_PROVIDER_PARTITION,
   );
-  assert.deepEqual(normalizeProviderSessionOptions({ profileId: '../unsafe' }), {
+  assert.deepEqual(normalizeProviderSessionOptions({ profileId: '../unsafe', autoDetect: false }), {
     profileId: 'gaming',
     isolateAccounts: true,
+    autoDetect: false,
   });
 });
 

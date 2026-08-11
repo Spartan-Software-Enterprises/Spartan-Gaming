@@ -40,6 +40,8 @@ test('Electron shell keeps quit confirmation tied to the active session setting'
   assert.match(main, /resolveProviderPartition/);
   assert.match(main, /providerSessionPartitions/);
   assert.match(main, /providerChildWindows/);
+  assert.match(main, /providerSessionActive/);
+  assert.match(main, /applicationSessionActive/);
   assert.match(main, /clearAuthCache/);
   assert.match(providerSession, /persist:spartan-gaming-providers/);
   assert.match(main, /did-create-window/);

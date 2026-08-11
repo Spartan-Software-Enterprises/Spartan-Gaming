@@ -33,7 +33,7 @@ The primary desktop app is packaged as one application. Its interface, catalogs,
 - Sandboxed, isolated provider views with HTTPS-only navigation policy.
 - In-app provider sign-in and OAuth windows with approved authentication domains. Each local gaming profile receives its own persistent provider session by default; a Settings compatibility option can deliberately share accounts across profiles, and logout clears every managed partition.
 - Tray and background-app behavior controlled by Settings.
-- Session-aware power-save blocking plus bounded suspend, battery, thermal, and CPU speed-limit events.
+- Session-aware power-save blocking for connected games and, when enabled, successfully loaded provider views, plus bounded suspend, battery, thermal, and CPU speed-limit events.
 - Privacy controls for Do Not Track, third-party cookies, and permission prompting.
 - An optional global restore shortcut with safe, allow-listed choices and visible registration status.
 - Cross-platform Electron Builder configuration for Windows, Linux, and macOS development artifacts.
