@@ -50,27 +50,20 @@ export const settingsCategories = [
     id: 'general',
     label: 'General',
     icon: '◈',
-    description: 'Startup, defaults, and core browser behavior.',
+    description: 'Startup, defaults, and standalone application behavior.',
     settings: [
       toggle(
         'general.restoreSession',
         'Restore previous session',
-        'Reopen tabs, windows, workspaces, and active game sessions on startup.',
+        'Restore the active workspace and eligible game-session handoff on startup.',
         true,
       ),
       select(
         'general.startupPage',
         'Startup page',
-        'Choose what Spartan Gaming opens when the browser launches.',
-        ['Gaming home', 'Continue playing', 'New tab', 'Last session'],
+        'Choose what Spartan Gaming opens when the application launches.',
+        ['Gaming home', 'Continue playing', 'New session', 'Last session'],
         'Gaming home',
-      ),
-      select(
-        'general.defaultSearch',
-        'Search provider',
-        'Search used by the address bar and the gaming dashboard.',
-        ['DuckDuckGo', 'Google', 'Bing', 'Brave Search', 'Custom'],
-        'DuckDuckGo',
       ),
       toggle(
         'general.askBeforeQuit',
@@ -100,7 +93,7 @@ export const settingsCategories = [
       action(
         'general.reset',
         'Reset all settings',
-        'Restore Spartan Gaming defaults. Browser profiles and saved games are not removed.',
+        'Restore Spartan Gaming defaults. Local profiles and saved games are not removed.',
         'Reset settings',
       ),
     ],
@@ -821,7 +814,7 @@ export const settingsCategories = [
       toggle(
         'providers.isolateAccounts',
         'Isolate provider accounts by profile',
-        'Prevent account metadata and sessions from crossing browser profiles.',
+        'Prevent account metadata and sessions from crossing local gaming profiles.',
         true,
       ),
       action(

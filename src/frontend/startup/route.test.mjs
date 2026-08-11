@@ -31,8 +31,15 @@ test('startup routing sends prior history to a recent view and never auto-opens 
   );
   assert.equal(
     resolveStartupRoute(
-      { 'general.startupPage': 'New tab' },
+      { 'general.startupPage': 'New session' },
       { recovery: { ticket: 'secret' }, lastLaunch: { backendId: 'host' } },
+    ),
+    null,
+  );
+  assert.equal(
+    resolveStartupRoute(
+      { 'general.startupPage': 'New tab' },
+      { recovery: { ticket: 'legacy' }, lastLaunch: { backendId: 'host' } },
     ),
     null,
   );
