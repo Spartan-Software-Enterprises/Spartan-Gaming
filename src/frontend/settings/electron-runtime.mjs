@@ -52,7 +52,9 @@ export function resolveElectronRuntimeSettings(settings = {}) {
     )
       ? settings['performance.gpuPreference']
       : 'Automatic',
-    processModel: ['Default', 'Maximum isolation', 'Low memory'].includes(
+    ? settings['performance.processModel']
+      : 'Default',
+    crashReports: settings['performance.crashReports'] === true, ['Default', 'Maximum isolation', 'Low memory'].includes(
       settings['performance.processModel'],
     )
       ? settings['performance.processModel']
