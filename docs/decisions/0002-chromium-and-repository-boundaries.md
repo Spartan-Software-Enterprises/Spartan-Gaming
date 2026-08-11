@@ -19,12 +19,12 @@ moving `main` revision.
 
 The repository owns four explicit layers:
 
-| Layer | Owns | Must not own |
-| --- | --- | --- |
-| `src/frontend/`, `protocol/`, catalogs | Browser UX, session contracts, provider/emulator descriptors, diagnostics | Native OS privileges, provider credentials, game/firmware content |
-| `chromium/` | Build manifest, GN templates, branding/integration patch metadata | Chromium checkout, generated binaries, upstream dependency history |
-| `signaling/`, `docker/`, `scripts/` | Reference signaling, deployment contracts, ticket tooling, CI/build orchestration | Media relay, long-term secrets, game execution |
-| `host/` | Privileged host lifecycle, capture/encode/publish/input/audio adapter contracts | Browser UI, catalog policy, unvalidated remote commands |
+| Layer                                  | Owns                                                                              | Must not own                                                       |
+| -------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `src/frontend/`, `protocol/`, catalogs | Browser UX, session contracts, provider/emulator descriptors, diagnostics         | Native OS privileges, provider credentials, game/firmware content  |
+| `chromium/`                            | Build manifest, GN templates, branding/integration patch metadata                 | Chromium checkout, generated binaries, upstream dependency history |
+| `signaling/`, `docker/`, `scripts/`    | Reference signaling, deployment contracts, ticket tooling, CI/build orchestration | Media relay, long-term secrets, game execution                     |
+| `host/`                                | Privileged host lifecycle, capture/encode/publish/input/audio adapter contracts   | Browser UI, catalog policy, unvalidated remote commands            |
 
 `protocol/` is the only shared dependency boundary between frontend, service,
 and host layers. Native implementations may be added behind the contracts, but

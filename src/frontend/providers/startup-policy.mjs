@@ -2,5 +2,9 @@
 export function resolveProviderStartupPolicy(settings = {}) {
   const healthChecks = settings['providers.healthChecks'] === true;
   const prewarmProviders = settings['performance.prewarmProviders'] === true;
-  return Object.freeze({healthChecks, prewarmProviders, shouldProbe: healthChecks || prewarmProviders});
+  return Object.freeze({
+    healthChecks,
+    prewarmProviders,
+    shouldProbe: healthChecks || prewarmProviders,
+  });
 }

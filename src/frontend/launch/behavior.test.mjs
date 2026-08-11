@@ -1,7 +1,39 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {launchExternalSurface, resolveLaunchTarget} from './behavior.mjs';
+import { launchExternalSurface, resolveLaunchTarget } from './behavior.mjs';
 
-test('launch behavior resolves safe browser targets', () => { assert.equal(resolveLaunchTarget('New tab').target, '_blank'); assert.match(resolveLaunchTarget('New gaming window').features, /popup/); assert.match(resolveLaunchTarget('Fullscreen window').features, /fullscreen/); assert.equal(resolveLaunchTarget('invalid').target, '_blank'); });
-test('launch behavior honors current-workspace navigation without opening a popup', () => { const calls = []; const result = launchExternalSurface('https://provider.example/play', {behavior: 'Current workspace', assign: url => calls.push(url), open: () => { throw new Error('must not open'); }}); assert.deepEqual(calls, ['https://provider.example/play']); assert.deepEqual(result, {mode: 'current-workspace', url: 'https://provider.example/play'}); });
-test('launch behavior reports popup/tab handoff and rejects unsafe URLs', () => { const calls = []; const result = launchExternalSurface('https://provider.example/play', {behavior: 'New gaming window', open: (...args) => { calls.push(args); return {}; }}); assert.equal(result.mode, 'window'); assert.equal(result.opened, true); assert.equal(calls[0][0], 'https://provider.example/play'); assert.throws(() => launchExternalSurface('http://provider.example/play', {open: () => ({})}), /HTTPS/); });
+test('launch behavior resolves safe browser targets', () => {
+  assert.equal(resolveLaunchTarget('New tab').target, '_blank');
+  assert.match(resolveLaunchTarget('New gaming window').features, /popup/);
+  assert.match(resolveLaunchTarget('Fullscreen window').features, /fullscreen/);
+  assert.equal(resolveLaunchTarget('invalid').target, '_blank');
+});
+test('launch behavior honors current-workspace navigation without opening a popup', () => {
+  const calls = [];
+  const result = launchExternalSurface('https://provider.example/play', {
+    behavior: 'Current workspace',
+    assign: (url) => calls.push(url),
+    open: () => {
+      throw new Error('must not open');
+    },
+  });
+  assert.deepEqual(calls, ['https://provider.example/play']);
+  assert.deepEqual(result, { mode: 'current-workspace', url: 'https://provider.example/play' });
+});
+test('launch behavior reports popup/tab handoff and rejects unsafe URLs', () => {
+  const calls = [];
+  const result = launchExternalSurface('https://provider.example/play', {
+    behavior: 'New gaming window',
+    open: (...args) => {
+      calls.push(args);
+      return {};
+    },
+  });
+  assert.equal(result.mode, 'window');
+  assert.equal(result.opened, true);
+  assert.equal(calls[0][0], 'https://provider.example/play');
+  assert.throws(
+    () => launchExternalSurface('http://provider.example/play', { open: () => ({}) }),
+    /HTTPS/,
+  );
+});

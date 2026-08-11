@@ -55,4 +55,3 @@ try {
 } catch (error) {
   fail(error instanceof SyntaxError ? 'file is not valid JSON' : error.message);
 }
-

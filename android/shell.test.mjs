@@ -2,10 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import {fileURLToPath} from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)));
-const read = relative => fs.readFileSync(path.join(root, relative), 'utf8');
+const read = (relative) => fs.readFileSync(path.join(root, relative), 'utf8');
 
 test('Android shell packages the shared frontend through a safe asset origin', () => {
   const settings = read('settings.gradle.kts');
@@ -30,7 +30,10 @@ test('Android shell packages the shared frontend through a safe asset origin', (
 });
 
 test('Android shell exposes a reproducible wrapper build in CI', () => {
-  const workflow = fs.readFileSync(path.join(root, '..', '.github/workflows/android-debug.yml'), 'utf8');
+  const workflow = fs.readFileSync(
+    path.join(root, '..', '.github/workflows/android-debug.yml'),
+    'utf8',
+  );
   assert.match(workflow, /android-actions\/setup-android@v4/);
   assert.match(workflow, /actions\/setup-java@v5/);
   assert.match(workflow, /platforms;android-35/);
@@ -55,7 +58,10 @@ test('Android release signing fails closed and never stores credentials in sourc
 });
 
 test('Android signed release workflow keeps keystore material external', () => {
-  const workflow = fs.readFileSync(path.join(root, '..', '.github/workflows/android-release.yml'), 'utf8');
+  const workflow = fs.readFileSync(
+    path.join(root, '..', '.github/workflows/android-release.yml'),
+    'utf8',
+  );
   assert.match(workflow, /workflow_dispatch/);
   assert.match(workflow, /environment: android-release/);
   assert.match(workflow, /actions\/setup-java@v5/);
@@ -74,6 +80,9 @@ test('Android shell keeps native actions bounded and lifecycle-scoped', () => {
   assert.match(activity, /removeJavascriptInterface\("SpartanAndroid"\)/);
   assert.match(activity, /AndroidControllerInventory\.snapshot/);
   assert.match(activity, /AndroidGameModeBridge\.queryOnResume/);
-  assert.match(activity, /override fun onTextInput\(payload: JSONObject\): Boolean \{[\s\S]*return false/);
+  assert.match(
+    activity,
+    /override fun onTextInput\(payload: JSONObject\): Boolean \{[\s\S]*return false/,
+  );
   assert.match(activity, /target\.host == ASSET_HOST/);
 });

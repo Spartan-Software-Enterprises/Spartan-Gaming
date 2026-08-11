@@ -1,29 +1,133 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {applyRuntimeUiSettings, resolveRuntimeUiSettings} from './runtime-ui.mjs';
+import { applyRuntimeUiSettings, resolveRuntimeUiSettings } from './runtime-ui.mjs';
 
 test('runtime UI settings normalize appearance, accessibility, and overlay preferences', () => {
-  const settings = resolveRuntimeUiSettings({'appearance.accent': 'Amber', 'appearance.theme': 'Spartan Light', 'appearance.density': 'Controller-first', 'appearance.uiScale': 200, 'accessibility.reduceMotion': true, 'accessibility.highContrast': true, 'gaming.showOverlay': false, 'gaming.hideBrowserChrome': false, 'gaming.overlayOpacity': 5, 'gaming.overlayPosition': 'Bottom left'}, {navigatorRef: {userAgent: '', platform: ''}});
-  assert.deepEqual(settings, {accent: '#f5c563', theme: 'light', density: 'controller', tabLayout: 'top', locale: 'en', translucentChrome: true, showStatusBar: false, uiScale: 140, deviceMode: 'desktop', navigation: 'pointer-keyboard', touchControls: false, preferFullscreen: false, effectiveUiScale: 140, layoutColumns: 3, platform: 'unknown', enginePolicy: 'chromium-capable', supportLevel: 'platform-adapted', featureGates: {webFrontend: true, remoteStreaming: true, browserEmulation: false, nativeChromiumShell: true, nativeHostPackaging: true, tvRemoteNavigation: false}, narrowViewport: false, reduceMotion: true, highContrast: true, largeText: false, focusRing: true, screenReaderHints: false, colorVision: 'None', showOverlay: false, hideBrowserChrome: false, overlayPosition: 'Bottom left', overlayOpacity: 20, television: {remoteNavigationSpeed: 'Automatic', remoteNavigationIntervalMs: 100, remoteDeadzone: 0.35, focusWrap: true, showPointer: false, safeArea: 0, autoHideChrome: true}});
+  const settings = resolveRuntimeUiSettings(
+    {
+      'appearance.accent': 'Amber',
+      'appearance.theme': 'Spartan Light',
+      'appearance.density': 'Controller-first',
+      'appearance.uiScale': 200,
+      'accessibility.reduceMotion': true,
+      'accessibility.highContrast': true,
+      'gaming.showOverlay': false,
+      'gaming.hideBrowserChrome': false,
+      'gaming.overlayOpacity': 5,
+      'gaming.overlayPosition': 'Bottom left',
+    },
+    { navigatorRef: { userAgent: '', platform: '' } },
+  );
+  assert.deepEqual(settings, {
+    accent: '#f5c563',
+    theme: 'light',
+    density: 'controller',
+    tabLayout: 'top',
+    locale: 'en',
+    translucentChrome: true,
+    showStatusBar: false,
+    uiScale: 140,
+    deviceMode: 'desktop',
+    navigation: 'pointer-keyboard',
+    touchControls: false,
+    preferFullscreen: false,
+    effectiveUiScale: 140,
+    layoutColumns: 3,
+    platform: 'unknown',
+    enginePolicy: 'chromium-capable',
+    supportLevel: 'platform-adapted',
+    featureGates: {
+      webFrontend: true,
+      remoteStreaming: true,
+      browserEmulation: false,
+      nativeChromiumShell: true,
+      nativeHostPackaging: true,
+      tvRemoteNavigation: false,
+    },
+    narrowViewport: false,
+    reduceMotion: true,
+    highContrast: true,
+    largeText: false,
+    focusRing: true,
+    screenReaderHints: false,
+    colorVision: 'None',
+    showOverlay: false,
+    hideBrowserChrome: false,
+    overlayPosition: 'Bottom left',
+    overlayOpacity: 20,
+    television: {
+      remoteNavigationSpeed: 'Automatic',
+      remoteNavigationIntervalMs: 100,
+      remoteDeadzone: 0.35,
+      focusWrap: true,
+      showPointer: false,
+      safeArea: 0,
+      autoHideChrome: true,
+    },
+  });
 });
 
 test('runtime UI applies the configured document locale with a safe fallback', () => {
-  const root = {dataset: {}, style: {setProperty() {}}};
+  const root = { dataset: {}, style: { setProperty() {} } };
   const nodes = new Map();
-  const documentRef = {defaultView: {navigator: {userAgent: '', platform: ''}}, documentElement: root, head: {append(node) { nodes.set(node.id, node); }}, getElementById(id) { return nodes.get(id); }, createElement() { return {id: '', textContent: ''}; }};
-  assert.equal(resolveRuntimeUiSettings({'general.language': 'Japanese'}).locale, 'ja');
-  applyRuntimeUiSettings(documentRef, {'general.language': 'Japanese'});
+  const documentRef = {
+    defaultView: { navigator: { userAgent: '', platform: '' } },
+    documentElement: root,
+    head: {
+      append(node) {
+        nodes.set(node.id, node);
+      },
+    },
+    getElementById(id) {
+      return nodes.get(id);
+    },
+    createElement() {
+      return { id: '', textContent: '' };
+    },
+  };
+  assert.equal(resolveRuntimeUiSettings({ 'general.language': 'Japanese' }).locale, 'ja');
+  applyRuntimeUiSettings(documentRef, { 'general.language': 'Japanese' });
   assert.equal(root.lang, 'ja');
-  applyRuntimeUiSettings(documentRef, {'general.language': 'unsupported'});
+  applyRuntimeUiSettings(documentRef, { 'general.language': 'unsupported' });
   assert.equal(root.lang, 'en');
 });
 
 test('runtime UI settings apply data attributes, CSS variables, and one shared style element', () => {
-  const root = {dataset: {}, style: {values: new Map(), setProperty(key, value) { this.values.set(key, value); }}};
+  const root = {
+    dataset: {},
+    style: {
+      values: new Map(),
+      setProperty(key, value) {
+        this.values.set(key, value);
+      },
+    },
+  };
   const nodes = new Map();
-  const documentRef = {defaultView: {navigator: {userAgent: '', platform: ''}}, documentElement: root, head: {append(node) { nodes.set(node.id, node); }}, getElementById(id) { return nodes.get(id); }, createElement() { return {id: '', textContent: ''}; }};
-  applyRuntimeUiSettings(documentRef, {'appearance.accent': 'Violet', 'gaming.showOverlay': false, 'accessibility.largeText': true});
-  applyRuntimeUiSettings(documentRef, {'appearance.accent': 'Violet', 'gaming.showOverlay': false, 'accessibility.largeText': true});
+  const documentRef = {
+    defaultView: { navigator: { userAgent: '', platform: '' } },
+    documentElement: root,
+    head: {
+      append(node) {
+        nodes.set(node.id, node);
+      },
+    },
+    getElementById(id) {
+      return nodes.get(id);
+    },
+    createElement() {
+      return { id: '', textContent: '' };
+    },
+  };
+  applyRuntimeUiSettings(documentRef, {
+    'appearance.accent': 'Violet',
+    'gaming.showOverlay': false,
+    'accessibility.largeText': true,
+  });
+  applyRuntimeUiSettings(documentRef, {
+    'appearance.accent': 'Violet',
+    'gaming.showOverlay': false,
+    'accessibility.largeText': true,
+  });
   assert.equal(root.dataset.spartanOverlay, 'hidden');
   assert.equal(root.dataset.spartanDeviceMode, 'desktop');
   assert.equal(root.dataset.spartanTabLayout, 'top');
@@ -40,12 +144,37 @@ test('runtime UI settings apply data attributes, CSS variables, and one shared s
 });
 
 test('runtime UI exposes Fire TV remote-navigation metadata', () => {
-  const root = {dataset: {}, style: {values: new Map(), setProperty(key, value) { this.values.set(key, value); }}};
+  const root = {
+    dataset: {},
+    style: {
+      values: new Map(),
+      setProperty(key, value) {
+        this.values.set(key, value);
+      },
+    },
+  };
   const nodes = new Map();
-  const navigatorRef = {userAgent: 'Mozilla/5.0 (Linux; Android 9; AFTSSS Build/PS7292)', platform: 'Linux armv7l'};
-  const documentRef = {defaultView: {navigator: navigatorRef, innerWidth: 1920}, documentElement: root, head: {append(node) { nodes.set(node.id, node); }}, getElementById(id) { return nodes.get(id); }, createElement() { return {id: '', textContent: ''}; }};
-  const settings = resolveRuntimeUiSettings({}, {navigatorRef, viewport: {width: 1920}});
-  applyRuntimeUiSettings(documentRef, {}, {navigation: {scheduler: () => null}});
+  const navigatorRef = {
+    userAgent: 'Mozilla/5.0 (Linux; Android 9; AFTSSS Build/PS7292)',
+    platform: 'Linux armv7l',
+  };
+  const documentRef = {
+    defaultView: { navigator: navigatorRef, innerWidth: 1920 },
+    documentElement: root,
+    head: {
+      append(node) {
+        nodes.set(node.id, node);
+      },
+    },
+    getElementById(id) {
+      return nodes.get(id);
+    },
+    createElement() {
+      return { id: '', textContent: '' };
+    },
+  };
+  const settings = resolveRuntimeUiSettings({}, { navigatorRef, viewport: { width: 1920 } });
+  applyRuntimeUiSettings(documentRef, {}, { navigation: { scheduler: () => null } });
   assert.equal(settings.platform, 'fire-tv');
   assert.equal(settings.enginePolicy, 'chromium-capable');
   assert.equal(settings.featureGates.tvRemoteNavigation, true);
@@ -53,44 +182,130 @@ test('runtime UI exposes Fire TV remote-navigation metadata', () => {
 });
 
 test('runtime UI forwards a bounded Android policy request to the optional native bridge', () => {
-  const root = {dataset: {}, style: {setProperty() {}}};
+  const root = { dataset: {}, style: { setProperty() {} } };
   const nodes = new Map();
   const messages = [];
-  const navigatorRef = {userAgent: 'Mozilla/5.0 (Linux; Android 15)', platform: 'Linux arm64'};
-  const documentRef = {defaultView: {navigator: navigatorRef, innerWidth: 390, devicePixelRatio: 1, SpartanAndroid: {postMessage(value) { messages.push(JSON.parse(value)); return true; }}}, documentElement: root, head: {append(node) { nodes.set(node.id, node); }}, getElementById(id) { return nodes.get(id); }, createElement() { return {id: '', textContent: ''}; }};
-  applyRuntimeUiSettings(documentRef, {'mobile.orientation': 'Landscape', 'mobile.gameMode': 'Performance'});
+  const navigatorRef = { userAgent: 'Mozilla/5.0 (Linux; Android 15)', platform: 'Linux arm64' };
+  const documentRef = {
+    defaultView: {
+      navigator: navigatorRef,
+      innerWidth: 390,
+      devicePixelRatio: 1,
+      SpartanAndroid: {
+        postMessage(value) {
+          messages.push(JSON.parse(value));
+          return true;
+        },
+      },
+    },
+    documentElement: root,
+    head: {
+      append(node) {
+        nodes.set(node.id, node);
+      },
+    },
+    getElementById(id) {
+      return nodes.get(id);
+    },
+    createElement() {
+      return { id: '', textContent: '' };
+    },
+  };
+  applyRuntimeUiSettings(documentRef, {
+    'mobile.orientation': 'Landscape',
+    'mobile.gameMode': 'Performance',
+  });
   assert.equal(messages.length, 1);
   assert.match(messages[0].requestId, /^and-/);
-  const {requestId, ...message} = messages[0];
-  assert.deepEqual(message, {version: 1, action: 'android.policy', payload: {formFactor: 'phone', orientation: 'landscape', currentOrientation: 'unknown', keepScreenAwake: true, pictureInPicture: true, edgeToEdge: true, dataSaver: false, gameMode: 'Performance', touchLayout: 'automatic'}});
+  const { requestId, ...message } = messages[0];
+  assert.deepEqual(message, {
+    version: 1,
+    action: 'android.policy',
+    payload: {
+      formFactor: 'phone',
+      orientation: 'landscape',
+      currentOrientation: 'unknown',
+      keepScreenAwake: true,
+      pictureInPicture: true,
+      edgeToEdge: true,
+      dataSaver: false,
+      gameMode: 'Performance',
+      touchLayout: 'automatic',
+    },
+  });
 });
 
 test('television settings configure safe area, pointer visibility, and navigation policy', () => {
-  const root = {dataset: {}, style: {values: new Map(), setProperty(key, value) { this.values.set(key, value); }}};
+  const root = {
+    dataset: {},
+    style: {
+      values: new Map(),
+      setProperty(key, value) {
+        this.values.set(key, value);
+      },
+    },
+  };
   const nodes = new Map();
-  const navigatorRef = {userAgent: 'Roku/DVP-12.5 (12.5.0. build 4178)', platform: 'Roku'};
-  const documentRef = {defaultView: {navigator: navigatorRef, innerWidth: 1920}, documentElement: root, head: {append(node) { nodes.set(node.id, node); }}, getElementById(id) { return nodes.get(id); }, createElement() { return {id: '', textContent: ''}; }};
-  const settings = {'television.remoteNavigationSpeed': 'Responsive', 'television.focusWrap': false, 'television.remoteDeadzone': 50, 'television.showPointer': true, 'television.safeArea': 8};
-  const resolved = resolveRuntimeUiSettings(settings, {navigatorRef, viewport: {width: 1920}});
+  const navigatorRef = { userAgent: 'Roku/DVP-12.5 (12.5.0. build 4178)', platform: 'Roku' };
+  const documentRef = {
+    defaultView: { navigator: navigatorRef, innerWidth: 1920 },
+    documentElement: root,
+    head: {
+      append(node) {
+        nodes.set(node.id, node);
+      },
+    },
+    getElementById(id) {
+      return nodes.get(id);
+    },
+    createElement() {
+      return { id: '', textContent: '' };
+    },
+  };
+  const settings = {
+    'television.remoteNavigationSpeed': 'Responsive',
+    'television.focusWrap': false,
+    'television.remoteDeadzone': 50,
+    'television.showPointer': true,
+    'television.safeArea': 8,
+  };
+  const resolved = resolveRuntimeUiSettings(settings, { navigatorRef, viewport: { width: 1920 } });
   assert.equal(resolved.television.remoteNavigationIntervalMs, 60);
   assert.equal(resolved.television.remoteDeadzone, 0.5);
   assert.equal(resolved.television.focusWrap, false);
-  applyRuntimeUiSettings(documentRef, settings, {navigation: {scheduler: () => null}});
+  applyRuntimeUiSettings(documentRef, settings, { navigation: { scheduler: () => null } });
   assert.equal(root.dataset.spartanPlatform, 'roku');
   assert.equal(root.dataset.spartanTvPointer, 'visible');
   assert.equal(root.style.values.get('--spartan-tv-safe-area'), '8%');
   assert.equal(root.dataset.spartanTvAutoHideChrome, '');
   assert.equal(resolved.hideBrowserChrome, true);
-  const disabled = resolveRuntimeUiSettings({...settings, 'television.autoHideChrome': false, 'gaming.hideBrowserChrome': false}, {navigatorRef, viewport: {width: 1920}});
+  const disabled = resolveRuntimeUiSettings(
+    { ...settings, 'television.autoHideChrome': false, 'gaming.hideBrowserChrome': false },
+    { navigatorRef, viewport: { width: 1920 } },
+  );
   assert.equal(disabled.hideBrowserChrome, false);
 });
 
 test('runtime UI settings toggle the player chrome dataset', () => {
-  const root = {dataset: {}, style: {setProperty() {}}};
+  const root = { dataset: {}, style: { setProperty() {} } };
   const nodes = new Map();
-  const documentRef = {defaultView: {navigator: {userAgent: '', platform: ''}}, documentElement: root, head: {append(node) { nodes.set(node.id, node); }}, getElementById(id) { return nodes.get(id); }, createElement() { return {id: '', textContent: ''}; }};
-  applyRuntimeUiSettings(documentRef, {'gaming.hideBrowserChrome': false});
+  const documentRef = {
+    defaultView: { navigator: { userAgent: '', platform: '' } },
+    documentElement: root,
+    head: {
+      append(node) {
+        nodes.set(node.id, node);
+      },
+    },
+    getElementById(id) {
+      return nodes.get(id);
+    },
+    createElement() {
+      return { id: '', textContent: '' };
+    },
+  };
+  applyRuntimeUiSettings(documentRef, { 'gaming.hideBrowserChrome': false });
   assert.equal(root.dataset.spartanHideBrowserChrome, undefined);
-  applyRuntimeUiSettings(documentRef, {'gaming.hideBrowserChrome': true});
+  applyRuntimeUiSettings(documentRef, { 'gaming.hideBrowserChrome': true });
   assert.equal(root.dataset.spartanHideBrowserChrome, '');
 });

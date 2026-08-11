@@ -2,16 +2,16 @@
 
 Spartan Gaming is intended to be universal across practical Chromium-supported environments. “Universal” means a shared product and protocol foundation with native platform adapters, not identical feature parity on every device.
 
-| Platform | Initial role | Platform-specific work |
-| --- | --- | --- |
-| Windows | Primary desktop target | Win32 windowing, DirectX/GPU paths, controller and capture integrations, signing |
-| macOS | Primary desktop target | App bundle, Metal/GPU paths, permissions, signing/notarization |
-| Linux | Primary desktop target | Ozone/Wayland/X11, VA-API/Vulkan paths, packages, controller/device permissions |
-| ChromeOS | Large-screen and lightweight target | ChromeOS integration, kiosk/fullscreen, device and power behavior |
-| Android | Mobile and handheld target | Touch controls, Android media codecs, lifecycle, controller UX, Play distribution |
-| SteamOS / Steam Deck | Linux handheld target | SteamOS capability signal, Steam Input action/glyph boundary, Gamescope/Game Mode behavior, Proton/native launch, handheld power and physical validation |
-| Amazon Fire TV / Fire Stick | Television/browser target | Silk/Chromium-compatible web surface, remote navigation, controller and media capability gates |
-| Roku | Television/browser target | Roku browser-capable surface where available, remote navigation, HTTPS provider handoffs |
+| Platform                    | Initial role                        | Platform-specific work                                                                                                                                   |
+| --------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Windows                     | Primary desktop target              | Win32 windowing, DirectX/GPU paths, controller and capture integrations, signing                                                                         |
+| macOS                       | Primary desktop target              | App bundle, Metal/GPU paths, permissions, signing/notarization                                                                                           |
+| Linux                       | Primary desktop target              | Ozone/Wayland/X11, VA-API/Vulkan paths, packages, controller/device permissions                                                                          |
+| ChromeOS                    | Large-screen and lightweight target | ChromeOS integration, kiosk/fullscreen, device and power behavior                                                                                        |
+| Android                     | Mobile and handheld target          | Touch controls, Android media codecs, lifecycle, controller UX, Play distribution                                                                        |
+| SteamOS / Steam Deck        | Linux handheld target               | SteamOS capability signal, Steam Input action/glyph boundary, Gamescope/Game Mode behavior, Proton/native launch, handheld power and physical validation |
+| Amazon Fire TV / Fire Stick | Television/browser target           | Silk/Chromium-compatible web surface, remote navigation, controller and media capability gates                                                           |
+| Roku                        | Television/browser target           | Roku browser-capable surface where available, remote navigation, HTTPS provider handoffs                                                                 |
 
 The frontend now has a capability-driven presentation profile for desktop,
 ChromeOS, handheld, mobile, and television classes. Automatic detection is

@@ -9,18 +9,43 @@
   "scope": "../",
   "display_override": ["window-controls-overlay", "standalone", "fullscreen"],
   "display": "standalone",
-  "launch_handler": {"client_mode": "navigate-existing"},
+  "launch_handler": { "client_mode": "navigate-existing" },
   "background_color": "#080b10",
   "theme_color": "#080b10",
   "categories": ["games", "entertainment"],
   "shortcuts": [
-    {"name": "Library", "short_name": "Library", "description": "Browse providers, emulators, and browser games.", "url": "../dashboard/"},
-    {"name": "Continue session", "short_name": "Session", "description": "Open the Spartan Gaming session player.", "url": "../player/"},
-    {"name": "Controllers", "short_name": "Controllers", "description": "Inspect and configure controller profiles.", "url": "../input/profiles.html"},
-    {"name": "Diagnostics", "short_name": "Diagnostics", "description": "Check browser, media, display, and input capabilities.", "url": "../diagnostics/"}
+    {
+      "name": "Library",
+      "short_name": "Library",
+      "description": "Browse providers, emulators, and browser games.",
+      "url": "../dashboard/"
+    },
+    {
+      "name": "Continue session",
+      "short_name": "Session",
+      "description": "Open the Spartan Gaming session player.",
+      "url": "../player/"
+    },
+    {
+      "name": "Controllers",
+      "short_name": "Controllers",
+      "description": "Inspect and configure controller profiles.",
+      "url": "../input/profiles.html"
+    },
+    {
+      "name": "Diagnostics",
+      "short_name": "Diagnostics",
+      "description": "Check browser, media, display, and input capabilities.",
+      "url": "../diagnostics/"
+    }
   ],
   "prefer_related_applications": false,
   "icons": [
-    {"src": "./spartan-mark.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}
+    {
+      "src": "./spartan-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
   ]
 }

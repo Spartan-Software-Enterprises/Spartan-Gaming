@@ -5,6 +5,8 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
 required_files=(
+  .prettierignore
+  .prettierrc.json
   README.md
   android/README.md
   android/gamenative/GameNativeHandoff.kt

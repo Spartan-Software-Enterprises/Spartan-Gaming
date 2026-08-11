@@ -13,6 +13,7 @@ The default development endpoints are:
 For remote direct-host deployments, pass `--tls-key` and `--tls-cert` together
 to serve `wss://` and `https://` endpoints. Keep the private key outside the
 repository; a managed reverse proxy is preferred for certificate rotation.
+
 - `ws://127.0.0.1:8787/session` for protocol-v1 session offers.
 
 Remote deployments should set `--allowed-origins` (or

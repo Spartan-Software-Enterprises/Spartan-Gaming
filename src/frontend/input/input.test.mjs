@@ -1,31 +1,286 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {applyDeadzone, createInputEventEnvelope, createInputMapper, normalizeGamepadState, normalizeRemoteInputEvent} from './input.mjs';
-import {controllerPolicyAllowsEvent, controllerPolicyFromSettings, controllerPollingIntervalMs, normalizeControllerPolicy} from './controller-policy.mjs';
+import {
+  applyDeadzone,
+  createInputEventEnvelope,
+  createInputMapper,
+  normalizeGamepadState,
+  normalizeRemoteInputEvent,
+} from './input.mjs';
+import {
+  controllerPolicyAllowsEvent,
+  controllerPolicyFromSettings,
+  controllerPollingIntervalMs,
+  normalizeControllerPolicy,
+} from './controller-policy.mjs';
 
-test('native passthrough forwards standard and extended unbound gamepad buttons with their native control', () => { const mapper = createInputMapper({bindings: {confirm: 'button-0', cancel: 'button-1'}}); assert.deepEqual(mapper.mapNativeButton(12, true), {type: 'input.event', action: 'button-12', kind: 'button', pressed: true, value: 1}); assert.deepEqual(mapper.mapNativeButton(16, true), {type: 'input.event', action: 'button-16', kind: 'button', pressed: true, value: 1}); assert.deepEqual(mapper.mapNativeButton(31, false), {type: 'input.event', action: 'button-31', kind: 'button', pressed: false, value: 0}); assert.equal(mapper.mapNativeButton(32, true), null); });
-test('native passthrough forwards unbound analog axes with change detection and release', () => { const mapper = createInputMapper({bindings: {moveLeft: 'axis-0-negative', moveRight: 'axis-0-positive'}}); assert.deepEqual(mapper.mapNativeAxis(2, 0.5), [{type: 'input.event', action: 'axis-2', kind: 'axis', pressed: true, value: 0.5}]); assert.deepEqual(mapper.mapNativeAxis(2, 0, 0.5), [{type: 'input.event', action: 'axis-2', kind: 'axis', pressed: false, value: 0}]); assert.deepEqual(mapper.mapNativeAxis(2, 0.5, 0.5), []); });
-test('native passthrough rejects out-of-range native axes', () => { const mapper = createInputMapper(); assert.deepEqual(mapper.mapNativeAxis(6, 0.5), []); assert.deepEqual(mapper.mapNativeAxis(-1, 0.5), []); assert.deepEqual(mapper.mapNativeAxis(2.5, 0.5), []); assert.deepEqual(mapper.mapNativeAxis('2', 0.5), []); });
+test('native passthrough forwards standard and extended unbound gamepad buttons with their native control', () => {
+  const mapper = createInputMapper({ bindings: { confirm: 'button-0', cancel: 'button-1' } });
+  assert.deepEqual(mapper.mapNativeButton(12, true), {
+    type: 'input.event',
+    action: 'button-12',
+    kind: 'button',
+    pressed: true,
+    value: 1,
+  });
+  assert.deepEqual(mapper.mapNativeButton(16, true), {
+    type: 'input.event',
+    action: 'button-16',
+    kind: 'button',
+    pressed: true,
+    value: 1,
+  });
+  assert.deepEqual(mapper.mapNativeButton(31, false), {
+    type: 'input.event',
+    action: 'button-31',
+    kind: 'button',
+    pressed: false,
+    value: 0,
+  });
+  assert.equal(mapper.mapNativeButton(32, true), null);
+});
+test('native passthrough forwards unbound analog axes with change detection and release', () => {
+  const mapper = createInputMapper({
+    bindings: { moveLeft: 'axis-0-negative', moveRight: 'axis-0-positive' },
+  });
+  assert.deepEqual(mapper.mapNativeAxis(2, 0.5), [
+    { type: 'input.event', action: 'axis-2', kind: 'axis', pressed: true, value: 0.5 },
+  ]);
+  assert.deepEqual(mapper.mapNativeAxis(2, 0, 0.5), [
+    { type: 'input.event', action: 'axis-2', kind: 'axis', pressed: false, value: 0 },
+  ]);
+  assert.deepEqual(mapper.mapNativeAxis(2, 0.5, 0.5), []);
+});
+test('native passthrough rejects out-of-range native axes', () => {
+  const mapper = createInputMapper();
+  assert.deepEqual(mapper.mapNativeAxis(6, 0.5), []);
+  assert.deepEqual(mapper.mapNativeAxis(-1, 0.5), []);
+  assert.deepEqual(mapper.mapNativeAxis(2.5, 0.5), []);
+  assert.deepEqual(mapper.mapNativeAxis('2', 0.5), []);
+});
 
-test('deadzone suppresses drift and rescales live input', () => { assert.equal(applyDeadzone(0.1, 0.2), 0); assert.ok(Math.abs(applyDeadzone(0.6, 0.2) - 0.5) < 0.001); assert.equal(applyDeadzone(-2), -1); });
-test('gamepad state is normalized and immutable', () => { const state = normalizeGamepadState({id: 'Pad', index: 1, buttons: [{pressed: true, value: 1}], axes: [0.1, -0.5], timestamp: 4}); assert.equal(state.buttons[0].pressed, true); assert.equal(state.axes[0], 0); assert.ok(state.axes[1] < 0); assert.equal(Object.isFrozen(state), true); });
-test('gamepad state accepts browser array-like GamepadButtonList and axes collections', () => { const buttons = {0: {pressed: true, value: 0.75}, length: 1}; const axes = {0: 0.5, length: 1}; const state = normalizeGamepadState({buttons, axes}); assert.equal(state.buttons[0].value, 0.75); assert.ok(state.axes[0] > 0); });
-test('controller policy preserves settings and bounds active player slots', () => { const policy = controllerPolicyFromSettings({'controllers.defaultProfile': 'DualSense Edge', 'controllers.inputMode': 'Standard Gamepad', 'controllers.hapticsBackend': 'Native rumble', 'controllers.multipleControllers': false, 'controllers.playerSlots': '8', 'controllers.allowGamepad': true, 'controllers.allowHid': true, 'controllers.rumble': true, 'controllers.adaptiveTriggers': true, 'controllers.gyro': true, 'controllers.touchpad': true, 'controllers.backButtons': true, 'controllers.triggerMode': 'Analog only', 'controllers.steeringRange': 2000, 'controllers.splitInput': true, 'controllers.deadzone': 40, 'controllers.inputLatency': 'High frequency'}); assert.equal(policy.defaultProfile, 'DualSense Edge'); assert.equal(policy.playerSlots, 8); assert.equal(policy.steeringRange, 1080); assert.equal(policy.deadzone, 30); assert.equal(policy.adaptiveTriggers, true); assert.equal(policy.splitInput, true); assert.equal(controllerPolicyAllowsEvent({source: 'gamepad', kind: 'button', gamepadIndex: 0}, policy), true); assert.equal(controllerPolicyAllowsEvent({source: 'gamepad', kind: 'button', gamepadIndex: 1}, policy), false); assert.equal(controllerPolicyAllowsEvent({source: 'hid', kind: 'button'}, policy), true); assert.equal(controllerPolicyAllowsEvent({source: 'gamepad', kind: 'rumble'}, policy), true); assert.equal(controllerPolicyAllowsEvent({source: 'gamepad', kind: 'rumble', gamepadIndex: 1}, policy), false); assert.equal(controllerPolicyAllowsEvent({source: 'gamepad', kind: 'rumble', gamepadIndex: 8}, policy), false); assert.equal(controllerPolicyAllowsEvent({source: 'gamepad', kind: 'rumble'}, normalizeControllerPolicy({rumble: false})), false); assert.equal(controllerPolicyAllowsEvent({source: 'gamepad', kind: 'rumble'}, normalizeControllerPolicy({allowGamepad: false})), false); });
-test('controller policy carries Steam Deck capability toggles and custom profile IDs from settings', () => { const policy = controllerPolicyFromSettings({'controllers.defaultProfile': 'custom-living-room', 'controllers.trackpads': true, 'controllers.touchscreen': true, 'controllers.textEntry': false, 'controllers.controllerNavigation': false}); assert.equal(policy.defaultProfile, 'custom-living-room'); assert.equal(policy.trackpads, true); assert.equal(policy.touchscreen, true); assert.equal(policy.textEntry, false); assert.equal(policy.controllerNavigation, false); assert.equal(normalizeControllerPolicy({defaultProfile: 'not a profile'}).defaultProfile, 'Auto-detect'); });
-test('controller polling follows the configured latency mode with a safe fallback', () => { assert.equal(controllerPollingIntervalMs('Automatic'), 100); assert.equal(controllerPollingIntervalMs('Standard'), 50); assert.equal(controllerPollingIntervalMs('High frequency'), 16); assert.equal(controllerPollingIntervalMs('unsupported'), 100); });
-test('input mapper emits stable action events', () => { const mapper = createInputMapper({bindings: {confirm: 'button-0', moveLeft: 'axis-0-negative'}}); assert.deepEqual(mapper.mapButton(0, true), {type: 'input.event', action: 'confirm', pressed: true, value: 1}); assert.equal(mapper.mapAxis(0, -0.8).action, 'moveLeft'); assert.equal(mapper.mapAxis(0, 0.03), null); });
-test('input mapper emits axis releases when returning to neutral or changing direction', () => { const mapper = createInputMapper({bindings: {moveLeft: 'axis-0-negative', moveRight: 'axis-0-positive'}}); assert.deepEqual(mapper.mapAxisTransition(0, -0.8), [{type: 'input.event', action: 'moveLeft', kind: 'axis', pressed: true, value: -0.8}]); assert.deepEqual(mapper.mapAxisTransition(0, 0, -0.8), [{type: 'input.event', action: 'moveLeft', kind: 'axis', pressed: false, value: 0}]); assert.deepEqual(mapper.mapAxisTransition(0, 0.7, -0.8), [{type: 'input.event', action: 'moveLeft', kind: 'axis', pressed: false, value: 0}, {type: 'input.event', action: 'moveRight', kind: 'axis', pressed: true, value: 0.7}]); });
-test('input events become protocol envelopes without leaking extra fields', () => { const envelope = createInputEventEnvelope({sessionId: 'ses-input-01', sequence: 4, event: {type: 'input.event', action: 'confirm', pressed: true, value: 1, source: 'keyboard', control: 'Enter'}, clock: () => '2026-08-07T12:00:00.000Z'}); assert.equal(envelope.type, 'input.event'); assert.deepEqual(envelope.payload, {action: 'confirm', pressed: true, value: 1, source: 'keyboard', control: 'Enter'}); });
-test('gamepad envelopes preserve a bounded controller slot', () => { const envelope = createInputEventEnvelope({sessionId: 'ses-input-gamepad', event: {type: 'input.event', action: 'confirm', pressed: true, value: 1, source: 'gamepad', control: 'button-0', gamepadIndex: 99}}); assert.equal(envelope.payload.gamepadIndex, 15); });
-test('input envelopes preserve signed analog values', () => { const envelope = createInputEventEnvelope({sessionId: 'ses-input-02', event: {type: 'input.event', action: 'moveLeft', pressed: true, value: -0.8}}); assert.equal(envelope.payload.value, -0.8); });
+test('deadzone suppresses drift and rescales live input', () => {
+  assert.equal(applyDeadzone(0.1, 0.2), 0);
+  assert.ok(Math.abs(applyDeadzone(0.6, 0.2) - 0.5) < 0.001);
+  assert.equal(applyDeadzone(-2), -1);
+});
+test('gamepad state is normalized and immutable', () => {
+  const state = normalizeGamepadState({
+    id: 'Pad',
+    index: 1,
+    buttons: [{ pressed: true, value: 1 }],
+    axes: [0.1, -0.5],
+    timestamp: 4,
+  });
+  assert.equal(state.buttons[0].pressed, true);
+  assert.equal(state.axes[0], 0);
+  assert.ok(state.axes[1] < 0);
+  assert.equal(Object.isFrozen(state), true);
+});
+test('gamepad state accepts browser array-like GamepadButtonList and axes collections', () => {
+  const buttons = { 0: { pressed: true, value: 0.75 }, length: 1 };
+  const axes = { 0: 0.5, length: 1 };
+  const state = normalizeGamepadState({ buttons, axes });
+  assert.equal(state.buttons[0].value, 0.75);
+  assert.ok(state.axes[0] > 0);
+});
+test('controller policy preserves settings and bounds active player slots', () => {
+  const policy = controllerPolicyFromSettings({
+    'controllers.defaultProfile': 'DualSense Edge',
+    'controllers.inputMode': 'Standard Gamepad',
+    'controllers.hapticsBackend': 'Native rumble',
+    'controllers.multipleControllers': false,
+    'controllers.playerSlots': '8',
+    'controllers.allowGamepad': true,
+    'controllers.allowHid': true,
+    'controllers.rumble': true,
+    'controllers.adaptiveTriggers': true,
+    'controllers.gyro': true,
+    'controllers.touchpad': true,
+    'controllers.backButtons': true,
+    'controllers.triggerMode': 'Analog only',
+    'controllers.steeringRange': 2000,
+    'controllers.splitInput': true,
+    'controllers.deadzone': 40,
+    'controllers.inputLatency': 'High frequency',
+  });
+  assert.equal(policy.defaultProfile, 'DualSense Edge');
+  assert.equal(policy.playerSlots, 8);
+  assert.equal(policy.steeringRange, 1080);
+  assert.equal(policy.deadzone, 30);
+  assert.equal(policy.adaptiveTriggers, true);
+  assert.equal(policy.splitInput, true);
+  assert.equal(
+    controllerPolicyAllowsEvent({ source: 'gamepad', kind: 'button', gamepadIndex: 0 }, policy),
+    true,
+  );
+  assert.equal(
+    controllerPolicyAllowsEvent({ source: 'gamepad', kind: 'button', gamepadIndex: 1 }, policy),
+    false,
+  );
+  assert.equal(controllerPolicyAllowsEvent({ source: 'hid', kind: 'button' }, policy), true);
+  assert.equal(controllerPolicyAllowsEvent({ source: 'gamepad', kind: 'rumble' }, policy), true);
+  assert.equal(
+    controllerPolicyAllowsEvent({ source: 'gamepad', kind: 'rumble', gamepadIndex: 1 }, policy),
+    false,
+  );
+  assert.equal(
+    controllerPolicyAllowsEvent({ source: 'gamepad', kind: 'rumble', gamepadIndex: 8 }, policy),
+    false,
+  );
+  assert.equal(
+    controllerPolicyAllowsEvent(
+      { source: 'gamepad', kind: 'rumble' },
+      normalizeControllerPolicy({ rumble: false }),
+    ),
+    false,
+  );
+  assert.equal(
+    controllerPolicyAllowsEvent(
+      { source: 'gamepad', kind: 'rumble' },
+      normalizeControllerPolicy({ allowGamepad: false }),
+    ),
+    false,
+  );
+});
+test('controller policy carries Steam Deck capability toggles and custom profile IDs from settings', () => {
+  const policy = controllerPolicyFromSettings({
+    'controllers.defaultProfile': 'custom-living-room',
+    'controllers.trackpads': true,
+    'controllers.touchscreen': true,
+    'controllers.textEntry': false,
+    'controllers.controllerNavigation': false,
+  });
+  assert.equal(policy.defaultProfile, 'custom-living-room');
+  assert.equal(policy.trackpads, true);
+  assert.equal(policy.touchscreen, true);
+  assert.equal(policy.textEntry, false);
+  assert.equal(policy.controllerNavigation, false);
+  assert.equal(
+    normalizeControllerPolicy({ defaultProfile: 'not a profile' }).defaultProfile,
+    'Auto-detect',
+  );
+});
+test('controller polling follows the configured latency mode with a safe fallback', () => {
+  assert.equal(controllerPollingIntervalMs('Automatic'), 100);
+  assert.equal(controllerPollingIntervalMs('Standard'), 50);
+  assert.equal(controllerPollingIntervalMs('High frequency'), 16);
+  assert.equal(controllerPollingIntervalMs('unsupported'), 100);
+});
+test('input mapper emits stable action events', () => {
+  const mapper = createInputMapper({
+    bindings: { confirm: 'button-0', moveLeft: 'axis-0-negative' },
+  });
+  assert.deepEqual(mapper.mapButton(0, true), {
+    type: 'input.event',
+    action: 'confirm',
+    pressed: true,
+    value: 1,
+  });
+  assert.equal(mapper.mapAxis(0, -0.8).action, 'moveLeft');
+  assert.equal(mapper.mapAxis(0, 0.03), null);
+});
+test('input mapper emits axis releases when returning to neutral or changing direction', () => {
+  const mapper = createInputMapper({
+    bindings: { moveLeft: 'axis-0-negative', moveRight: 'axis-0-positive' },
+  });
+  assert.deepEqual(mapper.mapAxisTransition(0, -0.8), [
+    { type: 'input.event', action: 'moveLeft', kind: 'axis', pressed: true, value: -0.8 },
+  ]);
+  assert.deepEqual(mapper.mapAxisTransition(0, 0, -0.8), [
+    { type: 'input.event', action: 'moveLeft', kind: 'axis', pressed: false, value: 0 },
+  ]);
+  assert.deepEqual(mapper.mapAxisTransition(0, 0.7, -0.8), [
+    { type: 'input.event', action: 'moveLeft', kind: 'axis', pressed: false, value: 0 },
+    { type: 'input.event', action: 'moveRight', kind: 'axis', pressed: true, value: 0.7 },
+  ]);
+});
+test('input events become protocol envelopes without leaking extra fields', () => {
+  const envelope = createInputEventEnvelope({
+    sessionId: 'ses-input-01',
+    sequence: 4,
+    event: {
+      type: 'input.event',
+      action: 'confirm',
+      pressed: true,
+      value: 1,
+      source: 'keyboard',
+      control: 'Enter',
+    },
+    clock: () => '2026-08-07T12:00:00.000Z',
+  });
+  assert.equal(envelope.type, 'input.event');
+  assert.deepEqual(envelope.payload, {
+    action: 'confirm',
+    pressed: true,
+    value: 1,
+    source: 'keyboard',
+    control: 'Enter',
+  });
+});
+test('gamepad envelopes preserve a bounded controller slot', () => {
+  const envelope = createInputEventEnvelope({
+    sessionId: 'ses-input-gamepad',
+    event: {
+      type: 'input.event',
+      action: 'confirm',
+      pressed: true,
+      value: 1,
+      source: 'gamepad',
+      control: 'button-0',
+      gamepadIndex: 99,
+    },
+  });
+  assert.equal(envelope.payload.gamepadIndex, 15);
+});
+test('input envelopes preserve signed analog values', () => {
+  const envelope = createInputEventEnvelope({
+    sessionId: 'ses-input-02',
+    event: { type: 'input.event', action: 'moveLeft', pressed: true, value: -0.8 },
+  });
+  assert.equal(envelope.payload.value, -0.8);
+});
 test('remote input normalizes keyboard, pointer, touch, and rumble bounds', () => {
-  const pointer = normalizeRemoteInputEvent({type: 'input.event', action: 'look', source: 'pointer', kind: 'pointer', x: 2, y: -1, deltaX: 9000, deltaY: -9000});
-  assert.deepEqual(pointer, {action: 'look', pressed: false, value: 0, source: 'pointer', control: 'look', kind: 'pointer', x: 1, y: 0, deltaX: 4096, deltaY: -4096});
-  const rumble = normalizeRemoteInputEvent({type: 'input.event', action: 'rumble', source: 'host', kind: 'rumble', gamepadIndex: 99, durationMs: 9000, startDelay: -1, strongMagnitude: 2, weakMagnitude: -1});
+  const pointer = normalizeRemoteInputEvent({
+    type: 'input.event',
+    action: 'look',
+    source: 'pointer',
+    kind: 'pointer',
+    x: 2,
+    y: -1,
+    deltaX: 9000,
+    deltaY: -9000,
+  });
+  assert.deepEqual(pointer, {
+    action: 'look',
+    pressed: false,
+    value: 0,
+    source: 'pointer',
+    control: 'look',
+    kind: 'pointer',
+    x: 1,
+    y: 0,
+    deltaX: 4096,
+    deltaY: -4096,
+  });
+  const rumble = normalizeRemoteInputEvent({
+    type: 'input.event',
+    action: 'rumble',
+    source: 'host',
+    kind: 'rumble',
+    gamepadIndex: 99,
+    durationMs: 9000,
+    startDelay: -1,
+    strongMagnitude: 2,
+    weakMagnitude: -1,
+  });
   assert.equal(rumble.durationMs, 5000);
   assert.equal(rumble.gamepadIndex, 15);
   assert.equal(rumble.startDelay, 0);
   assert.equal(rumble.strongMagnitude, 1);
   assert.equal(rumble.weakMagnitude, 0);
-  assert.equal(normalizeRemoteInputEvent({type: 'input.event', action: 'jump', source: 'keyboard'}).kind, 'key');
+  assert.equal(
+    normalizeRemoteInputEvent({ type: 'input.event', action: 'jump', source: 'keyboard' }).kind,
+    'key',
+  );
 });

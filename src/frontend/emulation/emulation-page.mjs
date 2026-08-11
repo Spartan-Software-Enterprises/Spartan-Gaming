@@ -1,22 +1,41 @@
 import '../pwa/register.mjs';
-import {computeSelectedFileSha256, createEmulationLaunchPlan, createEmulationLibraryStore, createUserFileRecord, formatFileSize, resolveEmulationPreferences} from './emulation.mjs';
-import {createEmulatorIntegration, emulatorTroubleshooting} from './integration.mjs';
-import {consumeLaunchIntent} from '../launch/intent.mjs';
-import {collectCapabilities} from '../diagnostics/capabilities.mjs';
-import {createSettingsStore} from '../settings/profile.mjs';
-import {createRuntimeProfileStore} from './runtime-profiles.mjs';
-import {createBrowserEmulatorAdapterRegistry, discoverBrowserEmulatorAdapters} from './browser-adapters.mjs';
-import {loadVerifiedBrowserEmulatorAdapter} from './browser-adapter-loader.mjs';
-import {createBrowserEmulatorRuntime} from './browser-runtime.mjs';
-import {createBrowserEmulatorInputBridge} from './browser-input.mjs';
-import {createNativeHostLaunchRequest} from './host-launch.mjs';
-import {savePendingLaunchHandoff} from '../launch/handoff.mjs';
-import {createActiveProfileStorage} from '../profiles/storage.mjs';
+import {
+  computeSelectedFileSha256,
+  createEmulationLaunchPlan,
+  createEmulationLibraryStore,
+  createUserFileRecord,
+  formatFileSize,
+  resolveEmulationPreferences,
+} from './emulation.mjs';
+import { createEmulatorIntegration, emulatorTroubleshooting } from './integration.mjs';
+import { consumeLaunchIntent } from '../launch/intent.mjs';
+import { collectCapabilities } from '../diagnostics/capabilities.mjs';
+import { createSettingsStore } from '../settings/profile.mjs';
+import { createRuntimeProfileStore } from './runtime-profiles.mjs';
+import {
+  createBrowserEmulatorAdapterRegistry,
+  discoverBrowserEmulatorAdapters,
+} from './browser-adapters.mjs';
+import { loadVerifiedBrowserEmulatorAdapter } from './browser-adapter-loader.mjs';
+import { createBrowserEmulatorRuntime } from './browser-runtime.mjs';
+import { createBrowserEmulatorInputBridge } from './browser-input.mjs';
+import { createNativeHostLaunchRequest } from './host-launch.mjs';
+import { savePendingLaunchHandoff } from '../launch/handoff.mjs';
+import { createActiveProfileStorage } from '../profiles/storage.mjs';
 
 const profileStorage = createActiveProfileStorage();
-const runtimeStore = createRuntimeProfileStore({storage: profileStorage});
-const state = {cores: [], gameFiles: [], firmwareFiles: [], rememberedFiles: [], runtimeProfiles: runtimeStore.list(), report: null, capabilitiesReady: false, preferences: resolveEmulationPreferences()};
-const library = createEmulationLibraryStore({storage: profileStorage});
+const runtimeStore = createRuntimeProfileStore({ storage: profileStorage });
+const state = {
+  cores: [],
+  gameFiles: [],
+  firmwareFiles: [],
+  rememberedFiles: [],
+  runtimeProfiles: runtimeStore.list(),
+  report: null,
+  capabilitiesReady: false,
+  preferences: resolveEmulationPreferences(),
+};
+const library = createEmulationLibraryStore({ storage: profileStorage });
 const browserAdapters = createBrowserEmulatorAdapterRegistry(discoverBrowserEmulatorAdapters());
 let activeBrowserRuntime = null;
 let activeBrowserInput = null;
@@ -28,39 +47,416 @@ const gameFolderInput = document.querySelector('[data-game-folder]');
 const notice = document.querySelector('[data-notice]');
 const runtimePanel = document.createElement('section');
 runtimePanel.className = 'runtime-manager panel';
-runtimePanel.innerHTML = '<div class="panel-head"><div><p class="eyebrow">TRUSTED RUNTIME PROFILES</p><h2>Manage local runtimes</h2></div><span>Metadata only</span></div><p class="runtime-help">Profiles describe user-owned native adapters, Libretro hosts, or browser runtimes. Spartan Gaming never launches a path from this page; a signed host adapter performs any native handoff.</p><form class="runtime-form" data-runtime-form><label>ID<input name="id" required pattern="[a-z0-9][a-z0-9._-]{1,63}" placeholder="dolphin-linux"></label><label>Name<input name="name" required maxlength="160" placeholder="Dolphin Linux"></label><label>Kind<select name="kind"><option value="native-emulator">Native emulator</option><option value="native-adapter">Native adapter</option><option value="libretro-core">Libretro core host</option><option value="browser-wasm">Browser WASM</option></select></label><label>Platform<select name="platform"><option value="any">Any</option><option value="linux">Linux</option><option value="darwin">macOS</option><option value="win32">Windows</option><option value="browser">Browser</option></select></label><label>Version<input name="version" required placeholder="5.0"></label><label>Core IDs<input name="coreIds" required placeholder="dolphin, libretro"></label><label class="wide">Executable or adapter path<input name="executablePath" placeholder="/opt/dolphin/dolphin-emu"></label><label>Trust<select name="trust"><option value="user-approved">User approved</option><option value="signed">Signed</option><option value="unverified">Unverified (not selectable)</option></select></label><label>Notes<input name="notes" maxlength="500" placeholder="Optional local notes"></label><button class="file-button" type="submit">＋ Save runtime profile</button></form><div data-runtime-list class="runtime-list"><p class="empty">No custom runtime profiles.</p></div>';
+runtimePanel.innerHTML =
+  '<div class="panel-head"><div><p class="eyebrow">TRUSTED RUNTIME PROFILES</p><h2>Manage local runtimes</h2></div><span>Metadata only</span></div><p class="runtime-help">Profiles describe user-owned native adapters, Libretro hosts, or browser runtimes. Spartan Gaming never launches a path from this page; a signed host adapter performs any native handoff.</p><form class="runtime-form" data-runtime-form><label>ID<input name="id" required pattern="[a-z0-9][a-z0-9._-]{1,63}" placeholder="dolphin-linux"></label><label>Name<input name="name" required maxlength="160" placeholder="Dolphin Linux"></label><label>Kind<select name="kind"><option value="native-emulator">Native emulator</option><option value="native-adapter">Native adapter</option><option value="libretro-core">Libretro core host</option><option value="browser-wasm">Browser WASM</option></select></label><label>Platform<select name="platform"><option value="any">Any</option><option value="linux">Linux</option><option value="darwin">macOS</option><option value="win32">Windows</option><option value="browser">Browser</option></select></label><label>Version<input name="version" required placeholder="5.0"></label><label>Core IDs<input name="coreIds" required placeholder="dolphin, libretro"></label><label class="wide">Executable or adapter path<input name="executablePath" placeholder="/opt/dolphin/dolphin-emu"></label><label>Trust<select name="trust"><option value="user-approved">User approved</option><option value="signed">Signed</option><option value="unverified">Unverified (not selectable)</option></select></label><label>Notes<input name="notes" maxlength="500" placeholder="Optional local notes"></label><button class="file-button" type="submit">＋ Save runtime profile</button></form><div data-runtime-list class="runtime-list"><p class="empty">No custom runtime profiles.</p></div>';
 coreList.closest('.panel').before(runtimePanel);
-runtimePanel.insertAdjacentHTML('beforeend', '<div class="browser-adapter-import"><div class="panel-head"><div><p class="eyebrow">SIGNED BROWSER ADAPTERS</p><h2>Load a WASM adapter</h2></div><span>Session only</span></div><p class="runtime-help">Choose a signed manifest from a trusted release, then approve its HTTPS module for this browser session. No adapter bytes or credentials are stored.</p><label class="file-button secondary">＋ Choose adapter manifest<input data-browser-adapter-file type="file" accept="application/json,.json"></label><button class="file-button" data-browser-adapter-load type="button" disabled>Load verified adapter</button><p class="adapter-import-status" data-browser-adapter-status>Waiting for a signed manifest.</p></div>');
+runtimePanel.insertAdjacentHTML(
+  'beforeend',
+  '<div class="browser-adapter-import"><div class="panel-head"><div><p class="eyebrow">SIGNED BROWSER ADAPTERS</p><h2>Load a WASM adapter</h2></div><span>Session only</span></div><p class="runtime-help">Choose a signed manifest from a trusted release, then approve its HTTPS module for this browser session. No adapter bytes or credentials are stored.</p><label class="file-button secondary">＋ Choose adapter manifest<input data-browser-adapter-file type="file" accept="application/json,.json"></label><button class="file-button" data-browser-adapter-load type="button" disabled>Load verified adapter</button><p class="adapter-import-status" data-browser-adapter-status>Waiting for a signed manifest.</p></div>',
+);
 const runtimeList = runtimePanel.querySelector('[data-runtime-list]');
 const planPanel = document.createElement('section');
 planPanel.className = 'panel launch-plan';
 planPanel.hidden = true;
 coreList.closest('.panel').before(planPanel);
-function toast(message) { notice.textContent = message; notice.classList.add('visible'); setTimeout(() => notice.classList.remove('visible'), 2500); }
-function allFiles() { return [...state.gameFiles, ...state.firmwareFiles]; }
-function renderFiles() { const files = allFiles(); document.querySelector('[data-file-count]').textContent = `${files.length} file${files.length === 1 ? '' : 's'}`; fileList.innerHTML = files.length ? files.map(file => `<div class="file-entry"><strong>${escapeHtml(file.relativePath || file.name)}</strong><small>${escapeHtml(file.kind)} · ${formatFileSize(file.size)} · ready this session${file.sha256 ? ` · SHA-256 ${escapeHtml(file.sha256)}` : ''}</small></div>`).join('') : '<p class="empty">No files selected. Your files stay local to this browser.</p>'; }
-function renderRememberedFiles() { const container = document.querySelector('[data-library-list]'); container.innerHTML = state.rememberedFiles.length ? state.rememberedFiles.map(file => `<div class="file-entry remembered"><div><strong>${escapeHtml(file.name)}</strong><small>${escapeHtml(file.kind)} · ${formatFileSize(file.size)} · re-select to use${file.sha256 ? ` · SHA-256 ${escapeHtml(file.sha256)}` : ''}</small></div><button class="text-button" data-remove-library="${escapeHtml(file.id)}" type="button" aria-label="Forget ${escapeHtml(file.name)}">Forget</button></div>`).join('') : '<p class="empty">No remembered files yet.</p>'; }
-function escapeHtml(value) { return String(value).replace(/[&<>\'"]/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character])); }
-function renderRuntimeProfiles() { runtimeList.innerHTML = state.runtimeProfiles.length ? state.runtimeProfiles.map(profile => `<div class="runtime-entry"><div><strong>${escapeHtml(profile.name)}</strong><small>${escapeHtml(profile.kind)} · ${escapeHtml(profile.platform)} · ${escapeHtml(profile.version)} · ${escapeHtml(profile.trust)}</small></div><button class="text-button" data-remove-runtime="${escapeHtml(profile.id)}" type="button" aria-label="Remove ${escapeHtml(profile.name)}">Remove</button></div>`).join('') : '<p class="empty">No custom runtime profiles. Browser WASM is available when the browser passes capability checks.</p>'; }
-function downloadSaveState(value, coreId) { if (value == null) throw new Error('The browser adapter did not return a save state.'); const blob = value instanceof Blob ? value : new Blob([value], {type: 'application/octet-stream'}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `spartan-${coreId}-${new Date().toISOString().replaceAll(':', '-')}.state`; link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 0); }
-function renderBrowserRuntime(plan, core) { if (plan.integration.runtime !== 'browser-wasm') return; const adapter = browserAdapters.resolve(core.id); const box = document.createElement('div'); box.className = 'browser-runtime-box'; box.innerHTML = `<div><small>Browser adapter</small><strong>${adapter ? escapeHtml(adapter.id) : 'Not installed'}</strong></div><p>${adapter ? 'Adapter injection detected. Selected files can be loaded into the browser runtime.' : 'A Chromium/WASM adapter must register at window.__SPARTAN_BROWSER_EMULATOR_ADAPTERS__ before this core can run.'}</p>`; planPanel.append(box); if (!adapter) return; box.insertAdjacentHTML('beforeend', '<canvas data-runtime-canvas tabindex="0" aria-label="Emulator display"></canvas><div class="runtime-controls"><button class="launch" data-runtime-action="start" type="button">Start</button><button class="text-button" data-runtime-action="pause" type="button">Pause / resume</button><button class="text-button" data-runtime-action="save" type="button">Save state</button><label class="text-button runtime-load-state">Load state<input data-runtime-save type="file" accept=".state,.sav,application/octet-stream"></label><button class="text-button" data-runtime-action="stop" type="button">Stop</button><span data-runtime-state>idle</span></div><small class="runtime-input-note">Click the display, then use keyboard controls or a connected gamepad.</small>'); activeBrowserRuntime = createBrowserEmulatorRuntime({adapter, canvas: box.querySelector('[data-runtime-canvas]')}); activeBrowserInput = createBrowserEmulatorInputBridge({runtime: activeBrowserRuntime, canvas: box.querySelector('[data-runtime-canvas]')}).start(); const stateLabel = box.querySelector('[data-runtime-state]'); activeBrowserRuntime.on('state', value => { stateLabel.textContent = value; if (value === 'stopped' || value === 'error') activeBrowserInput?.close(); }); box.querySelector('[data-runtime-action="start"]').addEventListener('click', async () => { try { if (activeBrowserRuntime.state === 'idle' || activeBrowserRuntime.state === 'stopped') { await activeBrowserRuntime.load({core, gameFile: plan.files[0], firmwareFiles: plan.files.slice(1), settings: state.preferences}); activeBrowserInput?.start(); } await activeBrowserRuntime.start(); } catch (error) { toast(error.message); } }); box.querySelector('[data-runtime-action="pause"]').addEventListener('click', async () => { try { if (activeBrowserRuntime.state === 'running') await activeBrowserRuntime.pause(); else if (activeBrowserRuntime.state === 'paused') await activeBrowserRuntime.resume(); } catch (error) { toast(error.message); } }); box.querySelector('[data-runtime-action="save"]').addEventListener('click', async () => { try { downloadSaveState(await activeBrowserRuntime.saveState(), core.id); toast('Save state exported locally.'); } catch (error) { toast(error.message); } }); box.querySelector('[data-runtime-save]').addEventListener('change', async event => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { await activeBrowserRuntime.loadState(createUserFileRecord(file, {kind: 'save'})); toast('Save state loaded locally.'); } catch (error) { toast(error.message); } }); box.querySelector('[data-runtime-action="stop"]').addEventListener('click', async () => { try { if (state.preferences.autoSaveStates && ['ready', 'running', 'paused'].includes(activeBrowserRuntime.state)) { try { downloadSaveState(await activeBrowserRuntime.saveState(), core.id); toast('Auto-save exported locally before stopping.'); } catch { toast('Runtime stopped; automatic save state is unavailable for this adapter.'); } } await activeBrowserRuntime.stop(); activeBrowserInput?.close(); } catch (error) { toast(error.message); } }); }
-function renderLaunchPlan(plan, core) { const firmware = plan.integration.content.firmwareFiles ? 'Required' : 'Not required'; const profile = plan.integration.runtimeProfile; const nativeReady = Boolean(profile && ['native-adapter', 'native-emulator', 'libretro-core'].includes(plan.integration.runtime)); planPanel.hidden = false; planPanel.innerHTML = `<div class="panel-head"><div><p class="eyebrow">LAUNCH PLAN</p><h2>${escapeHtml(core.name)}</h2></div><span class="tag">${escapeHtml(plan.status)}</span></div><div class="plan-grid"><div><small>Runtime</small><strong>${escapeHtml(plan.integration.runtime)}</strong></div><div><small>Renderer</small><strong>${escapeHtml(plan.integration.renderer)}</strong></div><div><small>Systems</small><strong>${escapeHtml(plan.systems.join(', ') || 'General')}</strong></div><div><small>Firmware</small><strong>${firmware}</strong></div></div><p class="plan-note">${escapeHtml(plan.integration.notes[0] || 'Only user-selected files are mounted. Content remains local to this browser.')}</p><div class="plan-files">${plan.files.map(file => `<span class="tag">${escapeHtml(file.kind)}: ${escapeHtml(file.name)}${file.sha256 ? ` · SHA-256 ${escapeHtml(file.sha256)}` : ''}</span>`).join('')}</div>${nativeReady ? `<div class="native-handoff"><div class="panel-head"><div><p class="eyebrow">NATIVE HOST HANDOFF</p><h2>Prepare a consented launch</h2></div><span class="tag">Metadata only</span></div><p class="plan-note">The browser sends file names, sizes, and optional hashes only. Executable paths, file bytes, and credentials remain on the trusted host.</p><label>Host content ID<input data-host-content-id maxlength="128" pattern="[A-Za-z0-9._:-]{1,128}" placeholder="e.g. dolphin-gamecube-01"></label><label class="consent-row"><input data-native-consent type="checkbox"> I approve this user-selected content being launched by my trusted host.</label><button class="launch" data-prepare-native type="button">Prepare host launch</button><small data-native-status>Pair with a host after preparing this request.</small></div>` : ''}`; if (nativeReady) { planPanel.querySelector('[data-prepare-native]').addEventListener('click', () => { const status = planPanel.querySelector('[data-native-status]'); try { const request = createNativeHostLaunchRequest({plan, hostContentId: planPanel.querySelector('[data-host-content-id]').value, consent: planPanel.querySelector('[data-native-consent]').checked}); savePendingLaunchHandoff(sessionStorage, {request, backendId: core.id, name: core.name}); status.textContent = 'Request saved for this session. Continue to Host Profiles to pair.'; window.location.assign('../host/index.html?launch=1'); } catch (error) { status.textContent = error.message; } }); } planPanel.scrollIntoView({behavior: 'smooth', block: 'nearest'}); }
-function renderCores() { document.querySelector('[data-core-count]').textContent = `${state.cores.length} runtimes · ${state.capabilitiesReady ? 'browser probed' : 'checking browser'}`; coreList.innerHTML = state.cores.map(core => { const integration = createEmulatorIntegration(core, {...state.preferences, runtimeProfiles: state.runtimeProfiles, platform: state.report?.browser?.platform || 'browser', report: state.report || {graphics: {webgpuAdapter: false, webgl: false}}}); const issues = emulatorTroubleshooting(integration); const readiness = integration.runtime === 'browser-wasm' ? (state.capabilitiesReady ? (integration.browserReady ? 'Browser ready' : 'Native fallback') : 'Checking…') : integration.runtimeReadiness?.status === 'ready' ? 'Profile ready' : 'Profile needed'; const profile = integration.runtimeProfile ? ` · ${integration.runtimeProfile.name}` : ''; return `<article class="core-card"><h3>${escapeHtml(core.name)}</h3><p>${escapeHtml(integration.runtime)} · ${escapeHtml(integration.renderer)}${escapeHtml(profile)}</p><div class="core-tags"><span class="tag">${escapeHtml(readiness)}</span>${core.systems.map(system => `<span class="tag">${escapeHtml(system)}</span>`).join('')}${integration.features.slice(0, 2).map(feature => `<span class="tag">${escapeHtml(feature)}</span>`).join('')}</div><small class="core-note">${escapeHtml(issues[0]?.message || integration.notes[0] || 'User-selected files only')}</small><button class="launch" data-launch="${escapeHtml(core.id)}" ${state.gameFiles.length ? '' : 'disabled'}>Prepare launch plan</button></article>`; }).join(''); coreList.querySelectorAll('[data-launch]').forEach(button => button.addEventListener('click', () => { const core = state.cores.find(item => item.id === button.dataset.launch); try { const plan = createEmulationLaunchPlan({core, gameFile: state.gameFiles[0], firmwareFiles: state.firmwareFiles, ...state.preferences, runtimeProfiles: state.runtimeProfiles, platform: state.report?.browser?.platform || 'browser', report: state.report || {graphics: {webgpuAdapter: false, webgl: false}}}); renderLaunchPlan(plan, core); renderBrowserRuntime(plan, core); toast(`${core.name}: ${plan.integration.runtime} · ${plan.integration.renderer} plan ready.`); } catch (error) { toast(error.message); } })); }
-async function loadCores() { try { state.preferences = resolveEmulationPreferences(createSettingsStore().read()); if (gameFolderLabel) gameFolderLabel.hidden = !state.preferences.scanLibraries; const manifest = await fetch('../../../emulators/catalog.json').then(response => response.json()); state.cores = manifest.projects; renderCores(); collectCapabilities().then(report => { state.report = report; state.capabilitiesReady = true; renderCores(); }).catch(() => { state.capabilitiesReady = true; renderCores(); }); const intent = consumeLaunchIntent(sessionStorage, {backendType: 'emulator', action: 'choose-runtime'}); const core = state.cores.find(item => item.id === intent?.backendId); if (intent && core) toast(`${core.name}: ${intent.mode} runtime selected. Add your game files to continue.`); } catch { coreList.innerHTML = '<p class="empty">The emulator catalog could not be loaded.</p>'; } }
-async function addFiles(files, kind) { let records = [...files].map(file => createUserFileRecord(file, {kind})); if (kind === 'firmware') { toast('Hashing selected firmware locally…'); records = await Promise.all(records.map(async record => createUserFileRecord(record, {kind, sha256: await computeSelectedFileSha256(record)}))); } if (kind === 'game') state.gameFiles.push(...records); else state.firmwareFiles.push(...records); state.rememberedFiles = library.add(records); renderFiles(); renderRememberedFiles(); renderCores(); toast(`${records.length} user-selected ${kind} file${records.length === 1 ? '' : 's'} added${kind === 'firmware' ? ' with local SHA-256 digest' : ''} and remembered as metadata.`); }
-document.querySelector('[data-runtime-form]').addEventListener('submit', event => { event.preventDefault(); const form = event.currentTarget; try { runtimeStore.save({id: form.elements.id.value, name: form.elements.name.value, kind: form.elements.kind.value, platform: form.elements.platform.value, version: form.elements.version.value, coreIds: form.elements.coreIds.value.split(',').map(value => value.trim()).filter(Boolean), executablePath: form.elements.executablePath.value, trust: form.elements.trust.value, notes: form.elements.notes.value}); state.runtimeProfiles = runtimeStore.list(); renderRuntimeProfiles(); renderCores(); form.reset(); form.elements.platform.value = 'any'; form.elements.trust.value = 'user-approved'; toast('Runtime profile saved as metadata only.'); } catch (error) { toast(error.message); } });
+function toast(message) {
+  notice.textContent = message;
+  notice.classList.add('visible');
+  setTimeout(() => notice.classList.remove('visible'), 2500);
+}
+function allFiles() {
+  return [...state.gameFiles, ...state.firmwareFiles];
+}
+function renderFiles() {
+  const files = allFiles();
+  document.querySelector('[data-file-count]').textContent =
+    `${files.length} file${files.length === 1 ? '' : 's'}`;
+  fileList.innerHTML = files.length
+    ? files
+        .map(
+          (file) =>
+            `<div class="file-entry"><strong>${escapeHtml(file.relativePath || file.name)}</strong><small>${escapeHtml(file.kind)} · ${formatFileSize(file.size)} · ready this session${file.sha256 ? ` · SHA-256 ${escapeHtml(file.sha256)}` : ''}</small></div>`,
+        )
+        .join('')
+    : '<p class="empty">No files selected. Your files stay local to this browser.</p>';
+}
+function renderRememberedFiles() {
+  const container = document.querySelector('[data-library-list]');
+  container.innerHTML = state.rememberedFiles.length
+    ? state.rememberedFiles
+        .map(
+          (file) =>
+            `<div class="file-entry remembered"><div><strong>${escapeHtml(file.name)}</strong><small>${escapeHtml(file.kind)} · ${formatFileSize(file.size)} · re-select to use${file.sha256 ? ` · SHA-256 ${escapeHtml(file.sha256)}` : ''}</small></div><button class="text-button" data-remove-library="${escapeHtml(file.id)}" type="button" aria-label="Forget ${escapeHtml(file.name)}">Forget</button></div>`,
+        )
+        .join('')
+    : '<p class="empty">No remembered files yet.</p>';
+}
+function escapeHtml(value) {
+  return String(value).replace(
+    /[&<>\'"]/g,
+    (character) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character],
+  );
+}
+function renderRuntimeProfiles() {
+  runtimeList.innerHTML = state.runtimeProfiles.length
+    ? state.runtimeProfiles
+        .map(
+          (profile) =>
+            `<div class="runtime-entry"><div><strong>${escapeHtml(profile.name)}</strong><small>${escapeHtml(profile.kind)} · ${escapeHtml(profile.platform)} · ${escapeHtml(profile.version)} · ${escapeHtml(profile.trust)}</small></div><button class="text-button" data-remove-runtime="${escapeHtml(profile.id)}" type="button" aria-label="Remove ${escapeHtml(profile.name)}">Remove</button></div>`,
+        )
+        .join('')
+    : '<p class="empty">No custom runtime profiles. Browser WASM is available when the browser passes capability checks.</p>';
+}
+function downloadSaveState(value, coreId) {
+  if (value == null) throw new Error('The browser adapter did not return a save state.');
+  const blob =
+    value instanceof Blob ? value : new Blob([value], { type: 'application/octet-stream' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `spartan-${coreId}-${new Date().toISOString().replaceAll(':', '-')}.state`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 0);
+}
+function renderBrowserRuntime(plan, core) {
+  if (plan.integration.runtime !== 'browser-wasm') return;
+  const adapter = browserAdapters.resolve(core.id);
+  const box = document.createElement('div');
+  box.className = 'browser-runtime-box';
+  box.innerHTML = `<div><small>Browser adapter</small><strong>${adapter ? escapeHtml(adapter.id) : 'Not installed'}</strong></div><p>${adapter ? 'Adapter injection detected. Selected files can be loaded into the browser runtime.' : 'A Chromium/WASM adapter must register at window.__SPARTAN_BROWSER_EMULATOR_ADAPTERS__ before this core can run.'}</p>`;
+  planPanel.append(box);
+  if (!adapter) return;
+  box.insertAdjacentHTML(
+    'beforeend',
+    '<canvas data-runtime-canvas tabindex="0" aria-label="Emulator display"></canvas><div class="runtime-controls"><button class="launch" data-runtime-action="start" type="button">Start</button><button class="text-button" data-runtime-action="pause" type="button">Pause / resume</button><button class="text-button" data-runtime-action="save" type="button">Save state</button><label class="text-button runtime-load-state">Load state<input data-runtime-save type="file" accept=".state,.sav,application/octet-stream"></label><button class="text-button" data-runtime-action="stop" type="button">Stop</button><span data-runtime-state>idle</span></div><small class="runtime-input-note">Click the display, then use keyboard controls or a connected gamepad.</small>',
+  );
+  activeBrowserRuntime = createBrowserEmulatorRuntime({
+    adapter,
+    canvas: box.querySelector('[data-runtime-canvas]'),
+  });
+  activeBrowserInput = createBrowserEmulatorInputBridge({
+    runtime: activeBrowserRuntime,
+    canvas: box.querySelector('[data-runtime-canvas]'),
+  }).start();
+  const stateLabel = box.querySelector('[data-runtime-state]');
+  activeBrowserRuntime.on('state', (value) => {
+    stateLabel.textContent = value;
+    if (value === 'stopped' || value === 'error') activeBrowserInput?.close();
+  });
+  box.querySelector('[data-runtime-action="start"]').addEventListener('click', async () => {
+    try {
+      if (activeBrowserRuntime.state === 'idle' || activeBrowserRuntime.state === 'stopped') {
+        await activeBrowserRuntime.load({
+          core,
+          gameFile: plan.files[0],
+          firmwareFiles: plan.files.slice(1),
+          settings: state.preferences,
+        });
+        activeBrowserInput?.start();
+      }
+      await activeBrowserRuntime.start();
+    } catch (error) {
+      toast(error.message);
+    }
+  });
+  box.querySelector('[data-runtime-action="pause"]').addEventListener('click', async () => {
+    try {
+      if (activeBrowserRuntime.state === 'running') await activeBrowserRuntime.pause();
+      else if (activeBrowserRuntime.state === 'paused') await activeBrowserRuntime.resume();
+    } catch (error) {
+      toast(error.message);
+    }
+  });
+  box.querySelector('[data-runtime-action="save"]').addEventListener('click', async () => {
+    try {
+      downloadSaveState(await activeBrowserRuntime.saveState(), core.id);
+      toast('Save state exported locally.');
+    } catch (error) {
+      toast(error.message);
+    }
+  });
+  box.querySelector('[data-runtime-save]').addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    try {
+      await activeBrowserRuntime.loadState(createUserFileRecord(file, { kind: 'save' }));
+      toast('Save state loaded locally.');
+    } catch (error) {
+      toast(error.message);
+    }
+  });
+  box.querySelector('[data-runtime-action="stop"]').addEventListener('click', async () => {
+    try {
+      if (
+        state.preferences.autoSaveStates &&
+        ['ready', 'running', 'paused'].includes(activeBrowserRuntime.state)
+      ) {
+        try {
+          downloadSaveState(await activeBrowserRuntime.saveState(), core.id);
+          toast('Auto-save exported locally before stopping.');
+        } catch {
+          toast('Runtime stopped; automatic save state is unavailable for this adapter.');
+        }
+      }
+      await activeBrowserRuntime.stop();
+      activeBrowserInput?.close();
+    } catch (error) {
+      toast(error.message);
+    }
+  });
+}
+function renderLaunchPlan(plan, core) {
+  const firmware = plan.integration.content.firmwareFiles ? 'Required' : 'Not required';
+  const profile = plan.integration.runtimeProfile;
+  const nativeReady = Boolean(
+    profile &&
+    ['native-adapter', 'native-emulator', 'libretro-core'].includes(plan.integration.runtime),
+  );
+  planPanel.hidden = false;
+  planPanel.innerHTML = `<div class="panel-head"><div><p class="eyebrow">LAUNCH PLAN</p><h2>${escapeHtml(core.name)}</h2></div><span class="tag">${escapeHtml(plan.status)}</span></div><div class="plan-grid"><div><small>Runtime</small><strong>${escapeHtml(plan.integration.runtime)}</strong></div><div><small>Renderer</small><strong>${escapeHtml(plan.integration.renderer)}</strong></div><div><small>Systems</small><strong>${escapeHtml(plan.systems.join(', ') || 'General')}</strong></div><div><small>Firmware</small><strong>${firmware}</strong></div></div><p class="plan-note">${escapeHtml(plan.integration.notes[0] || 'Only user-selected files are mounted. Content remains local to this browser.')}</p><div class="plan-files">${plan.files.map((file) => `<span class="tag">${escapeHtml(file.kind)}: ${escapeHtml(file.name)}${file.sha256 ? ` · SHA-256 ${escapeHtml(file.sha256)}` : ''}</span>`).join('')}</div>${nativeReady ? `<div class="native-handoff"><div class="panel-head"><div><p class="eyebrow">NATIVE HOST HANDOFF</p><h2>Prepare a consented launch</h2></div><span class="tag">Metadata only</span></div><p class="plan-note">The browser sends file names, sizes, and optional hashes only. Executable paths, file bytes, and credentials remain on the trusted host.</p><label>Host content ID<input data-host-content-id maxlength="128" pattern="[A-Za-z0-9._:-]{1,128}" placeholder="e.g. dolphin-gamecube-01"></label><label class="consent-row"><input data-native-consent type="checkbox"> I approve this user-selected content being launched by my trusted host.</label><button class="launch" data-prepare-native type="button">Prepare host launch</button><small data-native-status>Pair with a host after preparing this request.</small></div>` : ''}`;
+  if (nativeReady) {
+    planPanel.querySelector('[data-prepare-native]').addEventListener('click', () => {
+      const status = planPanel.querySelector('[data-native-status]');
+      try {
+        const request = createNativeHostLaunchRequest({
+          plan,
+          hostContentId: planPanel.querySelector('[data-host-content-id]').value,
+          consent: planPanel.querySelector('[data-native-consent]').checked,
+        });
+        savePendingLaunchHandoff(sessionStorage, { request, backendId: core.id, name: core.name });
+        status.textContent = 'Request saved for this session. Continue to Host Profiles to pair.';
+        window.location.assign('../host/index.html?launch=1');
+      } catch (error) {
+        status.textContent = error.message;
+      }
+    });
+  }
+  planPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function renderCores() {
+  document.querySelector('[data-core-count]').textContent =
+    `${state.cores.length} runtimes · ${state.capabilitiesReady ? 'browser probed' : 'checking browser'}`;
+  coreList.innerHTML = state.cores
+    .map((core) => {
+      const integration = createEmulatorIntegration(core, {
+        ...state.preferences,
+        runtimeProfiles: state.runtimeProfiles,
+        platform: state.report?.browser?.platform || 'browser',
+        report: state.report || { graphics: { webgpuAdapter: false, webgl: false } },
+      });
+      const issues = emulatorTroubleshooting(integration);
+      const readiness =
+        integration.runtime === 'browser-wasm'
+          ? state.capabilitiesReady
+            ? integration.browserReady
+              ? 'Browser ready'
+              : 'Native fallback'
+            : 'Checking…'
+          : integration.runtimeReadiness?.status === 'ready'
+            ? 'Profile ready'
+            : 'Profile needed';
+      const profile = integration.runtimeProfile ? ` · ${integration.runtimeProfile.name}` : '';
+      return `<article class="core-card"><h3>${escapeHtml(core.name)}</h3><p>${escapeHtml(integration.runtime)} · ${escapeHtml(integration.renderer)}${escapeHtml(profile)}</p><div class="core-tags"><span class="tag">${escapeHtml(readiness)}</span>${core.systems.map((system) => `<span class="tag">${escapeHtml(system)}</span>`).join('')}${integration.features
+        .slice(0, 2)
+        .map((feature) => `<span class="tag">${escapeHtml(feature)}</span>`)
+        .join(
+          '',
+        )}</div><small class="core-note">${escapeHtml(issues[0]?.message || integration.notes[0] || 'User-selected files only')}</small><button class="launch" data-launch="${escapeHtml(core.id)}" ${state.gameFiles.length ? '' : 'disabled'}>Prepare launch plan</button></article>`;
+    })
+    .join('');
+  coreList.querySelectorAll('[data-launch]').forEach((button) =>
+    button.addEventListener('click', () => {
+      const core = state.cores.find((item) => item.id === button.dataset.launch);
+      try {
+        const plan = createEmulationLaunchPlan({
+          core,
+          gameFile: state.gameFiles[0],
+          firmwareFiles: state.firmwareFiles,
+          ...state.preferences,
+          runtimeProfiles: state.runtimeProfiles,
+          platform: state.report?.browser?.platform || 'browser',
+          report: state.report || { graphics: { webgpuAdapter: false, webgl: false } },
+        });
+        renderLaunchPlan(plan, core);
+        renderBrowserRuntime(plan, core);
+        toast(
+          `${core.name}: ${plan.integration.runtime} · ${plan.integration.renderer} plan ready.`,
+        );
+      } catch (error) {
+        toast(error.message);
+      }
+    }),
+  );
+}
+async function loadCores() {
+  try {
+    state.preferences = resolveEmulationPreferences(createSettingsStore().read());
+    if (gameFolderLabel) gameFolderLabel.hidden = !state.preferences.scanLibraries;
+    const manifest = await fetch('../../../emulators/catalog.json').then((response) =>
+      response.json(),
+    );
+    state.cores = manifest.projects;
+    renderCores();
+    collectCapabilities()
+      .then((report) => {
+        state.report = report;
+        state.capabilitiesReady = true;
+        renderCores();
+      })
+      .catch(() => {
+        state.capabilitiesReady = true;
+        renderCores();
+      });
+    const intent = consumeLaunchIntent(sessionStorage, {
+      backendType: 'emulator',
+      action: 'choose-runtime',
+    });
+    const core = state.cores.find((item) => item.id === intent?.backendId);
+    if (intent && core)
+      toast(`${core.name}: ${intent.mode} runtime selected. Add your game files to continue.`);
+  } catch {
+    coreList.innerHTML = '<p class="empty">The emulator catalog could not be loaded.</p>';
+  }
+}
+async function addFiles(files, kind) {
+  let records = [...files].map((file) => createUserFileRecord(file, { kind }));
+  if (kind === 'firmware') {
+    toast('Hashing selected firmware locally…');
+    records = await Promise.all(
+      records.map(async (record) =>
+        createUserFileRecord(record, { kind, sha256: await computeSelectedFileSha256(record) }),
+      ),
+    );
+  }
+  if (kind === 'game') state.gameFiles.push(...records);
+  else state.firmwareFiles.push(...records);
+  state.rememberedFiles = library.add(records);
+  renderFiles();
+  renderRememberedFiles();
+  renderCores();
+  toast(
+    `${records.length} user-selected ${kind} file${records.length === 1 ? '' : 's'} added${kind === 'firmware' ? ' with local SHA-256 digest' : ''} and remembered as metadata.`,
+  );
+}
+document.querySelector('[data-runtime-form]').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  try {
+    runtimeStore.save({
+      id: form.elements.id.value,
+      name: form.elements.name.value,
+      kind: form.elements.kind.value,
+      platform: form.elements.platform.value,
+      version: form.elements.version.value,
+      coreIds: form.elements.coreIds.value
+        .split(',')
+        .map((value) => value.trim())
+        .filter(Boolean),
+      executablePath: form.elements.executablePath.value,
+      trust: form.elements.trust.value,
+      notes: form.elements.notes.value,
+    });
+    state.runtimeProfiles = runtimeStore.list();
+    renderRuntimeProfiles();
+    renderCores();
+    form.reset();
+    form.elements.platform.value = 'any';
+    form.elements.trust.value = 'user-approved';
+    toast('Runtime profile saved as metadata only.');
+  } catch (error) {
+    toast(error.message);
+  }
+});
 const browserAdapterFile = runtimePanel.querySelector('[data-browser-adapter-file]');
 const browserAdapterLoad = runtimePanel.querySelector('[data-browser-adapter-load]');
 const browserAdapterStatus = runtimePanel.querySelector('[data-browser-adapter-status]');
-function trustedBrowserAdapterSigners() { const signers = globalThis.__SPARTAN_TRUSTED_ADAPTER_SIGNERS__; return signers && typeof signers === 'object' ? signers : {}; }
-browserAdapterFile.addEventListener('change', async event => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { const parsed = JSON.parse(await file.text()); pendingBrowserAdapterManifest = Array.isArray(parsed?.records) && parsed.records.length === 1 ? parsed.records[0] : parsed; browserAdapterStatus.textContent = `${pendingBrowserAdapterManifest.id || 'Unknown adapter'} · signer ${pendingBrowserAdapterManifest.signature?.signer || 'unknown'} · ready for approval`; browserAdapterLoad.disabled = false; } catch (error) { pendingBrowserAdapterManifest = null; browserAdapterLoad.disabled = true; browserAdapterStatus.textContent = `Invalid manifest: ${error.message}`; } });
-browserAdapterLoad.addEventListener('click', async () => { if (!pendingBrowserAdapterManifest) return; browserAdapterLoad.disabled = true; browserAdapterStatus.textContent = 'Verifying signature and module integrity…'; try { const loaded = await loadVerifiedBrowserEmulatorAdapter({manifest: pendingBrowserAdapterManifest, consent: true, trustedSigners: trustedBrowserAdapterSigners()}); browserAdapters.register(loaded.adapter); browserAdapterStatus.textContent = `${loaded.manifest.id} verified and active for this session`; renderCores(); toast(`${loaded.manifest.id}: signed browser adapter loaded.`); pendingBrowserAdapterManifest = null; } catch (error) { browserAdapterStatus.textContent = `Adapter not loaded: ${error.message}`; } finally { browserAdapterLoad.disabled = !pendingBrowserAdapterManifest; } });
-runtimeList.addEventListener('click', event => { const button = event.target.closest('[data-remove-runtime]'); if (!button) return; state.runtimeProfiles = runtimeStore.remove(button.dataset.removeRuntime); renderRuntimeProfiles(); renderCores(); toast('Runtime profile removed.'); });
-document.querySelector('[data-game-files]').addEventListener('change', async event => { try { await addFiles(event.target.files, 'game'); } catch (error) { toast(error.message); } event.target.value = ''; });
-gameFolderInput?.addEventListener('change', async event => { try { await addFiles(event.target.files, 'game'); toast('Selected game folder indexed locally.'); } catch (error) { toast(error.message); } event.target.value = ''; });
-document.querySelector('[data-firmware-files]').addEventListener('change', async event => { try { await addFiles(event.target.files, 'firmware'); } catch (error) { toast(error.message); } event.target.value = ''; });
-document.querySelector('[data-clear-library]').addEventListener('click', () => { state.rememberedFiles = library.clear(); renderRememberedFiles(); toast('Remembered collection cleared'); });
-document.querySelector('[data-library-list]').addEventListener('click', event => { const button = event.target.closest('[data-remove-library]'); if (!button) return; state.rememberedFiles = library.remove(button.dataset.removeLibrary); renderRememberedFiles(); toast('File metadata forgotten'); });
+function trustedBrowserAdapterSigners() {
+  const signers = globalThis.__SPARTAN_TRUSTED_ADAPTER_SIGNERS__;
+  return signers && typeof signers === 'object' ? signers : {};
+}
+browserAdapterFile.addEventListener('change', async (event) => {
+  const file = event.target.files?.[0];
+  event.target.value = '';
+  if (!file) return;
+  try {
+    const parsed = JSON.parse(await file.text());
+    pendingBrowserAdapterManifest =
+      Array.isArray(parsed?.records) && parsed.records.length === 1 ? parsed.records[0] : parsed;
+    browserAdapterStatus.textContent = `${pendingBrowserAdapterManifest.id || 'Unknown adapter'} · signer ${pendingBrowserAdapterManifest.signature?.signer || 'unknown'} · ready for approval`;
+    browserAdapterLoad.disabled = false;
+  } catch (error) {
+    pendingBrowserAdapterManifest = null;
+    browserAdapterLoad.disabled = true;
+    browserAdapterStatus.textContent = `Invalid manifest: ${error.message}`;
+  }
+});
+browserAdapterLoad.addEventListener('click', async () => {
+  if (!pendingBrowserAdapterManifest) return;
+  browserAdapterLoad.disabled = true;
+  browserAdapterStatus.textContent = 'Verifying signature and module integrity…';
+  try {
+    const loaded = await loadVerifiedBrowserEmulatorAdapter({
+      manifest: pendingBrowserAdapterManifest,
+      consent: true,
+      trustedSigners: trustedBrowserAdapterSigners(),
+    });
+    browserAdapters.register(loaded.adapter);
+    browserAdapterStatus.textContent = `${loaded.manifest.id} verified and active for this session`;
+    renderCores();
+    toast(`${loaded.manifest.id}: signed browser adapter loaded.`);
+    pendingBrowserAdapterManifest = null;
+  } catch (error) {
+    browserAdapterStatus.textContent = `Adapter not loaded: ${error.message}`;
+  } finally {
+    browserAdapterLoad.disabled = !pendingBrowserAdapterManifest;
+  }
+});
+runtimeList.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-remove-runtime]');
+  if (!button) return;
+  state.runtimeProfiles = runtimeStore.remove(button.dataset.removeRuntime);
+  renderRuntimeProfiles();
+  renderCores();
+  toast('Runtime profile removed.');
+});
+document.querySelector('[data-game-files]').addEventListener('change', async (event) => {
+  try {
+    await addFiles(event.target.files, 'game');
+  } catch (error) {
+    toast(error.message);
+  }
+  event.target.value = '';
+});
+gameFolderInput?.addEventListener('change', async (event) => {
+  try {
+    await addFiles(event.target.files, 'game');
+    toast('Selected game folder indexed locally.');
+  } catch (error) {
+    toast(error.message);
+  }
+  event.target.value = '';
+});
+document.querySelector('[data-firmware-files]').addEventListener('change', async (event) => {
+  try {
+    await addFiles(event.target.files, 'firmware');
+  } catch (error) {
+    toast(error.message);
+  }
+  event.target.value = '';
+});
+document.querySelector('[data-clear-library]').addEventListener('click', () => {
+  state.rememberedFiles = library.clear();
+  renderRememberedFiles();
+  toast('Remembered collection cleared');
+});
+document.querySelector('[data-library-list]').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-remove-library]');
+  if (!button) return;
+  state.rememberedFiles = library.remove(button.dataset.removeLibrary);
+  renderRememberedFiles();
+  toast('File metadata forgotten');
+});
 state.rememberedFiles = library.list();
 loadCores();
 renderFiles();

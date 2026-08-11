@@ -13,9 +13,27 @@
     "requiredTools": ["git", "python3", "gclient", "gn", "autoninja"]
   },
   "targets": [
-    { "id": "linux", "args": "chromium/args/linux.gn", "buildTarget": "chrome", "artifact": "spartan-gaming-dev-linux", "binary": "chrome" },
-    { "id": "mac", "args": "chromium/args/mac.gn", "buildTarget": "chrome", "artifact": "spartan-gaming-dev-mac", "binary": "Chromium.app" },
-    { "id": "windows", "args": "chromium/args/windows.gn", "buildTarget": "chrome", "artifact": "spartan-gaming-dev-windows", "binary": "chrome.exe" }
+    {
+      "id": "linux",
+      "args": "chromium/args/linux.gn",
+      "buildTarget": "chrome",
+      "artifact": "spartan-gaming-dev-linux",
+      "binary": "chrome"
+    },
+    {
+      "id": "mac",
+      "args": "chromium/args/mac.gn",
+      "buildTarget": "chrome",
+      "artifact": "spartan-gaming-dev-mac",
+      "binary": "Chromium.app"
+    },
+    {
+      "id": "windows",
+      "args": "chromium/args/windows.gn",
+      "buildTarget": "chrome",
+      "artifact": "spartan-gaming-dev-windows",
+      "binary": "chrome.exe"
+    }
   ],
   "productIntegration": {
     "shellEntry": "src/frontend/dashboard/index.html",

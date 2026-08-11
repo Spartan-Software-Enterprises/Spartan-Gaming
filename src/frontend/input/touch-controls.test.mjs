@@ -1,7 +1,79 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createTouchControlEvent, createTouchControlLayout, createTouchStickEvents, normalizeTouchLayout} from './touch-controls.mjs';
+import {
+  createTouchControlEvent,
+  createTouchControlLayout,
+  createTouchStickEvents,
+  normalizeTouchLayout,
+} from './touch-controls.mjs';
 
-test('touch layouts normalize settings into bounded controller controls', () => { assert.equal(normalizeTouchLayout('Minimal'), 'minimal'); assert.equal(normalizeTouchLayout('Automatic'), 'full'); assert.equal(normalizeTouchLayout('Off'), 'off'); assert.equal(createTouchControlLayout('minimal').length, 2); assert.equal(createTouchControlLayout('full').length, 14); assert.deepEqual(createTouchControlLayout('full')[0], {id: 'lb', label: 'L1', action: 'lb', group: 'shoulder', side: 'left', control: 'button-4'}); assert.deepEqual(createTouchControlLayout('full').find(control => control.id === 'rt'), {id: 'rt', label: 'R2', action: 'rt', group: 'shoulder', side: 'right', control: 'button-7'}); assert.equal(createTouchControlLayout('full').find(control => control.id === 'moveUp').control, 'button-12'); });
-test('touch control events use the shared input vocabulary and button bounds', () => { assert.deepEqual(createTouchControlEvent({action: 'confirm', pressed: true}), {type: 'input.event', action: 'confirm', kind: 'button', source: 'touch', control: 'button-0', pressed: true, value: 1}); assert.equal(createTouchControlEvent({action: 'cancel', pressed: false}).value, 0); assert.equal(createTouchControlEvent({action: 'cancel', pressed: false}).control, 'button-1'); assert.equal(createTouchControlEvent({action: 'menu', pressed: true}).control, 'button-9'); assert.equal(createTouchControlEvent({action: 'pause', pressed: true}).control, 'button-8'); assert.equal(createTouchControlEvent({action: 'lb', pressed: true}).control, 'button-4'); assert.equal(createTouchControlEvent({action: 'rt', pressed: true}).control, 'button-7'); assert.equal(createTouchControlEvent({action: 'l3', pressed: true}).control, 'button-10'); assert.equal(createTouchControlEvent({action: 'r3', pressed: true}).control, 'button-11'); assert.throws(() => createTouchControlEvent({action: ''}), /touch action/); });
-test('virtual touch sticks emit bounded paired axes and explicit release events', () => { assert.deepEqual(createTouchStickEvents({index: 0, x: 2, y: -2}), [{type: 'input.event', action: 'axis-0', kind: 'axis', source: 'touch', control: 'axis-0', pressed: true, value: 1}, {type: 'input.event', action: 'axis-1', kind: 'axis', source: 'touch', control: 'axis-1', pressed: true, value: -1}]); assert.equal(createTouchStickEvents({index: 2, x: 0.5, y: 0, pressed: false})[0].pressed, false); assert.throws(() => createTouchStickEvents({index: 1}), /even axis/); });
+test('touch layouts normalize settings into bounded controller controls', () => {
+  assert.equal(normalizeTouchLayout('Minimal'), 'minimal');
+  assert.equal(normalizeTouchLayout('Automatic'), 'full');
+  assert.equal(normalizeTouchLayout('Off'), 'off');
+  assert.equal(createTouchControlLayout('minimal').length, 2);
+  assert.equal(createTouchControlLayout('full').length, 14);
+  assert.deepEqual(createTouchControlLayout('full')[0], {
+    id: 'lb',
+    label: 'L1',
+    action: 'lb',
+    group: 'shoulder',
+    side: 'left',
+    control: 'button-4',
+  });
+  assert.deepEqual(
+    createTouchControlLayout('full').find((control) => control.id === 'rt'),
+    { id: 'rt', label: 'R2', action: 'rt', group: 'shoulder', side: 'right', control: 'button-7' },
+  );
+  assert.equal(
+    createTouchControlLayout('full').find((control) => control.id === 'moveUp').control,
+    'button-12',
+  );
+});
+test('touch control events use the shared input vocabulary and button bounds', () => {
+  assert.deepEqual(createTouchControlEvent({ action: 'confirm', pressed: true }), {
+    type: 'input.event',
+    action: 'confirm',
+    kind: 'button',
+    source: 'touch',
+    control: 'button-0',
+    pressed: true,
+    value: 1,
+  });
+  assert.equal(createTouchControlEvent({ action: 'cancel', pressed: false }).value, 0);
+  assert.equal(createTouchControlEvent({ action: 'cancel', pressed: false }).control, 'button-1');
+  assert.equal(createTouchControlEvent({ action: 'menu', pressed: true }).control, 'button-9');
+  assert.equal(createTouchControlEvent({ action: 'pause', pressed: true }).control, 'button-8');
+  assert.equal(createTouchControlEvent({ action: 'lb', pressed: true }).control, 'button-4');
+  assert.equal(createTouchControlEvent({ action: 'rt', pressed: true }).control, 'button-7');
+  assert.equal(createTouchControlEvent({ action: 'l3', pressed: true }).control, 'button-10');
+  assert.equal(createTouchControlEvent({ action: 'r3', pressed: true }).control, 'button-11');
+  assert.throws(() => createTouchControlEvent({ action: '' }), /touch action/);
+});
+test('virtual touch sticks emit bounded paired axes and explicit release events', () => {
+  assert.deepEqual(createTouchStickEvents({ index: 0, x: 2, y: -2 }), [
+    {
+      type: 'input.event',
+      action: 'axis-0',
+      kind: 'axis',
+      source: 'touch',
+      control: 'axis-0',
+      pressed: true,
+      value: 1,
+    },
+    {
+      type: 'input.event',
+      action: 'axis-1',
+      kind: 'axis',
+      source: 'touch',
+      control: 'axis-1',
+      pressed: true,
+      value: -1,
+    },
+  ]);
+  assert.equal(
+    createTouchStickEvents({ index: 2, x: 0.5, y: 0, pressed: false })[0].pressed,
+    false,
+  );
+  assert.throws(() => createTouchStickEvents({ index: 1 }), /even axis/);
+});

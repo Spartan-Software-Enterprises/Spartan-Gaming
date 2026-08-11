@@ -1,7 +1,44 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createLanHandoffPayload, installLanHandoffListener} from './lan-handoff.mjs';
+import { createLanHandoffPayload, installLanHandoffListener } from './lan-handoff.mjs';
 
-const payload = {type: 'spartan.lan-handoff.v1', handoffId: 'handoff01', target: 'client', endpoint: 'ws://localhost:8787/session', sessionId: 'ses-lan-01', ticket: 'client-ticket'};
-test('LAN handoff validates target, endpoint, and bounded session metadata', () => { const normalized = createLanHandoffPayload(payload); assert.equal(normalized.target, 'client'); assert.equal(normalized.endpoint, 'ws://localhost:8787/session'); assert.throws(() => createLanHandoffPayload({...payload, target: 'viewer'}), /target/); assert.throws(() => createLanHandoffPayload({...payload, endpoint: 'ws://remote.example/session'}), /TLS/); });
-test('LAN handoff accepts only same-origin messages from the opener', () => { const listeners = new Map(); const opener = {}; const received = []; const child = {location: {origin: 'http://localhost'}, opener, addEventListener: (type, handler) => listeners.set(type, handler), removeEventListener: () => {}}; const close = installLanHandoffListener({windowImpl: child, handoffId: payload.handoffId, target: 'client', onHandoff: value => received.push(value)}); listeners.get('message')({origin: 'https://evil.example', source: opener, data: payload}); listeners.get('message')({origin: child.location.origin, source: {}, data: payload}); listeners.get('message')({origin: child.location.origin, source: opener, data: payload}); assert.equal(received.length, 1); close(); });
+const payload = {
+  type: 'spartan.lan-handoff.v1',
+  handoffId: 'handoff01',
+  target: 'client',
+  endpoint: 'ws://localhost:8787/session',
+  sessionId: 'ses-lan-01',
+  ticket: 'client-ticket',
+};
+test('LAN handoff validates target, endpoint, and bounded session metadata', () => {
+  const normalized = createLanHandoffPayload(payload);
+  assert.equal(normalized.target, 'client');
+  assert.equal(normalized.endpoint, 'ws://localhost:8787/session');
+  assert.throws(() => createLanHandoffPayload({ ...payload, target: 'viewer' }), /target/);
+  assert.throws(
+    () => createLanHandoffPayload({ ...payload, endpoint: 'ws://remote.example/session' }),
+    /TLS/,
+  );
+});
+test('LAN handoff accepts only same-origin messages from the opener', () => {
+  const listeners = new Map();
+  const opener = {};
+  const received = [];
+  const child = {
+    location: { origin: 'http://localhost' },
+    opener,
+    addEventListener: (type, handler) => listeners.set(type, handler),
+    removeEventListener: () => {},
+  };
+  const close = installLanHandoffListener({
+    windowImpl: child,
+    handoffId: payload.handoffId,
+    target: 'client',
+    onHandoff: (value) => received.push(value),
+  });
+  listeners.get('message')({ origin: 'https://evil.example', source: opener, data: payload });
+  listeners.get('message')({ origin: child.location.origin, source: {}, data: payload });
+  listeners.get('message')({ origin: child.location.origin, source: opener, data: payload });
+  assert.equal(received.length, 1);
+  close();
+});

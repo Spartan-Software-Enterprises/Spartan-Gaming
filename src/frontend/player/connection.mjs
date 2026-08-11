@@ -1,4 +1,6 @@
-function text(value) { return typeof value === 'string' ? value.trim() : ''; }
+function text(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
 
 export function normalizePlayerConnection(values = {}) {
   return Object.freeze({

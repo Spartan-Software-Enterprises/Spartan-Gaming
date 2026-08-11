@@ -1,1 +1,73 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Spartan Gaming — Emulation</title><link rel="stylesheet" href="./emulation.css"></head><body><main class="emu-shell"><header><a class="brand" href="../dashboard/index.html"><span class="mark">S</span><span>SPARTAN <small>GAMING</small></span></a><a class="back" href="../settings/index.html">Back to settings</a></header><section class="intro"><p class="eyebrow">EMULATION CENTER</p><h1>Cores &amp; your library</h1><p>Use signed runtime adapters with files you legally selected from your own collection. Spartan Gaming never ships ROMs, BIOS files, or firmware.</p></section><section class="content"><aside class="files panel"><div class="panel-head"><h2>Selected files</h2><span data-file-count>0 files</span></div><label class="file-button" data-game-folder-label>＋ Scan game folder<input data-game-folder type="file" webkitdirectory directory multiple></label><label class="file-button secondary">＋ Add game files<input data-game-files type="file" multiple></label><label class="file-button secondary">＋ Add BIOS / firmware<input data-firmware-files type="file" multiple></label><div data-file-list class="file-list"><p class="empty">No files selected. Your files stay local to this browser.</p></div><div class="saved-library"><div class="panel-head"><h2>Remembered collection</h2><button class="text-button" data-clear-library type="button">Clear</button></div><p class="library-note">Metadata only. Re-select files above after a reload to launch.</p><div data-library-list class="file-list"><p class="empty">No remembered files yet.</p></div></div></aside><section class="cores panel"><div class="panel-head"><div><p class="eyebrow">RUNTIME REGISTRY</p><h2>Available cores &amp; adapters</h2></div><span data-core-count>Loading…</span></div><div class="core-grid" data-core-list><p class="empty">Loading emulator catalog…</p></div></section></section><div class="notice" data-notice role="status" aria-live="polite"></div></main><script type="module" src="./emulation-page.mjs"></script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Spartan Gaming — Emulation</title>
+    <link rel="stylesheet" href="./emulation.css" />
+  </head>
+  <body>
+    <main class="emu-shell">
+      <header>
+        <a class="brand" href="../dashboard/index.html"
+          ><span class="mark">S</span><span>SPARTAN <small>GAMING</small></span></a
+        ><a class="back" href="../settings/index.html">Back to settings</a>
+      </header>
+      <section class="intro">
+        <p class="eyebrow">EMULATION CENTER</p>
+        <h1>Cores &amp; your library</h1>
+        <p>
+          Use signed runtime adapters with files you legally selected from your own collection.
+          Spartan Gaming never ships ROMs, BIOS files, or firmware.
+        </p>
+      </section>
+      <section class="content">
+        <aside class="files panel">
+          <div class="panel-head">
+            <h2>Selected files</h2>
+            <span data-file-count>0 files</span>
+          </div>
+          <label class="file-button" data-game-folder-label
+            >＋ Scan game folder<input
+              data-game-folder
+              type="file"
+              webkitdirectory
+              directory
+              multiple /></label
+          ><label class="file-button secondary"
+            >＋ Add game files<input data-game-files type="file" multiple /></label
+          ><label class="file-button secondary"
+            >＋ Add BIOS / firmware<input data-firmware-files type="file" multiple
+          /></label>
+          <div data-file-list class="file-list">
+            <p class="empty">No files selected. Your files stay local to this browser.</p>
+          </div>
+          <div class="saved-library">
+            <div class="panel-head">
+              <h2>Remembered collection</h2>
+              <button class="text-button" data-clear-library type="button">Clear</button>
+            </div>
+            <p class="library-note">
+              Metadata only. Re-select files above after a reload to launch.
+            </p>
+            <div data-library-list class="file-list">
+              <p class="empty">No remembered files yet.</p>
+            </div>
+          </div>
+        </aside>
+        <section class="cores panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">RUNTIME REGISTRY</p>
+              <h2>Available cores &amp; adapters</h2>
+            </div>
+            <span data-core-count>Loading…</span>
+          </div>
+          <div class="core-grid" data-core-list><p class="empty">Loading emulator catalog…</p></div>
+        </section>
+      </section>
+      <div class="notice" data-notice role="status" aria-live="polite"></div>
+    </main>
+    <script type="module" src="./emulation-page.mjs"></script>
+  </body>
+</html>

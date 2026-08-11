@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {createSignalingBroker} from '../signaling/broker.mjs';
+import { createSignalingBroker } from '../signaling/broker.mjs';
 
 const args = new Map();
 for (let index = 2; index < process.argv.length; index += 1) {
@@ -16,14 +16,30 @@ const subject = String(args.get('subject') || role || '');
 const ttlMs = args.get('ttl-ms') === undefined ? undefined : Number(args.get('ttl-ms'));
 
 if (!secret || !sessionId || !role || !subject) {
-  console.error('usage: issue-signaling-ticket.mjs --session <id> --role <client|host> [--subject <name>] [--ttl-ms <milliseconds>]');
+  console.error(
+    'usage: issue-signaling-ticket.mjs --session <id> --role <client|host> [--subject <name>] [--ttl-ms <milliseconds>]',
+  );
   process.exit(2);
 }
 
 try {
-  const broker = createSignalingBroker({secret});
-  const ticket = broker.issueTicket({sessionId, role, subject, ...(ttlMs === undefined ? {} : {ttlMs})});
-  console.log(JSON.stringify({version: 1, sessionId, role, subject, ttlMs: ttlMs ?? 10 * 60 * 1000, ticket}));
+  const broker = createSignalingBroker({ secret });
+  const ticket = broker.issueTicket({
+    sessionId,
+    role,
+    subject,
+    ...(ttlMs === undefined ? {} : { ttlMs }),
+  });
+  console.log(
+    JSON.stringify({
+      version: 1,
+      sessionId,
+      role,
+      subject,
+      ttlMs: ttlMs ?? 10 * 60 * 1000,
+      ticket,
+    }),
+  );
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;

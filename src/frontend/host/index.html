@@ -1,5 +1,64 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#10151b"><title>Spartan Gaming — Host Profiles</title><link rel="stylesheet" href="./host.css"></head>
-<body><main class="host-shell"><header><a class="brand" href="../dashboard/index.html"><span class="mark">S</span><span>SPARTAN <small>GAMING</small></span></a><a class="back" href="../settings/index.html">Settings</a></header><section class="heading"><p class="eyebrow">SELF-HOSTED PLAY</p><h1>Connect your own machines.</h1><p>Register a Spartan Host or compatible user-owned endpoint. Profiles contain connection preferences only; pairing codes are transient and credentials remain session-scoped.</p></section><section class="workspace"><aside class="host-list panel"><div class="panel-head"><h2>Host profiles</h2><span data-count></span></div><div data-hosts class="loading">Loading saved hosts…</div><button class="secondary" data-new>＋ Add host</button></aside><section class="panel"><div data-editor class="empty">Select a host profile or add a host to begin.</div></section></section><section class="notice"><h3>What is required?</h3><p>The frontend validates and prepares a pairing request. A running host agent and signaling endpoint are still required to complete a connection. Remote endpoints must use HTTPS/WSS; localhost and <code>.local</code> are permitted for development.</p><p><a class="secondary" href="./browser-studio.html">Open Browser Host Studio</a></p></section><section class="portable panel"><div><p class="eyebrow">PORTABLE PREFERENCES</p><h2>Export or import host profiles</h2><p>Endpoints and launch preferences only. No codes, tokens, or passwords.</p></div><div class="actions"><button class="secondary" data-export>Export</button><label class="secondary file-label">Import<input data-import type="file" accept="application/json"></label></div></section><div class="notice-toast" data-notice role="status" aria-live="polite"></div></main><script type="module" src="./host-page.mjs"></script></body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#10151b" />
+    <title>Spartan Gaming — Host Profiles</title>
+    <link rel="stylesheet" href="./host.css" />
+  </head>
+  <body>
+    <main class="host-shell">
+      <header>
+        <a class="brand" href="../dashboard/index.html"
+          ><span class="mark">S</span><span>SPARTAN <small>GAMING</small></span></a
+        ><a class="back" href="../settings/index.html">Settings</a>
+      </header>
+      <section class="heading">
+        <p class="eyebrow">SELF-HOSTED PLAY</p>
+        <h1>Connect your own machines.</h1>
+        <p>
+          Register a Spartan Host or compatible user-owned endpoint. Profiles contain connection
+          preferences only; pairing codes are transient and credentials remain session-scoped.
+        </p>
+      </section>
+      <section class="workspace">
+        <aside class="host-list panel">
+          <div class="panel-head">
+            <h2>Host profiles</h2>
+            <span data-count></span>
+          </div>
+          <div data-hosts class="loading">Loading saved hosts…</div>
+          <button class="secondary" data-new>＋ Add host</button>
+        </aside>
+        <section class="panel">
+          <div data-editor class="empty">Select a host profile or add a host to begin.</div>
+        </section>
+      </section>
+      <section class="notice">
+        <h3>What is required?</h3>
+        <p>
+          The frontend validates and prepares a pairing request. A running host agent and signaling
+          endpoint are still required to complete a connection. Remote endpoints must use HTTPS/WSS;
+          localhost and <code>.local</code> are permitted for development.
+        </p>
+        <p><a class="secondary" href="./browser-studio.html">Open Browser Host Studio</a></p>
+      </section>
+      <section class="portable panel">
+        <div>
+          <p class="eyebrow">PORTABLE PREFERENCES</p>
+          <h2>Export or import host profiles</h2>
+          <p>Endpoints and launch preferences only. No codes, tokens, or passwords.</p>
+        </div>
+        <div class="actions">
+          <button class="secondary" data-export>Export</button
+          ><label class="secondary file-label"
+            >Import<input data-import type="file" accept="application/json"
+          /></label>
+        </div>
+      </section>
+      <div class="notice-toast" data-notice role="status" aria-live="polite"></div>
+    </main>
+    <script type="module" src="./host-page.mjs"></script>
+  </body>
 </html>

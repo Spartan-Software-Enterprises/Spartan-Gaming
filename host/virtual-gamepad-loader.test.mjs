@@ -1,13 +1,141 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {loadVirtualGamepadAdapter} from './virtual-gamepad-loader.mjs';
-import {describeVirtualGamepadReadiness, normalizeVirtualGamepadConfig, virtualGamepadConfigFromSettings} from './virtual-gamepad-config.mjs';
+import { loadVirtualGamepadAdapter } from './virtual-gamepad-loader.mjs';
+import {
+  describeVirtualGamepadReadiness,
+  normalizeVirtualGamepadConfig,
+  virtualGamepadConfigFromSettings,
+} from './virtual-gamepad-config.mjs';
 
-test('virtual gamepad loader validates an explicitly allowed development package', async () => { const adapter = {platform: 'win32', execute() {}, close() {}}; const result = await loadVirtualGamepadAdapter({platform: 'win32', backend: 'Windows external driver', packageName: '@test/windows-virtual-gamepad', allowUnverified: true, loader: async name => { assert.equal(name, '@test/windows-virtual-gamepad'); return {createVirtualGamepad: async options => { assert.equal(options.platform, 'win32'); assert.equal(options.config.backend, 'Windows external driver'); return adapter; }}; }}); assert.equal(result.status, 'available'); assert.equal(result.readiness.state, 'ready'); assert.equal(result.capabilities.virtualGamepad, true); assert.equal(result.adapter, adapter); });
-test('virtual gamepad loader fails closed for unsigned, missing, or malformed packages', async () => { const unsigned = await loadVirtualGamepadAdapter({platform: 'darwin', packageName: '@test/unsigned'}); assert.equal(unsigned.status, 'unavailable'); assert.match(unsigned.reason, /verified installed runtime/); const missing = await loadVirtualGamepadAdapter({platform: 'darwin', packageName: '@test/missing', allowUnverified: true, loader: async () => { const error = new Error('missing'); error.code = 'ERR_MODULE_NOT_FOUND'; throw error; }}); assert.equal(missing.status, 'unavailable'); assert.match(missing.reason, /not installed/); const malformed = await loadVirtualGamepadAdapter({platform: 'darwin', packageName: '@test/malformed', allowUnverified: true, loader: async () => ({})}); assert.match(malformed.reason, /export createVirtualGamepad/); });
-test('virtual gamepad loader passes normalized device configuration to a verified runtime', async () => { let received; const result = await loadVirtualGamepadAdapter({platform: 'win32', packageName: 'windows-driver', backend: 'Windows external driver', deviceId: 'xinput-1', runtime: {async load({options}) { received = options; return {manifest: {id: 'verified-windows-driver'}, adapter: {platform: 'win32', execute() {}}}; }}}); assert.equal(result.status, 'available'); assert.equal(received.config.deviceId, 'xinput-1'); assert.equal(received.config.backend, 'Windows external driver'); });
+test('virtual gamepad loader validates an explicitly allowed development package', async () => {
+  const adapter = { platform: 'win32', execute() {}, close() {} };
+  const result = await loadVirtualGamepadAdapter({
+    platform: 'win32',
+    backend: 'Windows external driver',
+    packageName: '@test/windows-virtual-gamepad',
+    allowUnverified: true,
+    loader: async (name) => {
+      assert.equal(name, '@test/windows-virtual-gamepad');
+      return {
+        createVirtualGamepad: async (options) => {
+          assert.equal(options.platform, 'win32');
+          assert.equal(options.config.backend, 'Windows external driver');
+          return adapter;
+        },
+      };
+    },
+  });
+  assert.equal(result.status, 'available');
+  assert.equal(result.readiness.state, 'ready');
+  assert.equal(result.capabilities.virtualGamepad, true);
+  assert.equal(result.adapter, adapter);
+});
+test('virtual gamepad loader fails closed for unsigned, missing, or malformed packages', async () => {
+  const unsigned = await loadVirtualGamepadAdapter({
+    platform: 'darwin',
+    packageName: '@test/unsigned',
+  });
+  assert.equal(unsigned.status, 'unavailable');
+  assert.match(unsigned.reason, /verified installed runtime/);
+  const missing = await loadVirtualGamepadAdapter({
+    platform: 'darwin',
+    packageName: '@test/missing',
+    allowUnverified: true,
+    loader: async () => {
+      const error = new Error('missing');
+      error.code = 'ERR_MODULE_NOT_FOUND';
+      throw error;
+    },
+  });
+  assert.equal(missing.status, 'unavailable');
+  assert.match(missing.reason, /not installed/);
+  const malformed = await loadVirtualGamepadAdapter({
+    platform: 'darwin',
+    packageName: '@test/malformed',
+    allowUnverified: true,
+    loader: async () => ({}),
+  });
+  assert.match(malformed.reason, /export createVirtualGamepad/);
+});
+test('virtual gamepad loader passes normalized device configuration to a verified runtime', async () => {
+  let received;
+  const result = await loadVirtualGamepadAdapter({
+    platform: 'win32',
+    packageName: 'windows-driver',
+    backend: 'Windows external driver',
+    deviceId: 'xinput-1',
+    runtime: {
+      async load({ options }) {
+        received = options;
+        return {
+          manifest: { id: 'verified-windows-driver' },
+          adapter: { platform: 'win32', execute() {} },
+        };
+      },
+    },
+  });
+  assert.equal(result.status, 'available');
+  assert.equal(received.config.deviceId, 'xinput-1');
+  assert.equal(received.config.backend, 'Windows external driver');
+});
 
-test('virtual gamepad configuration selects a compatible backend and readiness', () => { const windows = normalizeVirtualGamepadConfig({platform: 'win32', backend: 'Windows external driver', packageName: '@spartan/windows-driver'}); assert.equal(windows.compatible, true); assert.deepEqual(windows.requires, ['native-input-package', 'operator-installed-virtual-gamepad-driver']); assert.equal(describeVirtualGamepadReadiness({config: windows}).state, 'unconfigured'); assert.equal(normalizeVirtualGamepadConfig({platform: 'linux', backend: 'Linux uinput'}).packageName, null); });
-test('virtual gamepad configuration rejects unsafe and cross-platform choices', () => { assert.equal(normalizeVirtualGamepadConfig({platform: 'darwin', backend: 'Windows external driver'}).compatible, false); assert.throws(() => normalizeVirtualGamepadConfig({platform: 'win32', packageName: 'file:///tmp/driver'}), /valid package/); assert.equal(describeVirtualGamepadReadiness({config: normalizeVirtualGamepadConfig({platform: 'darwin', backend: 'Windows external driver'})}).state, 'unavailable'); });
-test('virtual gamepad settings map to portable host configuration', () => { const config = virtualGamepadConfigFromSettings({platform: 'darwin', settings: {'controllers.virtualGamepadBackend': 'macOS external driver', 'controllers.virtualGamepadPackage': '@spartan/macos-driver', 'controllers.virtualGamepadDevice': 'dualshock-1'}}); assert.equal(config.packageName, '@spartan/macos-driver'); assert.equal(config.deviceId, 'dualshock-1'); });
-test('virtual gamepad settings preserve bounded multi-controller slot IDs', () => { const config = virtualGamepadConfigFromSettings({platform: 'win32', settings: {'controllers.virtualGamepadBackend': 'Windows external driver', 'controllers.virtualGamepadDevices': 'xinput-0, xinput-1, xinput-0'}}); assert.deepEqual(config.deviceIds, ['xinput-0', 'xinput-1']); assert.equal(config.deviceId, 'xinput-0'); });
+test('virtual gamepad configuration selects a compatible backend and readiness', () => {
+  const windows = normalizeVirtualGamepadConfig({
+    platform: 'win32',
+    backend: 'Windows external driver',
+    packageName: '@spartan/windows-driver',
+  });
+  assert.equal(windows.compatible, true);
+  assert.deepEqual(windows.requires, [
+    'native-input-package',
+    'operator-installed-virtual-gamepad-driver',
+  ]);
+  assert.equal(describeVirtualGamepadReadiness({ config: windows }).state, 'unconfigured');
+  assert.equal(
+    normalizeVirtualGamepadConfig({ platform: 'linux', backend: 'Linux uinput' }).packageName,
+    null,
+  );
+});
+test('virtual gamepad configuration rejects unsafe and cross-platform choices', () => {
+  assert.equal(
+    normalizeVirtualGamepadConfig({ platform: 'darwin', backend: 'Windows external driver' })
+      .compatible,
+    false,
+  );
+  assert.throws(
+    () => normalizeVirtualGamepadConfig({ platform: 'win32', packageName: 'file:///tmp/driver' }),
+    /valid package/,
+  );
+  assert.equal(
+    describeVirtualGamepadReadiness({
+      config: normalizeVirtualGamepadConfig({
+        platform: 'darwin',
+        backend: 'Windows external driver',
+      }),
+    }).state,
+    'unavailable',
+  );
+});
+test('virtual gamepad settings map to portable host configuration', () => {
+  const config = virtualGamepadConfigFromSettings({
+    platform: 'darwin',
+    settings: {
+      'controllers.virtualGamepadBackend': 'macOS external driver',
+      'controllers.virtualGamepadPackage': '@spartan/macos-driver',
+      'controllers.virtualGamepadDevice': 'dualshock-1',
+    },
+  });
+  assert.equal(config.packageName, '@spartan/macos-driver');
+  assert.equal(config.deviceId, 'dualshock-1');
+});
+test('virtual gamepad settings preserve bounded multi-controller slot IDs', () => {
+  const config = virtualGamepadConfigFromSettings({
+    platform: 'win32',
+    settings: {
+      'controllers.virtualGamepadBackend': 'Windows external driver',
+      'controllers.virtualGamepadDevices': 'xinput-0, xinput-1, xinput-0',
+    },
+  });
+  assert.deepEqual(config.deviceIds, ['xinput-0', 'xinput-1']);
+  assert.equal(config.deviceId, 'xinput-0');
+});

@@ -12,7 +12,8 @@ export function normalizeGlobalShortcut(value) {
 
 export function describeElectronRuntimeResult(result) {
   const shortcut = result?.globalShortcutStatus;
-  if (shortcut?.status === 'unavailable') return 'Saved locally; desktop shortcut is unavailable or already in use.';
+  if (shortcut?.status === 'unavailable')
+    return 'Saved locally; desktop shortcut is unavailable or already in use.';
   if (shortcut?.status === 'registered') return `Saved locally; ${shortcut.accelerator} is active.`;
   return 'Saved locally';
 }

@@ -1,12 +1,103 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {classifyNetworkHealth, createQualityController, createQualityProfiles, findQualityProfile, normalizeHealthTelemetry} from './quality.mjs';
+import {
+  classifyNetworkHealth,
+  createQualityController,
+  createQualityProfiles,
+  findQualityProfile,
+  normalizeHealthTelemetry,
+} from './quality.mjs';
 
-test('health telemetry is bounded and normalized', () => { const health = normalizeHealthTelemetry({rttMs: -4, packetLossPct: 120, framesDropped: 2.8, bitrateKbps: 1250000, decodeFps: 58, timestamp: 'now'}); assert.equal(health.rttMs, 0); assert.equal(health.packetLossPct, 100); assert.equal(health.frameDrops, 2); assert.equal(health.bandwidthKbps, 1000000); assert.equal(health.decodeFps, 58); });
-test('network health classification identifies degradation', () => { assert.equal(classifyNetworkHealth({rttMs: 240}), 'poor'); assert.equal(classifyNetworkHealth({packetLossPct: 2.5}), 'fair'); assert.equal(classifyNetworkHealth({rttMs: 30}), 'good'); });
-test('network health consumes WebRTC bitrate and decode-rate telemetry', () => { assert.equal(classifyNetworkHealth({bitrateKbps: 2500}), 'poor'); assert.equal(classifyNetworkHealth({decodeFps: 40}), 'fair'); assert.equal(classifyNetworkHealth({bitrateKbps: 9000, decodeFps: 60}), 'good'); });
-test('quality controller downgrades quickly and upgrades with hysteresis', () => { const controller = createQualityController({initialProfile: 'balanced', upgradeAfter: 2}); assert.equal(controller.profile.id, 'balanced'); assert.equal(controller.ingest({packetLossPct: 8}).profile.id, 'low'); assert.equal(controller.ingest({rttMs: 20}).changed, false); assert.equal(controller.ingest({rttMs: 20}).profile.id, 'balanced'); assert.equal(controller.request().type, 'quality.request'); });
-test('quality controller accepts explicit profiles and rejects unknown profiles', () => { const controller = createQualityController(); assert.equal(controller.setProfile('high').profile.id, 'high'); assert.equal(controller.request().maxWidth, 2560); assert.throws(() => controller.setProfile('invalid'), /unknown quality profile/); });
-test('quality profiles honor user stream ceilings while preserving adaptive tiers', () => { const profiles = createQualityProfiles({maxWidth: 1280, maxHeight: 720, maxFramerate: 30, bitrateKbps: 5000}); const controller = createQualityController({initialProfile: 'high', profiles}); assert.equal(controller.profile.id, 'high'); assert.deepEqual(controller.request(), {type: 'quality.request', profile: 'high', maxWidth: 1280, maxHeight: 720, maxFramerate: 30, bitrateKbps: 5000}); assert.equal(profiles.length, 5); });
-test('quality profile lookup uses bounded session profiles for presentation', () => { const profiles = createQualityProfiles({maxWidth: 1280, maxHeight: 720, maxFramerate: 30, bitrateKbps: 5000}); assert.equal(findQualityProfile(profiles, 'ultra').maxWidth, 1280); assert.equal(findQualityProfile(profiles, 'missing').id, 'balanced'); });
-test('quality controller honors independent adaptive bitrate and resolution toggles', () => { const bitrateFixed = createQualityController({initialProfile: 'balanced', adaptiveBitrate: false}); bitrateFixed.ingest({packetLossPct: 8}); assert.equal(bitrateFixed.profile.id, 'low'); assert.equal(bitrateFixed.request().bitrateKbps, 10000); assert.equal(bitrateFixed.request().maxWidth, 1280); const resolutionFixed = createQualityController({initialProfile: 'balanced', adaptiveResolution: false}); resolutionFixed.ingest({packetLossPct: 8}); assert.equal(resolutionFixed.profile.id, 'low'); assert.equal(resolutionFixed.request().maxWidth, 1920); assert.equal(resolutionFixed.request().bitrateKbps, 6000); const disabled = createQualityController({initialProfile: 'balanced', adaptiveBitrate: false, adaptiveResolution: false}); assert.equal(disabled.ingest({packetLossPct: 8}).reason, 'adaptive-disabled'); assert.equal(disabled.profile.id, 'balanced'); });
+test('health telemetry is bounded and normalized', () => {
+  const health = normalizeHealthTelemetry({
+    rttMs: -4,
+    packetLossPct: 120,
+    framesDropped: 2.8,
+    bitrateKbps: 1250000,
+    decodeFps: 58,
+    timestamp: 'now',
+  });
+  assert.equal(health.rttMs, 0);
+  assert.equal(health.packetLossPct, 100);
+  assert.equal(health.frameDrops, 2);
+  assert.equal(health.bandwidthKbps, 1000000);
+  assert.equal(health.decodeFps, 58);
+});
+test('network health classification identifies degradation', () => {
+  assert.equal(classifyNetworkHealth({ rttMs: 240 }), 'poor');
+  assert.equal(classifyNetworkHealth({ packetLossPct: 2.5 }), 'fair');
+  assert.equal(classifyNetworkHealth({ rttMs: 30 }), 'good');
+});
+test('network health consumes WebRTC bitrate and decode-rate telemetry', () => {
+  assert.equal(classifyNetworkHealth({ bitrateKbps: 2500 }), 'poor');
+  assert.equal(classifyNetworkHealth({ decodeFps: 40 }), 'fair');
+  assert.equal(classifyNetworkHealth({ bitrateKbps: 9000, decodeFps: 60 }), 'good');
+});
+test('quality controller downgrades quickly and upgrades with hysteresis', () => {
+  const controller = createQualityController({ initialProfile: 'balanced', upgradeAfter: 2 });
+  assert.equal(controller.profile.id, 'balanced');
+  assert.equal(controller.ingest({ packetLossPct: 8 }).profile.id, 'low');
+  assert.equal(controller.ingest({ rttMs: 20 }).changed, false);
+  assert.equal(controller.ingest({ rttMs: 20 }).profile.id, 'balanced');
+  assert.equal(controller.request().type, 'quality.request');
+});
+test('quality controller accepts explicit profiles and rejects unknown profiles', () => {
+  const controller = createQualityController();
+  assert.equal(controller.setProfile('high').profile.id, 'high');
+  assert.equal(controller.request().maxWidth, 2560);
+  assert.throws(() => controller.setProfile('invalid'), /unknown quality profile/);
+});
+test('quality profiles honor user stream ceilings while preserving adaptive tiers', () => {
+  const profiles = createQualityProfiles({
+    maxWidth: 1280,
+    maxHeight: 720,
+    maxFramerate: 30,
+    bitrateKbps: 5000,
+  });
+  const controller = createQualityController({ initialProfile: 'high', profiles });
+  assert.equal(controller.profile.id, 'high');
+  assert.deepEqual(controller.request(), {
+    type: 'quality.request',
+    profile: 'high',
+    maxWidth: 1280,
+    maxHeight: 720,
+    maxFramerate: 30,
+    bitrateKbps: 5000,
+  });
+  assert.equal(profiles.length, 5);
+});
+test('quality profile lookup uses bounded session profiles for presentation', () => {
+  const profiles = createQualityProfiles({
+    maxWidth: 1280,
+    maxHeight: 720,
+    maxFramerate: 30,
+    bitrateKbps: 5000,
+  });
+  assert.equal(findQualityProfile(profiles, 'ultra').maxWidth, 1280);
+  assert.equal(findQualityProfile(profiles, 'missing').id, 'balanced');
+});
+test('quality controller honors independent adaptive bitrate and resolution toggles', () => {
+  const bitrateFixed = createQualityController({
+    initialProfile: 'balanced',
+    adaptiveBitrate: false,
+  });
+  bitrateFixed.ingest({ packetLossPct: 8 });
+  assert.equal(bitrateFixed.profile.id, 'low');
+  assert.equal(bitrateFixed.request().bitrateKbps, 10000);
+  assert.equal(bitrateFixed.request().maxWidth, 1280);
+  const resolutionFixed = createQualityController({
+    initialProfile: 'balanced',
+    adaptiveResolution: false,
+  });
+  resolutionFixed.ingest({ packetLossPct: 8 });
+  assert.equal(resolutionFixed.profile.id, 'low');
+  assert.equal(resolutionFixed.request().maxWidth, 1920);
+  assert.equal(resolutionFixed.request().bitrateKbps, 6000);
+  const disabled = createQualityController({
+    initialProfile: 'balanced',
+    adaptiveBitrate: false,
+    adaptiveResolution: false,
+  });
+  assert.equal(disabled.ingest({ packetLossPct: 8 }).reason, 'adaptive-disabled');
+  assert.equal(disabled.profile.id, 'balanced');
+});

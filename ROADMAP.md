@@ -9,6 +9,16 @@
 - [x] Define browser/server/host repository boundaries.
 - [x] Publish initial contributor setup contract for Linux, Windows, and macOS.
 
+## Public release acceptance gates
+
+- [ ] Maintain passing Prettier, repository, serial, Electron, Android, and cross-platform packaging checks on the release commit.
+- [ ] Run repeatable Playwright interaction and screenshot comparisons for every maintained application route at desktop, handheld, mobile, and television layouts.
+- [ ] Visually inspect the packaged application on real Windows, Linux, SteamOS/Steam Deck, Android, Fire TV, ChromeOS, and every other claimed device class; record platform-specific screenshots and interaction evidence.
+- [ ] Verify keyboard, mouse, touch, remote, and every supported controller family across navigation, text entry, gameplay, overlays, settings, and recovery flows.
+- [ ] Verify cold start, local library/settings/controller workflows, and locally installed runtimes with networking disabled.
+- [ ] Verify provider sign-in, sign-out, restart persistence, expired-session recovery, and account switching for every supported cloud-gaming service.
+- [ ] Complete signed installers, update/rollback, accessibility, crash recovery, performance, long-session stability, capture/audio/input, and release-candidate regression testing before any public-complete claim.
+
 ## Milestone 1: standalone application shell
 
 - [x] Gaming dashboard and library shell with catalog search, filters, favorites, and launch handoffs.

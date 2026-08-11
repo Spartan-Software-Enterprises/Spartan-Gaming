@@ -1,14 +1,129 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createCapturePlan, createEncoderPlan, createFfmpegEncoderProbe, listCaptureBackends, listFfmpegEncoders, resolveFfmpegCommand, selectHardwareEncoder, validateCapturePermission} from './media.mjs';
+import {
+  createCapturePlan,
+  createEncoderPlan,
+  createFfmpegEncoderProbe,
+  listCaptureBackends,
+  listFfmpegEncoders,
+  resolveFfmpegCommand,
+  selectHardwareEncoder,
+  validateCapturePermission,
+} from './media.mjs';
 
-test('capture backend matrix is platform-specific and plan-only', () => { assert.deepEqual(listCaptureBackends('linux').map(item => item.sourceType), ['x11', 'pipewire']); assert.equal(listCaptureBackends('darwin')[0].status, 'plan-only'); assert.equal(listCaptureBackends('android').length, 0); });
-test('capture plans validate permission context and never use a shell', () => { const plan = createCapturePlan({platform: 'linux', sourceType: 'x11', source: ':0.0', environment: {DISPLAY: ':0'}}); assert.equal(plan.process.shell, false); assert.ok(plan.process.args.includes('x11grab')); assert.throws(() => createCapturePlan({platform: 'linux', sourceType: 'x11', source: ':0.0'}), /DISPLAY/); });
-test('capture and encoder plans accept a bounded shell-free FFmpeg executable override', () => { const command = '/opt/spartan/bin/ffmpeg-wrapper'; assert.equal(resolveFfmpegCommand({SPARTAN_FFMPEG_COMMAND: command}), command); assert.equal(createCapturePlan({platform: 'linux', sourceType: 'x11', source: ':0.0', environment: {DISPLAY: ':0', SPARTAN_FFMPEG_COMMAND: command}}).process.executable, command); assert.equal(createEncoderPlan({codec: 'h264', preferHardware: false, ffmpegCommand: command}).process.executable, command); assert.throws(() => resolveFfmpegCommand({SPARTAN_FFMPEG_COMMAND: 'ffmpeg --version'}), /shell-free/); });
-test('capture permission and encoder plans fail closed', () => { assert.equal(validateCapturePermission({platform: 'darwin', sourceType: 'avfoundation'}).allowed, false); const plan = createEncoderPlan({codec: 'vp9', bitrateKbps: 6000, preferHardware: false}); assert.equal(plan.process.args.includes('libvpx-vp9'), true); assert.equal(plan.preference, 'software'); assert.throws(() => createEncoderPlan({codec: 'mpeg2'}), /unsupported/); });
-test('encoder plans select confirmed hardware encoders with bounded device args', () => { const probe = encoder => ['h264_vaapi', 'h264_nvenc'].includes(encoder); const plan = createEncoderPlan({codec: 'h264', platform: 'linux', probe}); assert.equal(plan.hardware, true); assert.equal(plan.preference, 'hardware'); assert.equal(plan.encoder, 'h264_vaapi'); assert.ok(plan.device); assert.ok(plan.process.args.includes('-vaapi_device')); assert.ok(plan.process.args.includes('format=nv12,hwupload')); assert.deepEqual(plan.requires, ['hardware-encoder-device', 'webrtc-publisher']); });
-test('hardware encoder selection falls back to software without a confirming probe', () => { const plan = createEncoderPlan({codec: 'h264', platform: 'linux', probe: encoder => false}); assert.equal(plan.hardware, false); assert.equal(plan.encoder, 'libx264'); assert.equal(plan.preference, 'hardware-when-platform-adapter-provides-it'); const direct = selectHardwareEncoder({codec: 'h264', platform: 'linux', probe: encoder => encoder === 'h264_vaapi'}); assert.equal(direct.encoder, 'h264_vaapi'); assert.equal(selectHardwareEncoder({codec: 'av1', platform: 'darwin', probe: encoder => false}), null); });
-test('FFmpeg encoder probe parses encoder listings and confirms hardware encoders', () => { const output = ` V....D h264_vaapi            H.264/AVC (VAAPI) (codec h264)\n V..... h264_v4l2m2m         V4L2 mem2mem H.264 encoder wrapper (codec h264)\n A..... libopus              Opus (codec opus)\n V....D av1_vaapi            AV1 (VAAPI) (codec av1)\n`; const names = listFfmpegEncoders(output); assert.deepEqual(names, ['h264_vaapi', 'h264_v4l2m2m', 'libopus', 'av1_vaapi']); const probe = createFfmpegEncoderProbe({run: () => output}); assert.equal(probe('h264_vaapi'), true); assert.equal(probe('h264_nvenc'), false); assert.equal(listFfmpegEncoders('').length, 0); });
-test('encoder plans emit the codec elementary stream the RTP packetizer consumes', () => { const h264 = createEncoderPlan({codec: 'h264', preferHardware: false}); assert.equal(h264.outputFormat, 'h264'); assert.deepEqual(h264.process.args.slice(-3), ['-f', 'h264', 'pipe:1']); const av1 = createEncoderPlan({codec: 'av1', preferHardware: false}); assert.equal(av1.outputFormat, 'obu'); assert.deepEqual(av1.process.args.slice(-3), ['-f', 'obu', 'pipe:1']); const vp9 = createEncoderPlan({codec: 'vp9', preferHardware: false}); assert.equal(vp9.outputFormat, 'ivf'); assert.deepEqual(vp9.process.args.slice(-3), ['-f', 'ivf', 'pipe:1']); const matroska = createEncoderPlan({codec: 'h264', preferHardware: false, outputFormat: 'matroska'}); assert.equal(matroska.outputFormat, 'matroska'); assert.deepEqual(matroska.process.args.slice(-3), ['-f', 'matroska', 'pipe:1']); });
+test('capture backend matrix is platform-specific and plan-only', () => {
+  assert.deepEqual(
+    listCaptureBackends('linux').map((item) => item.sourceType),
+    ['x11', 'pipewire'],
+  );
+  assert.equal(listCaptureBackends('darwin')[0].status, 'plan-only');
+  assert.equal(listCaptureBackends('android').length, 0);
+});
+test('capture plans validate permission context and never use a shell', () => {
+  const plan = createCapturePlan({
+    platform: 'linux',
+    sourceType: 'x11',
+    source: ':0.0',
+    environment: { DISPLAY: ':0' },
+  });
+  assert.equal(plan.process.shell, false);
+  assert.ok(plan.process.args.includes('x11grab'));
+  assert.throws(
+    () => createCapturePlan({ platform: 'linux', sourceType: 'x11', source: ':0.0' }),
+    /DISPLAY/,
+  );
+});
+test('capture and encoder plans accept a bounded shell-free FFmpeg executable override', () => {
+  const command = '/opt/spartan/bin/ffmpeg-wrapper';
+  assert.equal(resolveFfmpegCommand({ SPARTAN_FFMPEG_COMMAND: command }), command);
+  assert.equal(
+    createCapturePlan({
+      platform: 'linux',
+      sourceType: 'x11',
+      source: ':0.0',
+      environment: { DISPLAY: ':0', SPARTAN_FFMPEG_COMMAND: command },
+    }).process.executable,
+    command,
+  );
+  assert.equal(
+    createEncoderPlan({ codec: 'h264', preferHardware: false, ffmpegCommand: command }).process
+      .executable,
+    command,
+  );
+  assert.throws(
+    () => resolveFfmpegCommand({ SPARTAN_FFMPEG_COMMAND: 'ffmpeg --version' }),
+    /shell-free/,
+  );
+});
+test('capture permission and encoder plans fail closed', () => {
+  assert.equal(
+    validateCapturePermission({ platform: 'darwin', sourceType: 'avfoundation' }).allowed,
+    false,
+  );
+  const plan = createEncoderPlan({ codec: 'vp9', bitrateKbps: 6000, preferHardware: false });
+  assert.equal(plan.process.args.includes('libvpx-vp9'), true);
+  assert.equal(plan.preference, 'software');
+  assert.throws(() => createEncoderPlan({ codec: 'mpeg2' }), /unsupported/);
+});
+test('encoder plans select confirmed hardware encoders with bounded device args', () => {
+  const probe = (encoder) => ['h264_vaapi', 'h264_nvenc'].includes(encoder);
+  const plan = createEncoderPlan({ codec: 'h264', platform: 'linux', probe });
+  assert.equal(plan.hardware, true);
+  assert.equal(plan.preference, 'hardware');
+  assert.equal(plan.encoder, 'h264_vaapi');
+  assert.ok(plan.device);
+  assert.ok(plan.process.args.includes('-vaapi_device'));
+  assert.ok(plan.process.args.includes('format=nv12,hwupload'));
+  assert.deepEqual(plan.requires, ['hardware-encoder-device', 'webrtc-publisher']);
+});
+test('hardware encoder selection falls back to software without a confirming probe', () => {
+  const plan = createEncoderPlan({ codec: 'h264', platform: 'linux', probe: (encoder) => false });
+  assert.equal(plan.hardware, false);
+  assert.equal(plan.encoder, 'libx264');
+  assert.equal(plan.preference, 'hardware-when-platform-adapter-provides-it');
+  const direct = selectHardwareEncoder({
+    codec: 'h264',
+    platform: 'linux',
+    probe: (encoder) => encoder === 'h264_vaapi',
+  });
+  assert.equal(direct.encoder, 'h264_vaapi');
+  assert.equal(
+    selectHardwareEncoder({ codec: 'av1', platform: 'darwin', probe: (encoder) => false }),
+    null,
+  );
+});
+test('FFmpeg encoder probe parses encoder listings and confirms hardware encoders', () => {
+  const output = ` V....D h264_vaapi            H.264/AVC (VAAPI) (codec h264)\n V..... h264_v4l2m2m         V4L2 mem2mem H.264 encoder wrapper (codec h264)\n A..... libopus              Opus (codec opus)\n V....D av1_vaapi            AV1 (VAAPI) (codec av1)\n`;
+  const names = listFfmpegEncoders(output);
+  assert.deepEqual(names, ['h264_vaapi', 'h264_v4l2m2m', 'libopus', 'av1_vaapi']);
+  const probe = createFfmpegEncoderProbe({ run: () => output });
+  assert.equal(probe('h264_vaapi'), true);
+  assert.equal(probe('h264_nvenc'), false);
+  assert.equal(listFfmpegEncoders('').length, 0);
+});
+test('encoder plans emit the codec elementary stream the RTP packetizer consumes', () => {
+  const h264 = createEncoderPlan({ codec: 'h264', preferHardware: false });
+  assert.equal(h264.outputFormat, 'h264');
+  assert.deepEqual(h264.process.args.slice(-3), ['-f', 'h264', 'pipe:1']);
+  const av1 = createEncoderPlan({ codec: 'av1', preferHardware: false });
+  assert.equal(av1.outputFormat, 'obu');
+  assert.deepEqual(av1.process.args.slice(-3), ['-f', 'obu', 'pipe:1']);
+  const vp9 = createEncoderPlan({ codec: 'vp9', preferHardware: false });
+  assert.equal(vp9.outputFormat, 'ivf');
+  assert.deepEqual(vp9.process.args.slice(-3), ['-f', 'ivf', 'pipe:1']);
+  const matroska = createEncoderPlan({
+    codec: 'h264',
+    preferHardware: false,
+    outputFormat: 'matroska',
+  });
+  assert.equal(matroska.outputFormat, 'matroska');
+  assert.deepEqual(matroska.process.args.slice(-3), ['-f', 'matroska', 'pipe:1']);
+});
 
-test('FFmpeg encoder probe fails closed when the listing cannot be read', () => { const probe = createFfmpegEncoderProbe({run: () => null}); assert.equal(probe('h264_vaapi'), false); const plan = createEncoderPlan({codec: 'h264', platform: 'linux', probe}); assert.equal(plan.hardware, false); assert.equal(plan.encoder, 'libx264'); });
+test('FFmpeg encoder probe fails closed when the listing cannot be read', () => {
+  const probe = createFfmpegEncoderProbe({ run: () => null });
+  assert.equal(probe('h264_vaapi'), false);
+  const plan = createEncoderPlan({ codec: 'h264', platform: 'linux', probe });
+  assert.equal(plan.hardware, false);
+  assert.equal(plan.encoder, 'libx264');
+});

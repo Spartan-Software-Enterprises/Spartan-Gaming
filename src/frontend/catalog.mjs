@@ -54,7 +54,8 @@ function validateEntry(entry, source) {
     assertArray(entry.integrationModes, 'integrationModes', id);
     assertArray(entry.capabilities, 'capabilities', id);
     assertString(entry.url, 'url', id);
-    if (source === 'game' && !/^https:\/\//i.test(entry.url)) throw new TypeError(`${id}: browser-game url must use HTTPS`);
+    if (source === 'game' && !/^https:\/\//i.test(entry.url))
+      throw new TypeError(`${id}: browser-game url must use HTTPS`);
     assertArray(entry.requirements, 'requirements', id);
     if (source === 'game') {
       assertArray(entry.genres, 'genres', id);
@@ -84,10 +85,13 @@ function normalize(entry, source) {
     integrationModes: Object.freeze([...integrationModes]),
     capabilities: Object.freeze([...capabilities]),
     ...(source === 'provider'
-      ? {requirements: Object.freeze([...entry.requirements])}
+      ? { requirements: Object.freeze([...entry.requirements]) }
       : source === 'game'
-        ? {requirements: Object.freeze([...entry.requirements]), systems: Object.freeze([...entry.genres])}
-      : {systems: Object.freeze([...entry.systems])}),
+        ? {
+            requirements: Object.freeze([...entry.requirements]),
+            systems: Object.freeze([...entry.genres]),
+          }
+        : { systems: Object.freeze([...entry.systems]) }),
   });
 }
 
@@ -95,7 +99,7 @@ function normalize(entry, source) {
  * Build the frontend's single backend catalog from provider and emulator manifests.
  * The returned entries are immutable so UI state cannot mutate the source manifests.
  */
-export function createFrontendCatalog({providers = [], emulators = [], games = []} = {}) {
+export function createFrontendCatalog({ providers = [], emulators = [], games = [] } = {}) {
   const entries = [
     ...providers.map((entry) => normalize(entry, 'provider')),
     ...emulators.map((entry) => normalize(entry, 'emulator')),
@@ -112,12 +116,13 @@ export function createFrontendCatalog({providers = [], emulators = [], games = [
     get(id) {
       return byId.get(id);
     },
-    find({backendType, kind, capability, supportLevel} = {}) {
-      return entries.filter((entry) =>
-        (!backendType || entry.backendType === backendType) &&
-        (!kind || entry.kind === kind) &&
-        (!capability || entry.capabilities.includes(capability)) &&
-        (!supportLevel || entry.supportLevel === supportLevel),
+    find({ backendType, kind, capability, supportLevel } = {}) {
+      return entries.filter(
+        (entry) =>
+          (!backendType || entry.backendType === backendType) &&
+          (!kind || entry.kind === kind) &&
+          (!capability || entry.capabilities.includes(capability)) &&
+          (!supportLevel || entry.supportLevel === supportLevel),
       );
     },
   });

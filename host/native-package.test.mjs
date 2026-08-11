@@ -1,7 +1,100 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createNativePackageBuildPlan, nativePackageReadiness, normalizeNativePackageManifest} from './native-package.mjs';
+import {
+  createNativePackageBuildPlan,
+  nativePackageReadiness,
+  normalizeNativePackageManifest,
+} from './native-package.mjs';
 
-test('native package manifest covers one CMake node-addon per desktop platform', () => { const manifest = normalizeNativePackageManifest({schemaVersion: 1, buildSystem: 'cmake', packages: [{id: 'windows', platform: 'win32', packageName: '@spartan-gaming/native-windows', format: 'node-addon', requiredApis: ['SendInput'], sourceDirectory: 'native/windows', artifactName: 'windows.node'}, {id: 'macos', platform: 'darwin', packageName: '@spartan-gaming/native-macos', format: 'node-addon', requiredApis: ['CGEvent'], sourceDirectory: 'native/macos', artifactName: 'macos.node'}, {id: 'linux', platform: 'linux', packageName: '@spartan-gaming/native-linux', format: 'node-addon', requiredApis: ['uinput'], sourceDirectory: 'native/linux', artifactName: 'linux.node'}]}); assert.equal(manifest.packages.length, 3); });
-test('native package build plans are shell-free command descriptions with isolated outputs', () => { const plan = createNativePackageBuildPlan({platform: 'linux', sourceRoot: '/tmp/spartan-source', outRoot: '/tmp/spartan-build', installRoot: '/tmp/spartan-install', manifest: {schemaVersion: 1, buildSystem: 'cmake', packages: [{id: 'linux', platform: 'linux', packageName: '@spartan-gaming/native-linux', format: 'node-addon', requiredApis: ['uinput'], sourceDirectory: 'native/linux', artifactName: 'linux.node'}]}}); assert.equal(plan.commands[0].program, 'cmake'); assert.deepEqual(plan.commands[1].args.slice(0, 3), ['--build', plan.out, '--config']); assert.notEqual(plan.source, plan.out); });
-test('native package readiness distinguishes planned packages from installed packages', () => { const manifest = {schemaVersion: 1, buildSystem: 'cmake', packages: [{id: 'linux', platform: 'linux', packageName: '@spartan-gaming/native-linux', format: 'node-addon', requiredApis: ['uinput'], sourceDirectory: 'native/linux', artifactName: 'linux.node'}]}; const planned = nativePackageReadiness({manifest, platform: 'linux', toolProbe: name => name === 'cmake'}); assert.equal(planned.status, 'planned'); assert.equal(planned.cmakeAvailable, true); const ready = nativePackageReadiness({manifest, platform: 'linux', packageProbe: name => name === '@spartan-gaming/native-linux'}); assert.equal(ready.status, 'ready'); });
+test('native package manifest covers one CMake node-addon per desktop platform', () => {
+  const manifest = normalizeNativePackageManifest({
+    schemaVersion: 1,
+    buildSystem: 'cmake',
+    packages: [
+      {
+        id: 'windows',
+        platform: 'win32',
+        packageName: '@spartan-gaming/native-windows',
+        format: 'node-addon',
+        requiredApis: ['SendInput'],
+        sourceDirectory: 'native/windows',
+        artifactName: 'windows.node',
+      },
+      {
+        id: 'macos',
+        platform: 'darwin',
+        packageName: '@spartan-gaming/native-macos',
+        format: 'node-addon',
+        requiredApis: ['CGEvent'],
+        sourceDirectory: 'native/macos',
+        artifactName: 'macos.node',
+      },
+      {
+        id: 'linux',
+        platform: 'linux',
+        packageName: '@spartan-gaming/native-linux',
+        format: 'node-addon',
+        requiredApis: ['uinput'],
+        sourceDirectory: 'native/linux',
+        artifactName: 'linux.node',
+      },
+    ],
+  });
+  assert.equal(manifest.packages.length, 3);
+});
+test('native package build plans are shell-free command descriptions with isolated outputs', () => {
+  const plan = createNativePackageBuildPlan({
+    platform: 'linux',
+    sourceRoot: '/tmp/spartan-source',
+    outRoot: '/tmp/spartan-build',
+    installRoot: '/tmp/spartan-install',
+    manifest: {
+      schemaVersion: 1,
+      buildSystem: 'cmake',
+      packages: [
+        {
+          id: 'linux',
+          platform: 'linux',
+          packageName: '@spartan-gaming/native-linux',
+          format: 'node-addon',
+          requiredApis: ['uinput'],
+          sourceDirectory: 'native/linux',
+          artifactName: 'linux.node',
+        },
+      ],
+    },
+  });
+  assert.equal(plan.commands[0].program, 'cmake');
+  assert.deepEqual(plan.commands[1].args.slice(0, 3), ['--build', plan.out, '--config']);
+  assert.notEqual(plan.source, plan.out);
+});
+test('native package readiness distinguishes planned packages from installed packages', () => {
+  const manifest = {
+    schemaVersion: 1,
+    buildSystem: 'cmake',
+    packages: [
+      {
+        id: 'linux',
+        platform: 'linux',
+        packageName: '@spartan-gaming/native-linux',
+        format: 'node-addon',
+        requiredApis: ['uinput'],
+        sourceDirectory: 'native/linux',
+        artifactName: 'linux.node',
+      },
+    ],
+  };
+  const planned = nativePackageReadiness({
+    manifest,
+    platform: 'linux',
+    toolProbe: (name) => name === 'cmake',
+  });
+  assert.equal(planned.status, 'planned');
+  assert.equal(planned.cmakeAvailable, true);
+  const ready = nativePackageReadiness({
+    manifest,
+    platform: 'linux',
+    packageProbe: (name) => name === '@spartan-gaming/native-linux',
+  });
+  assert.equal(ready.status, 'ready');
+});

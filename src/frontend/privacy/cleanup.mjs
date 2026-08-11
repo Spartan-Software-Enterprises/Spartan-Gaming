@@ -5,7 +5,10 @@ export const TRANSIENT_SESSION_KEYS = Object.freeze([
   'spartan-gaming.session-recovery.v1',
 ]);
 
-export function clearTransientSessionData(storage = globalThis.sessionStorage, keys = TRANSIENT_SESSION_KEYS) {
+export function clearTransientSessionData(
+  storage = globalThis.sessionStorage,
+  keys = TRANSIENT_SESSION_KEYS,
+) {
   if (!storage || typeof storage.removeItem !== 'function') return Object.freeze([]);
   const removed = [];
   for (const key of keys) {

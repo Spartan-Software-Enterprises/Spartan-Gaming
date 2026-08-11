@@ -1,1 +1,86 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#10151b"><title>Spartan Gaming — Adapter Manager</title><link rel="stylesheet" href="./manager.css"></head><body><main class="manager-shell"><header><a class="brand" href="../dashboard/index.html"><span class="mark">S</span><span>SPARTAN <small>GAMING</small></span></a><a class="back" href="../settings/index.html">Settings</a></header><section class="intro"><p class="eyebrow">RUNTIME &amp; ADAPTER MANAGER</p><h1>Know what can run.</h1><p>Review browser-capable cores and signed native adapters for this device. Spartan Gaming never invents an installed adapter or downloads an unverified package.</p></section><section class="toolbar panel"><label class="search">Search runtimes<input data-search type="search" placeholder="Search by core, system, or adapter" aria-label="Search runtimes"></label><label>Platform<select data-platform aria-label="Target platform"><option value="browser">Browser</option><option value="linux">Linux</option><option value="win32">Windows</option><option value="darwin">macOS</option></select></label><label class="check"><input data-unsigned type="checkbox"> Allow unsigned development manifests</label><button class="secondary" data-import type="button">Import manifest bundle</button><input data-file type="file" accept="application/json,.json" hidden></section><section class="summary-grid"><div class="summary panel"><small>Runtime catalog</small><strong data-core-count>Loading…</strong><span>cores and systems tracked</span></div><div class="summary panel"><small>Signed manifests</small><strong data-manifest-count>0</strong><span>verified records available locally</span></div><div class="summary panel"><small>Browser path</small><strong data-browser-count>0</strong><span>cores eligible for browser-WASM adapters</span></div></section><section class="panel"><div class="panel-head"><div><p class="eyebrow">EMULATOR CORES</p><h2>Runtime readiness</h2></div><span data-status>Loading catalog…</span></div><div class="runtime-list" data-runtime-list><p class="empty">Loading emulator catalog…</p></div></section><section class="panel manifests"><div class="panel-head"><div><p class="eyebrow">SIGNED ADAPTER REGISTRY</p><h2>Installed and supplied manifests</h2></div><span>Trust is required before activation</span></div><div class="manifest-list" data-manifest-list><p class="empty">No adapter manifests have been injected or imported.</p></div></section><div class="notice" data-notice role="status" aria-live="polite"></div></main><script type="module" src="./manager-page.mjs"></script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#10151b" />
+    <title>Spartan Gaming — Adapter Manager</title>
+    <link rel="stylesheet" href="./manager.css" />
+  </head>
+  <body>
+    <main class="manager-shell">
+      <header>
+        <a class="brand" href="../dashboard/index.html"
+          ><span class="mark">S</span><span>SPARTAN <small>GAMING</small></span></a
+        ><a class="back" href="../settings/index.html">Settings</a>
+      </header>
+      <section class="intro">
+        <p class="eyebrow">RUNTIME &amp; ADAPTER MANAGER</p>
+        <h1>Know what can run.</h1>
+        <p>
+          Review browser-capable cores and signed native adapters for this device. Spartan Gaming
+          never invents an installed adapter or downloads an unverified package.
+        </p>
+      </section>
+      <section class="toolbar panel">
+        <label class="search"
+          >Search runtimes<input
+            data-search
+            type="search"
+            placeholder="Search by core, system, or adapter"
+            aria-label="Search runtimes" /></label
+        ><label
+          >Platform<select data-platform aria-label="Target platform">
+            <option value="browser">Browser</option>
+            <option value="linux">Linux</option>
+            <option value="win32">Windows</option>
+            <option value="darwin">macOS</option>
+          </select></label
+        ><label class="check"
+          ><input data-unsigned type="checkbox" /> Allow unsigned development manifests</label
+        ><button class="secondary" data-import type="button">Import manifest bundle</button
+        ><input data-file type="file" accept="application/json,.json" hidden />
+      </section>
+      <section class="summary-grid">
+        <div class="summary panel">
+          <small>Runtime catalog</small><strong data-core-count>Loading…</strong
+          ><span>cores and systems tracked</span>
+        </div>
+        <div class="summary panel">
+          <small>Signed manifests</small><strong data-manifest-count>0</strong
+          ><span>verified records available locally</span>
+        </div>
+        <div class="summary panel">
+          <small>Browser path</small><strong data-browser-count>0</strong
+          ><span>cores eligible for browser-WASM adapters</span>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">EMULATOR CORES</p>
+            <h2>Runtime readiness</h2>
+          </div>
+          <span data-status>Loading catalog…</span>
+        </div>
+        <div class="runtime-list" data-runtime-list>
+          <p class="empty">Loading emulator catalog…</p>
+        </div>
+      </section>
+      <section class="panel manifests">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">SIGNED ADAPTER REGISTRY</p>
+            <h2>Installed and supplied manifests</h2>
+          </div>
+          <span>Trust is required before activation</span>
+        </div>
+        <div class="manifest-list" data-manifest-list>
+          <p class="empty">No adapter manifests have been injected or imported.</p>
+        </div>
+      </section>
+      <div class="notice" data-notice role="status" aria-live="polite"></div>
+    </main>
+    <script type="module" src="./manager-page.mjs"></script>
+  </body>
+</html>

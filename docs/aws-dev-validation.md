@@ -117,18 +117,18 @@ The protected copies are outside Git at
 The following identifies the existing development host without publishing any
 secret material:
 
-| Field | Value |
-| --- | --- |
-| AWS instance | `i-0d3d5c3c1724d02f4` |
-| Instance type | `t3.small` |
-| OS | Amazon Linux 2023 |
-| Region/AZ | `us-east-1b` |
-| Public address | Resolve at connection time; not reserved and may change |
-| Disk | 30 GiB encrypted gp3 |
-| SSH source restriction | `173.80.1.14/32` |
-| Project checkout | `/home/ec2-user/Spartan-Gaming` |
-| Frontend test origin | `http://127.0.0.1:4173` (SSH-local only) |
-| Evidence directory | `/home/ec2-user/.config/spartan-dev/evidence` |
+| Field                  | Value                                                   |
+| ---------------------- | ------------------------------------------------------- |
+| AWS instance           | `i-0d3d5c3c1724d02f4`                                   |
+| Instance type          | `t3.small`                                              |
+| OS                     | Amazon Linux 2023                                       |
+| Region/AZ              | `us-east-1b`                                            |
+| Public address         | Resolve at connection time; not reserved and may change |
+| Disk                   | 30 GiB encrypted gp3                                    |
+| SSH source restriction | `173.80.1.14/32`                                        |
+| Project checkout       | `/home/ec2-user/Spartan-Gaming`                         |
+| Frontend test origin   | `http://127.0.0.1:4173` (SSH-local only)                |
+| Evidence directory     | `/home/ec2-user/.config/spartan-dev/evidence`           |
 
 Resolve the current address from the instance ID and region, then connect:
 
