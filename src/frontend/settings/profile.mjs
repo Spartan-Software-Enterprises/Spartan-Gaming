@@ -12,7 +12,7 @@ function normalizeValue(setting, value) {
     const number = Number(value);
     return Number.isFinite(number) ? Math.min(setting.max, Math.max(setting.min, number)) : setting.default;
   }
-  if (setting.type === 'select') return setting.options.includes(value) ? value : setting.default;
+  if (setting.type === 'select') return setting.options.includes(value) || setting.accepts?.(value) ? value : setting.default;
   if (setting.type === 'text') return typeof value === 'string' ? value.slice(0, 2048) : setting.default;
   return setting.default;
 }

@@ -9,12 +9,17 @@ const TRIGGERS = new Set(['Analog and digital', 'Analog only', 'Digital only']);
 const LATENCY = new Set(['Automatic', 'Standard', 'High frequency']);
 const GLYPH_STYLES = new Set(['Automatic', 'Xbox', 'PlayStation', 'Nintendo', 'Steam']);
 const INPUT_POLL_INTERVALS = Object.freeze({Automatic: 100, Standard: 50, 'High frequency': 16});
+const CUSTOM_PROFILE_ID = /^[a-z0-9][a-z0-9._-]{1,63}$/;
 function choice(value, allowed, fallback) { return allowed.has(value) ? value : fallback; }
 function flag(value, fallback) { return typeof value === 'boolean' ? value : fallback; }
 function integer(value, fallback, minimum, maximum) { const number = Number(value); return Number.isInteger(number) ? Math.max(minimum, Math.min(maximum, number)) : fallback; }
 
+/** Accept built-in display names and stable, locally-created custom profile IDs. */
+export function isControllerProfileSelection(value) { return PROFILES.has(value) || (typeof value === 'string' && CUSTOM_PROFILE_ID.test(value)); }
+function profileSelection(value) { return isControllerProfileSelection(value) ? value : 'Auto-detect'; }
+
 export function normalizeControllerPolicy(input = {}) {
-  return Object.freeze({version: 1, defaultProfile: choice(input.defaultProfile, PROFILES, 'Auto-detect'), inputMode: choice(input.inputMode, INPUT_MODES, 'Auto-detect'), glyphStyle: choice(input.glyphStyle, GLYPH_STYLES, 'Automatic'), virtualGamepadBackend: choice(input.virtualGamepadBackend, VIRTUAL_GAMEPAD_BACKENDS, 'Automatic'), hapticsBackend: choice(input.hapticsBackend, HAPTICS, 'Automatic'), multipleControllers: flag(input.multipleControllers, true), playerSlots: integer(input.playerSlots, 4, 1, 8), allowGamepad: flag(input.allowGamepad, true), allowHid: flag(input.allowHid, false), rumble: flag(input.rumble, true), adaptiveTriggers: flag(input.adaptiveTriggers, false), gyro: flag(input.gyro, false), touchpad: flag(input.touchpad, false), trackpads: flag(input.trackpads, false), backButtons: flag(input.backButtons, false), touchscreen: flag(input.touchscreen, false), textEntry: flag(input.textEntry, true), controllerNavigation: flag(input.controllerNavigation, true), triggerMode: choice(input.triggerMode, TRIGGERS, 'Analog and digital'), steeringRange: integer(input.steeringRange, 900, 90, 1080), splitInput: flag(input.splitInput, false), deadzone: integer(input.deadzone, 8, 0, 30), inputLatency: choice(input.inputLatency, LATENCY, 'Automatic')});
+  return Object.freeze({version: 1, defaultProfile: profileSelection(input.defaultProfile), inputMode: choice(input.inputMode, INPUT_MODES, 'Auto-detect'), glyphStyle: choice(input.glyphStyle, GLYPH_STYLES, 'Automatic'), virtualGamepadBackend: choice(input.virtualGamepadBackend, VIRTUAL_GAMEPAD_BACKENDS, 'Automatic'), hapticsBackend: choice(input.hapticsBackend, HAPTICS, 'Automatic'), multipleControllers: flag(input.multipleControllers, true), playerSlots: integer(input.playerSlots, 4, 1, 8), allowGamepad: flag(input.allowGamepad, true), allowHid: flag(input.allowHid, false), rumble: flag(input.rumble, true), adaptiveTriggers: flag(input.adaptiveTriggers, false), gyro: flag(input.gyro, false), touchpad: flag(input.touchpad, false), trackpads: flag(input.trackpads, false), backButtons: flag(input.backButtons, false), touchscreen: flag(input.touchscreen, false), textEntry: flag(input.textEntry, true), controllerNavigation: flag(input.controllerNavigation, true), triggerMode: choice(input.triggerMode, TRIGGERS, 'Analog and digital'), steeringRange: integer(input.steeringRange, 900, 90, 1080), splitInput: flag(input.splitInput, false), deadzone: integer(input.deadzone, 8, 0, 30), inputLatency: choice(input.inputLatency, LATENCY, 'Automatic')});
 }
 
 export function controllerPolicyFromSettings(settings = {}) {

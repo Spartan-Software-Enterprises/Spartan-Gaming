@@ -7,8 +7,11 @@ import {clearProviderSessionState} from '../providers/session-cleanup.mjs';
 import {createHostConfigFromSettings, detectHostPlatform} from '../host/config.mjs';
 import {renderSettingControl} from './control.mjs';
 import {resolveElectronRuntimeSettings} from './electron-runtime.mjs';
+import {createControllerProfileStore} from '../input/profiles.mjs';
+import {createActiveProfileStorage} from '../profiles/storage.mjs';
 
 const settingsStore = createSettingsStore();
+const controllerProfileStore = createControllerProfileStore({storage: createActiveProfileStorage({storage: globalThis.localStorage})});
 const state = {...settingsStore.read()};
 const requestedCategory = new URLSearchParams(globalThis.location?.search || '').get('category');
 let activeCategory = settingsCategories.some((category) => category.id === requestedCategory) ? requestedCategory : 'general';
@@ -25,10 +28,19 @@ function saveState() {
   }
 }
 
+function renderedCategories() {
+  const customProfiles = controllerProfileStore.list();
+  if (!customProfiles.length) return settingsCategories;
+  const customOptions = customProfiles.map(profile => profile.id);
+  const optionLabels = Object.fromEntries(customProfiles.map(profile => [profile.id, `${profile.name} (custom)`]));
+  return settingsCategories.map(category => category.id !== 'controllers' ? category : {...category, settings: category.settings.map(setting => setting.key !== 'controllers.defaultProfile' ? setting : {...setting, options: [...setting.options, ...customOptions.filter(id => !setting.options.includes(id))], optionLabels: {...setting.optionLabels, ...optionLabels}})});
+}
+
 function visibleCategories() {
-  if (!query) return settingsCategories;
+  const categories = renderedCategories();
+  if (!query) return categories;
   const needle = query.toLowerCase();
-  return settingsCategories.map((category) => ({
+  return categories.map((category) => ({
     ...category,
     settings: category.settings.filter((setting) =>
       `${category.label} ${setting.label} ${setting.description}`.toLowerCase().includes(needle),
@@ -53,7 +65,8 @@ function renderNav() {
 }
 
 function renderContent() {
-  const category = settingsCategories.find((item) => item.id === activeCategory) ?? settingsCategories[0];
+  const categories = renderedCategories();
+  const category = categories.find((item) => item.id === activeCategory) ?? categories[0];
   const shown = query ? visibleCategories().find((item) => item.id === activeCategory) : category;
   const content = shown ?? category;
   document.querySelector('[data-settings-content]').innerHTML = `
@@ -76,7 +89,7 @@ function renderContent() {
 function bindControls() {
   document.querySelectorAll('[data-key]').forEach((control) => {
     const update = () => {
-      const setting = settingsCategories.flatMap((category) => category.settings).find((item) => item.key === control.dataset.key);
+      const setting = renderedCategories().flatMap((category) => category.settings).find((item) => item.key === control.dataset.key);
       if (!setting) return;
       state[setting.key] = setting.type === 'toggle' ? !state[setting.key] : setting.type === 'range' ? Number(control.value) : control.value;
       saveState();
