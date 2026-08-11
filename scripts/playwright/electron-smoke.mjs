@@ -228,7 +228,7 @@ export async function runElectronVisualSmoke({
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  runElectronVisualSmoke()
+  runElectronVisualSmoke({ baselinePath: process.argv.includes('--candidate') ? null : undefined })
     .then((report) => console.log(JSON.stringify(report)))
     .catch((error) => {
       console.error(error.stack || error.message);

@@ -113,7 +113,7 @@ npm run desktop:package
 
 `npm run electron` launches the bundled application directly. It does not start a local HTTP service. `npm run desktop:package` creates platform development artifacts that contain the application UI and local catalogs.
 
-`npm run playwright:electron` launches the real Electron main process, verifies the private `spartan-app://app` origin, captures every maintained application route, checks for horizontal overflow, and exercises dashboard search plus a persisted desktop setting. Linux CI or development hosts can run it under Xvfb without exposing a web server.
+`npm run playwright:electron` launches the real Electron main process, verifies the private `spartan-app://app` origin, and checks all 11 maintained routes at desktop, Steam Deck-sized handheld, phone, and television layouts. The isolated-state run captures 44 screenshots, verifies each forced presentation/navigation mode, rejects horizontal overflow, exercises dashboard search at every layout, checks television remote focus and a persisted desktop setting, and compares perceptual fingerprints with the reviewed Linux/Xvfb baseline. `npm run playwright:electron:candidate` generates an unapproved candidate under `out/` for deliberate visual changes; inspect it before replacing a baseline.
 
 ## Explore the current interfaces
 
