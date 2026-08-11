@@ -20,7 +20,7 @@ protocols:
       - spartan
 linux:
   category: Game
-  desktopName: spartan-gaming
+  syncDesktopName: true
   target:
     - AppImage
     - deb
