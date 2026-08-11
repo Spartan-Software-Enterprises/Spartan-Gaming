@@ -6,11 +6,25 @@ Spartan Gaming is deliberately being built in layers:
 
 1. Repository contracts and cross-platform architecture.
 2. Protocol and diagnostic libraries that can be tested without Chromium.
-3. A thin browser shell and provider-compatible gaming dashboard.
-4. Chromium integration and platform adapters.
+3. A standalone Electron application with a bundled gaming dashboard.
+4. Native platform adapters and optional Chromium compatibility research.
 5. Self-hosted host and service implementations.
 
-This keeps protocol and product behavior testable while Chromium builds are being rebased and packaged.
+This keeps protocol and product behavior testable while the standalone application and native adapters are packaged. Electron is the primary desktop runtime; an external Chromium checkout is not required to launch Spartan Gaming.
+
+## Primary standalone application
+
+Run `npm run electron` to launch Spartan Gaming as one bundled application. The
+main window loads packaged assets through the private, secure
+`spartan-app://app` protocol. It does not create a loopback HTTP listener or
+depend on a hosted frontend. Provider/game launches are checked against the
+bundled catalogs, general external access is limited to approved gaming and
+download origins, and the local application remains available offline.
+
+Use `npm run electron:test` for focused runtime contracts and
+`npm run desktop:package` for platform development artifacts. The package must
+include `desktop/electron/**`, `src/frontend/**`, and local catalogs; it must not
+include or start `scripts/frontend/serve.mjs` as an application dependency.
 
 ## Chromium strategy
 
@@ -59,25 +73,26 @@ Every platform feature must document:
 - Packaging and signing requirements.
 - Automated and manual validation coverage.
 
-## Local checks
+## Legacy browser-surface test harness
 
-Run the dependency-free frontend server to use the dashboard and its related
-surfaces from a real HTTP origin (required for fetch, service workers, and
-browser permissions):
+The dependency-free frontend server is retained only for automated shared-UI,
+service-worker, and browser-permission tests. It is not a product entrypoint,
+is not packaged with Electron, and must never become a runtime dependency of
+the standalone application:
 
 ```bash
 npm run frontend:serve
 ```
 
-Open `http://127.0.0.1:4173/`. The server redirects `/` to `/dashboard/`,
+For test work, open `http://127.0.0.1:4173/`. The harness redirects `/` to `/dashboard/`,
 serves the frontend pages and public catalogs, applies restrictive browser
 security headers while allowing official HTTPS provider frames, signed browser
 adapter blob modules, and secure
 signaling, and keeps arbitrary signaling/session paths out of its static
 surface. Use `--port 0` for an ephemeral port or
 `--host 0.0.0.0` when testing from another device on a trusted LAN. This is a
-development/static frontend server, not a production TLS or authentication
-endpoint.
+development/static test harness, not a Spartan Gaming deployment, production
+TLS endpoint, or user-facing application mode.
 
 The same server can preview a packaged artifact with
 `npm run frontend:serve -- --root out/spartan-frontend --public-root out/spartan-frontend`.
@@ -95,11 +110,11 @@ mounts, PWA worker/assets, public provider and emulator catalogs, favicon, and
 `spartan-frontend-manifest.json`. The build refuses to write into the source or
 repository root and does not include host secrets, credentials, or game files.
 
-GitHub Actions packages and verifies that artifact independently on Linux,
+GitHub Actions packages and verifies that test artifact independently on Linux,
 macOS, and Windows, then retains one OS-labeled artifact for fourteen days.
-This validates the shared frontend distribution boundary across desktop hosts;
-it does not substitute for building the external Chromium checkout, which
-still requires the platform toolchains described in the Chromium section.
+This validates portable bundled-UI assets across desktop hosts; it is not a
+standalone release artifact and does not change Electron's role as the primary
+desktop application.
 
 For a local browser-to-browser stream smoke test, run:
 
@@ -190,6 +205,8 @@ Steam Deck-oriented actions are defined in `src/frontend/input/steam-input.mjs` 
 The explicit SteamOS host profile in `host/steam-os.mjs` also exposes the shared session/power contract: Game Mode fullscreen, overlay-safe controller focus, bounded 1280×800 and 30/40/60-FPS limits, and session-reconnect recovery metadata for sleep/wake. These fields describe the required host behavior and do not claim that a physical SteamOS runtime has been exercised.
 
 Electron now bridges bounded native power telemetry through `desktop/electron/power-runtime.mjs`: suspend/resume, AC/battery, thermal, and CPU speed-limit events reach the renderer through the preload API, while active sessions use Electron's power-save blocker (`prevent-display-sleep` for normal/performance modes and `prevent-app-suspension` for Battery saver). This is runtime plumbing, not evidence of hardware-specific thermal or suspend behavior.
+
+Settings → General can optionally register one of two bounded Electron global shortcuts to restore and focus the primary Spartan Gaming window. The shortcut is disabled by default, registration failure is shown in Settings, Linux enables Electron's Wayland GlobalShortcutsPortal path, and the main process unregisters the active accelerator during shutdown. Arbitrary accelerators never cross the renderer boundary.
 
 Electron also enforces one running Spartan instance and accepts only the
 allow-listed `spartan://launch?backend=<catalog-id>` deep-link shape. A second

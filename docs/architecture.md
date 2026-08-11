@@ -2,7 +2,7 @@
 
 ## Product boundary
 
-Spartan Gaming is a universal frontend and orchestration layer. It presents one library, launcher, controller model, overlay, profile system, and diagnostics surface over multiple execution backends:
+Spartan Gaming is a standalone universal application and orchestration layer. It presents one library, launcher, controller model, overlay, profile system, and diagnostics surface over multiple execution backends:
 
 - Cloud gaming providers opened through optimized official web experiences.
 - Remote-play and streaming clients connected to user-owned systems.
@@ -15,8 +15,9 @@ Spartan Gaming does not own the catalogs, bypass provider controls, replace emul
 ## Components
 
 ```text
-Spartan Gaming frontend
-├── Chromium browser and renderer processes
+Standalone Spartan Gaming application
+├── Electron main process and sandboxed application views
+├── Private packaged-asset protocol (no loopback frontend server)
 ├── Unified library and launcher
 ├── Provider adapter registry
 ├── Emulator/core adapter registry
@@ -30,7 +31,7 @@ Spartan Gaming frontend
 Execution backends
 ├── Provider web sessions
 ├── Official provider APIs and embeds
-├── Browser-native WASM/WebGPU runtimes
+├── In-app WASM/WebGPU runtimes
 ├── Native emulator adapters
 ├── Libretro cores
 ├── User-owned remote hosts
@@ -46,7 +47,7 @@ Optional services
 
 ## Repository boundaries
 
-The frontend and protocol layers are portable and unprivileged. `host/` owns
+The bundled application UI and protocol layers are portable and unprivileged. `desktop/electron/` owns the primary desktop lifecycle, private app protocol, catalog-approved network boundary, and packaging; `host/` owns
 privileged capture, process, input, audio, and publisher adapters; `signaling/`
 owns only authenticated control-plane routing; and `chromium/` owns build and
 overlay metadata around an external Chromium checkout. These boundaries are
@@ -60,6 +61,9 @@ management, and a clustered session registry.
 
 ## Technical direction
 
+- Ship one standalone application that starts and exposes local functionality without a network connection.
+- Keep application assets inside the package and never require a loopback or hosted frontend server at runtime.
+- Limit external connectivity to cataloged gaming services, user-owned gaming sessions, and approved download/update sources.
 - Preserve Chromium's sandbox, site isolation, and multi-process model.
 - Use WebRTC as the initial low-latency media transport.
 - Evaluate WebTransport for experimental client-server transport and datagrams.

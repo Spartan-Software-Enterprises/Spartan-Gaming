@@ -1,4 +1,5 @@
 import {CONTROLLER_PROFILE_OPTIONS, isControllerProfileSelection} from '../input/controller-policy.mjs';
+import {GLOBAL_SHORTCUT_OPTIONS} from './electron-runtime.mjs';
 
 const toggle = (key, label, description, defaultValue = false) => ({key, label, description, type: 'toggle', default: defaultValue});
 const select = (key, label, description, options, defaultValue) => ({key, label, description, type: 'select', options, default: defaultValue ?? options[0]});
@@ -14,6 +15,7 @@ export const settingsCategories = [
       select('general.defaultSearch', 'Search provider', 'Search used by the address bar and the gaming dashboard.', ['DuckDuckGo', 'Google', 'Bing', 'Brave Search', 'Custom'], 'DuckDuckGo'),
       toggle('general.askBeforeQuit', 'Confirm before quitting', 'Prevent accidental shutdown while an active session is running.', true),
       toggle('general.backgroundApps', 'Continue background apps', 'Keep the Electron process available after the window closes for configured background tasks.'),
+      select('general.globalShortcut', 'Desktop global shortcut', 'Optionally register a system-wide shortcut that restores and focuses Spartan Gaming. Registration remains disabled by default and may be unavailable when another application owns the shortcut.', GLOBAL_SHORTCUT_OPTIONS, 'Disabled'),
       select('general.language', 'Language', 'Interface language. Provider content remains controlled by the provider.', ['English', 'Spanish', 'French', 'German', 'Japanese', 'Korean'], 'English'),
       action('general.reset', 'Reset all settings', 'Restore Spartan Gaming defaults. Browser profiles and saved games are not removed.', 'Reset settings'),
     ],
