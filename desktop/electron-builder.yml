@@ -1,7 +1,6 @@
 appId: com.spartan.gaming
 productName: Spartan Gaming
 executableName: Spartan-Gaming
-icon: favicon.ico
 artifactName: Spartan-Gaming-${version}-${os}-${arch}.${ext}
 directories:
   output: dist-electron
