@@ -26,6 +26,12 @@ contextBridge.exposeInMainWorld(
     applyRuntimeSettings(settings) {
       return ipcRenderer.invoke('spartan:apply-runtime-settings', settings);
     },
+    exportDiagnostics() {
+      return ipcRenderer.invoke('spartan:export-diagnostics');
+    },
+    clearDiagnostics() {
+      return ipcRenderer.invoke('spartan:clear-diagnostics');
+    },
     toggleFullscreen() {
       return ipcRenderer.invoke('spartan:toggle-fullscreen');
     },

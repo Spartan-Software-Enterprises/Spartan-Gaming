@@ -311,3 +311,25 @@ concurrency test; the follow-up review returned zero findings across all 17
 changed files.
 The harness explicitly pins hidden in-session chrome for every release layout,
 preventing the mobile-player baseline from inheriting desktop interaction state.
+
+The 2026-08-11 local-diagnostics increment passed 41/41 Electron contracts on
+the Amazon Linux host. The Xvfb matrix matched the existing 44/44 Linux x64
+perceptual baselines and completed nine interactions. Its desktop diagnostics
+interaction enabled local crash and verbose logging, selected one-day
+retention, emitted a real renderer console warning, verified that its URL and
+token were absent from the owner-local file, inspected the persisted startup
+policy, and cleared the file through the sandboxed preload/IPC bridge. A
+dedicated full-page screenshot exposed a clipped active-toggle label; the
+shared toggle geometry was corrected and inspected at desktop, handheld, and
+mobile widths before the matrix was repeated. Xvfb remained sufficient and no
+full desktop environment or application port was required.
+The final synchronized repository check passed 438/438 and the serialized
+suite passed 640 of 642 with the two expected Windows/macOS package skips. A
+full Electron Builder run produced a 120,348,741-byte AppImage and a
+93,273,544-byte Debian package containing the diagnostics module, CommonJS
+preload, and corrected Settings stylesheet. That run exposed the default
+Electron icon warning; after adding the existing Spartan mark as
+`desktop/build-resources/icon.svg`, a second AppImage build completed without
+the warning. The SVG is Electron Builder's shared scalable source for Linux,
+Windows, and macOS development artifacts; signed/installed icon inspection on
+each real platform remains part of release validation.

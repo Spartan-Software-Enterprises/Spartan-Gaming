@@ -242,6 +242,7 @@ select:focus,
   display: inline-flex;
   align-items: center;
   gap: 9px;
+  min-width: 72px;
   padding: 5px 8px 5px 5px;
   border: 1px solid var(--border);
   border-radius: 20px;
@@ -264,12 +265,13 @@ select:focus,
   font-weight: 650;
 }
 .toggle.is-on {
+  flex-direction: row-reverse;
+  padding: 5px 5px 5px 8px;
   border-color: rgba(101, 215, 255, 0.45);
   background: var(--accent-soft);
 }
 .toggle.is-on span {
   background: var(--accent);
-  transform: translateX(20px);
 }
 .toggle.is-on b {
   color: var(--accent);

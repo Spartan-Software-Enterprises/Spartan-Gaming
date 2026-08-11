@@ -6,7 +6,16 @@ import path from 'node:path';
 const writeQueues = new Map();
 
 export function normalizeElectronStartupPolicy(settings = {}) {
-  return Object.freeze({ hardwareAcceleration: settings?.hardwareAcceleration !== false });
+  return Object.freeze({
+    hardwareAcceleration: settings?.hardwareAcceleration !== false,
+    crashReports: settings?.crashReports === true,
+    verboseLogs: settings?.verboseLogs === true,
+    logRetention: ['1 day', '7 days', '30 days', 'Until manually removed'].includes(
+      settings?.logRetention,
+    )
+      ? settings.logRetention
+      : '7 days',
+  });
 }
 
 export function readElectronStartupPolicy(filePath, { read = readFileSync } = {}) {
