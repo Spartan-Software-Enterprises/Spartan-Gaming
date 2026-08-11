@@ -43,20 +43,17 @@ export function describeElectronUpdateStatus(result) {
   return 'Update status is idle.';
 }
 
+const GPU_PREFERENCES = ['Automatic', 'Power saving GPU', 'High performance GPU'];
+const PROCESS_MODELS = ['Default', 'Maximum isolation', 'Low memory'];
+
 /** Convert persisted settings into the bounded Electron runtime policy payload. */
 export function resolveElectronRuntimeSettings(settings = {}) {
   return Object.freeze({
     developerMode: settings['advanced.developerMode'] === true,
-    gpuPreference: ['Automatic', 'Power saving GPU', 'High performance GPU'].includes(
-      settings['performance.gpuPreference'],
-    )
+    gpuPreference: GPU_PREFERENCES.includes(settings['performance.gpuPreference'])
       ? settings['performance.gpuPreference']
       : 'Automatic',
-    ? settings['performance.processModel']
-      : 'Default',
-    crashReports: settings['performance.crashReports'] === true, ['Default', 'Maximum isolation', 'Low memory'].includes(
-      settings['performance.processModel'],
-    )
+    processModel: PROCESS_MODELS.includes(settings['performance.processModel'])
       ? settings['performance.processModel']
       : 'Default',
     crashReports: settings['performance.crashReports'] === true,
