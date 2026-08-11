@@ -12,6 +12,12 @@ test('settings profile normalization preserves defaults and bounds values', () =
   assert.equal(settings['gaming.autoFullscreen'], false);
 });
 
+test('settings profile normalization preserves valid custom controller profile IDs', () => {
+  const settings = normalizeSettings({'controllers.defaultProfile': 'custom-living-room'});
+  assert.equal(settings['controllers.defaultProfile'], 'custom-living-room');
+  assert.equal(normalizeSettings({'controllers.defaultProfile': 'invalid profile label'})['controllers.defaultProfile'], 'Auto-detect');
+});
+
 test('settings store saves, resets, exports, and imports portable profiles', () => {
   const store = createSettingsStore({storage: storage()});
   store.save({'streaming.bitrate': 40, 'advanced.customSignalingUrl': 'wss://host.example/session'});

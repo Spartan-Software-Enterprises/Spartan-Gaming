@@ -15,3 +15,9 @@ test('settings control renderer preserves safe control semantics', () => {
   assert.match(control, /data-key="controllers.inputMode"/);
   assert.doesNotMatch(control, /undefined/);
 });
+
+test('settings control renderer labels stable custom select values without changing their value', () => {
+  const control = renderSettingControl({key: 'controllers.defaultProfile', type: 'select', options: ['custom-living-room'], optionLabels: {'custom-living-room': 'Living room pad (custom)'}}, 'custom-living-room');
+  assert.match(control, /value="custom-living-room"/);
+  assert.match(control, />Living room pad \(custom\)<\/option>/);
+});

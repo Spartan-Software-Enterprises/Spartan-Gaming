@@ -1,4 +1,4 @@
-import {CONTROLLER_PROFILE_OPTIONS} from '../input/controller-policy.mjs';
+import {CONTROLLER_PROFILE_OPTIONS, isControllerProfileSelection} from '../input/controller-policy.mjs';
 
 const toggle = (key, label, description, defaultValue = false) => ({key, label, description, type: 'toggle', default: defaultValue});
 const select = (key, label, description, options, defaultValue) => ({key, label, description, type: 'select', options, default: defaultValue ?? options[0]});
@@ -90,7 +90,7 @@ export const settingsCategories = [
   },
   {
     id: 'controllers', label: 'Controllers', icon: '⌁', description: 'Gamepads, HID devices, mappings, and rumble.', settings: [
-      select('controllers.defaultProfile', 'Default controller profile', 'Profile used for new games and providers.', CONTROLLER_PROFILE_OPTIONS, 'Auto-detect'),
+      {...select('controllers.defaultProfile', 'Default controller profile', 'Profile used for new games and providers. Custom profiles created in the profile manager appear here by their stable local ID.', CONTROLLER_PROFILE_OPTIONS, 'Auto-detect'), accepts: isControllerProfileSelection},
       select('controllers.inputMode', 'Controller input mode', 'Select how connected controllers are exposed to games and remote hosts.', ['Auto-detect', 'XInput', 'DirectInput', 'Standard Gamepad', 'HID passthrough'], 'Auto-detect'),
       select('controllers.glyphStyle', 'Controller glyph style', 'Choose portable button labels when an official Steam Input glyph bridge is unavailable.', ['Automatic', 'Xbox', 'PlayStation', 'Nintendo', 'Steam'], 'Automatic'),
       select('controllers.virtualGamepadBackend', 'Virtual gamepad backend', 'Choose the native or externally installed bridge used when a host or game needs a virtual controller; unavailable bridges fail closed. Windows and macOS require an operator-installed external driver.', ['Automatic', 'Browser Gamepad', 'Linux uinput', 'Windows external driver', 'macOS external driver', 'Disabled'], 'Automatic'),
