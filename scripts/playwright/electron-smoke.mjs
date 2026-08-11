@@ -1,65 +1,97 @@
-import { mkdir } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { _electron as electron } from 'playwright';
+import {
+  compareVisualBaseline,
+  ELECTRON_VISUAL_LAYOUTS,
+  ELECTRON_VISUAL_ROUTES,
+  visualSnapshotKey,
+} from './electron-visual-contract.mjs';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const appOrigin = 'spartan-app://app';
+const activeProfileKey = 'spartan-gaming.active-profile.v1';
+const gamingSettingsKey = 'spartan-gaming.profile.gaming.spartan-gaming.settings.v1';
 
-export const ELECTRON_VISUAL_ROUTES = Object.freeze([
-  '/dashboard/',
-  '/settings/',
-  '/player/',
-  '/diagnostics/',
-  '/adapters/',
-  '/emulation/',
-  '/host/',
-  '/workspaces/',
-  '/providers/',
-  '/input/inspector.html',
-  '/input/profiles.html',
-]);
-
-function screenshotName(route) {
-  const name = route.replace(/^\/+|\/+$/g, '').replace(/[^a-z0-9]+/gi, '-');
-  return `${name || 'home'}.png`;
+function screenshotName(layout, route) {
+  return `${visualSnapshotKey(layout, route)}.png`;
 }
 
-export async function runElectronVisualSmoke({
-  output = path.join(repositoryRoot, 'out/playwright/electron'),
-} = {}) {
-  await mkdir(output, { recursive: true });
-  const application = await electron.launch({
-    args: [path.join(repositoryRoot, 'desktop/electron/main.mjs')],
-    cwd: repositoryRoot,
+function pngDimensions(buffer) {
+  if (!Buffer.isBuffer(buffer) || buffer.length < 24 || buffer.toString('ascii', 1, 4) !== 'PNG')
+    throw new TypeError('visual smoke produced an invalid PNG screenshot');
+  return Object.freeze({ width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) });
+}
+
+function fingerprintScreenshot(buffer) {
+  return Object.freeze({
+    sha256: createHash('sha256').update(buffer).digest('hex'),
+    ...pngDimensions(buffer),
+    bytes: buffer.length,
   });
-  const results = [];
+}
+
+async function readBaseline(baselinePath) {
+  if (!baselinePath) return null;
   try {
-    const page = await application.firstWindow();
-    await page.waitForLoadState('domcontentloaded');
-    await page.setViewportSize({ width: 1280, height: 800 });
-    if (!page.url().startsWith(`${appOrigin}/dashboard/`))
-      throw new Error(`standalone app opened an unexpected URL: ${page.url()}`);
+    return JSON.parse(await readFile(baselinePath, 'utf8'));
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+}
 
-    const search = page.locator('input[type="search"]');
-    await search.fill('Steam');
-    await page.waitForTimeout(150);
-    if (!(await page.locator('body').innerText()).includes('Steam'))
-      throw new Error('standalone dashboard search did not render a Steam result');
-    await page.screenshot({ path: path.join(output, 'dashboard-search.png'), fullPage: true });
-
-    for (const route of ELECTRON_VISUAL_ROUTES) {
-      await page.goto(`${appOrigin}${route}`, { waitUntil: 'domcontentloaded' });
-      await page.waitForTimeout(150);
-      const body = (await page.locator('body').innerText()).trim();
-      if (body.length < 20) throw new Error(`${route} has no meaningful application content`);
-      const horizontalOverflow = await page.evaluate(
-        () => document.documentElement.scrollWidth > window.innerWidth,
+async function configureLayout(page, layout) {
+  await page.setViewportSize({ width: layout.width, height: layout.height });
+  await page.goto(`${appOrigin}/dashboard/`, { waitUntil: 'domcontentloaded' });
+  await page.evaluate(
+    ({ activeKey, settingsKey, mode }) => {
+      localStorage.setItem(activeKey, 'gaming');
+      let current = {};
+      try {
+        current = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+      } catch {
+        current = {};
+      }
+      localStorage.setItem(
+        settingsKey,
+        JSON.stringify({
+          ...current,
+          'appearance.deviceMode': mode,
+          'appearance.reduceMotion': true,
+          'accessibility.reduceMotion': true,
+          'general.askBeforeQuit': false,
+          'television.showPointer': true,
+        }),
       );
-      await page.screenshot({ path: path.join(output, screenshotName(route)), fullPage: true });
-      results.push(Object.freeze({ route, bodyLength: body.length, horizontalOverflow }));
-    }
+    },
+    { activeKey: activeProfileKey, settingsKey: gamingSettingsKey, mode: layout.mode },
+  );
+}
 
+async function checkLayoutInteraction(page, layout, output) {
+  await page.goto(`${appOrigin}/dashboard/`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(150);
+  const search = page.locator('input[type="search"]');
+  await search.fill('Steam');
+  if (!(await page.locator('body').innerText()).includes('Steam'))
+    throw new Error(`${layout.name} dashboard search did not render a Steam result`);
+
+  const interactions = [`${layout.name}:dashboard-search`];
+  if (layout.name === 'television') {
+    await page.keyboard.press('ArrowDown');
+    const focused = await page.evaluate(() => {
+      const element = document.activeElement;
+      return Boolean(element && element !== document.body && element !== document.documentElement);
+    });
+    if (!focused) throw new Error('television remote navigation did not establish focus');
+    interactions.push('television:remote-focus');
+  }
+
+  if (layout.name === 'desktop') {
     await page.goto(`${appOrigin}/settings/`, { waitUntil: 'domcontentloaded' });
     const shortcut = page.locator('[data-key="general.globalShortcut"]');
     await shortcut.selectOption('CommandOrControl+Shift+G');
@@ -67,22 +99,112 @@ export async function runElectronVisualSmoke({
     const saveStatus = await page.locator('[data-save-status]').innerText();
     if (!/active|unavailable|saved/i.test(saveStatus))
       throw new Error(`desktop shortcut setting returned unexpected status: ${saveStatus}`);
-    await page.screenshot({
-      path: path.join(output, 'settings-global-shortcut.png'),
-      fullPage: true,
+    interactions.push('desktop:global-shortcut-setting');
+  }
+
+  await page.screenshot({
+    path: path.join(output, `${layout.name}-interaction.png`),
+    fullPage: true,
+    animations: 'disabled',
+  });
+  return interactions;
+}
+
+export async function runElectronVisualSmoke({
+  output = path.join(repositoryRoot, 'out/playwright/electron'),
+  baselinePath = path.join(
+    repositoryRoot,
+    'scripts/playwright/baselines',
+    `electron-${process.platform}-${process.arch}.json`,
+  ),
+} = {}) {
+  await mkdir(output, { recursive: true });
+  const userDataDirectory = await mkdtemp(path.join(tmpdir(), 'spartan-electron-visual-'));
+  const application = await electron.launch({
+    args: [
+      path.join(repositoryRoot, 'desktop/electron/main.mjs'),
+      `--user-data-dir=${userDataDirectory}`,
+    ],
+    cwd: repositoryRoot,
+  });
+  const results = [];
+  const interactions = [];
+  const snapshots = {};
+  try {
+    const page = await application.firstWindow();
+    await page.waitForLoadState('domcontentloaded');
+    if (!page.url().startsWith(`${appOrigin}/dashboard/`))
+      throw new Error(`standalone app opened an unexpected URL: ${page.url()}`);
+
+    for (const layout of ELECTRON_VISUAL_LAYOUTS) {
+      await configureLayout(page, layout);
+      for (const route of ELECTRON_VISUAL_ROUTES) {
+        await page.goto(`${appOrigin}${route}`, { waitUntil: 'domcontentloaded' });
+        await page.waitForTimeout(150);
+        const body = (await page.locator('body').innerText()).trim();
+        if (body.length < 20)
+          throw new Error(`${layout.name} ${route} has no meaningful application content`);
+        const runtime = await page.evaluate(() => ({
+          deviceMode: document.documentElement.dataset.spartanDeviceMode,
+          navigation: document.documentElement.dataset.spartanNavigation,
+          horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth,
+        }));
+        if (runtime.deviceMode !== layout.name)
+          throw new Error(
+            `${layout.name} ${route} resolved unexpected device mode ${runtime.deviceMode || 'none'}`,
+          );
+        if (runtime.horizontalOverflow)
+          throw new Error(`${layout.name} ${route} has horizontal overflow`);
+        const screenshot = await page.screenshot({
+          path: path.join(output, screenshotName(layout.name, route)),
+          fullPage: true,
+          animations: 'disabled',
+        });
+        const key = visualSnapshotKey(layout.name, route);
+        snapshots[key] = fingerprintScreenshot(screenshot);
+        results.push(
+          Object.freeze({
+            layout: layout.name,
+            route,
+            bodyLength: body.length,
+            deviceMode: runtime.deviceMode,
+            navigation: runtime.navigation,
+            horizontalOverflow: false,
+          }),
+        );
+      }
+      interactions.push(...(await checkLayoutInteraction(page, layout, output)));
+    }
+
+    const candidate = Object.freeze({
+      version: 1,
+      platform: `${process.platform}-${process.arch}`,
+      layouts: ELECTRON_VISUAL_LAYOUTS.map(({ name, width, height }) => ({ name, width, height })),
+      routes: ELECTRON_VISUAL_ROUTES,
+      snapshots,
     });
+    const candidatePath = path.join(output, 'visual-baseline.json');
+    await writeFile(candidatePath, `${JSON.stringify(candidate, null, 2)}\n`);
+    const baseline = compareVisualBaseline(await readBaseline(baselinePath), candidate);
+    if (baseline.status === 'changed')
+      throw new Error(`Electron visual baseline changed:\n${baseline.mismatches.join('\n')}`);
 
     return Object.freeze({
-      version: 1,
+      version: 2,
       tool: 'playwright-electron',
       origin: appOrigin,
+      platform: candidate.platform,
+      layouts: ELECTRON_VISUAL_LAYOUTS.map((layout) => layout.name),
       routes: Object.freeze(results),
-      interactions: Object.freeze(['dashboard-search', 'global-shortcut-setting']),
+      interactions: Object.freeze(interactions),
+      snapshots: Object.keys(snapshots).length,
+      baseline: Object.freeze({ ...baseline, path: baselinePath, candidatePath }),
       status: 'passed',
       output,
     });
   } finally {
     await application.close();
+    await rm(userDataDirectory, { recursive: true, force: true });
   }
 }
 
