@@ -9,8 +9,13 @@ import {
 
 test('Electron visual matrix covers every route at four release layouts', () => {
   assert.deepEqual(
-    ELECTRON_VISUAL_LAYOUTS.map((layout) => layout.name),
-    ['desktop', 'handheld', 'mobile', 'television'],
+    ELECTRON_VISUAL_LAYOUTS.map(({ name, navigation }) => [name, navigation]),
+    [
+      ['desktop', 'pointer-keyboard'],
+      ['handheld', 'controller-touch'],
+      ['mobile', 'touch'],
+      ['television', 'remote-controller'],
+    ],
   );
   assert.equal(ELECTRON_VISUAL_ROUTES.length, 11);
   assert.equal(
@@ -63,4 +68,11 @@ test('Electron visual baseline comparison emits a candidate when no baseline exi
     compared: 0,
     mismatches: [],
   });
+});
+
+test('Electron visual baseline comparison rejects a missing required baseline', () => {
+  assert.throws(
+    () => compareVisualBaseline(null, { snapshots: {} }, { required: true }),
+    /required Electron visual baseline is unavailable/,
+  );
 });

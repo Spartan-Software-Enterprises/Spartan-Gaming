@@ -95,17 +95,35 @@ async function checkLayoutInteraction(page, layout, output) {
   await page.goto(`${appOrigin}/dashboard/`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(150);
   const search = page.locator('input[type="search"]');
+  const resultCount = page.locator('[data-result-count]');
+  const beforeSearch = await resultCount.innerText();
   await search.fill('Steam');
-  if (!(await page.locator('body').innerText()).includes('Steam'))
-    throw new Error(`${layout.name} dashboard search did not render a Steam result`);
+  await page.waitForFunction(
+    ([selector, before]) => document.querySelector(selector)?.textContent?.trim() !== before.trim(),
+    ['[data-result-count]', beforeSearch],
+  );
+  const afterSearch = await resultCount.innerText();
+  const visibleCards = await page.locator('[data-cards]').innerText();
+  if (afterSearch.trim() === beforeSearch.trim() || !/steam/i.test(visibleCards))
+    throw new Error(`${layout.name} dashboard search did not filter to a Steam result`);
 
   const interactions = [`${layout.name}:dashboard-search`];
   if (layout.name === 'television') {
+    await search.evaluate((element) => element.blur());
     await page.keyboard.press('ArrowDown');
-    const focused = await page.evaluate(() => {
-      const element = document.activeElement;
-      return Boolean(element && element !== document.body && element !== document.documentElement);
-    });
+    const focused = await page.evaluate(
+      (searchElement) => {
+        const element = document.activeElement;
+        return Boolean(
+          element &&
+          element !== searchElement &&
+          element.matches(
+            'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])',
+          ),
+        );
+      },
+      await search.elementHandle(),
+    );
     if (!focused) throw new Error('television remote navigation did not establish focus');
     interactions.push('television:remote-focus');
   }
@@ -118,6 +136,9 @@ async function checkLayoutInteraction(page, layout, output) {
     const saveStatus = await page.locator('[data-save-status]').innerText();
     if (!/active|unavailable|saved/i.test(saveStatus))
       throw new Error(`desktop shortcut setting returned unexpected status: ${saveStatus}`);
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    if ((await shortcut.inputValue()) !== 'CommandOrControl+Shift+G')
+      throw new Error('desktop shortcut setting did not persist after reload');
     interactions.push('desktop:global-shortcut-setting');
   }
 
@@ -172,6 +193,10 @@ export async function runElectronVisualSmoke({
           throw new Error(
             `${layout.name} ${route} resolved unexpected device mode ${runtime.deviceMode || 'none'}`,
           );
+        if (runtime.navigation !== layout.navigation)
+          throw new Error(
+            `${layout.name} ${route} resolved unexpected navigation ${runtime.navigation || 'none'}`,
+          );
         if (runtime.horizontalOverflow)
           throw new Error(`${layout.name} ${route} has horizontal overflow`);
         const screenshot = await page.screenshot({
@@ -204,7 +229,9 @@ export async function runElectronVisualSmoke({
     });
     const candidatePath = path.join(output, 'visual-baseline.json');
     await writeFile(candidatePath, `${JSON.stringify(candidate, null, 2)}\n`);
-    const baseline = compareVisualBaseline(await readBaseline(baselinePath), candidate);
+    const baseline = compareVisualBaseline(await readBaseline(baselinePath), candidate, {
+      required: Boolean(baselinePath),
+    });
     if (baseline.status === 'changed')
       throw new Error(`Electron visual baseline changed:\n${baseline.mismatches.join('\n')}`);
 
