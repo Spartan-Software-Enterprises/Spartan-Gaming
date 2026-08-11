@@ -70,6 +70,7 @@ export function createProductionRolloutPlan({composeExecutable: executable = 'do
   const normalizedEnvFile = envFile ? absolute(envFile, 'envFile') : null;
   const health = healthUrl(healthEndpoint, 'healthEndpoint');
   const adminHealth = adminHealthEndpoint ? healthUrl(adminHealthEndpoint, 'adminHealthEndpoint') : null;
+  if (requireTurnCredentials && !includeTurn) throw new TypeError('includeTurn must be enabled when TURN credential verification is required');
   if (requireTurnCredentials && !adminHealth) throw new TypeError('adminHealthEndpoint is required when TURN credential verification is required');
   const base = {composeExecutable: normalizedExecutable, composeFile: normalizedComposeFile, project: normalizedProject, envFile: normalizedEnvFile, includeTurn: Boolean(includeTurn)};
   return Object.freeze({status: 'planned', compose: Object.freeze({preflight: composeArgs({...base, action: 'config'}), up: composeArgs({...base, action: 'up'})}), health: Object.freeze({endpoint: health, adminEndpoint: adminHealth, required: Object.freeze(['service', ...(requireBroker ? ['broker'] : []), ...(requireTurnCredentials ? ['turn-credential-service'] : [])])}), security: Object.freeze({shell: false, credentials: 'external-secret-files', turn: Boolean(includeTurn), operatorConfirmationRequired: true})});
