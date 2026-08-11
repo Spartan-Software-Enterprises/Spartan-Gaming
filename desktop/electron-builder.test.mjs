@@ -33,7 +33,11 @@ test('Electron shell keeps quit confirmation tied to the active session setting'
   assert.match(main, /spartan:deep-link/);
   assert.match(main, /createBundledAppProtocolHandler/);
   assert.doesNotMatch(main, /createFrontendServer/);
+  assert.match(main, /persist:spartan-gaming-providers/);
+  assert.match(main, /did-create-window/);
   assert.match(preload, /setQuitGuard\(enabled\)/);
   assert.match(preload, /setSessionActive\(active\)/);
   assert.match(preload, /onDeepLink\(callback\)/);
+  assert.match(main, /spartan:clear-provider-logins/);
+  assert.match(preload, /clearProviderLogins\(\)/);
 });

@@ -152,7 +152,7 @@ export const settingsCategories = [
       toggle('providers.isolateAccounts', 'Isolate provider accounts by profile', 'Prevent account metadata and sessions from crossing browser profiles.', true),
       action('providers.manageProfiles', 'Manage provider profiles', 'Configure launch URLs, account profiles, region hints, and quality overrides.', 'Open provider manager'),
       action('providers.manageHosts', 'Manage self-hosted machines', 'Register user-owned PCs and prepare secure, expiring pairing requests.', 'Open host manager'),
-      action('providers.clearSessions', 'Clear provider sessions', 'Remove Spartan-owned launch, recovery, and pairing handoffs from this browser session; official provider sign-out remains provider-owned.', 'Clear sessions'),
+      action('providers.clearSessions', 'Clear provider logins and sessions', 'Sign out of providers stored in the desktop app and remove Spartan launch, recovery, and pairing handoffs.', 'Clear logins'),
     ],
   },
   {

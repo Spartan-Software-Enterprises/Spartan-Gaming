@@ -1,4 +1,4 @@
-import {app, BrowserWindow, Menu, Tray, nativeImage, dialog, globalShortcut, ipcMain, protocol, shell, WebContentsView, powerMonitor, powerSaveBlocker} from 'electron';
+import {app, BrowserWindow, Menu, Tray, nativeImage, dialog, globalShortcut, ipcMain, protocol, session, shell, WebContentsView, powerMonitor, powerSaveBlocker} from 'electron';
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -26,6 +26,7 @@ let powerBlockerId = null;
 let powerBlockerType = null;
 const privacySessions = new WeakSet();
 const permissionDecisions = new Map();
+const providerPartition = 'persist:spartan-gaming-providers';
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 let pendingDeepLink = findSpartanDeepLink(process.argv);
 let networkPolicy = createApprovedNetworkPolicy();
@@ -68,16 +69,23 @@ function closeProviderView() {
 function createProviderView(url, title = 'Provider Player') {
   if (!networkPolicy.allowsProviderLaunch(url)) throw new Error('Provider Player accepts only cataloged gaming-service URLs.');
   closeProviderView();
-  providerView = new WebContentsView({webPreferences: {contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true, partition: 'persist:spartan-gaming-providers'}});
-  installPrivacyPolicy(providerView.webContents.session);
-  providerView.webContents.setWindowOpenHandler(({url: popupUrl}) => { if (networkPolicy.allowsServiceUrl(popupUrl)) void providerView.webContents.loadURL(popupUrl); return {action: 'deny'}; });
-  providerView.webContents.on('will-navigate', event => { if (!networkPolicy.allowsServiceUrl(event.url)) event.preventDefault(); });
+  providerView = new WebContentsView({webPreferences: providerWebPreferences()});
+  configureProviderWebContents(providerView.webContents);
   providerView.webContents.on('enter-full-screen', () => windowRef.webContents.send('spartan:fullscreen-changed', true));
   providerView.webContents.on('leave-full-screen', () => windowRef.webContents.send('spartan:fullscreen-changed', false));
   windowRef.contentView.addChildView(providerView);
   resizeProvider();
   void providerView.webContents.loadURL(url);
   windowRef.setTitle(`Spartan Gaming — ${title}`);
+}
+
+function providerWebPreferences() { return {contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true, partition: providerPartition}; }
+
+function configureProviderWebContents(contents) {
+  installPrivacyPolicy(contents.session);
+  contents.on('will-navigate', event => { if (!networkPolicy.allowsServiceUrl(event.url)) event.preventDefault(); });
+  contents.setWindowOpenHandler(({url}) => networkPolicy.allowsServiceUrl(url) ? {action: 'allow', overrideBrowserWindowOptions: {width: 560, height: 760, autoHideMenuBar: true, backgroundColor: '#10151b', webPreferences: providerWebPreferences()}} : {action: 'deny'});
+  contents.on('did-create-window', childWindow => configureProviderWebContents(childWindow.webContents));
 }
 
 function resizeProvider() { if (!providerView || !windowRef) return; const {width, height} = windowRef.getContentBounds(); providerView.setBounds({x: 0, y: 0, width, height}); }
@@ -151,6 +159,7 @@ if (hasSingleInstanceLock) app.whenReady().then(async () => {
   ipcMain.handle('spartan:open-external', (_event, url) => { if (!networkPolicy.allowsExternalUrl(url)) throw new Error('External links are limited to cataloged gaming services and approved download sources.'); return shell.openExternal(new URL(url).href); });
   ipcMain.handle('spartan:open-provider', (_event, {url, title}) => createProviderView(url, title));
   ipcMain.handle('spartan:close-provider', closeProviderView);
+  ipcMain.handle('spartan:clear-provider-logins', async event => { if (event.sender !== windowRef.webContents) throw new Error('provider logins may only be cleared by the primary window'); closeProviderView(); const providerSession = session.fromPartition(providerPartition); await providerSession.clearStorageData({storages: ['cookies', 'filesystem', 'indexdb', 'localstorage', 'serviceworkers', 'cachestorage']}); await providerSession.clearCache(); return Object.freeze({cleared: true}); });
   ipcMain.handle('spartan:set-quit-guard', (_event, enabled) => { if (typeof enabled !== 'boolean') throw new TypeError('quit guard must be boolean'); quitGuardEnabled = enabled; return quitGuardEnabled; });
   ipcMain.handle('spartan:set-session-active', (_event, active) => { if (typeof active !== 'boolean') throw new TypeError('session state must be boolean'); sessionActive = active; syncPowerSaveBlocker(); return sessionActive; });
   ipcMain.handle('spartan:apply-runtime-settings', (event, settings) => { if (event.sender !== windowRef.webContents) throw new Error('runtime settings may only be applied by the primary window'); runtimePolicy = normalizeElectronRuntimePolicy(settings); event.sender.setBackgroundThrottling(runtimePolicy.backgroundThrottling); syncPowerSaveBlocker(); if (runtimePolicy.backgroundApps) syncTray(); else destroyTray(); return Object.freeze({...runtimePolicy, globalShortcutStatus: shortcutController.sync(runtimePolicy.globalShortcut)}); });

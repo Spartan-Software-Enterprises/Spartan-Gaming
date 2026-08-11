@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('spartanElectron', Object.freeze({
   openExternal(url) { return ipcRenderer.invoke('spartan:open-external', url); },
   openProvider(url, title) { return ipcRenderer.invoke('spartan:open-provider', {url, title}); },
   closeProvider() { return ipcRenderer.invoke('spartan:close-provider'); },
+  clearProviderLogins() { return ipcRenderer.invoke('spartan:clear-provider-logins'); },
   setQuitGuard(enabled) { return ipcRenderer.invoke('spartan:set-quit-guard', enabled); },
   setSessionActive(active) { return ipcRenderer.invoke('spartan:set-session-active', active); },
   applyRuntimeSettings(settings) { return ipcRenderer.invoke('spartan:apply-runtime-settings', settings); },

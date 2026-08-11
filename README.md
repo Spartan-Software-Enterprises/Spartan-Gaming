@@ -31,13 +31,14 @@ The primary desktop app is packaged as one application. Its interface, catalogs,
 
 - A single-instance lifecycle with guarded `spartan://launch` deep links.
 - Sandboxed, isolated provider views with HTTPS-only navigation policy.
+- In-app provider sign-in and OAuth windows with persistent, provider-isolated sessions and approved authentication domains.
 - Tray and background-app behavior controlled by Settings.
 - Session-aware power-save blocking plus bounded suspend, battery, thermal, and CPU speed-limit events.
 - Privacy controls for Do Not Track, third-party cookies, and permission prompting.
 - An optional global restore shortcut with safe, allow-listed choices and visible registration status.
 - Cross-platform Electron Builder configuration for Windows, Linux, and macOS development artifacts.
 
-The primary window can navigate only inside Spartan's private `spartan-app://app` protocol. Cataloged cloud-gaming and browser-game services open in isolated player views, while general external access is restricted to approved gaming-service and download/update origins.
+The primary window can navigate only inside Spartan's private `spartan-app://app` protocol. Cataloged cloud-gaming and browser-game services open in isolated player views, while general external access is restricted to approved gaming-service and download/update origins. Login pages use the provider's own secure forms and session storage; Spartan never receives account passwords or copies provider credentials into its settings.
 
 The global shortcut is disabled by default. Settings → General offers only `CommandOrControl+Shift+G` and `CommandOrControl+Alt+G`; the app reports when another application or the operating system prevents registration. Linux also enables Electron's Wayland Global Shortcuts Portal path.
 
