@@ -1073,7 +1073,7 @@ export const settingsCategories = [
       select(
         'performance.gpuPreference',
         'GPU preference',
-        'Choose which GPU to use on multi-GPU systems.',
+        'Choose which GPU to use on multi-GPU systems. Applies on the next launch.',
         ['Automatic', 'Power saving GPU', 'High performance GPU'],
         'Automatic',
       ),
@@ -1110,7 +1110,7 @@ export const settingsCategories = [
       select(
         'performance.processModel',
         'Process model',
-        'Choose the browser process isolation profile.',
+        'Choose the browser process isolation profile. Applies on the next launch.',
         ['Default', 'Maximum isolation', 'Low memory'],
         'Default',
       ),

@@ -26,6 +26,9 @@ contextBridge.exposeInMainWorld(
     applyRuntimeSettings(settings) {
       return ipcRenderer.invoke('spartan:apply-runtime-settings', settings);
     },
+    getStartupState() {
+      return ipcRenderer.invoke('spartan:get-startup-state');
+    },
     exportDiagnostics() {
       return ipcRenderer.invoke('spartan:export-diagnostics');
     },

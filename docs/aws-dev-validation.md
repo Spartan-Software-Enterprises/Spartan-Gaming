@@ -188,6 +188,20 @@ layout matrix. The tester screenshots were visually inspected at desktop,
 mobile, and television sizes; the policy summary remains readable and the
 existing panels retain their intended layout.
 
+The 2026-08-11 GPU-preference/process-model increment wires
+`performance.gpuPreference` and `performance.processModel` as restart-safe
+startup policy alongside hardware acceleration. The Electron contract suite
+passes 53/53 and the real-process Playwright smoke passes with all 44 visual
+snapshots matched and twelve maintained interactions, adding
+`desktop:startup-performance-policy`: change GPU preference to high performance
+and process model to maximum isolation, observe the restart-required state,
+read the persisted `startup-policy.json` from the Electron user-data directory,
+reload the profile, confirm the selections persisted, and restore defaults. The
+interaction verifies the normalized policy on disk contains
+`gpuPreference: "High performance GPU"` and `processModel: "Maximum isolation"`
+before reload. Evidence is retained at
+`~/.config/spartan-dev/evidence/playwright-electron/` outside Git.
+
 ### Connection and host inventory
 
 The following identifies the existing development host without publishing any

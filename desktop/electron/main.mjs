@@ -546,6 +546,11 @@ if (hasSingleInstanceLock)
         globalShortcutStatus: shortcutController.sync(runtimePolicy.globalShortcut),
       });
     });
+    ipcMain.handle('spartan:get-startup-state', (event) => {
+      if (event.sender !== windowRef.webContents)
+        throw new Error('startup state may only be read by the primary window');
+      return JSON.stringify(startupPolicyAtLaunch);
+    });
     ipcMain.handle('spartan:export-diagnostics', async (event) => {
       if (event.sender !== windowRef.webContents)
         throw new Error('diagnostics may only be exported by the primary window');

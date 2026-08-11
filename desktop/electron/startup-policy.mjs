@@ -5,14 +5,43 @@ import path from 'node:path';
 
 const writeQueues = new Map();
 
+const GPU_PREFERENCE_OPTIONS = Object.freeze([
+  'Automatic',
+  'Power saving GPU',
+  'High performance GPU',
+]);
+const PROCESS_MODEL_OPTIONS = Object.freeze(['Default', 'Maximum isolation', 'Low memory']);
+const LOG_RETENTION_OPTIONS = Object.freeze([
+  '1 day',
+  '7 days',
+  '30 days',
+  'Until manually removed',
+]);
+
+/** Chromium command-line switches applied before the app becomes ready. */
+const GPU_PREFERENCE_SWITCHES = Object.freeze({
+  Automatic: null,
+  'Power saving GPU': 'force-low-power-gpu',
+  'High performance GPU': 'force-high-performance-gpu',
+});
+const PROCESS_MODEL_SWITCHES = Object.freeze({
+  Default: null,
+  'Maximum isolation': 'site-per-process',
+  'Low memory': 'enable-low-end-device-mode',
+});
+
 export function normalizeElectronStartupPolicy(settings = {}) {
   return Object.freeze({
     hardwareAcceleration: settings?.hardwareAcceleration !== false,
+    gpuPreference: GPU_PREFERENCE_OPTIONS.includes(settings?.gpuPreference)
+      ? settings.gpuPreference
+      : 'Automatic',
+    processModel: PROCESS_MODEL_OPTIONS.includes(settings?.processModel)
+      ? settings.processModel
+      : 'Default',
     crashReports: settings?.crashReports === true,
     verboseLogs: settings?.verboseLogs === true,
-    logRetention: ['1 day', '7 days', '30 days', 'Until manually removed'].includes(
-      settings?.logRetention,
-    )
+    logRetention: LOG_RETENTION_OPTIONS.includes(settings?.logRetention)
       ? settings.logRetention
       : '7 days',
   });
@@ -63,6 +92,10 @@ export async function persistElectronStartupPolicy(
 export function applyElectronStartupPolicy(app, policy = normalizeElectronStartupPolicy()) {
   const normalized = normalizeElectronStartupPolicy(policy);
   if (!normalized.hardwareAcceleration) app.disableHardwareAcceleration();
+  const gpuSwitch = GPU_PREFERENCE_SWITCHES[normalized.gpuPreference];
+  if (gpuSwitch) app.commandLine.appendSwitch(gpuSwitch);
+  const processSwitch = PROCESS_MODEL_SWITCHES[normalized.processModel];
+  if (processSwitch) app.commandLine.appendSwitch(processSwitch);
   return normalized;
 }
 
@@ -71,6 +104,9 @@ export function describeElectronStartupPolicy(saved, active) {
   const activePolicy = normalizeElectronStartupPolicy(active);
   return Object.freeze({
     ...policy,
-    requiresRestart: policy.hardwareAcceleration !== activePolicy.hardwareAcceleration,
+    requiresRestart:
+      policy.hardwareAcceleration !== activePolicy.hardwareAcceleration ||
+      policy.gpuPreference !== activePolicy.gpuPreference ||
+      policy.processModel !== activePolicy.processModel,
   });
 }

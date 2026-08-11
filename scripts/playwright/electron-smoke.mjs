@@ -226,6 +226,57 @@ async function checkLayoutInteraction(page, layout, output, userDataDirectory, a
         document.documentElement.dataset.spartanRestartRequired === 'false',
     );
 
+    const startupPolicyPath = path.join(userDataDirectory, 'startup-policy.json');
+    let gpuPreference = page.locator('[data-key="performance.gpuPreference"]');
+    let processModel = page.locator('[data-key="performance.processModel"]');
+    await gpuPreference.selectOption('High performance GPU');
+    await processModel.selectOption('Maximum isolation');
+    await page.waitForFunction(
+      () => document.documentElement.dataset.spartanRestartRequired === 'true',
+    );
+    await readJsonAfterWrite(
+      startupPolicyPath,
+      (policy) =>
+        policy.gpuPreference === 'High performance GPU' &&
+        policy.processModel === 'Maximum isolation',
+    );
+    await application.close();
+    application = await electron.launch({
+      args: [
+        path.join(repositoryRoot, 'desktop/electron/main.mjs'),
+        `--user-data-dir=${userDataDirectory}`,
+      ],
+      cwd: repositoryRoot,
+    });
+    page = await application.firstWindow();
+    await page.waitForLoadState('domcontentloaded');
+    await page.goto(`${appOrigin}/settings/`, { waitUntil: 'domcontentloaded' });
+    await page.locator('[data-category="performance"]').click();
+    gpuPreference = page.locator('[data-key="performance.gpuPreference"]');
+    processModel = page.locator('[data-key="performance.processModel"]');
+    if ((await gpuPreference.inputValue()) !== 'High performance GPU')
+      throw new Error('desktop GPU preference setting did not persist across relaunch');
+    if ((await processModel.inputValue()) !== 'Maximum isolation')
+      throw new Error('desktop process model setting did not persist across relaunch');
+    const activeStartup = await page.evaluate(async () => {
+      const serialized = await window.spartanElectron?.getStartupState?.();
+      return serialized ? JSON.parse(serialized) : null;
+    });
+    if (
+      !activeStartup ||
+      activeStartup.gpuPreference !== 'High performance GPU' ||
+      activeStartup.processModel !== 'Maximum isolation'
+    )
+      throw new Error(
+        `relaunched main process did not apply the persisted startup policy: ${JSON.stringify(activeStartup)}`,
+      );
+    await gpuPreference.selectOption('Automatic');
+    await processModel.selectOption('Default');
+    await page.waitForFunction(
+      () => document.documentElement.dataset.spartanRestartRequired === 'true',
+    );
+    interactions.push('desktop:startup-performance-policy');
+
     const crashReports = page.locator('[data-key="performance.crashReports"]');
     await crashReports.click();
     await page.locator('[data-category="advanced"]').click();
@@ -233,7 +284,6 @@ async function checkLayoutInteraction(page, layout, output, userDataDirectory, a
     const logRetention = page.locator('[data-key="advanced.logRetention"]');
     await verboseLogs.click();
     await logRetention.selectOption('1 day');
-    const startupPolicyPath = path.join(userDataDirectory, 'startup-policy.json');
     const diagnosticsPolicy = await readJsonAfterWrite(
       startupPolicyPath,
       (policy) =>
@@ -394,7 +444,7 @@ async function checkLayoutInteraction(page, layout, output, userDataDirectory, a
     fullPage: true,
     animations: 'disabled',
   });
-  return interactions;
+  return Object.freeze({ interactions, page, application });
 }
 
 export async function runElectronVisualSmoke({
@@ -407,7 +457,7 @@ export async function runElectronVisualSmoke({
 } = {}) {
   await mkdir(output, { recursive: true });
   const userDataDirectory = await mkdtemp(path.join(tmpdir(), 'spartan-electron-visual-'));
-  const application = await electron.launch({
+  let application = await electron.launch({
     args: [
       path.join(repositoryRoot, 'desktop/electron/main.mjs'),
       `--user-data-dir=${userDataDirectory}`,
@@ -418,7 +468,7 @@ export async function runElectronVisualSmoke({
   const interactions = [];
   const snapshots = {};
   try {
-    const page = await application.firstWindow();
+    let page = await application.firstWindow();
     await page.waitForLoadState('domcontentloaded');
     if (!page.url().startsWith(`${appOrigin}/dashboard/`))
       throw new Error(`standalone app opened an unexpected URL: ${page.url()}`);
@@ -519,9 +569,16 @@ export async function runElectronVisualSmoke({
           }),
         );
       }
-      interactions.push(
-        ...(await checkLayoutInteraction(page, layout, output, userDataDirectory, application)),
+      const interaction = await checkLayoutInteraction(
+        page,
+        layout,
+        output,
+        userDataDirectory,
+        application,
       );
+      page = interaction.page;
+      application = interaction.application;
+      interactions.push(...interaction.interactions);
     }
 
     const candidate = Object.freeze({

@@ -296,6 +296,17 @@ is normalized to a boolean policy, written atomically with owner-only file mode,
 and applied from `startup-policy.json` before Electron's ready event. Changing
 the setting reports that a restart is required; missing or malformed policy
 files safely retain hardware acceleration. The file contains no credentials.
+
+`performance.gpuPreference` and `performance.processModel` are the same kind of
+bounded next-launch policy. GPU preference maps to a real Chromium GPU switch
+(`--force-low-power-gpu` for power saving, `--force-high-performance-gpu` for
+high performance) and process model maps to Chromium isolation switches
+(`--site-per-process` for maximum isolation, `--enable-low-end-device-mode` for
+low memory). Both are appended to `app.commandLine` before Electron's ready
+event, fail closed to `Automatic`/`Default` for unsupported values, and each
+contributes to the restart-required notice in Settings. The desktop smoke covers
+changing both, observing restart-required state, verifying the persisted policy
+on disk, reloading the profile, and restoring defaults.
 The primary window keeps `sandbox: true` and context isolation enabled. Its
 preload is CommonJS (`desktop/electron/preload.cjs`) because Electron runs
 sandboxed preloads as plain JavaScript without ESM import support; using an ESM

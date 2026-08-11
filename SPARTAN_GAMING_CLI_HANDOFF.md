@@ -625,22 +625,26 @@ rebuilt successfully. No full desktop environment was required beyond Xvfb.
 CodeRabbit reviewed all 10 changed files in this increment and returned zero
 findings.
 
-The current desktop performance increment makes
-`performance.hardwareAcceleration` operational in Electron. The renderer sends
-the normalized choice to the main process, which atomically persists a bounded
-startup policy in the Electron user-data directory and reports when the active
-process must restart. On the next launch the policy is read and software
-rendering is selected before Electron becomes ready; missing, malformed, and
-non-boolean values retain the accelerated default. Focused startup-policy and
-renderer-policy validation passes 7/7, and the expanded Electron contract suite
-passes 34/34 after adding concurrent-write coverage. AWS visual testing exposed that the former ESM preload never ran
-inside the sandboxed renderer; Electron's documented constraint requires plain
-JavaScript/CommonJS there. The bridge now uses `preload.cjs` without weakening
-sandboxing or context isolation. AWS subsequently matched all 44 visual
-snapshots and exercised eight maintained interactions, including toggling
-hardware acceleration, observing restart-required state, reloading the saved
-profile, and reading the bounded next-launch policy from disk.
-Local repository checks pass 437/437 and the serialized suite passes 637 of 641
+The current desktop performance increment makes `performance.hardwareAcceleration`,
+`performance.gpuPreference`, and `performance.processModel` operational in
+Electron. The renderer sends the normalized choices to the main process, which
+atomically persists a bounded startup policy in the Electron user-data directory
+and reports when the active process must restart. On the next launch the policy
+is read before Electron becomes ready: hardware acceleration selects the
+software-rendering fallback, GPU preference appends `--force-low-power-gpu` or
+`--force-high-performance-gpu`, and process model appends `--site-per-process`
+or `--enable-low-end-device-mode`. Missing, malformed, and non-boolean values
+retain the defaults. Focused startup-policy, renderer-policy, and runtime
+validation passes 14/14, and the full Electron contract suite passes 53/53 after
+adding bound, switch-application, restart-detection, and persistence coverage.
+AWS matched all 44 visual snapshots and exercised twelve maintained interactions,
+including changing GPU preference and process model, observing restart-required
+state, reading the persisted next-launch policy from disk, reloading the saved
+profile, and restoring defaults. AWS visual testing earlier exposed that the
+former ESM preload never ran inside the sandboxed renderer; Electron's
+documented constraint requires plain JavaScript/CommonJS there. The bridge now
+uses `preload.cjs` without weakening sandboxing or context isolation.
+Local repository checks pass 442/442 and the serialized suite passes 637 of 641
 with four expected host skips; AWS passes 639 of 641 with two expected platform
 skips and rebuilt the unpacked Linux x64 application. CodeRabbit identified one
 valid concurrent-write race; startup policy writes are now queued per file with
@@ -651,10 +655,12 @@ layout so the mobile-player baseline cannot inherit state from desktop settings
 interactions.
 
 The next practical desktop-settings work remains the unsupported/inert settings
-inventory, beginning with a carefully bounded GPU preference/process-model
-contract or local-only developer tooling. Do not implement remote product
-telemetry or a generic update service without an explicit standalone endpoint,
-signed artifact model, rollback evidence, and network-boundary review.
+inventory; the GPU preference/process-model startup contract is now wired and
+validated, so continue with the remaining inert performance controls (for
+example background throttling and power mode) using the same bounded,
+restart-safe, fail-closed pattern. Do not implement remote product telemetry or
+a generic update service without an explicit standalone endpoint, signed
+artifact model, rollback evidence, and network-boundary review.
 
 The preceding PWA increment remains covered by
 `src/frontend/pwa/install.test.mjs`, `scripts/frontend/build.test.mjs`, and

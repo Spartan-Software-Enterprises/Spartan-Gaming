@@ -12,7 +12,7 @@
 ## Public release acceptance gates
 
 - [ ] Maintain passing Prettier, repository, serial, Electron, Android, and cross-platform packaging checks on the release commit.
-- [x] Run repeatable Playwright interaction and perceptual screenshot comparisons for every maintained application route at desktop, handheld, mobile, and television layouts (44 isolated-state route snapshots, eleven representative interactions, and the Linux/Xvfb baseline are automated; real-device visual approval remains the next separate gate).
+- [x] Run repeatable Playwright interaction and perceptual screenshot comparisons for every maintained application route at desktop, handheld, mobile, and television layouts (44 isolated-state route snapshots, twelve representative interactions, and the Linux/Xvfb baseline are automated; real-device visual approval remains the next separate gate).
 - [ ] Visually inspect the packaged application on real Windows, Linux, SteamOS/Steam Deck, Android, Fire TV, ChromeOS, and every other claimed device class; record platform-specific screenshots and interaction evidence.
 - [ ] Verify keyboard, mouse, touch, remote, and every supported controller family across navigation, text entry, gameplay, overlays, settings, and recovery flows.
 - [ ] Verify cold start, local library/settings/controller workflows, and locally installed runtimes with networking disabled.
@@ -44,6 +44,7 @@
 - [x] Settings-controlled provider-session auto-detection for successfully loaded approved Electron views, including application power activity and crash/close cleanup without remote-page injection.
 - [x] Standalone settings terminology and schema cleanup (removed the obsolete general-web-search/address-bar control, replaced the startup `New tab` choice with `New session`, and retained legacy-profile routing compatibility).
 - [x] Restart-safe Electron hardware-acceleration policy with bounded local persistence, safe malformed-file fallback, and an explicit next-launch status in Settings.
+- [x] Bounded GPU preference and process-model startup policy: `performance.gpuPreference` and `performance.processModel` persist alongside hardware acceleration, apply real Chromium switches before Electron becomes ready, fail closed to defaults, and participate in the restart-required notice with real-process Playwright coverage.
 - [x] Opt-in local Electron crash and verbose diagnostics with startup-safe policy persistence, bounded retention, queued atomic writes, credential/identity redaction, export and immediate cleanup controls, and real-process Playwright coverage.
 - [x] Functional Electron Developer Mode that gates the primary application's DevTools menu, F12/Command-or-Control+Shift+I shortcuts, and Settings action; disabling it closes DevTools immediately, and provider surfaces are never targeted.
 - [x] Functional packaged Electron application updater with stable/beta/alpha settings, bounded status and progress, restart confirmation, GitHub release metadata, exact tag/channel checks, and guarded Windows/macOS signing custody (signed release execution and rollback drills remain public-release gates).
