@@ -41,6 +41,7 @@ test('production rollout verifies TURN credentials without retaining secrets', a
 
 test('production rollout requires an admin endpoint before broker-admin or TURN checks', async () => {
   assert.throws(() => createProductionRolloutPlan({requireTurnCredentials: true}), /adminHealthEndpoint is required/);
+  assert.throws(() => createProductionRolloutPlan({includeTurn: false, requireTurnCredentials: true, adminHealthEndpoint: 'http://127.0.0.1:8790/admin/health'}), /includeTurn must be enabled/);
   const plan = createProductionRolloutPlan({composeFile: '/srv/spartan/compose.yml', healthEndpoint: 'http://127.0.0.1:8790/health'});
   await assert.rejects(() => executeProductionRollout(plan, {runner: async () => {}, checkAdmin: true}), /admin health endpoint is required/);
   await assert.rejects(() => executeProductionRollout(plan, {runner: async () => {}, checkTurn: true, adminSecret: 'secret'}), /admin health endpoint is required/);
