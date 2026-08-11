@@ -221,14 +221,27 @@ test(
     pipeline.videoOutput.emit('data', VIDEO_CHUNK);
     pipeline.audioOutput.emit('data', OPUS_FRAME);
     pipeline.audioOutput.emit('data', OPUS_FRAME);
-    // Werift's RTP delivery can be delayed by concurrent Node test workers on
-    // constrained ARM hosts. Keep the packet assertions strict while allowing
-    // the real loopback enough time to drain under that scheduling pressure.
-    await waitFor(
-      () => receivedVideo.length > 0 && receivedAudio.length > 0,
-      30_000,
-      'client media packets',
-    );
+    // Werift's DTLS SRTP send context can lag the `connected` state by a few
+    // hundred milliseconds on constrained hosts; a single-shot burst can land
+    // entirely inside that window and be dropped. Real capture never stops, so
+    // keep feeding the pipeline like a genuine source and only stop once the
+    // client has observed both tracks. The packet assertions below stay strict.
+    const mediaEmitter = setInterval(() => {
+      pipeline.videoOutput.emit('data', VIDEO_CHUNK);
+      pipeline.audioOutput.emit('data', OPUS_FRAME);
+    }, 100);
+    try {
+      // Werift's RTP delivery can be delayed by concurrent Node test workers on
+      // constrained hosts. Keep the packet assertions strict while allowing
+      // the real loopback enough time to drain under that scheduling pressure.
+      await waitFor(
+        () => receivedVideo.length > 0 && receivedAudio.length > 0,
+        30_000,
+        'client media packets',
+      );
+    } finally {
+      clearInterval(mediaEmitter);
+    }
     assert.ok(receivedVideo.length > 0, 'client received no H.264 RTP packets');
     assert.ok(receivedAudio.length > 0, 'client received no Opus RTP packets');
     assert.equal(
