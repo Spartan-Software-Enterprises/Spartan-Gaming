@@ -125,6 +125,14 @@ document
     'beforeend',
     '<button class="rom-import" data-action="import-roms" aria-label="Import ROM files">▼ Import ROMs</button>',
   );
+document
+  .querySelector('.topbar')
+  ?.insertAdjacentHTML(
+    'beforeend',
+    '<button class="rom-scan" data-action="scan-rom-folder" aria-label="Scan folder for ROMs">▼ Scan Folder</button>',
+  );
+document
+  .querySelector('.main-nav')
   ?.insertAdjacentHTML(
     'beforeend',
     '<button class="nav-item" data-section="browser">▣ <span>Browser games</span></button>',

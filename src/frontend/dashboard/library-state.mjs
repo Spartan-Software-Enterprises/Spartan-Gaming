@@ -154,6 +154,88 @@ function detectRomMime(path) {
   return mimeMap[ext] || 'application/octet-stream';
 }
 
+function detectRomSystem(path) {
+  const ext = path.split('.').pop().toLowerCase();
+  const systemMap = {
+    'smc': 'snes', 'sfc': 'snes',
+    'nes': 'nes',
+    'gba': 'gba',
+    'gb': 'game-boy', 'gbc': 'game-boy-color',
+    'n64': 'nintendo-64',
+    'z64': 'nintendo-64',
+    'iso': 'playstation-1', 'cue': 'playstation-1', 'bin': 'playstation-1',
+    'chd': 'playstation-2',
+    'wbfs': 'wii',
+    'gcm': 'gamecube',
+    'iso': 'playstation-3',
+    'cso': 'psp',
+    'nds': 'nintendo-ds',
+    '3ds': 'nintendo-3ds',
+    'zip': 'arcade',
+    'a26': 'atari-2600',
+    'vec': 'vectrex',
+    'smd': 'genesis', 'md': 'genesis',
+    'sms': 'sms', 'gg': 'game-gear',
+    'pce': 'pc-engine',
+    'ws': 'wonderswan',
+    'rom': 'multi-system',
+  };
+  return systemMap[ext] || 'multi-system';
+}
+
+function detectRomMime(path) {
+  const ext = path.split('.').pop().toLowerCase();
+  const mimeMap = {
+    'smc': 'application/x-snes-rom', 'sfc': 'application/x-snes-rom',
+    'nes': 'application/x-nes-rom',
+    'gba': 'application/x-gba-rom',
+    'gb': 'application/x-gameboy-rom', 'gbc': 'application/x-gameboy-color-rom',
+    'n64': 'application/x-n64-rom', 'z64': 'application/x-n64-rom',
+    'iso': 'application/x-iso9660-image', 'cue': 'application/x-cue', 'bin': 'application/octet-stream',
+    'chd': 'application/x-chd',
+    'wbfs': 'application/x-wbfs',
+    'gcm': 'application/x-gcm',
+    'cso': 'application/x-cso',
+    'nds': 'application/x-nds-rom',
+    '3ds': 'application/x-3ds-rom',
+    'zip': 'application/zip',
+    'a26': 'application/x-atari2600-rom',
+    'vec': 'application/x-vectrex-rom',
+    'smd': 'application/x-genesis-rom', 'md': 'application/x-genesis-rom',
+    'sms': 'application/x-sms-rom', 'gg': 'application/x-gg-rom',
+    'pce': 'application/x-pce-rom',
+    'ws': 'application/x-wonderswan-rom',
+    'rom': 'application/octet-stream',
+  };
+  return mimeMap[ext] || 'application/octet-stream';
+}
+
+function walkDirectoryFiles(directoryHandle, extensionFilter) {
+  const romExtensions = new Set([
+    'smc', 'sfc', 'nes', 'gba', 'gb', 'gbc', 'n64', 'z64',
+    'iso', 'cue', 'bin', 'chd', 'wbfs', 'gcm', 'cso',
+    'nds', '3ds', 'zip', 'a26', 'vec', 'smd', 'md', 'sms', 'gg',
+    'pce', 'ws', 'rom'
+  ]);
+  const result = [];
+  async function readEntries(handle) {
+    for await (const entry of handle.values()) {
+      if (entry.kind === 'file') {
+        const name = entry.name;
+        const ext = name.split('.').pop().toLowerCase();
+        if (romExtensions.has(ext)) {
+          const path = await entry.path();
+          result.push(path);
+        }
+      } else if (entry.kind === 'directory') {
+        await readEntries(entry);
+      }
+    }
+  }
+  await readEntries(directoryHandle);
+  return result;
+}
+
 export function createRomLibraryStore({
   storage = globalThis.localStorage,
   key = ROM_LIBRARY_KEY,
