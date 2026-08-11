@@ -13,10 +13,28 @@ export const ELECTRON_VISUAL_ROUTES = Object.freeze([
 ]);
 
 export const ELECTRON_VISUAL_LAYOUTS = Object.freeze([
-  Object.freeze({ name: 'desktop', mode: 'Desktop', width: 1440, height: 900 }),
-  Object.freeze({ name: 'handheld', mode: 'Handheld', width: 1280, height: 800 }),
-  Object.freeze({ name: 'mobile', mode: 'Mobile', width: 390, height: 844 }),
-  Object.freeze({ name: 'television', mode: 'Television', width: 1920, height: 1080 }),
+  Object.freeze({
+    name: 'desktop',
+    mode: 'Desktop',
+    navigation: 'pointer-keyboard',
+    width: 1440,
+    height: 900,
+  }),
+  Object.freeze({
+    name: 'handheld',
+    mode: 'Handheld',
+    navigation: 'controller-touch',
+    width: 1280,
+    height: 800,
+  }),
+  Object.freeze({ name: 'mobile', mode: 'Mobile', navigation: 'touch', width: 390, height: 844 }),
+  Object.freeze({
+    name: 'television',
+    mode: 'Television',
+    navigation: 'remote-controller',
+    width: 1920,
+    height: 1080,
+  }),
 ]);
 
 export function visualSnapshotKey(layout, route) {
@@ -41,8 +59,11 @@ function visualDifference(before, after) {
   return difference / (before.length * 15);
 }
 
-export function compareVisualBaseline(expected, actual) {
-  if (!expected) return Object.freeze({ status: 'candidate', compared: 0, mismatches: [] });
+export function compareVisualBaseline(expected, actual, { required = false } = {}) {
+  if (!expected) {
+    if (required) throw new Error('required Electron visual baseline is unavailable');
+    return Object.freeze({ status: 'candidate', compared: 0, mismatches: [] });
+  }
   if (expected.version !== 1 || !expected.snapshots || typeof expected.snapshots !== 'object')
     throw new TypeError('Electron visual baseline is invalid');
   const expectedKeys = Object.keys(expected.snapshots).sort();
