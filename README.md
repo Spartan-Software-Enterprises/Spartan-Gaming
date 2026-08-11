@@ -107,10 +107,13 @@ Run its focused tests or create development packages:
 
 ```bash
 npm run electron:test
+npm run playwright:electron
 npm run desktop:package
 ```
 
 `npm run electron` launches the bundled application directly. It does not start a local HTTP service. `npm run desktop:package` creates platform development artifacts that contain the application UI and local catalogs.
+
+`npm run playwright:electron` launches the real Electron main process, verifies the private `spartan-app://app` origin, captures every maintained application route, checks for horizontal overflow, and exercises dashboard search plus a persisted desktop setting. Linux CI or development hosts can run it under Xvfb without exposing a web server.
 
 ## Explore the current interfaces
 
@@ -130,6 +133,7 @@ Use the repository checks before treating a change as integrated:
 npm run check
 npm run test:serial
 npm run playwright:smoke
+npm run playwright:electron
 ```
 
 CI builds and tests development surfaces across its supported runner matrix. The preferred low-cost remote validation environment is documented in [docs/aws-dev-validation.md](docs/aws-dev-validation.md), including setup, evidence locations, cost boundaries, and limitations. Durable agent continuation state lives in [SPARTAN_GAMING_CLI_HANDOFF.md](SPARTAN_GAMING_CLI_HANDOFF.md). The README is maintained as a living product showcase and must be updated alongside verified feature, platform, setup, and acceptance changes.
