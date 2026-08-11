@@ -75,7 +75,7 @@ jobs:
       contents: write
     steps:
       - name: Download signed platform artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: spartan-native-*
           path: out/rollout-artifacts
