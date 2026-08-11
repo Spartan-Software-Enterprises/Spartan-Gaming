@@ -169,6 +169,10 @@ review; stay within the AWS credit limit.
   and repository checks `31445290574`. Its production rollout contract now
   rejects TURN or admin checks before deployment unless an admin health
   endpoint is explicitly configured.
+- The latest code commit `cf8686d` passed Android debug `31446401958`,
+  cross-platform contracts `31446401971`, frontend distribution `31446401959`,
+  and repository checks `31446401966`. It rejects TURN credential verification
+  when the TURN profile is excluded from the production rollout plan.
 - The current Android-hosted Termux probe (`a2378cc`, 2026-08-10) reports
   `/dev/uinput` unavailable/read-write-unverified; input and force-feedback
   were therefore not run. This host also has no Docker, Redis, or coturn
