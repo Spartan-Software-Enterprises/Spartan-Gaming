@@ -125,6 +125,13 @@ document
     'beforeend',
     '<button class="rom-import" data-action="import-roms" aria-label="Import ROM files">▼ Import ROMs</button>',
   );
+
+document
+  .querySelector('.topbar')
+  ?.insertAdjacentHTML(
+    'beforeend',
+    '<button class="rom-scan" data-action="scan-folder" aria-label="Scan folder for ROMs">▼ Scan Folder</button>',
+  );
 document
   .querySelector('.topbar')
   ?.insertAdjacentHTML(
@@ -614,7 +621,7 @@ document.addEventListener('click', (event) => {
     }
     launchEntry(entry, plan);
   }
-  const importButton = event.target.closest('[data-action="import-roms"]');
+const importButton = event.target.closest('[data-action="import-roms"]');
   if (importButton) {
     const input = document.createElement('input');
     input.type = 'file';
@@ -641,6 +648,24 @@ document.addEventListener('click', (event) => {
         showToast(`Imported ${selectedRoms.length} ROM(s)`);
         render();
       }
+    };
+    input.click();
+    return;
+  }
+  const scanButton = event.target.closest('[data-action="scan-folder"]');
+  if (scanButton) {
+    state.romLibrary.scanFolderForRoms().then((paths) => {
+      if (paths.length > 0) {
+        showToast(`Found ${paths.length} ROM(s) in folder`);
+        render();
+      } else {
+        showToast('No ROMs found in the selected folder');
+      }
+    }).catch((error) => {
+      showToast(`Folder scan failed: ${error.message}`);
+    });
+    return;
+  }
     };
     input.click();
     return;
