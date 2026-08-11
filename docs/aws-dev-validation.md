@@ -62,16 +62,26 @@ lacking a kernel or device path capable of force feedback.
 
 ## Current development evidence
 
-On commit `e988303`, the Amazon Linux host ran the standalone Electron visual
-smoke under Xvfb at 1440x900. The real Electron main process loaded the private
-`spartan-app://app` origin without a frontend HTTP server, rendered all 11
-maintained routes with meaningful bodies and no horizontal overflow, exercised
-dashboard search and the global-shortcut setting, and saved route and
-interaction screenshots under
-`/home/ec2-user/Spartan-Gaming/out/playwright/electron`. A generated contact
-sheet was visually inspected; no blank route, broken styling, or obvious
-clipping was observed. This is virtual-display Linux evidence, not physical
-display, controller, audio, haptics, or other-platform approval.
+On commit `b669886`, the Amazon Linux host ran the standalone Electron visual
+matrix twice under Xvfb. The real Electron main process loaded the private
+`spartan-app://app` origin without a frontend HTTP server and used a fresh
+temporary user-data directory. It rendered all 11 maintained routes at desktop
+(1440x900), handheld (1280x800), mobile (390x844), and television (1920x1080)
+layouts: 44 screenshots with meaningful bodies, the expected presentation and
+navigation mode, and no document-level horizontal overflow. It also exercised
+dashboard search in every layout, desktop global-shortcut persistence, and
+television remote focus.
+
+The first run created the reviewed `electron-linux-x64.json` perceptual
+baseline; the second independently captured all routes and matched 44/44 with
+zero mismatches. Exact PNG SHA-256 values remain in the evidence while bounded
+32x32 luminance signatures avoid false failures from harmless live diagnostics
+pixels. Contact sheets for all four layouts were visually inspected; no blank
+route, broken styling, overlapping primary control, or obvious clipping was
+observed. Screenshots and the candidate report remain under
+`/home/ec2-user/Spartan-Gaming/out/playwright/electron`. This is virtual-display
+Linux evidence, not physical display, controller, audio, haptics, or
+other-platform approval.
 
 The visual host has `Xvfb`, `ImageMagick`, and `dbus-x11` installed. No desktop,
 VNC, RDP, or public application port is required; Xvfb is the minimal display
@@ -135,8 +145,12 @@ xvfb-run -a --server-args="-screen 0 1440x900x24" npm run playwright:electron
 ```
 
 It launches the real Electron main process, requires the private
-`spartan-app://app` origin, captures every maintained application route, and
-exercises dashboard search plus a desktop runtime setting. Copy
+`spartan-app://app` origin, captures every maintained application route at all
+four release layouts, exercises representative interactions, and compares the
+result with `scripts/playwright/baselines/electron-linux-x64.json`. Use
+`npm run playwright:electron:candidate` only for an intentional UI change,
+visually inspect its `out/playwright/electron/visual-baseline.json` and contact
+sheets, then update the reviewed baseline in the same commit. Copy
 `out/playwright/electron/` into the protected evidence directory after a
 passing run; do not commit generated screenshots.
 
