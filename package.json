@@ -1,8 +1,10 @@
 {
   "name": "@spartan-software-enterprises/spartan-gaming",
+  "productName": "Spartan Gaming",
   "version": "0.1.0",
   "main": "desktop/electron/main.mjs",
   "private": true,
+  "author": "Spartan Software Enterprises",
   "description": "Cross-platform frontend and orchestration layer for cloud gaming, streaming, and emulation.",
   "type": "module",
   "scripts": {

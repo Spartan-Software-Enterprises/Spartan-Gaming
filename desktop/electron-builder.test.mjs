@@ -12,6 +12,8 @@ test('Electron package configuration targets every desktop operating system', as
   assert.match(config, /nsis/);
   assert.match(config, /schemes:/);
   assert.match(config, /- spartan/);
+  assert.match(config, /executableName: Spartan-Gaming/);
+  assert.match(config, /desktopName: spartan-gaming/);
   assert.match(config, /desktop\/electron/);
   assert.match(config, /src\/frontend/);
 });
