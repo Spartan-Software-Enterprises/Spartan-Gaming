@@ -1,0 +1,121 @@
+name: Desktop update release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Existing v-prefixed tag whose version exactly matches package.json'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: desktop update package (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    environment: desktop-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+          - os: macos-latest
+            platform: mac
+          - os: windows-latest
+            platform: windows
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.release_tag }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 20
+          cache: npm
+      - name: Verify release identity
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          package_version="$(node -p "require('./package.json').version")"
+          test "$RELEASE_TAG" = "v$package_version"
+          git tag --points-at HEAD | grep -Fx "$RELEASE_TAG"
+          case "$package_version" in
+            *-alpha.*) update_channel=alpha ;;
+            *-beta.*) update_channel=beta ;;
+            *-*) echo "Unsupported desktop update prerelease channel: $package_version" >&2; exit 1 ;;
+            *) update_channel=latest ;;
+          esac
+          echo "SPARTAN_UPDATE_CHANNEL=$update_channel" >> "$GITHUB_ENV"
+      - name: Require Windows signing custody
+        if: matrix.platform == 'windows'
+        shell: bash
+        env:
+          CSC_LINK: ${{ secrets.SPARTAN_WINDOWS_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.SPARTAN_WINDOWS_CSC_KEY_PASSWORD }}
+        run: test -n "$CSC_LINK" && test -n "$CSC_KEY_PASSWORD"
+      - name: Require macOS signing and notarization custody
+        if: matrix.platform == 'mac'
+        shell: bash
+        env:
+          CSC_LINK: ${{ secrets.SPARTAN_MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.SPARTAN_MAC_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.SPARTAN_MAC_APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.SPARTAN_MAC_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.SPARTAN_MAC_TEAM_ID }}
+        run: |
+          test -n "$CSC_LINK" && test -n "$CSC_KEY_PASSWORD"
+          test -n "$APPLE_ID" && test -n "$APPLE_APP_SPECIFIC_PASSWORD" && test -n "$APPLE_TEAM_ID"
+      - name: Install pinned dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install the pinned Electron runtime
+        run: npm rebuild electron
+      - name: Test Electron update contracts
+        run: npm run electron:test
+      - name: Build update artifacts and metadata
+        env:
+          CSC_LINK: ${{ matrix.platform == 'windows' && secrets.SPARTAN_WINDOWS_CSC_LINK || matrix.platform == 'mac' && secrets.SPARTAN_MAC_CSC_LINK || '' }}
+          CSC_KEY_PASSWORD: ${{ matrix.platform == 'windows' && secrets.SPARTAN_WINDOWS_CSC_KEY_PASSWORD || matrix.platform == 'mac' && secrets.SPARTAN_MAC_CSC_KEY_PASSWORD || '' }}
+          APPLE_ID: ${{ matrix.platform == 'mac' && secrets.SPARTAN_MAC_APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.platform == 'mac' && secrets.SPARTAN_MAC_APP_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ matrix.platform == 'mac' && secrets.SPARTAN_MAC_TEAM_ID || '' }}
+        run: npm run desktop:package -- --publish never -c.publish.channel="$SPARTAN_UPDATE_CHANNEL"
+      - name: Upload update artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: spartan-desktop-update-${{ matrix.platform }}-${{ inputs.release_tag }}
+          path: |
+            dist-electron/*.AppImage
+            dist-electron/*.deb
+            dist-electron/*.exe
+            dist-electron/*.dmg
+            dist-electron/*.zip
+            dist-electron/*.yml
+            dist-electron/*.blockmap
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: publish desktop update metadata
+    needs: package
+    runs-on: ubuntu-latest
+    environment: desktop-release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: spartan-desktop-update-*
+          path: out/desktop-updates
+          merge-multiple: true
+      - name: Publish to the existing verified release tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          gh release view "$RELEASE_TAG" --repo "${{ github.repository }}"
+          gh release upload "$RELEASE_TAG" out/desktop-updates/* --clobber --repo "${{ github.repository }}"

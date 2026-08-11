@@ -10,6 +10,7 @@ test('Electron package configuration targets every desktop operating system', as
   const icon = await readFile(path.join(root, 'desktop/build-resources/icon.svg'), 'utf8');
   assert.match(config, /AppImage/);
   assert.match(config, /dmg/);
+  assert.match(config, /- zip/);
   assert.match(config, /nsis/);
   assert.match(config, /schemes:/);
   assert.match(config, /- spartan/);
@@ -17,6 +18,10 @@ test('Electron package configuration targets every desktop operating system', as
   assert.match(config, /maintainer: Spartan Software Enterprises/);
   assert.match(config, /vendor: Spartan Software Enterprises/);
   assert.match(config, /syncDesktopName: true/);
+  assert.match(config, /electronUpdaterCompatibility: ['"]>=2\.16['"]/);
+  assert.match(config, /provider: github/);
+  assert.match(config, /owner: Spartan-Software-Enterprises/);
+  assert.match(config, /repo: Spartan-Gaming/);
   assert.match(config, /desktop\/electron/);
   assert.match(config, /src\/frontend/);
   assert.doesNotMatch(config, /scripts\/frontend/);
@@ -61,4 +66,11 @@ test('Electron shell keeps quit confirmation tied to the active session setting'
   assert.match(main, /spartan:clear-diagnostics/);
   assert.match(preload, /exportDiagnostics\(\)/);
   assert.match(preload, /clearDiagnostics\(\)/);
+  assert.match(main, /createElectronUpdateController/);
+  assert.match(main, /spartan:check-for-updates/);
+  assert.match(main, /spartan:get-update-status/);
+  assert.match(main, /loadElectronUpdater/);
+  assert.match(preload, /checkForUpdates\(\)/);
+  assert.match(preload, /getUpdateStatus\(\)/);
+  assert.match(preload, /onUpdateStatus\(callback\)/);
 });

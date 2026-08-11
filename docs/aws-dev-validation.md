@@ -352,3 +352,39 @@ confirmed that the Developer Mode policy module, CommonJS preload bridge, and
 Settings implementation are present.
 A complete staged CodeRabbit review explicitly included all 19 increment files,
 including both new Developer Mode policy files, and returned zero findings.
+
+The 2026-08-11 packaged-update increment reused Xvfb; installing a full desktop
+environment was unnecessary. The synchronized repository check passed 441/441,
+and the Electron contract suite passed 51/51. Actionlint 1.7.7 accepted the new
+manual desktop release workflow. The real Electron matrix matched all 44 Linux
+x64 baselines and completed eleven interactions, including selecting Beta,
+checking safely from a development build, reloading the persisted channel, and
+confirming that unsupported component-updater toggles are absent. The dedicated
+Updates screenshot was inspected at full resolution with no clipping, overlap,
+or horizontal overflow. The retained initial status exposed a real mobile
+overflow: its no-wrap text widened the main pane beyond the scrollbar-reduced
+viewport. Mobile status text now wraps, the category rail owns its horizontal
+scroll, and retained updater status is shown only in the Updates category. The
+original reviewed fingerprints then matched all 44 routes with zero overflow. The
+serialized AWS suite passed 641 of 643 with only the expected Windows/macOS
+package-contract skips.
+
+Electron Builder produced a final 120,771,271-byte stable AppImage and a
+93,561,932-byte Debian package with `latest-linux.yml`; a second explicit beta
+build produced `beta-linux.yml`. The packaged ASAR contains
+`electron-updater` and the Spartan update controller, while `app-update.yml`
+targets the project GitHub repository. A final ten-second Xvfb launch kept the
+unpacked packaged app alive while updater internals remained muted; the
+renderer receives only bounded status. Headless GPU initialization messages
+and forced-timeout shutdown output are environment noise, not physical display
+evidence.
+
+CodeRabbit's complete staged review covered all 24 initial increment files and
+found two valid issues: a retained updater status needed a sender-validated read
+path, and release actions needed immutable commit pins. After those fixes, the
+next full review found that a delayed save timer could overwrite active updater
+status; the third found that the mobile CSS regression regex could cross media
+boundaries. Status ownership and balanced-brace CSS block extraction now cover
+both cases. The final clean re-review was attempted, but the free CLI returned a
+29-minute rate limit before analysis; no clean final CodeRabbit result is
+claimed.

@@ -67,6 +67,7 @@ import {
   isDeveloperToolsShortcut,
   toggleDeveloperTools,
 } from './developer-tools-policy.mjs';
+import { createElectronUpdateController } from './update-service.mjs';
 
 protocol.registerSchemesAsPrivileged([APP_PROTOCOL_PRIVILEGES]);
 const startupPolicyPath = path.join(app.getPath('userData'), 'startup-policy.json');
@@ -97,6 +98,29 @@ const permissionDecisions = new Map();
 const hasSingleInstanceLock = app.requestSingleInstanceLock();
 let pendingDeepLink = findSpartanDeepLink(process.argv);
 let networkPolicy = createApprovedNetworkPolicy();
+let automaticUpdateCheckStarted = false;
+
+const updateController = createElectronUpdateController({
+  isPackaged: app.isPackaged,
+  dialog,
+  getWindow: () => windowRef,
+  onStatus: (status) => windowRef?.webContents.send('spartan:update-status', status),
+  onInstall: () => {
+    quitting = true;
+  },
+});
+
+async function loadElectronUpdater() {
+  if (!app.isPackaged) return false;
+  try {
+    const electronUpdater = await import('electron-updater');
+    return updateController.attach(
+      electronUpdater.autoUpdater ?? electronUpdater.default?.autoUpdater,
+    );
+  } catch {
+    return false;
+  }
+}
 
 function recordDiagnostic(type, details) {
   const entry = createElectronDiagnosticEntry(type, details);
@@ -426,6 +450,7 @@ if (!hasSingleInstanceLock) {
 
 if (hasSingleInstanceLock)
   app.whenReady().then(async () => {
+    await loadElectronUpdater();
     await protocol.handle(
       APP_SCHEME,
       createBundledAppProtocolHandler({
@@ -498,6 +523,11 @@ if (hasSingleInstanceLock)
       runtimePolicy = normalizeElectronRuntimePolicy(settings);
       closeDeveloperToolsWhenDisabled(event.sender, runtimePolicy.developerMode);
       syncApplicationMenu();
+      const updatePolicy = updateController.configure(runtimePolicy);
+      if (app.isPackaged && updatePolicy.autoUpdate && !automaticUpdateCheckStarted) {
+        automaticUpdateCheckStarted = true;
+        setTimeout(() => void updateController.check(), 1500);
+      }
       const nextDiagnosticsPolicy = normalizeElectronDiagnosticsPolicy(settings);
       const diagnosticsPolicyChanged = Object.keys(nextDiagnosticsPolicy).some(
         (key) => nextDiagnosticsPolicy[key] !== diagnosticsPolicy[key],
@@ -544,6 +574,16 @@ if (hasSingleInstanceLock)
       if (event.sender !== windowRef.webContents)
         throw new Error('developer tools may only be controlled by the primary window');
       return toggleApplicationDeveloperTools();
+    });
+    ipcMain.handle('spartan:check-for-updates', (event) => {
+      if (event.sender !== windowRef.webContents)
+        throw new Error('updates may only be checked by the primary window');
+      return updateController.check({ manual: true });
+    });
+    ipcMain.handle('spartan:get-update-status', (event) => {
+      if (event.sender !== windowRef.webContents)
+        throw new Error('update status may only be read by the primary window');
+      return updateController.status;
     });
     installPowerMonitoring();
     ipcMain.handle('spartan:toggle-fullscreen', () => {

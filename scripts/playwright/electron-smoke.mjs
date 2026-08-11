@@ -63,7 +63,7 @@ async function readBaseline(baselinePath) {
   }
 }
 
-async function readJsonAfterWrite(filePath, predicate = () => true, attempts = 20) {
+async function readJsonAfterWrite(filePath, predicate = () => true, attempts = 60) {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     try {
       const value = JSON.parse(await readFile(filePath, 'utf8'));
@@ -76,7 +76,7 @@ async function readJsonAfterWrite(filePath, predicate = () => true, attempts = 2
   throw new Error(`timed out waiting for JSON file ${filePath}`);
 }
 
-async function waitForMissingFile(filePath, attempts = 20) {
+async function waitForMissingFile(filePath, attempts = 60) {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     try {
       await readFile(filePath, 'utf8');
@@ -105,6 +105,10 @@ async function waitForApplicationDeveloperTools(application, expected, attempts 
 
 async function configureLayout(page, layout) {
   await page.setViewportSize({ width: layout.width, height: layout.height });
+  await page.waitForFunction(
+    ({ width, height }) => window.innerWidth === width && window.innerHeight === height,
+    { width: layout.width, height: layout.height },
+  );
   await page.goto(`${appOrigin}/dashboard/`, { waitUntil: 'domcontentloaded' });
   await page.evaluate(
     ({ activeKey, settingsKey, mode }) => {
@@ -336,6 +340,29 @@ async function checkLayoutInteraction(page, layout, output, userDataDirectory, a
       );
     interactions.push('desktop:developer-mode-tools');
 
+    await page.locator('[data-category="updates"]').click();
+    const updateChannel = page.locator('[data-key="updates.channel"]');
+    await updateChannel.selectOption('Beta');
+    await page.locator('[data-action="updates.checkNow"]').click();
+    await page.waitForFunction(() =>
+      /packaged Spartan Gaming application/i.test(
+        document.querySelector('[data-save-status]')?.textContent || '',
+      ),
+    );
+    if (await page.locator('[data-key="updates.adapterUpdates"]').count())
+      throw new Error('desktop updates still exposed an unsupported independent adapter updater');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.locator('[data-category="updates"]').click();
+    if ((await updateChannel.inputValue()) !== 'Beta')
+      throw new Error('desktop update channel did not persist after reload');
+    await page.screenshot({
+      path: path.join(output, 'desktop-update-settings-interaction.png'),
+      fullPage: true,
+      animations: 'disabled',
+    });
+    await updateChannel.selectOption('Stable');
+    interactions.push('desktop:update-settings');
+
     await page.locator('[data-category="controllers"]').click();
     await page.locator('[data-key="controllers.playerSlots"]').selectOption('2');
     await page.locator('[data-key="controllers.deadzone"]').fill('20');
@@ -400,7 +427,18 @@ export async function runElectronVisualSmoke({
       await configureLayout(page, layout);
       for (const route of ELECTRON_VISUAL_ROUTES) {
         await page.goto(`${appOrigin}${route}`, { waitUntil: 'domcontentloaded' });
-        await page.waitForTimeout(150);
+        await page.waitForFunction(
+          ({ mode, navigation }) =>
+            document.documentElement.dataset.spartanDeviceMode === mode &&
+            document.documentElement.dataset.spartanNavigation === navigation,
+          { mode: layout.name, navigation: layout.navigation },
+        );
+        await page.evaluate(async () => {
+          await document.fonts?.ready;
+          await new Promise((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(resolve)),
+          );
+        });
         const body = (await page.locator('body').innerText()).trim();
         if (body.length < 20)
           throw new Error(`${layout.name} ${route} has no meaningful application content`);
@@ -408,6 +446,48 @@ export async function runElectronVisualSmoke({
           deviceMode: document.documentElement.dataset.spartanDeviceMode,
           navigation: document.documentElement.dataset.spartanNavigation,
           horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth,
+          viewportWidth: window.innerWidth,
+          documentWidth: document.documentElement.scrollWidth,
+          containers: ['body', '.app', '.rail', '.nav', '.main'].map((selector) => {
+            const element = document.querySelector(selector);
+            const bounds = element?.getBoundingClientRect();
+            return {
+              selector,
+              left: Math.round(bounds?.left ?? 0),
+              right: Math.round(bounds?.right ?? 0),
+              scrollWidth: element?.scrollWidth ?? 0,
+              clientWidth: element?.clientWidth ?? 0,
+              overflowX: element ? getComputedStyle(element).overflowX : '',
+            };
+          }),
+          overflowElements: Array.from(document.querySelectorAll('body *'))
+            .filter((element) => {
+              if (element.closest('.nav')) return false;
+              const bounds = element.getBoundingClientRect();
+              return bounds.left < -1 || bounds.right > window.innerWidth + 1;
+            })
+            .slice(0, 5)
+            .map((element) => ({
+              tag: element.tagName.toLowerCase(),
+              className: String(element.className).slice(0, 80),
+              text: element.textContent?.trim().slice(0, 80) || '',
+              left: Math.round(element.getBoundingClientRect().left),
+              right: Math.round(element.getBoundingClientRect().right),
+              scrollWidth: element.scrollWidth,
+              clientWidth: element.clientWidth,
+            })),
+          wideContentElements: Array.from(document.querySelectorAll('.main *'))
+            .filter(
+              (element) => element.clientWidth > 0 && element.scrollWidth > element.clientWidth,
+            )
+            .slice(0, 8)
+            .map((element) => ({
+              tag: element.tagName.toLowerCase(),
+              className: String(element.className).slice(0, 80),
+              text: element.textContent?.trim().slice(0, 80) || '',
+              scrollWidth: element.scrollWidth,
+              clientWidth: element.clientWidth,
+            })),
         }));
         if (runtime.deviceMode !== layout.name)
           throw new Error(
@@ -418,7 +498,9 @@ export async function runElectronVisualSmoke({
             `${layout.name} ${route} resolved unexpected navigation ${runtime.navigation || 'none'}`,
           );
         if (runtime.horizontalOverflow)
-          throw new Error(`${layout.name} ${route} has horizontal overflow`);
+          throw new Error(
+            `${layout.name} ${route} has horizontal overflow: ${JSON.stringify(runtime)}`,
+          );
         const screenshot = await page.screenshot({
           path: path.join(output, screenshotName(layout.name, route)),
           fullPage: false,

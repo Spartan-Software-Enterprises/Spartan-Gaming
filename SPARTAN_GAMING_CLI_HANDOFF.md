@@ -35,28 +35,39 @@ Inspect `AGENTS.md` or `CLAUDE.md` if either is added in a future checkout.
 
 ## Latest continuation snapshot
 
-- The current unpublished increment makes `advanced.developerMode` functional
-  in the primary Electron application. It gates a dynamically rebuilt DevTools
-  menu, F12 and Command/Control+Shift+I, and a real Settings action. Turning it
-  off immediately closes an open inspector and removes the menu entry. The
-  implementation targets only the primary `spartan-app://app` WebContents;
-  provider login, OAuth child, and player surfaces are never selected.
-- Local repository validation passes 439/439 and the serialized suite passes
-  638 of 642 with the same four expected Termux/platform skips. AWS passes the
-  same 439/439 repository check and 640 of 642 serialized tests with only the
-  expected Windows/macOS skips. Its Xvfb Electron matrix matches all 44 Linux
-  x64 baselines and completes ten interactions, including process-level
-  Developer Mode menu/open/revoke assertions. The dedicated Developer Mode
-  screenshot was inspected with no clipping, overlap, or horizontal overflow.
-- AWS Electron Builder produced a 120,279,029-byte AppImage and a
-  93,203,464-byte Debian package. The packaged ASAR contains the Developer Mode
-  policy, CommonJS preload bridge, and Settings implementation. A complete
-  staged CodeRabbit review explicitly covered all 19 intended files, including
-  both new policy files, and returned zero findings.
-- The increment is published on `main` as `571c6aa`. GitHub Actions is green:
-  repository checks `31463385570`, frontend distribution `31463385595`,
-  cross-platform contracts `31463385568`, and Android debug shell
-  `31463385582` all succeeded for that commit.
+- The current unpublished increment makes Updates functional in packaged
+  Electron applications. Stable, beta, and alpha settings reach a bounded main-
+  process `electron-updater` controller; manual/automatic checks, progress,
+  downloaded status, restart confirmation, and next-exit installation are
+  covered. Development builds do not contact the updater, and obsolete
+  adapter/core/catalog updater toggles were removed instead of left decorative.
+- A manual desktop release workflow verifies the exact existing tag, derives
+  the explicit GitHub metadata channel, requires Windows signing and macOS
+  signing/notarization custody, builds before publication, and uploads to an
+  existing release only after every platform package succeeds. Signed release
+  execution and rollback drills remain open gates.
+- Local repository validation passes 442/442 and the serialized suite passes
+  640 of 644 with four expected environment/platform skips. AWS passes the same
+  442/442 repository check and 642 of 644 serialized tests with the expected
+  Windows/macOS skips. Its Xvfb Electron matrix matches all 44 Linux x64
+  baselines and completes eleven interactions. The dedicated Updates screenshot
+  and corrected handheld/mobile Settings views were inspected with no clipping,
+  overlap, or document overflow.
+- AWS produced a final 120,771,271-byte AppImage and a 93,561,932-byte Debian package
+  with stable metadata, then proved explicit beta metadata in a second package
+  run. The packaged ASAR contains `electron-updater` and the Spartan controller;
+  the packaged app remained alive during a bounded Xvfb smoke with raw updater
+  logging suppressed.
+- CodeRabbit's staged review cycles found four valid issues: missing retained-
+  status initialization, mutable release-action tags, a save-timer/updater-
+  status race, and an over-broad mobile CSS assertion. All four are fixed with
+  sender validation, official immutable action SHAs, explicit status ownership,
+  and balanced-brace media-block extraction. The final clean re-review hit a
+  29-minute free CLI rate limit before analysis, so no clean final result is
+  claimed.
+- The increment is not committed or published yet. Run final validation,
+  commit/push, and GitHub Actions checks before replacing this sentence with
+  published evidence.
 
 - The prior visual-matrix baseline was published through `5ef5e49`. The primary desktop runtime remains a
   standalone Electron application loading bundled assets from

@@ -20,6 +20,29 @@ export function describeElectronRuntimeResult(result) {
   return 'Saved locally';
 }
 
+export function describeElectronUpdateStatus(result) {
+  if (result?.status === 'development-build')
+    return 'Update checks run only from a packaged Spartan Gaming application.';
+  if (result?.status === 'disabled') return 'Automatic update checks are disabled.';
+  if (result?.status === 'checking') return 'Checking the selected release channel…';
+  if (result?.status === 'update-available')
+    return result.version
+      ? `Spartan Gaming ${result.version} is available.`
+      : 'An update is available.';
+  if (result?.status === 'downloading')
+    return Number.isFinite(result.percent)
+      ? `Downloading verified update… ${result.percent}%`
+      : 'Downloading verified update…';
+  if (result?.status === 'downloaded')
+    return result.version
+      ? `Spartan Gaming ${result.version} is ready to install.`
+      : 'The update is ready to install.';
+  if (result?.status === 'up-to-date') return 'Spartan Gaming is up to date.';
+  if (result?.status === 'unavailable')
+    return 'The selected signed release channel is currently unavailable.';
+  return 'Update status is idle.';
+}
+
 /** Convert persisted settings into the bounded Electron runtime policy payload. */
 export function resolveElectronRuntimeSettings(settings = {}) {
   return Object.freeze({
@@ -35,5 +58,8 @@ export function resolveElectronRuntimeSettings(settings = {}) {
     doNotTrack: settings['privacy.doNotTrack'] === true,
     blockThirdPartyCookies: settings['privacy.blockThirdPartyCookies'] === true,
     permissionPrompts: settings['privacy.permissionPrompts'],
+    updateChannel: settings['updates.channel'],
+    autoUpdate: settings['updates.autoUpdate'] !== false,
+    notifyRestart: settings['updates.notifyRestart'] !== false,
   });
 }

@@ -323,6 +323,19 @@ closes an open inspector and removes its menu command immediately. These paths
 never use Electron's focused-view `toggledevtools` role, so an approved provider
 login, OAuth child, or player view cannot become the accidental debug target.
 
+Packaged desktop updates are owned by `desktop/electron/update-service.mjs` and
+`electron-updater`; development runs return a local development-build status
+without making an update request. Settings selects only stable (`latest`),
+beta, or alpha metadata, and the main process exposes bounded status/version/
+progress fields through the preload bridge. Downloaded updates install only
+after the restart prompt or normal application exit. The manual
+`desktop-update-release.yml` workflow checks that an existing `v` tag points at
+the exact package version, derives the explicit GitHub update channel, requires
+Windows signing and macOS signing/notarization custody, builds without
+publishing, and uploads only after every platform job succeeds. A successful
+workflow is release evidence; Linux packaging alone is not evidence for signed
+Windows or notarized macOS artifacts.
+
 Electron Builder discovers the shared scalable package mark at
 `desktop/build-resources/icon.svg`. Keep that source platform-neutral so Linux,
 Windows, and macOS development packaging can derive their native icon formats

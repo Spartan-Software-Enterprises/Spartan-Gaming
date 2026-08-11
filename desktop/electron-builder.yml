@@ -13,6 +13,11 @@ files:
   - games/**
   - favicon.ico
 asar: true
+electronUpdaterCompatibility: '>=2.16'
+publish:
+  provider: github
+  owner: Spartan-Software-Enterprises
+  repo: Spartan-Gaming
 protocols:
   - name: Spartan Gaming Launch
     schemes:
@@ -29,6 +34,7 @@ mac:
   category: public.app-category.games
   target:
     - dmg
+    - zip
 win:
   target:
     - nsis
