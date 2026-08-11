@@ -88,14 +88,14 @@ test('production Compose mounts secrets and provisions the Redis broker dependen
   assert.match(productionCompose, /image: redis:7\.4-alpine/);
   assert.match(productionCompose, /condition: service_healthy/);
   assert.match(productionCompose, /SPARTAN_SIGNALING_TLS_KEY_FILE/);
-  assert.match(productionCompose, /SPARTAN_SIGNALING_REDIS_URL: \"\$\{/);
+  assert.match(productionCompose, /SPARTAN_SIGNALING_REDIS_URL: ["']\$\{/);
   assert.match(productionCompose, /cap_add:\s*\n\s*- SETUID\s*\n\s*- SETGID/);
   assert.match(productionCompose, /read_only: true/);
   assert.match(productionCompose, /no-new-privileges:true/);
 });
 
 test('production Compose exposes coturn only as an explicit operator profile', () => {
-  assert.match(productionCompose, /profiles: \["turn"\]/);
+  assert.match(productionCompose, /profiles: \[["']turn["']\]/);
   assert.match(productionCompose, /SPARTAN_TURN_IMAGE:\?Set an operator-approved coturn image/);
   assert.match(productionCompose, /network_mode: host/);
   assert.match(
@@ -106,7 +106,7 @@ test('production Compose exposes coturn only as an explicit operator profile', (
   assert.match(productionCompose, /SPARTAN_TURN_KEY_FILE:\?Mount the TURN private key file/);
   assert.match(
     productionCompose,
-    /command: \[\"turnserver\", \"-c\", \"\/run\/secrets\/turn_config\", \"--no-cli\"\]/,
+    /command: \[["']turnserver["'], ["']-c["'], ["']\/run\/secrets\/turn_config["'], ["']--no-cli["']\]/,
   );
   assert.match(productionCompose, /- NET_BIND_SERVICE/);
   assert.match(productionCompose, /--no-cli/);
