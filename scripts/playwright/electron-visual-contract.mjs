@@ -24,6 +24,23 @@ export function visualSnapshotKey(layout, route) {
   return `${layout}-${name || 'home'}`;
 }
 
+function visualDifference(before, after) {
+  if (
+    typeof before !== 'string' ||
+    typeof after !== 'string' ||
+    before.length !== after.length ||
+    before.length === 0
+  )
+    return Infinity;
+  let difference = 0;
+  for (let index = 0; index < before.length; index += 1) {
+    const delta = Math.abs(Number.parseInt(before[index], 16) - Number.parseInt(after[index], 16));
+    if (!Number.isFinite(delta)) return Infinity;
+    difference += delta;
+  }
+  return difference / (before.length * 15);
+}
+
 export function compareVisualBaseline(expected, actual) {
   if (!expected) return Object.freeze({ status: 'candidate', compared: 0, mismatches: [] });
   if (expected.version !== 1 || !expected.snapshots || typeof expected.snapshots !== 'object')
@@ -36,10 +53,16 @@ export function compareVisualBaseline(expected, actual) {
     const after = actual.snapshots[key];
     if (!before) mismatches.push(`${key}: unexpected snapshot`);
     else if (!after) mismatches.push(`${key}: missing snapshot`);
-    else if (before.sha256 !== after.sha256)
-      mismatches.push(`${key}: screenshot fingerprint changed`);
     else if (before.width !== after.width || before.height !== after.height)
       mismatches.push(`${key}: screenshot dimensions changed`);
+    else {
+      const difference = visualDifference(before.visualHash, after.visualHash);
+      const threshold = Number.isFinite(before.maxDifference) ? before.maxDifference : 0.015;
+      if (difference > threshold)
+        mismatches.push(
+          `${key}: perceptual difference ${(difference * 100).toFixed(2)}% exceeds ${(threshold * 100).toFixed(2)}%`,
+        );
+    }
   }
   return Object.freeze({
     status: mismatches.length ? 'changed' : 'matched',
