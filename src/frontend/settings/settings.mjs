@@ -100,7 +100,7 @@ function bindControls() {
     control.addEventListener(control.matches('input[type="range"]') ? 'input' : 'change', update);
     if (control.classList.contains('toggle')) control.addEventListener('click', update);
   });
-  document.querySelectorAll('[data-action]').forEach((button) => button.addEventListener('click', () => {
+  document.querySelectorAll('[data-action]').forEach((button) => button.addEventListener('click', async () => {
     const action = resolveSettingsAction(button.dataset.action);
     if (!action) return;
     if (action.kind === 'reset') { Object.assign(state, settingsStore.reset()); render(); saveState(); return; }
@@ -111,7 +111,7 @@ function bindControls() {
     if (action.kind === 'export-host-config') { downloadHostConfig(); return; }
     if (action.kind === 'import-settings') { document.querySelector('[data-import-file]').click(); return; }
     if (action.kind === 'export-privacy') { downloadPrivacyData(); return; }
-    if (action.kind === 'clear-provider-sessions') { const result = clearProviderSessionState(); const status = document.querySelector('[data-save-status]'); if (status) status.textContent = result.removed.length ? `Cleared ${result.removed.length} Spartan handoff${result.removed.length === 1 ? '' : 's'}; sign out on official services separately.` : 'No Spartan provider handoffs were present; sign out on official services separately.'; return; }
+    if (action.kind === 'clear-provider-sessions') { const result = clearProviderSessionState(); const status = document.querySelector('[data-save-status]'); try { await globalThis.spartanElectron?.clearProviderLogins?.(); if (status) status.textContent = `Provider logins cleared${result.removed.length ? ` with ${result.removed.length} Spartan handoff${result.removed.length === 1 ? '' : 's'}` : ''}.`; } catch (error) { if (status) status.textContent = `Spartan handoffs cleared; provider login cleanup failed: ${error.message}`; } return; }
     const status = document.querySelector('[data-save-status]');
     if (status && action.kind === 'status') { status.textContent = action.message; return; }
   }));

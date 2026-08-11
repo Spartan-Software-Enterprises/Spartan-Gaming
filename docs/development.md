@@ -20,6 +20,11 @@ main window loads packaged assets through the private, secure
 depend on a hosted frontend. Provider/game launches are checked against the
 bundled catalogs, general external access is limited to approved gaming and
 download origins, and the local application remains available offline.
+Provider authentication uses sandboxed windows in the persistent
+`persist:spartan-gaming-providers` Electron partition. Cross-domain identity
+hosts must be explicitly listed in `desktop/electron/network-policy.mjs`;
+arbitrary login popups remain blocked, and Spartan code never handles provider
+passwords.
 
 Use `npm run electron:test` for focused runtime contracts and
 `npm run desktop:package` for platform development artifacts. The package must
