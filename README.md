@@ -50,7 +50,7 @@ In-app host workflows include explicit display, system-audio, and microphone con
 
 ### Controllers without lock-in
 
-Create persistent controller profiles, remap a stable gaming action vocabulary, tune deadzones, choose rumble behavior, and inspect connected Gamepad/HID capabilities locally. Workspaces can select built-in or custom profiles, while session preflight carries the chosen bindings and capabilities into launch negotiation.
+Create persistent controller profiles, remap a stable gaming action vocabulary, tune deadzones, choose rumble behavior, and inspect connected Gamepad/HID capabilities locally. The live tester enforces the selected gamepad permission, multiplayer slot limit, dead zone, and polling mode, so settings can be checked against visible input before launch. Workspaces can select built-in or custom profiles, while session preflight carries the chosen bindings and capabilities into launch negotiation.
 
 The same model supports keyboard, pointer, gamepad, touch-controller, Android inventory, Steam Input metadata, Steam Deck controls, and future native virtual-gamepad adapters. Physical device and driver support is only marked ready after platform validation.
 

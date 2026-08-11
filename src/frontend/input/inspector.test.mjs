@@ -4,7 +4,9 @@ import {
   detectInputCapabilities,
   inspectGamepad,
   listApprovedHidDevices,
+  readInspectableGamepads,
   resolveControllerPreferences,
+  selectInspectableGamepads,
 } from './inspector.mjs';
 
 test('gamepad inspector reports normalized controls and haptics', () => {
@@ -83,11 +85,42 @@ test('controller preferences normalize explicit profile, permissions, HID, and a
     triggerMode: 'Analog only',
     steeringRange: 1080,
     splitInput: true,
+    deadzone: 0.08,
     inputPolling: 'High frequency',
   });
   assert.equal(resolveControllerPreferences().defaultProfile, 'Auto-detect');
   assert.equal(resolveControllerPreferences().allowGamepad, true);
   assert.equal(resolveControllerPreferences().rumble, true);
+});
+test('controller tester inventory enforces permission, multiplayer, and player-slot settings', () => {
+  const gamepads = [{ index: 0 }, null, { index: 2 }, { index: 3 }];
+  assert.deepEqual(selectInspectableGamepads(gamepads, { allowGamepad: false }), []);
+  assert.deepEqual(
+    selectInspectableGamepads(gamepads, { multipleControllers: false, playerSlots: 8 }),
+    [{ index: 0 }],
+  );
+  assert.deepEqual(
+    selectInspectableGamepads(gamepads, { multipleControllers: true, playerSlots: 2 }),
+    [{ index: 0 }, { index: 2 }],
+  );
+});
+test('disabled gamepad access does not evaluate the browser inventory API', () => {
+  let calls = 0;
+  const navigatorRef = {
+    getGamepads() {
+      calls += 1;
+      throw new Error('gamepad inventory must not be read');
+    },
+  };
+  assert.deepEqual(
+    readInspectableGamepads({ navigatorRef, preferences: { allowGamepad: false } }),
+    [],
+  );
+  assert.equal(calls, 0);
+});
+test('controller tester preferences expose the configured normalized dead zone', () => {
+  assert.equal(resolveControllerPreferences({ 'controllers.deadzone': 25 }).deadzone, 0.25);
+  assert.equal(resolveControllerPreferences({ 'controllers.deadzone': 99 }).deadzone, 0.3);
 });
 test('controller preferences accept every Electron profile option', () => {
   assert.equal(

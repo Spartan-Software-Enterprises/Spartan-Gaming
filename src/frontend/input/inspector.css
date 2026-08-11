@@ -84,6 +84,11 @@ header,
   flex-wrap: wrap;
   margin-bottom: 16px;
 }
+.policy-summary {
+  margin: -6px 0 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
 .capability {
   padding: 8px 11px;
   border: 1px solid var(--line);
