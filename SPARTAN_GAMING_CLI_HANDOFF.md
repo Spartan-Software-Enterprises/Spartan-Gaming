@@ -173,6 +173,12 @@ review; stay within the AWS credit limit.
   cross-platform contracts `31446401971`, frontend distribution `31446401959`,
   and repository checks `31446401966`. It rejects TURN credential verification
   when the TURN profile is excluded from the production rollout plan.
+- The latest desktop validation commit `6877b75` passed Android debug
+  `31448230555`, cross-platform contracts `31448230595`, frontend distribution
+  `31448230607`, and repository checks `31448230600`. The Amazon Linux dev
+  server built the Linux AppImage and Debian artifacts after explicit package
+  identity, desktop-association, and maintainer metadata; this remains
+  headless Linux packaging evidence, not hardware or desktop-interaction proof.
 - The current Android-hosted Termux probe (`a2378cc`, 2026-08-10) reports
   `/dev/uinput` unavailable/read-write-unverified; input and force-feedback
   were therefore not run. This host also has no Docker, Redis, or coturn
