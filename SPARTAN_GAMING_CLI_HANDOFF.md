@@ -35,35 +35,40 @@ Inspect `AGENTS.md` or `CLAUDE.md` if either is added in a future checkout.
 
 ## Latest continuation snapshot
 
-- `main` is published through `42649f6`. The primary desktop runtime is a
-  standalone Electron application that loads bundled assets from
-  `spartan-app://app`; production startup does not open a loopback HTTP server.
-- `7775f72` introduced the private bundled application protocol, offline cold
-  shell, bounded desktop global shortcut, and standalone-product documentation.
-- `3043793` added persistent in-app provider login sessions and the Settings
-  action that clears provider cookies, site storage, cache, and Spartan launch
-  handoffs.
-- `96798e9` pinned Prettier 3.9.6, formatted the repository, enforced
-  `npm run format:check` in CI, and recorded the public-release acceptance
-  matrix.
-- `e988303` pinned Playwright 1.62.1 and added
-  `npm run playwright:electron`, which drives the real Electron main process
-  without a frontend HTTP server.
-- `42649f6` made deployment YAML contracts independent of Prettier's quote
-  style. Local deployment tests passed 19/19; the complete serialized suite
-  passed 638 tests with 634 passed, 4 expected environment skips, and 0 failed.
-- GitHub Actions is green on `42649f6`: repository checks `31450972045`,
-  frontend distribution `31450972054`, cross-platform contracts `31450972062`,
-  and Android debug shell `31450972063` all succeeded.
-- On AWS at `e988303`, Electron contracts passed 21/21, Linux unpacked packaging
-  succeeded, and the Xvfb visual smoke rendered all 11 maintained routes plus
-  two interactions at 1440x900. Every route had meaningful content and no
-  horizontal overflow; the contact sheet showed no blank or obviously broken
-  surface. Screenshots remain outside Git under
+- `main` is published through `86b5c67`. The primary desktop runtime remains a
+  standalone Electron application loading bundled assets from
+  `spartan-app://app`; production startup opens no frontend HTTP server.
+- `da1f5e0` expanded the Electron Playwright harness to all 11 maintained routes
+  at desktop, handheld, mobile, and television layouts with isolated user data,
+  forced presentation modes, interaction checks, and screenshot fingerprints.
+- `b669886` added pinned `pngjs` perceptual comparison so harmless live
+  diagnostics pixels do not make the visual gate nondeterministic.
+- `664bbc0` committed the reviewed Linux/Xvfb 44-snapshot baseline, documented
+  the candidate-review workflow, and completed the roadmap's repeatable
+  multi-layout Playwright gate. Real-device visual approval remains separate.
+- `86b5c67` addressed every finding from the completed CodeRabbit review:
+  normal runs now fail when the required baseline is missing, every layout
+  asserts its exact navigation mode, search must change rendered results,
+  television focus must move away from search to a valid remote target, and the
+  desktop shortcut must survive a settings-page reload.
+- Local Electron contracts pass 26/26. The complete serialized suite passes
+  638 tests with 634 passed, 4 expected environment skips, and 0 failed.
+- AWS at `86b5c67` passes Electron contracts 26/26 and the real Electron visual
+  run matches all 44 committed perceptual snapshots with zero mismatches. It
+  checks four dashboard searches, desktop shortcut persistence, television
+  remote focus, expected presentation/navigation modes, meaningful route
+  bodies, and no horizontal overflow.
+- GitHub Actions is green on `86b5c67`: repository checks `31452400217`,
+  frontend distribution `31452400240`, cross-platform contracts `31452400190`,
+  and Android debug shell `31452400208` all succeeded.
+- Contact sheets for all four layouts were visually inspected. No blank route,
+  broken styling, overlapping primary control, or obvious clipping was found.
+  Screenshots remain outside Git under
   `/home/ec2-user/Spartan-Gaming/out/playwright/electron`.
-- CodeRabbit CLI 0.7.2 is authenticated on the AWS host, but three bounded
-  review attempts ended before a completed result was returned. Do not claim a
-  clean CodeRabbit review until the service completes one.
+- CodeRabbit CLI 0.7.2 completed a review of the full increment with one major
+  and three minor findings; all four were fixed and independently tested. The
+  immediate verification re-review hit the free CLI rate limit, so no second
+  clean CodeRabbit result is claimed.
 - Remaining release gates include physical Windows/Linux/SteamOS/Android/Fire
   TV/controller testing, macOS only where existing desktop CI contracts require
   it, signed installers and updates, real provider login/recovery flows,
@@ -120,12 +125,10 @@ review; stay within the AWS credit limit.
 
 ## Verified baseline
 
-- The published code state is `42649f6` on `main`; verify the worktree before
-  continuing. The latest four GitHub workflows for this code commit succeeded
-  and are identified in the continuation snapshot; recheck with `gh run list`
-  if the branch has advanced.
-  AWS is synchronized to `42649f6`, its worktree is clean, and its focused
-  deployment suite passes 19/19.
+- The published code state is `86b5c67` on `main`; verify the worktree before
+  continuing and recheck the latest four workflows with `gh run list` if the
+  branch has advanced. AWS is synchronized to `86b5c67` and its worktree is
+  clean.
 - `npm run check`: repository checks pass on the current code state locally
   and on the AWS dev server.
 - `npm test`: the current local run completed with 634 tests, 630 passed,
@@ -261,23 +264,20 @@ review; stay within the AWS credit limit.
 - Roadmap acceptance remains incomplete for real Windows/macOS/Linux hardware,
   Windows/macOS virtual gamepad drivers, external package signing, production
   activation, and physical SteamOS Deck/desktop validation.
-- CodeRabbit review was not completed. The local ARM64 binary is unusable; the
-  AWS CLI is installed and authenticated, but three attempts ended without a
-  completed review result. Retry on AWS before claiming CodeRabbit approval.
+- CodeRabbit completed the visual-matrix review and returned four findings; all
+  were fixed in `86b5c67`. A clean re-review is not claimed because the free CLI
+  rate limit blocked the immediate follow-up.
 
 ## Current change
 
-The current standalone-desktop increment is published through `42649f6`.
-Electron now loads its bundled application over the private
-`spartan-app://app` protocol with no production frontend server, keeps provider
-login state in a persistent in-app partition, exposes bounded shortcut and
-provider-session controls, enforces pinned Prettier formatting, and has an
-Electron-native Playwright visual harness. Local Electron contracts passed
-21/21; the full serialized suite passed 638 tests with 634 passed, 4 expected
-environment skips, and 0 failed. AWS rendered 11 maintained routes and two
-interactions at 1440x900 with meaningful content and no horizontal overflow.
-Physical platform, input, provider, signing, updater, and long-session release
-gates remain open.
+The current standalone-desktop increment is published through `86b5c67`.
+Electron's isolated-state visual harness now covers 44 route/layout snapshots,
+six representative interactions, forced presentation and navigation modes,
+horizontal-overflow checks, and a reviewed perceptual baseline. Local Electron
+contracts pass 26/26; the full serialized suite passes 638 tests with 634
+passed, 4 expected environment skips, and 0 failed. AWS matches the committed
+baseline 44/44. Physical platform, input, provider, signing, updater, and
+long-session release gates remain open.
 
 The current Android bridge increment binds native result delivery to the
 request/action pairs issued by each bridge instance. Unsolicited, stale, or
