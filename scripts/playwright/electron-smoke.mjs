@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { _electron as electron } from 'playwright';
+import { PNG } from 'pngjs';
 import {
   compareVisualBaseline,
   ELECTRON_VISUAL_LAYOUTS,
@@ -27,8 +28,26 @@ function pngDimensions(buffer) {
 }
 
 function fingerprintScreenshot(buffer) {
+  const image = PNG.sync.read(buffer);
+  const samples = 32;
+  let visualHash = '';
+  for (let row = 0; row < samples; row += 1) {
+    const y = Math.min(image.height - 1, Math.floor(((row + 0.5) * image.height) / samples));
+    for (let column = 0; column < samples; column += 1) {
+      const x = Math.min(image.width - 1, Math.floor(((column + 0.5) * image.width) / samples));
+      const offset = (y * image.width + x) * 4;
+      const alpha = image.data[offset + 3] / 255;
+      const luma =
+        (image.data[offset] * 0.2126 +
+          image.data[offset + 1] * 0.7152 +
+          image.data[offset + 2] * 0.0722) *
+        alpha;
+      visualHash += Math.round(luma / 17).toString(16);
+    }
+  }
   return Object.freeze({
     sha256: createHash('sha256').update(buffer).digest('hex'),
+    visualHash,
     ...pngDimensions(buffer),
     bytes: buffer.length,
   });
@@ -157,7 +176,7 @@ export async function runElectronVisualSmoke({
           throw new Error(`${layout.name} ${route} has horizontal overflow`);
         const screenshot = await page.screenshot({
           path: path.join(output, screenshotName(layout.name, route)),
-          fullPage: true,
+          fullPage: false,
           animations: 'disabled',
         });
         const key = visualSnapshotKey(layout.name, route);
