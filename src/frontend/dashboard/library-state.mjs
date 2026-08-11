@@ -298,11 +298,42 @@ export function createRomLibraryStore({
       write(records);
       return results;
     },
-    clear() {
-      storage?.removeItem?.(key);
-    },
-  });
+    import fs from 'fs';
+import path from 'path';
+
+export async function scanFolderForRoms(folderPath) {
+  const romExtensions = new Set([
+    'smc', 'sfc', 'nes', 'gba', 'gb', 'gbc', 'n64', 'z64',
+    'iso', 'cue', 'bin', 'chd', 'wbfs', 'gcm', 'cso',
+    'nds', '3ds', 'zip', 'a26', 'vec', 'smd', 'md', 'sms', 'gg',
+    'pce', 'ws', 'rom'
+  ]);
+  const results = [];
+
+  async function scan(dir) {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await scan(fullPath);
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (romExtensions.has(ext.slice(1))) {
+          results.push(fullPath);
+        }
+      }
+    }
+  }
+
+  await scan(folderPath);
+  return results;
 }
+
+export function createRomLibraryStore({
+  storage = globalThis.localStorage,
+  key = ROM_LIBRARY_KEY,
+  maxEntries = 100,
+} = {}) {
 
 export {
   validRomRecord,
