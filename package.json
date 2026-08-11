@@ -10,7 +10,7 @@
   "type": "module",
   "scripts": {
     "electron": "electron desktop/electron/main.mjs",
-    "electron:test": "node --test desktop/electron/app-protocol.test.mjs desktop/electron/network-policy.test.mjs desktop/electron/security.test.mjs desktop/electron/runtime-policy.test.mjs desktop/electron/power-runtime.test.mjs desktop/electron/tray-policy.test.mjs desktop/electron/deep-links.test.mjs desktop/electron/global-shortcut.test.mjs desktop/electron-builder.test.mjs scripts/playwright/electron-smoke.test.mjs",
+    "electron:test": "node --test desktop/electron/app-protocol.test.mjs desktop/electron/network-policy.test.mjs desktop/electron/provider-session.test.mjs desktop/electron/security.test.mjs desktop/electron/runtime-policy.test.mjs desktop/electron/power-runtime.test.mjs desktop/electron/tray-policy.test.mjs desktop/electron/deep-links.test.mjs desktop/electron/global-shortcut.test.mjs desktop/electron-builder.test.mjs scripts/playwright/electron-smoke.test.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "desktop:package": "electron-builder --config desktop/electron-builder.yml",

@@ -8,8 +8,8 @@ contextBridge.exposeInMainWorld(
     openExternal(url) {
       return ipcRenderer.invoke('spartan:open-external', url);
     },
-    openProvider(url, title) {
-      return ipcRenderer.invoke('spartan:open-provider', { url, title });
+    openProvider(url, title, sessionOptions) {
+      return ipcRenderer.invoke('spartan:open-provider', { url, title, sessionOptions });
     },
     closeProvider() {
       return ipcRenderer.invoke('spartan:close-provider');

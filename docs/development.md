@@ -20,11 +20,18 @@ main window loads packaged assets through the private, secure
 depend on a hosted frontend. Provider/game launches are checked against the
 bundled catalogs, general external access is limited to approved gaming and
 download origins, and the local application remains available offline.
-Provider authentication uses sandboxed windows in the persistent
-`persist:spartan-gaming-providers` Electron partition. Cross-domain identity
-hosts must be explicitly listed in `desktop/electron/network-policy.mjs`;
-arbitrary login popups remain blocked, and Spartan code never handles provider
-passwords.
+Provider authentication uses sandboxed windows in bounded persistent Electron
+partitions. Account isolation is enabled by default, mapping the four supported
+local profiles to `persist:spartan-gaming-providers-<profile>`; disabling
+Settings -> Providers -> Isolate provider accounts deliberately selects the
+legacy shared `persist:spartan-gaming-providers` compatibility partition.
+Cross-domain identity hosts must be explicitly listed in
+`desktop/electron/network-policy.mjs`; OAuth children inherit the launching
+profile's partition, arbitrary login popups remain blocked, and Spartan code
+never handles provider passwords. Switching surfaces or logging out closes
+provider-owned OAuth children. Logout then clears storage, HTTP authentication,
+and cache data from the shared partition and every profile partition so
+changing the setting cannot strand a signed-in account.
 
 Use `npm run electron:test` for focused runtime contracts and
 `npm run desktop:package` for platform development artifacts. The package must
