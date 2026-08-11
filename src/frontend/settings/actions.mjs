@@ -21,11 +21,7 @@ export const SETTINGS_ACTIONS = Object.freeze({
   'advanced.exportDiagnostics': Object.freeze({ kind: 'export-diagnostics' }),
   'advanced.clearDiagnostics': Object.freeze({ kind: 'clear-diagnostics' }),
   'advanced.flags': Object.freeze({ kind: 'developer-tools' }),
-  'updates.checkNow': Object.freeze({
-    kind: 'status',
-    message:
-      'Update service is not configured in this frontend build; use the signed release channel when available.',
-  }),
+  'updates.checkNow': Object.freeze({ kind: 'update-check' }),
   'updates.releaseNotes': Object.freeze({
     kind: 'external',
     href: 'https://github.com/Spartan-Software-Enterprises/Spartan-Gaming/releases',

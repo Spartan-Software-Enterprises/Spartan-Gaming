@@ -20,6 +20,9 @@ test('Electron runtime settings reflect persisted performance and privacy choice
       'privacy.doNotTrack': true,
       'privacy.blockThirdPartyCookies': true,
       'privacy.permissionPrompts': 'Ask every time',
+      'updates.channel': 'Beta',
+      'updates.autoUpdate': false,
+      'updates.notifyRestart': false,
     }),
     {
       developerMode: true,
@@ -34,6 +37,9 @@ test('Electron runtime settings reflect persisted performance and privacy choice
       doNotTrack: true,
       blockThirdPartyCookies: true,
       permissionPrompts: 'Ask every time',
+      updateChannel: 'Beta',
+      autoUpdate: false,
+      notifyRestart: false,
     },
   );
 });
@@ -52,7 +58,26 @@ test('Electron runtime settings default safely when values are absent', () => {
     doNotTrack: false,
     blockThirdPartyCookies: false,
     permissionPrompts: undefined,
+    updateChannel: undefined,
+    autoUpdate: true,
+    notifyRestart: true,
   });
+});
+
+test('Electron update status descriptions are bounded and actionable', async () => {
+  const { describeElectronUpdateStatus } = await import('./electron-runtime.mjs');
+  assert.equal(
+    describeElectronUpdateStatus({ status: 'development-build' }),
+    'Update checks run only from a packaged Spartan Gaming application.',
+  );
+  assert.equal(
+    describeElectronUpdateStatus({ status: 'downloading', percent: 42 }),
+    'Downloading verified update… 42%',
+  );
+  assert.equal(
+    describeElectronUpdateStatus({ status: 'downloaded', version: '1.2.3' }),
+    'Spartan Gaming 1.2.3 is ready to install.',
+  );
 });
 
 test('Electron runtime settings describe global shortcut registration outcomes', () => {

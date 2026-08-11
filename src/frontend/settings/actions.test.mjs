@@ -27,3 +27,7 @@ test('provider session cleanup is an explicit state-changing action', () => {
 test('developer tools are an explicit Electron action instead of a category loop', () => {
   assert.deepEqual(resolveSettingsAction('advanced.flags'), { kind: 'developer-tools' });
 });
+
+test('application updates use the Electron updater contract', () => {
+  assert.deepEqual(resolveSettingsAction('updates.checkNow'), { kind: 'update-check' });
+});

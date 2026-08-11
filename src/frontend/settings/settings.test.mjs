@@ -7,6 +7,20 @@ import { defaultSettings, settingsCategories } from './settings-data.mjs';
 import { normalizeControllerPolicy } from '../input/controller-policy.mjs';
 import './control.test.mjs';
 
+function extractCssBlock(stylesheet, marker) {
+  const markerIndex = stylesheet.indexOf(marker);
+  assert.notEqual(markerIndex, -1, `${marker} is missing`);
+  const openIndex = stylesheet.indexOf('{', markerIndex + marker.length);
+  assert.notEqual(openIndex, -1, `${marker} has no block`);
+  let depth = 0;
+  for (let index = openIndex; index < stylesheet.length; index += 1) {
+    if (stylesheet[index] === '{') depth += 1;
+    if (stylesheet[index] === '}') depth -= 1;
+    if (depth === 0) return stylesheet.slice(openIndex + 1, index);
+  }
+  assert.fail(`${marker} block is not closed`);
+}
+
 test('settings registry has unique keys and defaults', () => {
   const settings = settingsCategories.flatMap((category) => category.settings);
   const keys = settings.map((setting) => setting.key);
@@ -65,4 +79,28 @@ test('active setting toggles keep their label beside the thumb', async () => {
   assert.match(stylesheet, /\.toggle\s*\{[^}]*min-width:\s*72px/s);
   assert.match(stylesheet, /\.toggle\.is-on\s*\{[^}]*flex-direction:\s*row-reverse/s);
   assert.doesNotMatch(stylesheet, /\.toggle\.is-on span\s*\{[^}]*transform:/s);
+});
+
+test('mobile settings contain the scrollable category rail inside the viewport', async () => {
+  const directory = path.dirname(fileURLToPath(import.meta.url));
+  const stylesheet = await readFile(path.join(directory, 'settings.css'), 'utf8');
+  const mobileStyles = extractCssBlock(stylesheet, '@media (max-width: 720px)');
+  assert.match(mobileStyles, /\.nav\s*\{[^}]*overflow-x:\s*auto/s);
+  assert.match(mobileStyles, /\.rail\s*\{[^}]*max-width:\s*100vw[^}]*overflow-x:\s*hidden/s);
+  assert.match(
+    mobileStyles,
+    /\.save-status\s*\{[^}]*white-space:\s*normal[^}]*overflow-wrap:\s*anywhere/s,
+  );
+});
+
+test('updater status owns the Updates save area during asynchronous checks', async () => {
+  const directory = path.dirname(fileURLToPath(import.meta.url));
+  const implementation = await readFile(path.join(directory, 'settings.mjs'), 'utf8');
+  assert.match(implementation, /function updateStatusOwnsSaveArea\(\)/);
+  assert.match(implementation, /displayUpdateStatus\(\{ status: 'checking' \}\)/);
+  assert.match(implementation, /displayUpdateStatus\(result\)/);
+  assert.match(
+    implementation,
+    /saveSequence !== runtimeSaveSequence \|\| updateStatusOwnsSaveArea\(\)/,
+  );
 });

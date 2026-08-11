@@ -18,6 +18,9 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
     doNotTrack: false,
     blockThirdPartyCookies: false,
     permissionPrompts: 'Ask per site',
+    updateChannel: 'Stable',
+    autoUpdate: true,
+    notifyRestart: true,
   });
   assert.deepEqual(
     normalizeElectronRuntimePolicy({
@@ -29,6 +32,9 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
       doNotTrack: true,
       blockThirdPartyCookies: true,
       permissionPrompts: 'Ask every time',
+      updateChannel: 'Beta',
+      autoUpdate: false,
+      notifyRestart: false,
     }),
     {
       developerMode: true,
@@ -39,6 +45,9 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
       doNotTrack: true,
       blockThirdPartyCookies: true,
       permissionPrompts: 'Ask every time',
+      updateChannel: 'Beta',
+      autoUpdate: false,
+      notifyRestart: false,
     },
   );
   assert.deepEqual(
@@ -52,6 +61,9 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
       doNotTrack: false,
       blockThirdPartyCookies: false,
       permissionPrompts: 'Ask per site',
+      updateChannel: 'Stable',
+      autoUpdate: true,
+      notifyRestart: true,
     },
   );
   assert.deepEqual(
@@ -63,6 +75,9 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
       powerMode: 'unsupported',
       doNotTrack: 'true',
       permissionPrompts: 'unsupported',
+      updateChannel: 'Nightly',
+      autoUpdate: 'false',
+      notifyRestart: 'false',
     }),
     {
       developerMode: false,
@@ -73,6 +88,9 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
       doNotTrack: false,
       blockThirdPartyCookies: false,
       permissionPrompts: 'Ask per site',
+      updateChannel: 'Stable',
+      autoUpdate: true,
+      notifyRestart: true,
     },
   );
 });

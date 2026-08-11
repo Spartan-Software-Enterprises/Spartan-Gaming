@@ -8,6 +8,7 @@ import { createHostConfigFromSettings, detectHostPlatform } from '../host/config
 import { renderSettingControl } from './control.mjs';
 import {
   describeElectronRuntimeResult,
+  describeElectronUpdateStatus,
   resolveElectronRuntimeSettings,
 } from './electron-runtime.mjs';
 import { createControllerProfileStore } from '../input/profiles.mjs';
@@ -24,6 +25,18 @@ let activeCategory = settingsCategories.some((category) => category.id === reque
   : 'general';
 let query = '';
 let runtimeSaveSequence = 0;
+let currentUpdateStatus = null;
+
+function displayUpdateStatus(updateStatus) {
+  currentUpdateStatus = updateStatus;
+  if (activeCategory !== 'updates') return;
+  const status = document.querySelector('[data-save-status]');
+  if (status) status.textContent = describeElectronUpdateStatus(updateStatus);
+}
+
+function updateStatusOwnsSaveArea() {
+  return activeCategory === 'updates' && currentUpdateStatus !== null;
+}
 
 function saveState() {
   Object.assign(state, settingsStore.save(state));
@@ -34,11 +47,11 @@ function saveState() {
   );
   const saveSequence = ++runtimeSaveSequence;
   const status = document.querySelector('[data-save-status]');
-  if (status) {
+  if (status && !updateStatusOwnsSaveArea()) {
     status.textContent = 'Saved locally';
     void Promise.resolve(runtimeResult)
       .then((serializedResult) => {
-        if (saveSequence !== runtimeSaveSequence) return;
+        if (saveSequence !== runtimeSaveSequence || updateStatusOwnsSaveArea()) return;
         const result =
           typeof serializedResult === 'string' ? JSON.parse(serializedResult) : serializedResult;
         const startupPolicy = result?.startupPolicy;
@@ -50,10 +63,11 @@ function saveState() {
         status.textContent = describeElectronRuntimeResult({ ...result, startupPolicy });
       })
       .catch(() => {
-        if (saveSequence !== runtimeSaveSequence) return;
+        if (saveSequence !== runtimeSaveSequence || updateStatusOwnsSaveArea()) return;
         status.textContent = 'Saved locally; desktop runtime update failed.';
       });
     setTimeout(() => {
+      if (updateStatusOwnsSaveArea()) return;
       status.textContent = 'All changes saved';
     }, 1400);
   }
@@ -151,6 +165,9 @@ function renderContent() {
       }
     </div>
   `;
+  if (activeCategory === 'updates' && currentUpdateStatus)
+    document.querySelector('[data-save-status]').textContent =
+      describeElectronUpdateStatus(currentUpdateStatus);
   bindControls();
 }
 
@@ -292,6 +309,21 @@ function bindControls() {
         }
         return;
       }
+      if (action.kind === 'update-check') {
+        const status = document.querySelector('[data-save-status]');
+        if (!globalThis.spartanElectron?.checkForUpdates) {
+          if (status) status.textContent = 'Update checks require the Electron desktop app.';
+          return;
+        }
+        displayUpdateStatus({ status: 'checking' });
+        try {
+          const result = await globalThis.spartanElectron.checkForUpdates();
+          displayUpdateStatus(result);
+        } catch {
+          displayUpdateStatus({ status: 'unavailable' });
+        }
+        return;
+      }
       const status = document.querySelector('[data-save-status]');
       if (status && action.kind === 'status') {
         status.textContent = action.message;
@@ -377,3 +409,15 @@ document.querySelector('[data-import-file]').addEventListener('change', async (e
 render();
 const initialRuntimeSettings = resolveElectronRuntimeSettings(state);
 globalThis.spartanElectron?.applyRuntimeSettings?.(JSON.stringify(initialRuntimeSettings));
+let receivedUpdateStatus = false;
+globalThis.spartanElectron?.onUpdateStatus?.((updateStatus) => {
+  receivedUpdateStatus = true;
+  displayUpdateStatus(updateStatus);
+});
+void globalThis.spartanElectron
+  ?.getUpdateStatus?.()
+  .then((updateStatus) => {
+    if (receivedUpdateStatus) return;
+    displayUpdateStatus(updateStatus);
+  })
+  .catch(() => {});

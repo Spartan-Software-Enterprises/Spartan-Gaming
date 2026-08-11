@@ -1,4 +1,5 @@
 import { normalizeGlobalShortcut } from '../../src/frontend/settings/electron-runtime.mjs';
+import { normalizeElectronUpdatePolicy } from './update-service.mjs';
 
 function origin(value) {
   try {
@@ -15,6 +16,7 @@ const PERMISSION_PROMPT_MODES = Object.freeze([
 
 /** Normalize settings that can be applied to the Electron renderer at runtime. */
 export function normalizeElectronRuntimePolicy(settings = {}) {
+  const updatePolicy = normalizeElectronUpdatePolicy(settings);
   const powerMode = ['Balanced', 'Performance', 'Battery saver'].includes(settings?.powerMode)
     ? settings.powerMode
     : 'Balanced';
@@ -30,6 +32,9 @@ export function normalizeElectronRuntimePolicy(settings = {}) {
     doNotTrack: settings?.doNotTrack === true,
     blockThirdPartyCookies: settings?.blockThirdPartyCookies === true,
     permissionPrompts,
+    updateChannel: updatePolicy.channelLabel,
+    autoUpdate: updatePolicy.autoUpdate,
+    notifyRestart: updatePolicy.notifyRestart,
   });
 }
 

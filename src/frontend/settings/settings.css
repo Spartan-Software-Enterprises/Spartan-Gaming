@@ -102,6 +102,8 @@ button {
 .nav {
   display: grid;
   gap: 4px;
+  min-width: 0;
+  max-width: 100%;
 }
 .nav-item {
   display: flex;
@@ -334,6 +336,8 @@ output {
     display: block;
   }
   .rail {
+    max-width: 100vw;
+    overflow-x: hidden;
     padding: 18px 16px 12px;
     border-right: 0;
     border-bottom: 1px solid var(--border);
@@ -380,6 +384,8 @@ output {
   .save-status {
     display: block;
     margin-top: 12px;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
   .setting-row {
     grid-template-columns: 1fr;

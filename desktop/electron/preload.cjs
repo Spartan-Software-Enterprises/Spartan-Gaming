@@ -35,6 +35,18 @@ contextBridge.exposeInMainWorld(
     toggleDeveloperTools() {
       return ipcRenderer.invoke('spartan:toggle-developer-tools');
     },
+    checkForUpdates() {
+      return ipcRenderer.invoke('spartan:check-for-updates');
+    },
+    getUpdateStatus() {
+      return ipcRenderer.invoke('spartan:get-update-status');
+    },
+    onUpdateStatus(callback) {
+      if (typeof callback !== 'function') return () => {};
+      const listener = (_event, value) => callback(value);
+      ipcRenderer.on('spartan:update-status', listener);
+      return () => ipcRenderer.removeListener('spartan:update-status', listener);
+    },
     toggleFullscreen() {
       return ipcRenderer.invoke('spartan:toggle-fullscreen');
     },
