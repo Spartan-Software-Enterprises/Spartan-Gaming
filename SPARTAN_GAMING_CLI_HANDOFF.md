@@ -53,9 +53,10 @@ Inspect `AGENTS.md` or `CLAUDE.md` if either is added in a future checkout.
   policy, CommonJS preload bridge, and Settings implementation. A complete
   staged CodeRabbit review explicitly covered all 19 intended files, including
   both new policy files, and returned zero findings.
-- Before publishing this increment, still run final formatting and repository
-  checks, then update this entry with the resulting commit and GitHub Actions
-  evidence.
+- The increment is published on `main` as `571c6aa`. GitHub Actions is green:
+  repository checks `31463385570`, frontend distribution `31463385595`,
+  cross-platform contracts `31463385568`, and Android debug shell
+  `31463385582` all succeeded for that commit.
 
 - The prior visual-matrix baseline was published through `5ef5e49`. The primary desktop runtime remains a
   standalone Electron application loading bundled assets from
