@@ -1,5 +1,6 @@
 appId: com.spartan.gaming
 productName: Spartan Gaming
+executableName: Spartan-Gaming
 artifactName: Spartan-Gaming-${version}-${os}-${arch}.${ext}
 directories:
   output: dist-electron
@@ -19,6 +20,7 @@ protocols:
       - spartan
 linux:
   category: Game
+  desktopName: spartan-gaming
   target:
     - AppImage
     - deb
