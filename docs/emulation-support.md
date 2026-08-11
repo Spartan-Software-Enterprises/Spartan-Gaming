@@ -177,20 +177,20 @@ trusted key the load fails closed. A successful load registers the adapter in
 the in-memory browser registry and immediately makes it available to matching
 runtime plans.
 
-| Project | Systems | Preferred mode | Role |
-| --- | --- | --- | --- |
-| RetroArch/libretro | Many classic and modern systems | Browser/native | Unified frontend and core ecosystem |
-| Dolphin | GameCube, Wii | Native | High-quality standalone adapter; optional libretro path |
-| PCSX2 | PlayStation 2 | Native | High-performance standalone adapter |
-| RPCS3 | PlayStation 3 | Native | Advanced desktop/handheld adapter |
-| PPSSPP | PSP | Browser/native | Strong cross-platform candidate; no PSP BIOS required for normal operation |
-| DuckStation | PlayStation 1 | Native | Accuracy-focused adapter |
-| melonDS | Nintendo DS | Native/WASM candidate | Dual-screen and touch-aware adapter |
-| Azahar | Nintendo 3DS | Native | Current 3DS-focused adapter; platform and license review required |
-| MAME / FBNeo | Arcade | Browser/native | Preservation and arcade catalog support |
-| Flycast | Dreamcast, Naomi, Atomiswave | Native/WASM candidate | Arcade and sixth-generation support |
-| xemu | Original Xbox | Native | Desktop adapter subject to performance testing |
-| ScummVM | Adventure-game engines | Browser/native | Excellent preservation-focused web target |
+| Project            | Systems                         | Preferred mode        | Role                                                                       |
+| ------------------ | ------------------------------- | --------------------- | -------------------------------------------------------------------------- |
+| RetroArch/libretro | Many classic and modern systems | Browser/native        | Unified frontend and core ecosystem                                        |
+| Dolphin            | GameCube, Wii                   | Native                | High-quality standalone adapter; optional libretro path                    |
+| PCSX2              | PlayStation 2                   | Native                | High-performance standalone adapter                                        |
+| RPCS3              | PlayStation 3                   | Native                | Advanced desktop/handheld adapter                                          |
+| PPSSPP             | PSP                             | Browser/native        | Strong cross-platform candidate; no PSP BIOS required for normal operation |
+| DuckStation        | PlayStation 1                   | Native                | Accuracy-focused adapter                                                   |
+| melonDS            | Nintendo DS                     | Native/WASM candidate | Dual-screen and touch-aware adapter                                        |
+| Azahar             | Nintendo 3DS                    | Native                | Current 3DS-focused adapter; platform and license review required          |
+| MAME / FBNeo       | Arcade                          | Browser/native        | Preservation and arcade catalog support                                    |
+| Flycast            | Dreamcast, Naomi, Atomiswave    | Native/WASM candidate | Arcade and sixth-generation support                                        |
+| xemu               | Original Xbox                   | Native                | Desktop adapter subject to performance testing                             |
+| ScummVM            | Adventure-game engines          | Browser/native        | Excellent preservation-focused web target                                  |
 
 ## UX features
 
@@ -232,8 +232,8 @@ runtime plans.
 - Verify core and adapter signatures before loading.
 - Keep save data separate from game images and provider credentials.
 - Provide a clear removal/export path for user data.
-The Emulation Center remembers only safe file metadata (name, type, size, and
-modified time) in local browser storage so a user's collection survives a page
-reload. It never stores file contents, ROMs, BIOS data, or launch authority.
-Remembered entries are explicitly marked for re-selection; a launch still
-requires the user to choose the file again in the current session.
+  The Emulation Center remembers only safe file metadata (name, type, size, and
+  modified time) in local browser storage so a user's collection survives a page
+  reload. It never stores file contents, ROMs, BIOS data, or launch authority.
+  Remembered entries are explicitly marked for re-selection; a launch still
+  requires the user to choose the file again in the current session.

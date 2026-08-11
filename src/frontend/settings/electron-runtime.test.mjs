@@ -1,33 +1,57 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {describeElectronRuntimeResult, resolveElectronRuntimeSettings} from './electron-runtime.mjs';
+import {
+  describeElectronRuntimeResult,
+  resolveElectronRuntimeSettings,
+} from './electron-runtime.mjs';
 
 test('Electron runtime settings reflect persisted performance and privacy choices', () => {
-  assert.deepEqual(resolveElectronRuntimeSettings({
-    'general.backgroundApps': true,
-    'general.globalShortcut': 'CommandOrControl+Shift+G',
-    'performance.backgroundThrottling': false,
-    'performance.powerMode': 'Performance',
-    'privacy.doNotTrack': true,
-    'privacy.blockThirdPartyCookies': true,
-    'privacy.permissionPrompts': 'Ask every time',
-  }), {
-    backgroundApps: true,
-    globalShortcut: 'CommandOrControl+Shift+G',
-    backgroundThrottling: false,
-    powerMode: 'Performance',
-    doNotTrack: true,
-    blockThirdPartyCookies: true,
-    permissionPrompts: 'Ask every time',
-  });
+  assert.deepEqual(
+    resolveElectronRuntimeSettings({
+      'general.backgroundApps': true,
+      'general.globalShortcut': 'CommandOrControl+Shift+G',
+      'performance.backgroundThrottling': false,
+      'performance.powerMode': 'Performance',
+      'privacy.doNotTrack': true,
+      'privacy.blockThirdPartyCookies': true,
+      'privacy.permissionPrompts': 'Ask every time',
+    }),
+    {
+      backgroundApps: true,
+      globalShortcut: 'CommandOrControl+Shift+G',
+      backgroundThrottling: false,
+      powerMode: 'Performance',
+      doNotTrack: true,
+      blockThirdPartyCookies: true,
+      permissionPrompts: 'Ask every time',
+    },
+  );
 });
 
 test('Electron runtime settings default safely when values are absent', () => {
-  assert.deepEqual(resolveElectronRuntimeSettings({}), {backgroundApps: false, globalShortcut: undefined, backgroundThrottling: true, powerMode: undefined, doNotTrack: false, blockThirdPartyCookies: false, permissionPrompts: undefined});
+  assert.deepEqual(resolveElectronRuntimeSettings({}), {
+    backgroundApps: false,
+    globalShortcut: undefined,
+    backgroundThrottling: true,
+    powerMode: undefined,
+    doNotTrack: false,
+    blockThirdPartyCookies: false,
+    permissionPrompts: undefined,
+  });
 });
 
 test('Electron runtime settings describe global shortcut registration outcomes', () => {
-  assert.equal(describeElectronRuntimeResult({globalShortcutStatus: {status: 'registered', accelerator: 'CommandOrControl+Shift+G'}}), 'Saved locally; CommandOrControl+Shift+G is active.');
-  assert.equal(describeElectronRuntimeResult({globalShortcutStatus: {status: 'unavailable', accelerator: 'CommandOrControl+Shift+G'}}), 'Saved locally; desktop shortcut is unavailable or already in use.');
+  assert.equal(
+    describeElectronRuntimeResult({
+      globalShortcutStatus: { status: 'registered', accelerator: 'CommandOrControl+Shift+G' },
+    }),
+    'Saved locally; CommandOrControl+Shift+G is active.',
+  );
+  assert.equal(
+    describeElectronRuntimeResult({
+      globalShortcutStatus: { status: 'unavailable', accelerator: 'CommandOrControl+Shift+G' },
+    }),
+    'Saved locally; desktop shortcut is unavailable or already in use.',
+  );
   assert.equal(describeElectronRuntimeResult(), 'Saved locally');
 });

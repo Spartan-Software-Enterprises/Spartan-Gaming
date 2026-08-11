@@ -42,10 +42,19 @@ export function createSessionRecoveryHandoff(values = {}, now = Date.now()) {
   return Object.freeze(handoff);
 }
 
-export function saveSessionRecoveryHandoff(storage = globalThis.sessionStorage, values = {}, now = Date.now()) {
+export function saveSessionRecoveryHandoff(
+  storage = globalThis.sessionStorage,
+  values = {},
+  now = Date.now(),
+) {
   const handoff = createSessionRecoveryHandoff(values, now);
   if (!handoff || !storage || typeof storage.setItem !== 'function') return false;
-  try { storage.setItem(SESSION_RECOVERY_KEY, JSON.stringify(handoff)); return true; } catch { return false; }
+  try {
+    storage.setItem(SESSION_RECOVERY_KEY, JSON.stringify(handoff));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function readSessionRecoveryHandoff(storage = globalThis.sessionStorage, now = Date.now()) {
@@ -55,12 +64,22 @@ export function readSessionRecoveryHandoff(storage = globalThis.sessionStorage, 
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     const handoff = createSessionRecoveryHandoff(parsed, now);
-    if (!handoff) { storage.removeItem?.(SESSION_RECOVERY_KEY); return null; }
+    if (!handoff) {
+      storage.removeItem?.(SESSION_RECOVERY_KEY);
+      return null;
+    }
     return handoff;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 export function clearSessionRecoveryHandoff(storage = globalThis.sessionStorage) {
   if (!storage || typeof storage.removeItem !== 'function') return false;
-  try { storage.removeItem(SESSION_RECOVERY_KEY); return true; } catch { return false; }
+  try {
+    storage.removeItem(SESSION_RECOVERY_KEY);
+    return true;
+  } catch {
+    return false;
+  }
 }

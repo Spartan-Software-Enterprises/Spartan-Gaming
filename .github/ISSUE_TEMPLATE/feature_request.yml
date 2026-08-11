@@ -1,6 +1,6 @@
 name: Feature request
 description: Propose a feature or improvement
-title: "[Feature]: "
+title: '[Feature]: '
 labels: [enhancement]
 body:
   - type: textarea
@@ -19,4 +19,3 @@ body:
     id: platforms
     attributes:
       label: Affected platforms
-

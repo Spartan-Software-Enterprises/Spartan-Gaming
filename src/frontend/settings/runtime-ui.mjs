@@ -1,15 +1,47 @@
-import {detectDeviceMode, resolvePresentationProfile} from '../platform/device-mode.mjs';
-import {detectRuntimePlatform, resolvePlatformCompatibility} from '../platform/compatibility.mjs';
-import {syncRuntimeControllerNavigation} from '../input/navigation.mjs';
-import {createAndroidBridge} from '../platform/android-bridge.mjs';
-import {detectAndroidFormFactor, resolveAndroidPolicy} from '../platform/android.mjs';
+import { detectDeviceMode, resolvePresentationProfile } from '../platform/device-mode.mjs';
+import { detectRuntimePlatform, resolvePlatformCompatibility } from '../platform/compatibility.mjs';
+import { syncRuntimeControllerNavigation } from '../input/navigation.mjs';
+import { createAndroidBridge } from '../platform/android-bridge.mjs';
+import { detectAndroidFormFactor, resolveAndroidPolicy } from '../platform/android.mjs';
 
-const ACCENTS = Object.freeze({Cyan: '#50e1d1', Violet: '#9a84ff', Lime: '#b8ef65', Amber: '#f5c563', Red: '#ff8f9c'});
-const THEMES = Object.freeze({'Spartan Dark': 'dark', 'Spartan Light': 'light', System: 'system', 'OLED Black': 'oled'});
-const DENSITIES = Object.freeze({Comfortable: 'comfortable', Compact: 'compact', 'Controller-first': 'controller'});
-const TAB_LAYOUTS = Object.freeze({'Top tabs': 'top', 'Vertical tabs': 'vertical', 'Compact tabs': 'compact', 'Hidden in gaming mode': 'hidden-gaming'});
-const LOCALES = Object.freeze({English: 'en', Spanish: 'es', French: 'fr', German: 'de', Japanese: 'ja', Korean: 'ko'});
-const TV_NAVIGATION_INTERVALS = Object.freeze({Automatic: 100, Responsive: 60, Balanced: 100, 'Low power': 150});
+const ACCENTS = Object.freeze({
+  Cyan: '#50e1d1',
+  Violet: '#9a84ff',
+  Lime: '#b8ef65',
+  Amber: '#f5c563',
+  Red: '#ff8f9c',
+});
+const THEMES = Object.freeze({
+  'Spartan Dark': 'dark',
+  'Spartan Light': 'light',
+  System: 'system',
+  'OLED Black': 'oled',
+});
+const DENSITIES = Object.freeze({
+  Comfortable: 'comfortable',
+  Compact: 'compact',
+  'Controller-first': 'controller',
+});
+const TAB_LAYOUTS = Object.freeze({
+  'Top tabs': 'top',
+  'Vertical tabs': 'vertical',
+  'Compact tabs': 'compact',
+  'Hidden in gaming mode': 'hidden-gaming',
+});
+const LOCALES = Object.freeze({
+  English: 'en',
+  Spanish: 'es',
+  French: 'fr',
+  German: 'de',
+  Japanese: 'ja',
+  Korean: 'ko',
+});
+const TV_NAVIGATION_INTERVALS = Object.freeze({
+  Automatic: 100,
+  Responsive: 60,
+  Balanced: 100,
+  'Low power': 150,
+});
 
 export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
   const accent = ACCENTS[settings['appearance.accent']] || ACCENTS.Cyan;
@@ -17,12 +49,27 @@ export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
   const density = DENSITIES[settings['appearance.density']] || 'comfortable';
   const opacity = Number(settings['gaming.overlayOpacity']);
   const detectedMode = environment.deviceMode || detectDeviceMode(environment);
-  const presentation = resolvePresentationProfile({settings, detectedMode, viewport: environment.viewport});
-  const platform = detectRuntimePlatform({navigatorRef: environment.navigatorRef, userAgent: environment.userAgent, viewport: environment.viewport});
-  const compatibility = resolvePlatformCompatibility({platform, capabilities: environment.capabilities});
+  const presentation = resolvePresentationProfile({
+    settings,
+    detectedMode,
+    viewport: environment.viewport,
+  });
+  const platform = detectRuntimePlatform({
+    navigatorRef: environment.navigatorRef,
+    userAgent: environment.userAgent,
+    viewport: environment.viewport,
+  });
+  const compatibility = resolvePlatformCompatibility({
+    platform,
+    capabilities: environment.capabilities,
+  });
   const remoteNavigationSpeed = settings['television.remoteNavigationSpeed'] || 'Automatic';
-  const remoteNavigationIntervalMs = TV_NAVIGATION_INTERVALS[remoteNavigationSpeed] || TV_NAVIGATION_INTERVALS.Automatic;
-  const remoteDeadzone = Math.max(0.15, Math.min(0.6, (Number(settings['television.remoteDeadzone']) || 35) / 100));
+  const remoteNavigationIntervalMs =
+    TV_NAVIGATION_INTERVALS[remoteNavigationSpeed] || TV_NAVIGATION_INTERVALS.Automatic;
+  const remoteDeadzone = Math.max(
+    0.15,
+    Math.min(0.6, (Number(settings['television.remoteDeadzone']) || 35) / 100),
+  );
   const safeArea = Math.max(0, Math.min(10, Number(settings['television.safeArea']) || 0));
   const autoHideTelevisionChrome = settings['television.autoHideChrome'] !== false;
   return Object.freeze({
@@ -45,14 +92,21 @@ export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
     enginePolicy: compatibility.enginePolicy,
     supportLevel: compatibility.supportLevel,
     featureGates: compatibility.gates,
-    reduceMotion: settings['appearance.reduceMotion'] === true || settings['accessibility.reduceMotion'] === true,
+    reduceMotion:
+      settings['appearance.reduceMotion'] === true ||
+      settings['accessibility.reduceMotion'] === true,
     highContrast: settings['accessibility.highContrast'] === true,
     largeText: settings['accessibility.largeText'] === true,
     focusRing: settings['accessibility.focusRing'] !== false,
     screenReaderHints: settings['accessibility.screenReaderHints'] === true,
-    colorVision: typeof settings['accessibility.colorVision'] === 'string' ? settings['accessibility.colorVision'] : 'None',
+    colorVision:
+      typeof settings['accessibility.colorVision'] === 'string'
+        ? settings['accessibility.colorVision']
+        : 'None',
     showOverlay: settings['gaming.showOverlay'] !== false,
-    hideBrowserChrome: settings['gaming.hideBrowserChrome'] !== false || (presentation.mode === 'television' && autoHideTelevisionChrome),
+    hideBrowserChrome:
+      settings['gaming.hideBrowserChrome'] !== false ||
+      (presentation.mode === 'television' && autoHideTelevisionChrome),
     overlayPosition: settings['gaming.overlayPosition'] || 'Top right',
     overlayOpacity: Number.isFinite(opacity) ? Math.max(20, Math.min(100, opacity)) : 92,
     television: Object.freeze({
@@ -108,18 +162,31 @@ html[data-spartan-device-mode="mobile"] body,html[data-spartan-device-mode="hand
 html[data-spartan-device-mode="mobile"] .content,html[data-spartan-device-mode="handheld"] .content,html[data-spartan-device-mode="mobile"] .main,html[data-spartan-device-mode="handheld"] .main{padding-bottom:calc(45px + env(safe-area-inset-bottom))}
 `;
 
-export function applyRuntimeUiSettings(documentRef, settings = {}, {navigation = {}} = {}) {
+export function applyRuntimeUiSettings(documentRef, settings = {}, { navigation = {} } = {}) {
   if (!documentRef?.documentElement) return resolveRuntimeUiSettings(settings);
   globalThis.spartanElectron?.setQuitGuard?.(settings['general.askBeforeQuit'] !== false);
-  const resolved = resolveRuntimeUiSettings(settings, {navigatorRef: documentRef.defaultView?.navigator || globalThis.navigator, viewport: {width: documentRef.defaultView?.innerWidth}});
+  const resolved = resolveRuntimeUiSettings(settings, {
+    navigatorRef: documentRef.defaultView?.navigator || globalThis.navigator,
+    viewport: { width: documentRef.defaultView?.innerWidth },
+  });
   if (resolved.platform === 'android') {
     const androidWindow = documentRef.defaultView;
     const androidPolicy = resolveAndroidPolicy({
       settings,
-      formFactor: detectAndroidFormFactor({viewport: {width: androidWindow?.innerWidth}, density: androidWindow?.devicePixelRatio, windowSegments: androidWindow?.visualViewport?.segments || []}),
-      orientation: androidWindow?.screen?.orientation?.type?.startsWith('portrait') ? 'portrait' : androidWindow?.screen?.orientation?.type?.startsWith('landscape') ? 'landscape' : 'unknown',
+      formFactor: detectAndroidFormFactor({
+        viewport: { width: androidWindow?.innerWidth },
+        density: androidWindow?.devicePixelRatio,
+        windowSegments: androidWindow?.visualViewport?.segments || [],
+      }),
+      orientation: androidWindow?.screen?.orientation?.type?.startsWith('portrait')
+        ? 'portrait'
+        : androidWindow?.screen?.orientation?.type?.startsWith('landscape')
+          ? 'landscape'
+          : 'unknown',
     });
-    createAndroidBridge({bridge: androidWindow?.SpartanAndroid || globalThis.SpartanAndroid}).applyPolicy(androidPolicy);
+    createAndroidBridge({
+      bridge: androidWindow?.SpartanAndroid || globalThis.SpartanAndroid,
+    }).applyPolicy(androidPolicy);
   }
   const root = documentRef.documentElement;
   root.dataset.spartanTheme = resolved.theme;
@@ -127,30 +194,41 @@ export function applyRuntimeUiSettings(documentRef, settings = {}, {navigation =
   root.dataset.spartanDensity = resolved.density;
   root.dataset.spartanTabLayout = resolved.tabLayout;
   root.dataset.spartanStatusBar = resolved.showStatusBar ? 'visible' : 'hidden';
-  if (resolved.translucentChrome) root.dataset.spartanTranslucentChrome = ''; else delete root.dataset.spartanTranslucentChrome;
+  if (resolved.translucentChrome) root.dataset.spartanTranslucentChrome = '';
+  else delete root.dataset.spartanTranslucentChrome;
   root.dataset.spartanDeviceMode = resolved.deviceMode;
   root.dataset.spartanNavigation = resolved.navigation;
   root.dataset.spartanPlatform = resolved.platform;
   root.dataset.spartanEnginePolicy = resolved.enginePolicy;
   root.dataset.spartanColorVision = resolved.colorVision;
   root.dataset.spartanTvPointer = resolved.television.showPointer ? 'visible' : 'hidden';
-  if (resolved.television.autoHideChrome) root.dataset.spartanTvAutoHideChrome = ''; else delete root.dataset.spartanTvAutoHideChrome;
+  if (resolved.television.autoHideChrome) root.dataset.spartanTvAutoHideChrome = '';
+  else delete root.dataset.spartanTvAutoHideChrome;
   root.style.setProperty('--spartan-tv-safe-area', `${resolved.television.safeArea}%`);
-  if (resolved.screenReaderHints) root.dataset.spartanScreenReaderHints = ''; else delete root.dataset.spartanScreenReaderHints;
+  if (resolved.screenReaderHints) root.dataset.spartanScreenReaderHints = '';
+  else delete root.dataset.spartanScreenReaderHints;
   root.dataset.spartanOverlay = resolved.showOverlay ? 'visible' : 'hidden';
-  if (resolved.hideBrowserChrome) root.dataset.spartanHideBrowserChrome = ''; else delete root.dataset.spartanHideBrowserChrome;
+  if (resolved.hideBrowserChrome) root.dataset.spartanHideBrowserChrome = '';
+  else delete root.dataset.spartanHideBrowserChrome;
   root.dataset.spartanOverlayPosition = resolved.overlayPosition;
-  if (resolved.reduceMotion) root.dataset.spartanReduceMotion = ''; else delete root.dataset.spartanReduceMotion;
-  if (resolved.highContrast) root.dataset.spartanHighContrast = ''; else delete root.dataset.spartanHighContrast;
-  if (resolved.largeText) root.dataset.spartanLargeText = ''; else delete root.dataset.spartanLargeText;
-  if (resolved.focusRing) root.dataset.spartanFocusRing = ''; else delete root.dataset.spartanFocusRing;
+  if (resolved.reduceMotion) root.dataset.spartanReduceMotion = '';
+  else delete root.dataset.spartanReduceMotion;
+  if (resolved.highContrast) root.dataset.spartanHighContrast = '';
+  else delete root.dataset.spartanHighContrast;
+  if (resolved.largeText) root.dataset.spartanLargeText = '';
+  else delete root.dataset.spartanLargeText;
+  if (resolved.focusRing) root.dataset.spartanFocusRing = '';
+  else delete root.dataset.spartanFocusRing;
   root.style.setProperty('--spartan-accent', resolved.accent);
   root.style.setProperty('--accent', resolved.accent);
   root.style.setProperty('--cyan', resolved.accent);
   root.style.setProperty('--spartan-ui-scale', `${resolved.effectiveUiScale / 100}`);
   root.style.setProperty('--spartan-overlay-opacity', `${resolved.overlayOpacity / 100}`);
   if (!documentRef.getElementById(STYLE_ID)) {
-    const style = documentRef.createElement('style'); style.id = STYLE_ID; style.textContent = RUNTIME_STYLES; documentRef.head?.append(style);
+    const style = documentRef.createElement('style');
+    style.id = STYLE_ID;
+    style.textContent = RUNTIME_STYLES;
+    documentRef.head?.append(style);
   }
   syncRuntimeControllerNavigation(documentRef, {
     intervalMs: resolved.television.remoteNavigationIntervalMs,

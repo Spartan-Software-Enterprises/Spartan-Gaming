@@ -78,17 +78,17 @@ The Settings control center covers browser behavior, gaming, streaming, controll
 
 ## Device-universal direction
 
-| Platform | Current project coverage | Remaining acceptance gate |
-| --- | --- | --- |
-| Windows desktop | Electron development packaging, shared frontend, native package/build contracts | Signed installer plus physical capture, input, audio, haptics, and virtual-gamepad validation |
-| Linux desktop | Electron AppImage/Debian development packaging and native Linux contracts | Wider distro/hardware coverage and physical `/dev/uinput`/FF validation |
-| macOS desktop | Electron development packaging and native package/build contracts | Signed/notarized release and physical platform validation |
-| SteamOS / Steam Deck | Handheld UI, Gamescope/Proton/Steam Input/session-power contracts | Physical Deck and SteamOS hardware testing |
-| Android | Shared frontend, touch/controller policy, WebView shell and bounded native bridge; debug APK build path | Physical-device behavior, permissions, release signing, and distribution |
-| Amazon Fire TV / Fire Stick | Android-derived television presentation and remote-navigation profile | Device testing, native packaging, and store certification |
-| Roku | Capability-gated television/browser presentation profile | Roku-native packaging/certification or a validated supported web delivery route |
-| ChromeOS | Standalone application direction and capability-driven large/small-screen UI contracts | Native installation route and physical-device compatibility matrix |
-| iOS | Not targeted | Not planned |
+| Platform                    | Current project coverage                                                                                | Remaining acceptance gate                                                                     |
+| --------------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Windows desktop             | Electron development packaging, shared frontend, native package/build contracts                         | Signed installer plus physical capture, input, audio, haptics, and virtual-gamepad validation |
+| Linux desktop               | Electron AppImage/Debian development packaging and native Linux contracts                               | Wider distro/hardware coverage and physical `/dev/uinput`/FF validation                       |
+| macOS desktop               | Electron development packaging and native package/build contracts                                       | Signed/notarized release and physical platform validation                                     |
+| SteamOS / Steam Deck        | Handheld UI, Gamescope/Proton/Steam Input/session-power contracts                                       | Physical Deck and SteamOS hardware testing                                                    |
+| Android                     | Shared frontend, touch/controller policy, WebView shell and bounded native bridge; debug APK build path | Physical-device behavior, permissions, release signing, and distribution                      |
+| Amazon Fire TV / Fire Stick | Android-derived television presentation and remote-navigation profile                                   | Device testing, native packaging, and store certification                                     |
+| Roku                        | Capability-gated television/browser presentation profile                                                | Roku-native packaging/certification or a validated supported web delivery route               |
+| ChromeOS                    | Standalone application direction and capability-driven large/small-screen UI contracts                  | Native installation route and physical-device compatibility matrix                            |
+| iOS                         | Not targeted                                                                                            | Not planned                                                                                   |
 
 This table describes repository coverage, not a promise that every listed device is release-ready. The [future local validation lab](docs/future-local-validation.md) records the exact hardware evidence still required.
 
@@ -133,6 +133,8 @@ npm run playwright:smoke
 ```
 
 CI builds and tests development surfaces across its supported runner matrix. The preferred low-cost remote validation environment is documented in [docs/aws-dev-validation.md](docs/aws-dev-validation.md), including setup, evidence locations, cost boundaries, and limitations. Durable agent continuation state lives in [SPARTAN_GAMING_CLI_HANDOFF.md](SPARTAN_GAMING_CLI_HANDOFF.md). The README is maintained as a living product showcase and must be updated alongside verified feature, platform, setup, and acceptance changes.
+
+Public release requires more than green unit tests. Spartan's release gates include repeatable interaction tests, screenshot comparisons, packaged-app visual inspection, controller/keyboard/mouse/touch/remote navigation, offline cold starts, provider login and recovery, accessibility, performance, crash recovery, updates, and real-device evidence for every claimed platform.
 
 Spartan Gaming is in active foundation implementation. The shared frontend, Electron-first shell, Android policy/shell boundaries, controller profiles, provider and emulator catalogs, host control plane, deployment contracts, and diagnostics are implemented and automated-test covered. A checked roadmap item can represent a verified contract or development artifact; it does not replace physical hardware, production deployment, driver, store, signing, or certification evidence where the roadmap calls for it.
 

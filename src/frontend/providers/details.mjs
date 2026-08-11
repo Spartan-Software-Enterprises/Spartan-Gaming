@@ -1,8 +1,12 @@
-function list(value) { return Object.freeze(Array.isArray(value) ? [...value] : []); }
+function list(value) {
+  return Object.freeze(Array.isArray(value) ? [...value] : []);
+}
 
 export function createProviderDetailsModel(entry, plan) {
-  if (!entry || entry.backendType !== 'provider') throw new TypeError('A provider entry is required');
-  if (!plan || plan.backendId !== entry.id) throw new TypeError('A matching provider launch plan is required');
+  if (!entry || entry.backendType !== 'provider')
+    throw new TypeError('A provider entry is required');
+  if (!plan || plan.backendId !== entry.id)
+    throw new TypeError('A matching provider launch plan is required');
   const integration = plan.integration || {};
   const readiness = plan.readiness || {};
   return Object.freeze({
@@ -26,6 +30,6 @@ export function createProviderDetailsModel(entry, plan) {
     readinessReason: readiness.reason || 'Readiness evidence is not available yet.',
     missingCapabilities: list(readiness.missingCapabilities),
     blocking: list(readiness.blocking),
-    troubleshooting: list((readiness.issues || []).map(issue => issue.message).filter(Boolean)),
+    troubleshooting: list((readiness.issues || []).map((issue) => issue.message).filter(Boolean)),
   });
 }

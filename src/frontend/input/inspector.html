@@ -1,2 +1,67 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Spartan Gaming — Controller Tester</title><link rel="stylesheet" href="./inspector.css"></head><body><main class="inspector-shell"><header><a class="brand" href="../dashboard/index.html"><span class="mark">S</span><span>SPARTAN <small>GAMING</small></span></a><a class="back" href="../settings/index.html">Settings</a></header><section class="heading"><p class="eyebrow">INPUT LAB</p><h1>Test every controller.</h1><p>Connect a gamepad, then press a button or move a stick. Spartan reads normalized input locally and never uploads raw device objects.</p></section><section class="capabilities" data-capabilities></section><section class="controller-grid"><div class="devices panel"><div class="panel-head"><div><p class="eyebrow">CONNECTED DEVICES</p><h2>Gamepads</h2></div><button class="secondary" data-refresh>Refresh</button></div><div data-devices class="empty">No gamepads detected. Connect one and press a button to wake it.</div></div><div class="panel tester"><div class="panel-head"><div><p class="eyebrow">LIVE INSPECTOR</p><h2 data-selected>No controller selected</h2><p data-profile>No matching profile</p></div><span class="live" data-live>WAITING</span></div><div class="axes" data-axes></div><h3>Buttons</h3><div class="buttons" data-buttons></div><dl class="details" data-details></dl></div></section><section class="panel hid"><div class="panel-head"><div><p class="eyebrow">HID ACCESS</p><h2>Approved devices</h2></div><button class="secondary" data-hid>Refresh HID list</button></div><div data-hid-list class="empty">No approved HID devices.</div></section><div class="notice" data-notice role="status" aria-live="polite"></div></main><script type="module" src="./inspector-page.mjs"></script></body></html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Spartan Gaming — Controller Tester</title>
+    <link rel="stylesheet" href="./inspector.css" />
+  </head>
+  <body>
+    <main class="inspector-shell">
+      <header>
+        <a class="brand" href="../dashboard/index.html"
+          ><span class="mark">S</span><span>SPARTAN <small>GAMING</small></span></a
+        ><a class="back" href="../settings/index.html">Settings</a>
+      </header>
+      <section class="heading">
+        <p class="eyebrow">INPUT LAB</p>
+        <h1>Test every controller.</h1>
+        <p>
+          Connect a gamepad, then press a button or move a stick. Spartan reads normalized input
+          locally and never uploads raw device objects.
+        </p>
+      </section>
+      <section class="capabilities" data-capabilities></section>
+      <section class="controller-grid">
+        <div class="devices panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">CONNECTED DEVICES</p>
+              <h2>Gamepads</h2>
+            </div>
+            <button class="secondary" data-refresh>Refresh</button>
+          </div>
+          <div data-devices class="empty">
+            No gamepads detected. Connect one and press a button to wake it.
+          </div>
+        </div>
+        <div class="panel tester">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">LIVE INSPECTOR</p>
+              <h2 data-selected>No controller selected</h2>
+              <p data-profile>No matching profile</p>
+            </div>
+            <span class="live" data-live>WAITING</span>
+          </div>
+          <div class="axes" data-axes></div>
+          <h3>Buttons</h3>
+          <div class="buttons" data-buttons></div>
+          <dl class="details" data-details></dl>
+        </div>
+      </section>
+      <section class="panel hid">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">HID ACCESS</p>
+            <h2>Approved devices</h2>
+          </div>
+          <button class="secondary" data-hid>Refresh HID list</button>
+        </div>
+        <div data-hid-list class="empty">No approved HID devices.</div>
+      </section>
+      <div class="notice" data-notice role="status" aria-live="polite"></div>
+    </main>
+    <script type="module" src="./inspector-page.mjs"></script>
+  </body>
+</html>

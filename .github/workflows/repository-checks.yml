@@ -13,6 +13,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install formatting dependency
+        run: npm ci --ignore-scripts
+      - name: Check Prettier formatting
+        run: npm run format:check
       - name: Check required files
         shell: bash
         run: |

@@ -1,15 +1,97 @@
 import '../pwa/register.mjs';
-import {createWorkspaceStore} from './workspaces.mjs';
-import {createActiveProfileStorage} from '../profiles/storage.mjs';
-import {BUILTIN_CONTROLLER_PROFILES, createControllerProfileStore} from '../input/profiles.mjs';
+import { createWorkspaceStore } from './workspaces.mjs';
+import { createActiveProfileStorage } from '../profiles/storage.mjs';
+import { BUILTIN_CONTROLLER_PROFILES, createControllerProfileStore } from '../input/profiles.mjs';
 
-const profileStorage = createActiveProfileStorage(); const store = createWorkspaceStore({storage: profileStorage}); const controllerStore = createControllerProfileStore({storage: profileStorage}); const grid = document.querySelector('[data-workspaces]'); const toast = document.querySelector('[data-toast]'); let timer;
-function escapeHtml(value) { return String(value).replace(/[&<>\'"]/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character])); }
-function showToast(message) { toast.textContent = message; toast.classList.add('is-visible'); clearTimeout(timer); timer = setTimeout(() => toast.classList.remove('is-visible'), 2400); }
-function render() { const profiles = [...BUILTIN_CONTROLLER_PROFILES, ...controllerStore.list().filter(profile => !BUILTIN_CONTROLLER_PROFILES.some(builtin => builtin.id === profile.id))]; const options = [{id: 'auto', label: 'Auto-detect'}, {id: 'keyboard', label: 'Keyboard and mouse'}, ...profiles.map(profile => ({id: profile.id, label: profile.name}))]; grid.innerHTML = store.list().map(workspace => `<article class="workspace-card ${workspace.id === store.active.id ? 'is-active' : ''}"><p class="eyebrow">${workspace.id === store.active.id ? 'ACTIVE WORKSPACE' : 'WORKSPACE'}</p><h2>${escapeHtml(workspace.name)}</h2><p>${escapeHtml(workspace.description)}</p><div class="workspace-meta"><span class="chip">${escapeHtml(workspace.quality)} quality</span><span class="chip">${workspace.overlay ? 'Overlay on' : 'Overlay off'}</span></div><label class="workspace-controller">Controller profile<select data-controller="${escapeHtml(workspace.id)}">${options.map(option => `<option value="${escapeHtml(option.id)}" ${option.id === workspace.controllerProfile ? 'selected' : ''}>${escapeHtml(option.label)}</option>`).join('')}</select></label><div class="card-actions"><button class="${workspace.id === store.active.id ? 'secondary' : 'primary'}" data-select="${escapeHtml(workspace.id)}">${workspace.id === store.active.id ? 'Selected' : 'Use workspace'}</button>${workspace.pinned ? '' : `<button class="secondary" data-remove="${escapeHtml(workspace.id)}">Remove</button>`}</div></article>`).join(''); }
-document.addEventListener('click', event => { const select = event.target.closest('[data-select]'); if (select) { store.setActive(select.dataset.select); render(); showToast(`Using ${store.active.name} workspace`); return; } const remove = event.target.closest('[data-remove]'); if (remove) { store.remove(remove.dataset.remove); render(); showToast('Workspace removed'); } });
-document.addEventListener('change', event => { const controller = event.target.closest('[data-controller]'); if (!controller) return; store.update(controller.dataset.controller, {controllerProfile: controller.value}); render(); showToast('Controller profile assigned to workspace'); });
-document.querySelector('[data-create]').addEventListener('click', () => { const name = window.prompt?.('Workspace name', 'New workspace'); if (!name?.trim()) return; store.create({name}); render(); showToast(`${name.trim()} workspace created`); });
-document.querySelector('[data-export]').addEventListener('click', () => { const blob = new Blob([store.export()], {type: 'application/json'}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'spartan-workspaces.json'; link.click(); URL.revokeObjectURL(link.href); showToast('Workspace preferences exported'); });
-document.querySelector('[data-import]').addEventListener('change', async event => { const file = event.target.files?.[0]; if (!file) return; try { store.import(await file.text()); render(); showToast('Workspace preferences imported'); } catch (error) { showToast(error.message); } event.target.value = ''; });
+const profileStorage = createActiveProfileStorage();
+const store = createWorkspaceStore({ storage: profileStorage });
+const controllerStore = createControllerProfileStore({ storage: profileStorage });
+const grid = document.querySelector('[data-workspaces]');
+const toast = document.querySelector('[data-toast]');
+let timer;
+function escapeHtml(value) {
+  return String(value).replace(
+    /[&<>\'"]/g,
+    (character) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character],
+  );
+}
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.add('is-visible');
+  clearTimeout(timer);
+  timer = setTimeout(() => toast.classList.remove('is-visible'), 2400);
+}
+function render() {
+  const profiles = [
+    ...BUILTIN_CONTROLLER_PROFILES,
+    ...controllerStore
+      .list()
+      .filter(
+        (profile) => !BUILTIN_CONTROLLER_PROFILES.some((builtin) => builtin.id === profile.id),
+      ),
+  ];
+  const options = [
+    { id: 'auto', label: 'Auto-detect' },
+    { id: 'keyboard', label: 'Keyboard and mouse' },
+    ...profiles.map((profile) => ({ id: profile.id, label: profile.name })),
+  ];
+  grid.innerHTML = store
+    .list()
+    .map(
+      (workspace) =>
+        `<article class="workspace-card ${workspace.id === store.active.id ? 'is-active' : ''}"><p class="eyebrow">${workspace.id === store.active.id ? 'ACTIVE WORKSPACE' : 'WORKSPACE'}</p><h2>${escapeHtml(workspace.name)}</h2><p>${escapeHtml(workspace.description)}</p><div class="workspace-meta"><span class="chip">${escapeHtml(workspace.quality)} quality</span><span class="chip">${workspace.overlay ? 'Overlay on' : 'Overlay off'}</span></div><label class="workspace-controller">Controller profile<select data-controller="${escapeHtml(workspace.id)}">${options.map((option) => `<option value="${escapeHtml(option.id)}" ${option.id === workspace.controllerProfile ? 'selected' : ''}>${escapeHtml(option.label)}</option>`).join('')}</select></label><div class="card-actions"><button class="${workspace.id === store.active.id ? 'secondary' : 'primary'}" data-select="${escapeHtml(workspace.id)}">${workspace.id === store.active.id ? 'Selected' : 'Use workspace'}</button>${workspace.pinned ? '' : `<button class="secondary" data-remove="${escapeHtml(workspace.id)}">Remove</button>`}</div></article>`,
+    )
+    .join('');
+}
+document.addEventListener('click', (event) => {
+  const select = event.target.closest('[data-select]');
+  if (select) {
+    store.setActive(select.dataset.select);
+    render();
+    showToast(`Using ${store.active.name} workspace`);
+    return;
+  }
+  const remove = event.target.closest('[data-remove]');
+  if (remove) {
+    store.remove(remove.dataset.remove);
+    render();
+    showToast('Workspace removed');
+  }
+});
+document.addEventListener('change', (event) => {
+  const controller = event.target.closest('[data-controller]');
+  if (!controller) return;
+  store.update(controller.dataset.controller, { controllerProfile: controller.value });
+  render();
+  showToast('Controller profile assigned to workspace');
+});
+document.querySelector('[data-create]').addEventListener('click', () => {
+  const name = window.prompt?.('Workspace name', 'New workspace');
+  if (!name?.trim()) return;
+  store.create({ name });
+  render();
+  showToast(`${name.trim()} workspace created`);
+});
+document.querySelector('[data-export]').addEventListener('click', () => {
+  const blob = new Blob([store.export()], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'spartan-workspaces.json';
+  link.click();
+  URL.revokeObjectURL(link.href);
+  showToast('Workspace preferences exported');
+});
+document.querySelector('[data-import]').addEventListener('change', async (event) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  try {
+    store.import(await file.text());
+    render();
+    showToast('Workspace preferences imported');
+  } catch (error) {
+    showToast(error.message);
+  }
+  event.target.value = '';
+});
 render();

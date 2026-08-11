@@ -1,11 +1,20 @@
 export const PROFILE_IDS = Object.freeze(['default', 'gaming', 'family', 'guest']);
-export const PROFILE_LABELS = Object.freeze({default: 'Default', gaming: 'Gaming', family: 'Family', guest: 'Guest'});
+export const PROFILE_LABELS = Object.freeze({
+  default: 'Default',
+  gaming: 'Gaming',
+  family: 'Family',
+  guest: 'Guest',
+});
 const SETTINGS_KEY = 'spartan-gaming.settings.v1';
 export const ACTIVE_PROFILE_KEY = 'spartan-gaming.active-profile.v1';
 
 export function normalizeProfileId(value) {
-  const id = String(value || '').trim().toLowerCase();
-  return PROFILE_IDS.includes(id) ? id : PROFILE_IDS.find(candidate => PROFILE_LABELS[candidate].toLowerCase() === id) || 'gaming';
+  const id = String(value || '')
+    .trim()
+    .toLowerCase();
+  return PROFILE_IDS.includes(id)
+    ? id
+    : PROFILE_IDS.find((candidate) => PROFILE_LABELS[candidate].toLowerCase() === id) || 'gaming';
 }
 
 export function readActiveProfileId(storage = globalThis.localStorage) {
@@ -19,11 +28,15 @@ export function readActiveProfileId(storage = globalThis.localStorage) {
   }
 }
 
-export function createProfileStorage({storage = globalThis.localStorage, profileId, migrateLegacy = true} = {}) {
+export function createProfileStorage({
+  storage = globalThis.localStorage,
+  profileId,
+  migrateLegacy = true,
+} = {}) {
   const id = normalizeProfileId(profileId || readActiveProfileId(storage));
-  const scopedKey = key => id === 'default' ? key : `spartan-gaming.profile.${id}.${key}`;
-  const legacyValue = key => id === 'gaming' && migrateLegacy ? storage?.getItem(key) : null;
-  const getItem = key => {
+  const scopedKey = (key) => (id === 'default' ? key : `spartan-gaming.profile.${id}.${key}`);
+  const legacyValue = (key) => (id === 'gaming' && migrateLegacy ? storage?.getItem(key) : null);
+  const getItem = (key) => {
     const scoped = storage?.getItem(scopedKey(key));
     if (scoped !== null && scoped !== undefined) return scoped;
     const legacy = legacyValue(key);
@@ -36,10 +49,18 @@ export function createProfileStorage({storage = globalThis.localStorage, profile
   return Object.freeze({
     profileId: id,
     getItem,
-    setItem(key, value) { storage?.setItem(scopedKey(key), String(value)); },
-    removeItem(key) { storage?.removeItem?.(scopedKey(key)); },
-    key(index) { return storage?.key?.(index) || null; },
-    get length() { return storage?.length || 0; },
+    setItem(key, value) {
+      storage?.setItem(scopedKey(key), String(value));
+    },
+    removeItem(key) {
+      storage?.removeItem?.(scopedKey(key));
+    },
+    key(index) {
+      return storage?.key?.(index) || null;
+    },
+    get length() {
+      return storage?.length || 0;
+    },
   });
 }
 

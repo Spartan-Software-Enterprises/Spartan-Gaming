@@ -1,18 +1,38 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Spartan Gaming — Settings</title>
-    <link rel="stylesheet" href="./settings.css">
+    <link rel="stylesheet" href="./settings.css" />
   </head>
   <body>
     <div class="app">
       <aside class="rail">
-        <div class="brand"><span class="brand-mark">S</span><div><strong>Spartan Gaming</strong><small>Control center</small></div></div>
-        <label class="search-wrap"><span class="search-icon">⌕</span><input data-search type="search" placeholder="Search settings" aria-label="Search settings"></label>
+        <div class="brand">
+          <span class="brand-mark">S</span>
+          <div><strong>Spartan Gaming</strong><small>Control center</small></div>
+        </div>
+        <label class="search-wrap"
+          ><span class="search-icon">⌕</span
+          ><input
+            data-search
+            type="search"
+            placeholder="Search settings"
+            aria-label="Search settings"
+        /></label>
         <nav class="nav" data-settings-nav aria-label="Settings categories"></nav>
-        <div class="rail-footer"><button data-export type="button">Export</button><button data-import type="button" onclick="document.querySelector('[data-import-file]').click()">Import</button><button type="button" onclick="window.print()">Print</button><input data-import-file type="file" accept="application/json,.json" hidden></div>
+        <div class="rail-footer">
+          <button data-export type="button">Export</button
+          ><button
+            data-import
+            type="button"
+            onclick="document.querySelector('[data-import-file]').click()"
+          >
+            Import</button
+          ><button type="button" onclick="window.print()">Print</button
+          ><input data-import-file type="file" accept="application/json,.json" hidden />
+        </div>
       </aside>
       <main class="main"><div data-settings-content></div></main>
     </div>

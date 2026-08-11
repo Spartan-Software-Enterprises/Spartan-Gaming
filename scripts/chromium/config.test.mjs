@@ -1,13 +1,21 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
-import { loadChromiumManifest, parseGnArgs, validateChromiumManifest, validateGnArgsFile } from '../../chromium/config.mjs';
+import {
+  loadChromiumManifest,
+  parseGnArgs,
+  validateChromiumManifest,
+  validateGnArgsFile,
+} from '../../chromium/config.mjs';
 
 test('Chromium manifest covers universal desktop targets without vendoring source', () => {
   const manifest = loadChromiumManifest();
   assert.equal(validateChromiumManifest(manifest), true);
   assert.equal(manifest.checkout.managedOutsideRepository, true);
-  assert.deepEqual(manifest.targets.map((target) => target.id), ['linux', 'mac', 'windows']);
+  assert.deepEqual(
+    manifest.targets.map((target) => target.id),
+    ['linux', 'mac', 'windows'],
+  );
 });
 
 test('GN templates contain safe development defaults', () => {

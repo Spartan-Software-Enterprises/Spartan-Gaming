@@ -3,16 +3,27 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { chromiumManifestPath, loadChromiumManifest, validateChromiumManifest, validateGnArgsFile } from '../../chromium/config.mjs';
+import {
+  chromiumManifestPath,
+  loadChromiumManifest,
+  validateChromiumManifest,
+  validateGnArgsFile,
+} from '../../chromium/config.mjs';
 
 const args = new Set(process.argv.slice(2));
 const platformIndex = process.argv.indexOf('--platform');
 const requestedPlatform = platformIndex >= 0 ? process.argv[platformIndex + 1] : null;
-const platform = requestedPlatform ?? ({ win32: 'windows', darwin: 'mac', linux: 'linux' }[process.platform] ?? process.platform);
+const platform =
+  requestedPlatform ??
+  { win32: 'windows', darwin: 'mac', linux: 'linux' }[process.platform] ??
+  process.platform;
 const strict = args.has('--strict');
 
 function commandExists(command) {
-  const result = spawnSync(command, ['--version'], { stdio: 'ignore', shell: process.platform === 'win32' });
+  const result = spawnSync(command, ['--version'], {
+    stdio: 'ignore',
+    shell: process.platform === 'win32',
+  });
   return !result.error && result.status === 0;
 }
 
@@ -39,7 +50,12 @@ for (const tool of tools) {
 
 const source = process.env.SPARTAN_CHROMIUM_SRC;
 if (source) printStatus('SPARTAN_CHROMIUM_SRC', fs.existsSync(source), source);
-else printStatus('SPARTAN_CHROMIUM_SRC', false, 'not set; checkout remains external to this repository');
+else
+  printStatus(
+    'SPARTAN_CHROMIUM_SRC',
+    false,
+    'not set; checkout remains external to this repository',
+  );
 
 const gnPath = path.resolve(target.args);
 validateGnArgsFile(gnPath);

@@ -39,19 +39,27 @@ export function validateChromiumManifest(manifest) {
     if (!(key in manifest)) throw new Error(`manifest is missing ${key}`);
   }
   if (manifest.schemaVersion !== 1) throw new Error('unsupported Chromium manifest schema');
-  if (manifest.product !== 'Spartan Gaming') throw new Error('manifest product must be Spartan Gaming');
+  if (manifest.product !== 'Spartan Gaming')
+    throw new Error('manifest product must be Spartan Gaming');
   if (manifest.source.repository !== 'https://chromium.googlesource.com/chromium/src.git') {
     throw new Error('manifest must use the upstream Chromium source repository');
   }
-  if (manifest.source.branch !== 'refs/heads/main' && !/^refs\/branch-heads\/[0-9]+$/.test(manifest.source.branch || '')) throw new Error('manifest must select Chromium main or a numeric stable branch-head');
+  if (
+    manifest.source.branch !== 'refs/heads/main' &&
+    !/^refs\/branch-heads\/[0-9]+$/.test(manifest.source.branch || '')
+  )
+    throw new Error('manifest must select Chromium main or a numeric stable branch-head');
   if (!Array.isArray(manifest.targets) || manifest.targets.length < 3) {
     throw new Error('manifest must describe Linux, macOS, and Windows targets');
   }
   const ids = new Set(manifest.targets.map((target) => target.id));
-  for (const id of ['linux', 'mac', 'windows']) if (!ids.has(id)) throw new Error(`missing target: ${id}`);
+  for (const id of ['linux', 'mac', 'windows'])
+    if (!ids.has(id)) throw new Error(`missing target: ${id}`);
   for (const target of manifest.targets) {
-    if (typeof target.artifact !== 'string' || !target.artifact.trim()) throw new Error(`target ${target.id} is missing artifact metadata`);
-    if (typeof target.binary !== 'string' || !target.binary.trim()) throw new Error(`target ${target.id} is missing binary metadata`);
+    if (typeof target.artifact !== 'string' || !target.artifact.trim())
+      throw new Error(`target ${target.id} is missing artifact metadata`);
+    if (typeof target.binary !== 'string' || !target.binary.trim())
+      throw new Error(`target ${target.id} is missing binary metadata`);
   }
   return true;
 }
@@ -61,6 +69,7 @@ export function validateGnArgsFile(filePath) {
   for (const key of ['is_official_build', 'is_component_build', 'symbol_level']) {
     if (!(key in args)) throw new Error(`${filePath} is missing ${key}`);
   }
-  if (args.is_official_build !== 'false') throw new Error(`${filePath} must remain a development template`);
+  if (args.is_official_build !== 'false')
+    throw new Error(`${filePath} must remain a development template`);
   return args;
 }

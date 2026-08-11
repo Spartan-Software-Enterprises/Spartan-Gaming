@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {resolveProductionConfig} from '../signaling/production-config.mjs';
+import { resolveProductionConfig } from '../signaling/production-config.mjs';
 
 try {
   const config = resolveProductionConfig();

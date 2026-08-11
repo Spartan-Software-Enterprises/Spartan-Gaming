@@ -15,4 +15,3 @@ Do not publicly disclose credentials, access tokens, private stream endpoints, o
 - Treat remote input as high-risk functionality.
 - Keep telemetry opt-in and minimize collected data.
 - Publish security fixes and affected release versions.
-

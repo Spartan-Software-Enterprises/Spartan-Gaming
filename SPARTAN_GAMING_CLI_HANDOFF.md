@@ -35,17 +35,17 @@ Inspect `AGENTS.md` or `CLAUDE.md` if either is added in a future checkout.
 
 ## Remote development server
 
-| Field | Value |
-| --- | --- |
-| Type | `t3.small` |
-| OS | Amazon Linux 2023 |
-| Region | `us-east-1` |
-| Address | Resolve from protected infrastructure configuration |
-| Disk | 30 GiB encrypted gp3 |
-| SSH access | Restricted operator access |
-| Checkout | `~/Spartan-Gaming` |
-| Frontend | `127.0.0.1:4173`, not publicly exposed |
-| Evidence | `~/.config/spartan-dev/evidence` |
+| Field      | Value                                               |
+| ---------- | --------------------------------------------------- |
+| Type       | `t3.small`                                          |
+| OS         | Amazon Linux 2023                                   |
+| Region     | `us-east-1`                                         |
+| Address    | Resolve from protected infrastructure configuration |
+| Disk       | 30 GiB encrypted gp3                                |
+| SSH access | Restricted operator access                          |
+| Checkout   | `~/Spartan-Gaming`                                  |
+| Frontend   | `127.0.0.1:4173`, not publicly exposed              |
+| Evidence   | `~/.config/spartan-dev/evidence`                    |
 
     # Resolve the current host address from the private AWS inventory/runbook.
     ssh -i ~/.ssh/spartan-dev ec2-user@<current-dev-host>

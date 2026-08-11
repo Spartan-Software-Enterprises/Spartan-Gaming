@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: docker/signaling.Dockerfile
-    command: ["node", "signaling/agent.mjs", "--bind", "0.0.0.0"]
+    command: ['node', 'signaling/agent.mjs', '--bind', '0.0.0.0']
     environment:
       NODE_ENV: production
       SPARTAN_SIGNALING_SECRET_FILE: /run/secrets/signaling_secret
@@ -11,11 +11,11 @@ services:
       SPARTAN_SIGNALING_TURN_SECRET_FILE: /run/secrets/turn_shared_secret
       SPARTAN_SIGNALING_TLS_KEY: /run/secrets/tls_key
       SPARTAN_SIGNALING_TLS_CERT: /run/secrets/tls_cert
-      SPARTAN_SIGNALING_ALLOWED_ORIGINS: "${SPARTAN_SIGNALING_ALLOWED_ORIGINS:?Set an exact HTTPS origin allowlist}"
-      SPARTAN_SIGNALING_SESSION_STORE: "${SPARTAN_SIGNALING_SESSION_STORE:-redis}"
-      SPARTAN_SIGNALING_BROKER_PACKAGE: "${SPARTAN_SIGNALING_BROKER_PACKAGE:-/app/signaling/redis-broker.mjs}"
-      SPARTAN_SIGNALING_REDIS_URL: "${SPARTAN_SIGNALING_REDIS_URL:-redis://redis:6379}"
-      SPARTAN_SIGNALING_TURN_URLS: "${SPARTAN_SIGNALING_TURN_URLS:?Set turn: or turns: endpoints}"
+      SPARTAN_SIGNALING_ALLOWED_ORIGINS: '${SPARTAN_SIGNALING_ALLOWED_ORIGINS:?Set an exact HTTPS origin allowlist}'
+      SPARTAN_SIGNALING_SESSION_STORE: '${SPARTAN_SIGNALING_SESSION_STORE:-redis}'
+      SPARTAN_SIGNALING_BROKER_PACKAGE: '${SPARTAN_SIGNALING_BROKER_PACKAGE:-/app/signaling/redis-broker.mjs}'
+      SPARTAN_SIGNALING_REDIS_URL: '${SPARTAN_SIGNALING_REDIS_URL:-redis://redis:6379}'
+      SPARTAN_SIGNALING_TURN_URLS: '${SPARTAN_SIGNALING_TURN_URLS:?Set turn: or turns: endpoints}'
     secrets:
       - signaling_secret
       - signaling_admin_secret
@@ -23,7 +23,7 @@ services:
       - tls_key
       - tls_cert
     ports:
-      - "${SPARTAN_SIGNALING_BIND_PORT:-8790}:8790"
+      - '${SPARTAN_SIGNALING_BIND_PORT:-8790}:8790'
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=16m
@@ -39,11 +39,11 @@ services:
 
   redis:
     image: redis:7.4-alpine
-    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    command: ['redis-server', '--appendonly', 'yes', '--save', '60', '1']
     volumes:
       - signaling-redis:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 3s
       retries: 5
@@ -60,9 +60,9 @@ services:
     restart: unless-stopped
 
   turn:
-    profiles: ["turn"]
-    image: "${SPARTAN_TURN_IMAGE:?Set an operator-approved coturn image}"
-    command: ["turnserver", "-c", "/run/secrets/turn_config", "--no-cli"]
+    profiles: ['turn']
+    image: '${SPARTAN_TURN_IMAGE:?Set an operator-approved coturn image}'
+    command: ['turnserver', '-c', '/run/secrets/turn_config', '--no-cli']
     network_mode: host
     secrets:
       - turn_config
@@ -84,21 +84,21 @@ services:
 
 secrets:
   signaling_secret:
-    file: "${SPARTAN_SIGNALING_SECRET_FILE:?Mount a strong signaling secret file}"
+    file: '${SPARTAN_SIGNALING_SECRET_FILE:?Mount a strong signaling secret file}'
   signaling_admin_secret:
-    file: "${SPARTAN_SIGNALING_ADMIN_SECRET_FILE:?Mount a distinct admin secret file}"
+    file: '${SPARTAN_SIGNALING_ADMIN_SECRET_FILE:?Mount a distinct admin secret file}'
   turn_shared_secret:
-    file: "${SPARTAN_SIGNALING_TURN_SECRET_FILE:?Mount the TURN shared secret file}"
+    file: '${SPARTAN_SIGNALING_TURN_SECRET_FILE:?Mount the TURN shared secret file}'
   tls_key:
-    file: "${SPARTAN_SIGNALING_TLS_KEY_FILE:?Mount the TLS private key file}"
+    file: '${SPARTAN_SIGNALING_TLS_KEY_FILE:?Mount the TLS private key file}'
   tls_cert:
-    file: "${SPARTAN_SIGNALING_TLS_CERT_FILE:?Mount the TLS certificate file}"
+    file: '${SPARTAN_SIGNALING_TLS_CERT_FILE:?Mount the TLS certificate file}'
   turn_config:
-    file: "${SPARTAN_TURN_CONFIG_FILE:?Mount the generated coturn config file}"
+    file: '${SPARTAN_TURN_CONFIG_FILE:?Mount the generated coturn config file}'
   turn_cert:
-    file: "${SPARTAN_TURN_CERT_FILE:?Mount the TURN certificate file}"
+    file: '${SPARTAN_TURN_CERT_FILE:?Mount the TURN certificate file}'
   turn_key:
-    file: "${SPARTAN_TURN_KEY_FILE:?Mount the TURN private key file}"
+    file: '${SPARTAN_TURN_KEY_FILE:?Mount the TURN private key file}'
 
 volumes:
   signaling-redis:

@@ -10,7 +10,7 @@ services:
       SPARTAN_SIGNALING_MAX_CONNECTIONS: ${SPARTAN_SIGNALING_MAX_CONNECTIONS:-256}
       SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND: ${SPARTAN_SIGNALING_MAX_MESSAGES_PER_SECOND:-120}
     ports:
-      - "127.0.0.1:8790:8790"
+      - '127.0.0.1:8790:8790'
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=16m

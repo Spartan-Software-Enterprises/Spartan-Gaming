@@ -517,7 +517,6 @@ bounded and are filtered through the negotiated `playerSlots`,
 `multipleControllers`, and haptics policy before broadcast; a reader that does
 not expose an index safely targets slot zero.
 
-
 The reference host calls `detectHostRuntime()` during startup. It loads the
 optional package when installed, exposes only its serializable readiness and
 input capabilities through `/health` and session negotiation, and keeps the
