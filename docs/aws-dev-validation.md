@@ -112,6 +112,19 @@ rm -rf /tmp/spartan-playwright-results /tmp/spartan-playwright-pure.json
 The protected copies are outside Git at
 `~/.config/spartan-dev/evidence/playwright/`.
 
+The standalone Electron application has a separate visual smoke command that
+never starts the frontend test server:
+
+```bash
+xvfb-run -a npm run playwright:electron
+```
+
+It launches the real Electron main process, requires the private
+`spartan-app://app` origin, captures every maintained application route, and
+exercises dashboard search plus a desktop runtime setting. Copy
+`out/playwright/electron/` into the protected evidence directory after a
+passing run; do not commit generated screenshots.
+
 ### Connection and host inventory
 
 The following identifies the existing development host without publishing any
