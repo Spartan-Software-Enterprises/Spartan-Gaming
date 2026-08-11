@@ -8,6 +8,14 @@ const writeQueues = new Map();
 export function normalizeElectronStartupPolicy(settings = {}) {
   return Object.freeze({
     hardwareAcceleration: settings?.hardwareAcceleration !== false,
+    gpuPreference: ['Automatic', 'Power saving GPU', 'High performance GPU'].includes(
+      settings?.gpuPreference,
+    )
+      ? settings.gpuPreference
+      : 'Automatic',
+    processModel: ['Default', 'Maximum isolation', 'Low memory'].includes(settings?.processModel)
+      ? settings.processModel
+      : 'Default',
     crashReports: settings?.crashReports === true,
     verboseLogs: settings?.verboseLogs === true,
     logRetention: ['1 day', '7 days', '30 days', 'Until manually removed'].includes(
@@ -62,7 +70,10 @@ export async function persistElectronStartupPolicy(
 
 export function applyElectronStartupPolicy(app, policy = normalizeElectronStartupPolicy()) {
   const normalized = normalizeElectronStartupPolicy(policy);
-  if (!normalized.hardwareAcceleration) app.disableHardwareAcceleration();
+  if (!normalized.hardwareAcceleration || normalized.gpuPreference === 'Power saving GPU')
+    app.disableHardwareAcceleration();
+  if (normalized.processModel === 'Maximum isolation')
+    app.commandLine.appendSwitch('--site-per-process');
   return normalized;
 }
 
@@ -71,6 +82,9 @@ export function describeElectronStartupPolicy(saved, active) {
   const activePolicy = normalizeElectronStartupPolicy(active);
   return Object.freeze({
     ...policy,
-    requiresRestart: policy.hardwareAcceleration !== activePolicy.hardwareAcceleration,
+    requiresRestart:
+      policy.hardwareAcceleration !== activePolicy.hardwareAcceleration ||
+      policy.gpuPreference !== activePolicy.gpuPreference ||
+      policy.processModel !== activePolicy.processModel,
   });
 }

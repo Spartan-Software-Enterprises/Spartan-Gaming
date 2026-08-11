@@ -12,6 +12,8 @@ test('Electron runtime settings reflect persisted performance and privacy choice
       'general.backgroundApps': true,
       'general.globalShortcut': 'CommandOrControl+Shift+G',
       'performance.hardwareAcceleration': false,
+      'performance.gpuPreference': 'Power saving GPU',
+      'performance.processModel': 'Maximum isolation',
       'performance.crashReports': true,
       'advanced.verboseLogs': true,
       'advanced.logRetention': '30 days',
@@ -27,6 +29,8 @@ test('Electron runtime settings reflect persisted performance and privacy choice
     {
       developerMode: true,
       hardwareAcceleration: false,
+      gpuPreference: 'Power saving GPU',
+      processModel: 'Maximum isolation',
       crashReports: true,
       verboseLogs: true,
       logRetention: '30 days',
@@ -48,6 +52,8 @@ test('Electron runtime settings default safely when values are absent', () => {
   assert.deepEqual(resolveElectronRuntimeSettings({}), {
     developerMode: false,
     hardwareAcceleration: true,
+    gpuPreference: 'Automatic',
+    processModel: 'Default',
     crashReports: false,
     verboseLogs: false,
     logRetention: undefined,
@@ -83,7 +89,7 @@ test('Electron update status descriptions are bounded and actionable', async () 
 test('Electron runtime settings describe global shortcut registration outcomes', () => {
   assert.equal(
     describeElectronRuntimeResult({ startupPolicy: { requiresRestart: true } }),
-    'Saved locally; restart Spartan Gaming to apply hardware acceleration changes.',
+    'Saved locally; restart Spartan Gaming to apply performance changes.',
   );
   assert.equal(
     describeElectronRuntimeResult({

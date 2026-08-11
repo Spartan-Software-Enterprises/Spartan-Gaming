@@ -35,6 +35,7 @@ Inspect `AGENTS.md` or `CLAUDE.md` if either is added in a future checkout.
 
 ## Latest continuation snapshot
 
+- The current unpublished increment makes the previously inert `performance.gpuPreference` and `performance.processModel` settings operational in the Electron desktop shell. `gpuPreference` is bounded to `Automatic`, `Power saving GPU`, and `High performance GPU`; selecting `Power saving GPU` disables hardware acceleration before Electron becomes ready. `processModel` is bounded to `Default`, `Maximum isolation`, and `Low memory`; `Maximum isolation` appends `--site-per-process`, while `Low memory` is a deliberate no-op because no safe documented Chromium switch reduces memory usage without breaking functionality. Both settings are normalized, persisted to `startup-policy.json`, and reported through the bounded restart-required policy. Focused startup-policy tests pass; repository checks pass 442/442 and the serialized suite passes 639 of 644 with five expected environment/platform skips.
 - The current unpublished increment makes Updates functional in packaged
   Electron applications. Stable, beta, and alpha settings reach a bounded main-
   process `electron-updater` controller; manual/automatic checks, progress,
