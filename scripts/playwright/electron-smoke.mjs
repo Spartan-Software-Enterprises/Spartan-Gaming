@@ -140,6 +140,31 @@ async function checkLayoutInteraction(page, layout, output) {
     if ((await shortcut.inputValue()) !== 'CommandOrControl+Shift+G')
       throw new Error('desktop shortcut setting did not persist after reload');
     interactions.push('desktop:global-shortcut-setting');
+
+    await page.locator('[data-category="controllers"]').click();
+    await page.locator('[data-key="controllers.playerSlots"]').selectOption('2');
+    await page.locator('[data-key="controllers.deadzone"]').fill('20');
+    await page.locator('[data-key="controllers.inputLatency"]').selectOption('High frequency');
+    await page.goto(`${appOrigin}/input/inspector.html`, { waitUntil: 'domcontentloaded' });
+    const controllerPolicy = (await page.locator('[data-policy]').innerText()).trim();
+    if (controllerPolicy !== '2 active slots · 20% dead zone · high frequency polling')
+      throw new Error(`controller tester did not apply saved settings: ${controllerPolicy}`);
+    interactions.push('desktop:controller-tester-settings');
+    await page.evaluate(
+      ({ settingsKey }) => {
+        const current = JSON.parse(localStorage.getItem(settingsKey) || '{}');
+        localStorage.setItem(
+          settingsKey,
+          JSON.stringify({
+            ...current,
+            'controllers.playerSlots': '4',
+            'controllers.deadzone': 8,
+            'controllers.inputLatency': 'Automatic',
+          }),
+        );
+      },
+      { settingsKey: gamingSettingsKey },
+    );
   }
 
   await page.screenshot({

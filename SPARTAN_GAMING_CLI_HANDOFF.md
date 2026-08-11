@@ -35,7 +35,7 @@ Inspect `AGENTS.md` or `CLAUDE.md` if either is added in a future checkout.
 
 ## Latest continuation snapshot
 
-- `main` is published through `86b5c67`. The primary desktop runtime remains a
+- The prior visual-matrix baseline was published through `5ef5e49`. The primary desktop runtime remains a
   standalone Electron application loading bundled assets from
   `spartan-app://app`; production startup opens no frontend HTTP server.
 - `da1f5e0` expanded the Electron Playwright harness to all 11 maintained routes
@@ -51,6 +51,20 @@ Inspect `AGENTS.md` or `CLAUDE.md` if either is added in a future checkout.
   asserts its exact navigation mode, search must change rendered results,
   television focus must move away from search to a valid remote target, and the
   desktop shortcut must survive a settings-page reload.
+- The next controller-settings increment makes the live tester enforce the
+  normalized gamepad permission, multiplayer/player-slot limit, dead zone, and
+  polling cadence. Focused input tests and the complete repository check pass.
+  AWS Electron verification matches all 44 visual baselines and adds a seventh
+  representative interaction that changes controller settings through the UI,
+  reloads the tester, and verifies the exact effective policy summary.
+- The AWS serialized suite for this increment passes 641 tests: 639 passed, two
+  expected Windows/macOS package skips, and zero failed. CodeRabbit completed a
+  full uncommitted review and identified one major permission-boundary issue:
+  disabled gamepad access still evaluated `navigator.getGamepads()`. The API
+  read is now gated before evaluation and has a regression test. A clean
+  re-review was attempted twice; the first SSH stream disconnected while the
+  service was reviewing and the second reached the free CLI rate limit with a
+  31-minute reset, so no clean second CodeRabbit result is claimed.
 - Local Electron contracts pass 26/26. The complete serialized suite passes
   638 tests with 634 passed, 4 expected environment skips, and 0 failed.
 - AWS at `86b5c67` passes Electron contracts 26/26 and the real Electron visual

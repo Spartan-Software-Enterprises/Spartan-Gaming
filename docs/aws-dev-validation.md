@@ -154,6 +154,15 @@ sheets, then update the reviewed baseline in the same commit. Copy
 `out/playwright/electron/` into the protected evidence directory after a
 passing run; do not commit generated screenshots.
 
+The controller-settings verification increment runs 44/44 matched route
+snapshots with no horizontal overflow and seven representative interactions.
+The desktop controller interaction changes player slots, dead zone, and input
+polling through Settings, opens the bundled Controller Tester, and requires the
+exact normalized policy summary before restoring defaults for the remaining
+layout matrix. The tester screenshots were visually inspected at desktop,
+mobile, and television sizes; the policy summary remains readable and the
+existing panels retain their intended layout.
+
 ### Connection and host inventory
 
 The following identifies the existing development host without publishing any

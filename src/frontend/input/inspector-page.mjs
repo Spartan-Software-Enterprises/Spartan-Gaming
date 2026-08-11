@@ -3,8 +3,10 @@ import {
   detectInputCapabilities,
   inspectGamepad,
   listApprovedHidDevices,
+  readInspectableGamepads,
   resolveControllerPreferences,
 } from './inspector.mjs';
+import { controllerPollingIntervalMs } from './controller-policy.mjs';
 import { resolveControllerProfile } from './profiles.mjs';
 import { createSettingsStore } from '../settings/profile.mjs';
 
@@ -16,6 +18,7 @@ const axesElement = document.querySelector('[data-axes]');
 const buttonsElement = document.querySelector('[data-buttons]');
 const detailsElement = document.querySelector('[data-details]');
 const capabilityElement = document.querySelector('[data-capabilities]');
+const policyElement = document.querySelector('[data-policy]');
 const hidList = document.querySelector('[data-hid-list]');
 const noticeElement = document.querySelector('[data-notice]');
 const controllerPreferences = resolveControllerPreferences(createSettingsStore().read());
@@ -36,7 +39,7 @@ function showNotice(message) {
   noticeTimer = setTimeout(() => noticeElement.classList.remove('visible'), 2300);
 }
 function gamepads() {
-  return [...(navigator.getGamepads?.() || [])].filter(Boolean);
+  return readInspectableGamepads({ preferences: controllerPreferences });
 }
 function renderCapabilities() {
   const capabilities = detectInputCapabilities();
@@ -46,13 +49,18 @@ function renderCapabilities() {
         `<span class="capability"><strong>${supported ? '✓' : '—'}</strong> ${escapeHtml(name)}</span>`,
     )
     .join('');
+  policyElement.textContent = controllerPreferences.allowGamepad
+    ? `${controllerPreferences.multipleControllers ? controllerPreferences.playerSlots : 1} active slot${controllerPreferences.multipleControllers && controllerPreferences.playerSlots !== 1 ? 's' : ''} · ${Math.round(controllerPreferences.deadzone * 100)}% dead zone · ${controllerPreferences.inputPolling.toLowerCase()} polling`
+    : 'Gamepad access disabled in Controller settings';
 }
 function renderDevices() {
   const list = gamepads();
   if (selectedIndex === null && list[0]) selectedIndex = list[0].index;
   if (!list.length) {
     devicesElement.className = 'empty';
-    devicesElement.textContent = 'No gamepads detected. Connect one and press a button to wake it.';
+    devicesElement.textContent = controllerPreferences.allowGamepad
+      ? 'No gamepads detected. Connect one and press a button to wake it.'
+      : 'Gamepad access is disabled in Controller settings.';
     return;
   }
   devicesElement.className = '';
@@ -75,7 +83,7 @@ function renderSnapshot() {
     detailsElement.innerHTML = '';
     return;
   }
-  const snapshot = inspectGamepad(gamepad);
+  const snapshot = inspectGamepad(gamepad, { deadzone: controllerPreferences.deadzone });
   const profile = resolveControllerProfile({
     profileId: controllerPreferences.defaultProfile,
     deviceName: snapshot.id,
@@ -155,4 +163,4 @@ renderHid();
 setInterval(() => {
   renderDevices();
   renderSnapshot();
-}, 100);
+}, controllerPollingIntervalMs(controllerPreferences.inputPolling));

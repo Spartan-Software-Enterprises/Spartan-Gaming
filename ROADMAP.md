@@ -31,7 +31,7 @@
 - [x] Workspace-scoped dashboard favorites and launch handoffs.
 - [x] Fullscreen gaming mode.
 - [x] Controller-first dashboard navigation with focus, confirm, and cancel actions.
-- [x] Controller remapping profiles and live gamepad/HID inspector.
+- [x] Controller remapping profiles and live gamepad/HID inspector with settings-enforced gamepad permission, multiplayer/player-slot limits, dead-zone filtering, and polling cadence.
 - [x] Capability-aware Keyboard Lock and Pointer Lock controls with graceful permission fallback.
 - [x] Stream and system diagnostics page.
 - [x] Windows, macOS, and Linux development builds (Electron unpacked artifacts are built and contract-tested by the cross-platform CI matrix; signed release installers remain a separate release step).
