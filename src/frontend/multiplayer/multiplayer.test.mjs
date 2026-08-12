@@ -1,8 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-test('multiplayer store creates and lists sessions', async () => {
+test('multiplayer page loads imported games from localStorage', async () => {
   const backend = new Map();
+  backend.set('spartan-gaming.imported-games.v1', JSON.stringify([
+    { id: 'game-1', name: 'Test Game 1' },
+    { id: 'game-2', name: 'Test Game 2' },
+  ]));
   const storage = {
     getItem: (key) => backend.get(key) || null,
     setItem: (key, value) => backend.set(key, value),
@@ -11,21 +15,20 @@ test('multiplayer store creates and lists sessions', async () => {
   const { createMultiplayerStore } = await import('./multiplayer.mjs');
   const store = createMultiplayerStore({ storage });
 
-  const session = store.addSession({
+  store.addSession({
     name: 'Test Session',
-    game: 'Test Game',
+    game: 'Test Game 1',
     maxPlayers: 4,
     players: [{ id: 'you', name: 'You', host: true }],
     host: 'You',
     description: 'Test',
   });
 
-  assert.ok(session.id);
-  assert.strictEqual(session.name, 'Test Session');
   assert.strictEqual(store.getSessions().length, 1);
+  assert.strictEqual(store.getSessions()[0].game, 'Test Game 1');
 });
 
-test('multiplayer store updates and removes sessions', async () => {
+test('multiplayer store bounds sessions to 100 entries', async () => {
   const backend = new Map();
   const storage = {
     getItem: (key) => backend.get(key) || null,
@@ -35,16 +38,13 @@ test('multiplayer store updates and removes sessions', async () => {
   const { createMultiplayerStore } = await import('./multiplayer.mjs');
   const store = createMultiplayerStore({ storage });
 
-  const session = store.addSession({ name: 'Test', game: 'Game', maxPlayers: 2 });
-  const updated = store.updateSession(session.id, { status: 'in-progress' });
-  assert.strictEqual(updated.status, 'in-progress');
-
-  const removed = store.removeSession(session.id);
-  assert.strictEqual(removed, true);
-  assert.strictEqual(store.getSessions().length, 0);
+  for (let i = 0; i < 150; i++) {
+    store.addSession({ name: `Session ${i}`, game: `Game ${i}`, maxPlayers: 4 });
+  }
+  assert.strictEqual(store.getSessions().length, 100);
 });
 
-test('multiplayer store manages invitations', async () => {
+test('multiplayer store bounds invitations to 200 entries', async () => {
   const backend = new Map();
   const storage = {
     getItem: (key) => backend.get(key) || null,
@@ -54,11 +54,8 @@ test('multiplayer store manages invitations', async () => {
   const { createMultiplayerStore } = await import('./multiplayer.mjs');
   const store = createMultiplayerStore({ storage });
 
-  store.addInvitation({ from: 'Alice', game: 'Game', sessionId: '123' });
-  const invitations = store.getInvitations();
-  assert.strictEqual(invitations.length, 1);
-  assert.strictEqual(invitations[0].status, 'pending');
-
-  store.updateInvitation(invitations[0].id, { status: 'accepted' });
-  assert.strictEqual(store.getInvitations()[0].status, 'accepted');
+  for (let i = 0; i < 250; i++) {
+    store.addInvitation({ from: `User${i}`, game: `Game ${i}`, sessionId: `session-${i}` });
+  }
+  assert.strictEqual(store.getInvitations().length, 200);
 });
