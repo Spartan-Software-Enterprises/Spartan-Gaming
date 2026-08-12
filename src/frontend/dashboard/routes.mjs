@@ -5,6 +5,7 @@ const ROUTES = Object.freeze({
   watch: Object.freeze({ kind: 'filter', filter: 'watch' }),
   browser: Object.freeze({ kind: 'filter', filter: 'browser' }),
   social: Object.freeze({ kind: 'navigate', href: '../social/index.html' }),
+  multiplayer: Object.freeze({ kind: 'navigate', href: '../multiplayer/index.html' }),
 });
 
 export function resolveDashboardSection(section) {
