@@ -110,7 +110,13 @@ export function createSignalingBroker({
           throw new Error('signaling message is too large');
         session.lastActivityAt = clock();
         for (const [recipientRole, recipient] of session.participants)
-          if (recipientRole !== role) recipient.send(validated);
+          if (recipientRole !== role)
+            try {
+              recipient.send(validated);
+            } catch {
+              /* a failing recipient socket is cleaned up by the agent; never
+                 propagate the failure back to the sender */
+            }
         if (validated.type === 'session.close') detach();
         return validated;
       },

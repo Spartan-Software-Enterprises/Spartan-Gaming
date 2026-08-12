@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { constants as fsConstants, promises as fs } from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const PLATFORMS = new Set(['win32', 'darwin', 'linux']);
 const DEFAULT_ROOTS = Object.freeze({
@@ -247,7 +247,7 @@ async function writeReport(file, report) {
     mode: 0o600,
   });
 }
-if (path.resolve(process.argv[1] || '') === path.resolve(new URL(import.meta.url).pathname)) {
+if (path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1] || '')) {
   try {
     const argv = process.argv.slice(2);
     const platform = requiredPlatform(argument(argv, '--platform') || process.platform);

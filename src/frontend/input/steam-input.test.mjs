@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { CONTROLLER_PROFILE_CAPABILITIES } from './profiles.mjs';
 import {
   createSteamInputActionManifest,
   negotiateSteamInputActions,
@@ -56,7 +57,10 @@ test('portable glyph fallbacks cover Xbox, PlayStation, Nintendo, and Steam fami
 
 test('Steam Deck action negotiation exposes supported controls and explicit missing capabilities', () => {
   const manifest = createSteamInputActionManifest();
-  const partial = negotiateSteamInputActions({ manifest, capabilities: ['gyro', 'back-buttons'] });
+  const partial = negotiateSteamInputActions({
+    manifest,
+    capabilities: ['gyro', 'backButtons'],
+  });
   assert.ok(partial.supportedActions.includes('gyro'));
   assert.ok(
     partial.unavailableActions.some(
@@ -65,12 +69,12 @@ test('Steam Deck action negotiation exposes supported controls and explicit miss
   );
   assert.ok(
     partial.unavailableActions.some(
-      (action) => action.id === 'text-entry' && action.missing.includes('text-entry'),
+      (action) => action.id === 'text-entry' && action.missing.includes('textEntry'),
     ),
   );
   const deck = negotiateSteamInputActions({
     manifest,
-    capabilities: ['trackpads', 'gyro', 'back-buttons', 'touchscreen', 'text-entry'],
+    capabilities: ['trackpads', 'gyro', 'backButtons', 'touchscreen', 'textEntry'],
   });
   assert.ok(deck.supportedActions.includes('trackpad-right'));
   assert.ok(deck.supportedActions.includes('text-entry'));
@@ -84,13 +88,33 @@ test('Steam Deck action negotiation exposes supported controls and explicit miss
     capabilities: [
       'trackpads',
       'gyro',
-      'back-buttons',
+      'backButtons',
       'touchscreen',
-      'text-entry',
+      'textEntry',
       'haptics',
-      'controller-navigation',
+      'controllerNavigation',
     ],
   });
   assert.ok(complete.supportedActions.includes('haptic-feedback'));
   assert.ok(complete.supportedActions.includes('controller-navigation'));
+});
+
+test('controller profile capabilities negotiate Steam Input actions without vocabulary gaps', () => {
+  const manifest = createSteamInputActionManifest();
+  const required = [...new Set(manifest.actions.flatMap((action) => action.requires))];
+  for (const token of required)
+    assert.ok(
+      CONTROLLER_PROFILE_CAPABILITIES.includes(token),
+      `steam-input requires the shared capability token ${token}`,
+    );
+  const deck = negotiateSteamInputActions({
+    manifest,
+    capabilities: CONTROLLER_PROFILE_CAPABILITIES,
+  });
+  for (const action of manifest.actions) {
+    assert.ok(
+      deck.supportedActions.includes(action.id),
+      `every manifest action ${action.id} is supported with the full profile vocabulary`,
+    );
+  }
 });

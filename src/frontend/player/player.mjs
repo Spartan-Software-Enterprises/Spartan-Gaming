@@ -477,6 +477,8 @@ async function connect(connectionValues = {}) {
       (message.payload?.sdp ? 'negotiating' : 'not-configured');
     apply({ type: 'media.state', state: mediaState });
     apply({ type: 'session.negotiated', capabilities: manager.negotiated });
+    if (manager.state === 'connected')
+      apply({ type: 'session.state', status: 'connected', negotiated: manager.negotiated });
     elements.demo.classList.add('is-hidden');
   });
   runtime.on('telemetry', (sample) => {

@@ -236,7 +236,13 @@ function readBody(request, maximum = 4096) {
   });
 }
 
-export function parseFrames(buffer, onMessage, socket, maxFrameBytes = DEFAULT_MAX_FRAME_BYTES) {
+export function parseFrames(
+  buffer,
+  onMessage,
+  socket,
+  maxFrameBytes = DEFAULT_MAX_FRAME_BYTES,
+  onPing,
+) {
   let cursor = 0;
   while (buffer.length - cursor >= 2) {
     const first = buffer[cursor];
@@ -268,6 +274,10 @@ export function parseFrames(buffer, onMessage, socket, maxFrameBytes = DEFAULT_M
       return buffer.subarray(cursor);
     }
     if (opcode === 0x9) {
+      if (onPing && !onPing()) {
+        socket.end(closeFrame());
+        return buffer.subarray(cursor);
+      }
       socket.write(Buffer.from([0x8a, 0]));
       continue;
     }
@@ -494,6 +504,7 @@ export function createSignalingServer(options = {}) {
         },
         socket,
         config.maxFrameBytes,
+        () => limiter.take(),
       );
     });
     socket.on('close', cleanup);

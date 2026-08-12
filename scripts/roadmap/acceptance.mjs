@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { verifyReleaseManifest } from '../native/verify-release.mjs';
 
 const PLATFORMS = Object.freeze(['win32', 'darwin', 'linux']);
@@ -277,7 +278,7 @@ async function writeReport(file, report) {
   });
 }
 
-if (path.resolve(process.argv[1] || '') === path.resolve(new URL(import.meta.url).pathname)) {
+if (path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1] || '')) {
   try {
     const argv = process.argv.slice(2);
     const productionPath = argumentValues(argv, '--production-report')[0];

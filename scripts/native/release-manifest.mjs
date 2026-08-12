@@ -2,6 +2,7 @@
 import { createHash } from 'node:crypto';
 import { promises as defaultFs } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const ALIASES = Object.freeze({
   windows: 'win32',
@@ -87,7 +88,7 @@ function argument(argv, name) {
   const index = argv.indexOf(name);
   return index < 0 ? '' : argv[index + 1];
 }
-if (path.resolve(process.argv[1] || '') === path.resolve(new URL(import.meta.url).pathname)) {
+if (path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1] || '')) {
   try {
     const argv = process.argv.slice(2);
     const manifest = await createUnsignedNativePackageManifest({

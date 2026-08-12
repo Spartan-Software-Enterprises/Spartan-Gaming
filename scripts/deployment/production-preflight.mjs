@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import { accessSync, constants, statSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { resolveProductionConfig } from '../../signaling/production-config.mjs';
 
 function required(value, name) {
@@ -35,7 +37,7 @@ export function verifyProductionInputs(config, dependencies = {}) {
   });
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1] || '')) {
   try {
     console.log(JSON.stringify(verifyProductionInputs(resolveProductionConfig())));
   } catch (error) {

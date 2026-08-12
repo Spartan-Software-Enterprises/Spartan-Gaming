@@ -134,10 +134,9 @@ export function createQualityController({
   adaptiveResolution = true,
 } = {}) {
   const available = Object.freeze([...profiles]);
-  let current =
-    profileIndex(initialProfile) < available.length
-      ? initialProfile
-      : available[Math.floor(available.length / 2)].id;
+  let current = available.some((profile) => profile.id === initialProfile)
+    ? initialProfile
+    : available[Math.floor(available.length / 2)].id;
   let fixedProfile = available.find((profile) => profile.id === current) || available[0];
   let goodSamples = 0;
   const requestProfile = (profile) =>

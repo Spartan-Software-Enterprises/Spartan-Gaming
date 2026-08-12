@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { verifyPackageManifestSignature } from '../../host/package-signing.mjs';
 
 function required(value, name) {
@@ -37,7 +38,7 @@ function argument(argv, name) {
   const index = argv.indexOf(name);
   return index < 0 ? '' : argv[index + 1];
 }
-if (path.resolve(process.argv[1] || '') === path.resolve(new URL(import.meta.url).pathname)) {
+if (path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1] || '')) {
   try {
     const argv = process.argv.slice(2);
     const keyEnv = argument(argv, '--public-key-env') || 'SPARTAN_RELEASE_SIGNING_PUBLIC_KEY_JWK';

@@ -139,6 +139,7 @@ function renderNav() {
 }
 
 function renderContent() {
+  const previousStatus = document.querySelector('[data-save-status]')?.textContent;
   const categories = renderedCategories();
   const category = categories.find((item) => item.id === activeCategory) ?? categories[0];
   const shown = query ? visibleCategories().find((item) => item.id === activeCategory) : category;
@@ -146,7 +147,7 @@ function renderContent() {
   document.querySelector('[data-settings-content]').innerHTML = `
     <div class="content-heading">
       <div><p class="eyebrow">Control center</p><h1>${content.label}</h1><p>${content.description}</p></div>
-      <span class="save-status" data-save-status>All changes saved</span>
+      <span class="save-status" data-save-status>${previousStatus || 'All changes saved'}</span>
     </div>
     <div class="settings-sections">
       ${
@@ -187,6 +188,12 @@ function bindControls() {
       if (setting.key === 'sync.activeProfile') {
         saveState();
         window.location.reload();
+        return;
+      }
+      if (control.matches('input[type="range"]')) {
+        const output = control.parentElement?.querySelector('output');
+        if (output) output.textContent = `${state[setting.key]}${setting.unit || ''}`;
+        saveState();
         return;
       }
       renderContent();

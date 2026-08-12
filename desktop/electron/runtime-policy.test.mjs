@@ -5,6 +5,7 @@ import {
   isThirdPartyRequest,
   normalizeElectronRuntimePolicy,
   resolvePermissionDecision,
+  shouldBlockTrackingRequest,
   shouldQuitWhenWindowsClose,
 } from './runtime-policy.mjs';
 
@@ -17,6 +18,7 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
     powerMode: 'Balanced',
     doNotTrack: false,
     blockThirdPartyCookies: false,
+    trackingProtection: 'Strict',
     permissionPrompts: 'Ask per site',
     updateChannel: 'Stable',
     autoUpdate: true,
@@ -31,6 +33,7 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
       powerMode: 'Performance',
       doNotTrack: true,
       blockThirdPartyCookies: true,
+      trackingProtection: 'Standard',
       permissionPrompts: 'Ask every time',
       updateChannel: 'Beta',
       autoUpdate: false,
@@ -44,6 +47,7 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
       powerMode: 'Performance',
       doNotTrack: true,
       blockThirdPartyCookies: true,
+      trackingProtection: 'Standard',
       permissionPrompts: 'Ask every time',
       updateChannel: 'Beta',
       autoUpdate: false,
@@ -60,6 +64,7 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
       powerMode: 'Battery saver',
       doNotTrack: false,
       blockThirdPartyCookies: false,
+      trackingProtection: 'Strict',
       permissionPrompts: 'Ask per site',
       updateChannel: 'Stable',
       autoUpdate: true,
@@ -74,6 +79,7 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
       backgroundThrottling: 'false',
       powerMode: 'unsupported',
       doNotTrack: 'true',
+      trackingProtection: 'unsupported',
       permissionPrompts: 'unsupported',
       updateChannel: 'Nightly',
       autoUpdate: 'false',
@@ -87,6 +93,7 @@ test('Electron runtime policy defaults to throttling and accepts the explicit pe
       powerMode: 'Balanced',
       doNotTrack: false,
       blockThirdPartyCookies: false,
+      trackingProtection: 'Strict',
       permissionPrompts: 'Ask per site',
       updateChannel: 'Stable',
       autoUpdate: true,
@@ -156,5 +163,58 @@ test('Electron privacy headers add DNT and strip cookies only for cross-origin r
       policy,
     ),
     { Cookie: 'session=1', DNT: '1' },
+  );
+});
+
+test('Electron tracking protection blocks third-party tracker hosts and honors the mode', () => {
+  const strict = normalizeElectronRuntimePolicy();
+  assert.equal(
+    shouldBlockTrackingRequest(
+      { url: 'https://www.google-analytics.com/collect', initiator: 'https://store.example' },
+      strict,
+    ),
+    true,
+  );
+  assert.equal(
+    shouldBlockTrackingRequest(
+      { url: 'https://cdn.segment.io/analytics.js', initiator: 'https://play.example' },
+      strict,
+    ),
+    true,
+  );
+  assert.equal(
+    shouldBlockTrackingRequest(
+      { url: 'https://doubleclick.net/ads', initiator: 'https://store.example' },
+      strict,
+    ),
+    true,
+  );
+  assert.equal(
+    shouldBlockTrackingRequest(
+      { url: 'https://assets.example/game.js', initiator: 'https://store.example' },
+      strict,
+    ),
+    false,
+  );
+  assert.equal(
+    shouldBlockTrackingRequest(
+      { url: 'https://cdn.example/game.js', initiator: 'https://cdn.example' },
+      strict,
+    ),
+    false,
+  );
+  assert.equal(
+    shouldBlockTrackingRequest(
+      { url: 'https://assets.example/game.js', initiator: 'https://cdn.example' },
+      normalizeElectronRuntimePolicy({ trackingProtection: 'Disabled' }),
+    ),
+    false,
+  );
+  assert.equal(
+    shouldBlockTrackingRequest(
+      { url: 'https://www.google-analytics.com/collect', initiator: 'https://store.example' },
+      normalizeElectronRuntimePolicy({ trackingProtection: 'unsupported' }),
+    ),
+    true,
   );
 });

@@ -59,6 +59,7 @@ export function resolveElectronRuntimeSettings(settings = {}) {
     powerMode: settings['performance.powerMode'],
     doNotTrack: settings['privacy.doNotTrack'] === true,
     blockThirdPartyCookies: settings['privacy.blockThirdPartyCookies'] === true,
+    trackingProtection: settings['privacy.trackingProtection'],
     permissionPrompts: settings['privacy.permissionPrompts'],
     updateChannel: settings['updates.channel'],
     autoUpdate: settings['updates.autoUpdate'] !== false,

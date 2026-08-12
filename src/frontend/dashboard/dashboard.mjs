@@ -315,6 +315,7 @@ function launchEntry(entry, plan) {
     at: new Date().toISOString(),
   });
   renderResume();
+  render();
   saveLaunchIntent(
     sessionStorage,
     createLaunchIntent({

@@ -99,3 +99,33 @@ test('signaling broker rejects forged ticket signatures and invalid roles', () =
     /role must be client or host/,
   );
 });
+
+test('signaling broker does not propagate a failing recipient socket to the sender', () => {
+  const broker = createSignalingBroker({ secret: 'test-only-secret' });
+  const host = broker.attach({
+    sessionId: 'ses-signal-04',
+    role: 'host',
+    ticket: broker.issueTicket({ sessionId: 'ses-signal-04', role: 'host' }),
+    send() {},
+  });
+  const client = broker.attach({
+    sessionId: 'ses-signal-04',
+    role: 'client',
+    ticket: broker.issueTicket({ sessionId: 'ses-signal-04', role: 'client' }),
+    send: () => {
+      throw new Error('recipient socket is closed');
+    },
+  });
+  assert.doesNotThrow(() =>
+    host.send(
+      createSessionEnvelope({
+        sessionId: 'ses-signal-04',
+        type: 'session.offer',
+        payload: { role: 'client' },
+      }),
+    ),
+  );
+  assert.deepEqual(broker.stats(), { sessions: 1, participants: 2 });
+  client.detach();
+  host.detach();
+});

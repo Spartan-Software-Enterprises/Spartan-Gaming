@@ -411,7 +411,7 @@ function closeFrame() {
 function acceptKey(key) {
   return createHash('sha1').update(`${key}258EAFA5-E914-47DA-95CA-C5AB0DC85B11`).digest('base64');
 }
-function parseFrames(buffer, onMessage, socket) {
+function parseFrames(buffer, onMessage, socket, takeMessage) {
   let cursor = 0;
   while (buffer.length - cursor >= 2) {
     const first = buffer[cursor];
@@ -439,12 +439,20 @@ function parseFrames(buffer, onMessage, socket) {
       return buffer.subarray(cursor);
     }
     if (opcode === 0x9) {
+      if (takeMessage && !takeMessage()) {
+        socket.end(closeFrame());
+        return buffer.subarray(cursor);
+      }
       socket.write(Buffer.from([0x8a, 0]));
       continue;
     }
     if (opcode !== 0x1) {
       socket.end(closeFrame());
       return Buffer.alloc(0);
+    }
+    if (takeMessage && !takeMessage()) {
+      socket.end(closeFrame());
+      return buffer.subarray(cursor);
     }
     Promise.resolve(onMessage(payload.toString('utf8'))).catch(() => socket.end(closeFrame()));
   }
@@ -845,14 +853,11 @@ server.on('upgrade', (request, socket) => {
   const session = { accepted: false, sessionId: null, negotiated: null, send: connection.send };
   let buffer = Buffer.alloc(0);
   socket.on('data', (chunk) => {
-    if (!takeMessage()) {
-      socket.end(closeFrame());
-      return;
-    }
     buffer = parseFrames(
       Buffer.concat([buffer, chunk]),
       (text) => handleMessage(connection, text, session),
       socket,
+      takeMessage,
     );
   });
   socket.on('close', cleanup);

@@ -2,6 +2,7 @@
 import { createPrivateKey, createPublicKey, X509Certificate } from 'node:crypto';
 import { readFile, rename, writeFile, chmod, unlink } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 function text(value) {
   return typeof value === 'string' ? value.trim() : '';
@@ -128,7 +129,7 @@ function option(argv, name) {
   const index = argv.indexOf(name);
   return index < 0 ? '' : argv[index + 1];
 }
-if (path.resolve(process.argv[1] || '') === path.resolve(new URL(import.meta.url).pathname)) {
+if (path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1] || '')) {
   try {
     const keyPath = required(option(process.argv.slice(2), '--key'), '--key');
     const certPath = required(option(process.argv.slice(2), '--cert'), '--cert');

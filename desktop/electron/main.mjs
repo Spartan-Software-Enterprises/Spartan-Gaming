@@ -22,6 +22,7 @@ import {
   applyElectronPrivacyHeaders,
   normalizeElectronRuntimePolicy,
   resolvePermissionDecision,
+  shouldBlockTrackingRequest,
   shouldQuitWhenWindowsClose,
 } from './runtime-policy.mjs';
 import { createTrayMenuTemplate, shouldCreateTray } from './tray-policy.mjs';
@@ -146,6 +147,13 @@ async function loadApprovedNetworkPolicy() {
 function installPrivacyPolicy(electronSession, decisionScope = 'application') {
   if (!electronSession || privacySessions.has(electronSession)) return;
   privacySessions.add(electronSession);
+  electronSession.webRequest.onBeforeRequest((details, callback) =>
+    callback(
+      shouldBlockTrackingRequest({ url: details.url, initiator: details.initiator }, runtimePolicy)
+        ? { cancel: true }
+        : {},
+    ),
+  );
   electronSession.webRequest.onBeforeSendHeaders((details, callback) =>
     callback({
       requestHeaders: applyElectronPrivacyHeaders(details.requestHeaders, details, runtimePolicy),

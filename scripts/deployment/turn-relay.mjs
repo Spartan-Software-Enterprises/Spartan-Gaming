@@ -2,6 +2,7 @@
 import { readFile, writeFile, chmod } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 function text(value) {
   return typeof value === 'string' ? value.trim() : '';
@@ -113,7 +114,7 @@ function argument(argv, name) {
   const index = argv.indexOf(name);
   return index < 0 ? '' : argv[index + 1];
 }
-if (path.resolve(process.argv[1] || '') === path.resolve(new URL(import.meta.url).pathname)) {
+if (path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1] || '')) {
   try {
     const argv = process.argv.slice(2);
     const secretPath = filePath(argument(argv, '--secret-file'), 'TURN secret file');
