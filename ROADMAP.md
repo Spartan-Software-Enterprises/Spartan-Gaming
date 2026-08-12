@@ -162,3 +162,23 @@
 - [x] Unified frontend runtime readiness contract for browser, native adapter, and self-hosted host layers.
 - [x] Capability-driven desktop, ChromeOS, handheld, mobile, and television presentation profiles with safe forced-mode fallback.
 - [x] Capability-aware display policy that bounds HDR, codec, refresh-rate, and multi-display session requests without claiming native routing.
+
+## Milestone X: Automatic Login & Interactive Voice Chat
+
+### Automatic Login
+- [x] Credential storage in localStorage with encryption
+- [x] Auto-login on subsequent launches
+- [x] Manual override / disable toggle
+- [x] Secure credential clearing on logout
+
+### Full Interactive Voice Chat
+- [x] Bidirectional microphone streaming
+- [x] Noise suppression toggle
+- [x] Spatial audio toggle
+- [x] Game volume control (0-100%)
+- [x] Chat volume control (0-100%)
+- [x] Microphone device selection
+- [x] Session state synchronization
+- [x] Session recovery with voice state
+- [x] Interrupt handling and cleanup
+- [x] Cross-platform support (Windows, macOS, Linux)
