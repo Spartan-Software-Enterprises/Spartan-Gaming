@@ -125,16 +125,54 @@ function renderSessions() {
     .join('');
 }
 
+function loadImportedGames() {
+  try {
+    const raw = globalThis.localStorage?.getItem('spartan-gaming.imported-games.v1');
+    if (!raw) return [];
+    const games = JSON.parse(raw);
+    return Array.isArray(games) ? games.slice(0, 200) : [];
+  } catch {
+    return [];
+  }
+}
+
+function populateGameSelect() {
+  const select = document.querySelector('[data-session-game]');
+  if (!select) return;
+  const games = loadImportedGames();
+  const existingOptions = new Set(Array.from(select.options).map((option) => option.value));
+  games.forEach((game) => {
+    if (!existingOptions.has(game.id)) {
+      const option = document.createElement('option');
+      option.value = game.id;
+      option.textContent = game.name;
+      select.appendChild(option);
+    }
+  });
+}
+
+function getSelectedGameName() {
+  const select = document.querySelector('[data-session-game]');
+  if (!select) return '';
+  const selectedOption = select.options[select.selectedIndex];
+  if (selectedOption && selectedOption.value && selectedOption.value !== '') {
+    return selectedOption.textContent;
+  }
+  const customInput = document.querySelector('[data-session-game-custom]');
+  return customInput?.value?.trim() || '';
+}
+
 function setupMultiplayer() {
+  populateGameSelect();
   renderSessions();
 
   document.querySelector('[data-action="create-session"]')?.addEventListener('click', () => {
     const dialog = document.querySelector('[data-multiplayer-dialog]');
     const nameInput = document.querySelector('[data-session-name]');
-    const gameInput = document.querySelector('[data-session-game]');
+    const gameSelect = document.querySelector('[data-session-game]');
     const maxInput = document.querySelector('[data-session-max]');
     if (nameInput) nameInput.value = '';
-    if (gameInput) gameInput.value = '';
+    if (gameSelect) gameSelect.value = '';
     if (maxInput) maxInput.value = '4';
     if (typeof dialog.showModal === 'function') dialog.showModal();
     else dialog.setAttribute('open', '');
@@ -142,10 +180,10 @@ function setupMultiplayer() {
 
   document.querySelector('[data-session-save]')?.addEventListener('click', () => {
     const name = document.querySelector('[data-session-name]')?.value?.trim();
-    const game = document.querySelector('[data-session-game]')?.value?.trim();
+    const game = getSelectedGameName();
     const maxPlayers = Math.max(2, Math.min(64, Number(document.querySelector('[data-session-max]')?.value || 4)));
     if (!name || !game) {
-      showToast('Please enter a session name and game.');
+      showToast('Please enter a session name and select or enter a game.');
       return;
     }
     multiplayerStore.addSession({
