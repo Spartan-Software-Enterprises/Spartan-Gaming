@@ -27,6 +27,7 @@ const validKinds = new Set([
   'atomiswave',
   'original-xbox',
   'browser-game',
+  'game-library',
 ]);
 
 function assertString(value, field, id) {

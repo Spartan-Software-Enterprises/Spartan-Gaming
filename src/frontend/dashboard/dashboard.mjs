@@ -22,7 +22,7 @@ import {
   createWorkspaceStore,
   resolveWorkspaceLaunchBehavior,
 } from '../workspaces/workspaces.mjs';
-import { createFavoritesStore, createRomLibraryStore, detectRomSystem, detectRomMime } from './library-state.mjs';
+import { createFavoritesStore, createRomLibraryStore, createImportedGameStore, detectRomSystem, detectRomMime } from './library-state.mjs';
 import {
   createCommunityProviderCatalogStore,
   mergeCommunityProviders,
@@ -70,6 +70,7 @@ const romLibraryStore = createRomLibraryStore({
   storage: profileStorage,
   workspaceId: activeWorkspace.id,
 });
+const importedGameStore = createImportedGameStore({ storage: profileStorage });
 const requestedFilter = new URLSearchParams(globalThis.location?.search || '').get('filter');
 const state = {
   catalog: [],
@@ -77,7 +78,7 @@ const state = {
   compatibility: null,
   report: null,
   providerHealth: new Map(),
-  filter: ['all', 'cloud', 'watch', 'browser', 'emulator', 'favorites', 'recent', 'rom-library'].includes(
+  filter: ['all', 'cloud', 'watch', 'browser', 'emulator', 'favorites', 'recent', 'rom-library', 'imported'].includes(
     requestedFilter,
   )
     ? requestedFilter
@@ -131,6 +132,12 @@ document
   ?.insertAdjacentHTML(
     'beforeend',
     '<button class="rom-scan" data-action="scan-folder" aria-label="Scan folder for ROMs">▼ Scan Folder</button>',
+  );
+document
+  .querySelector('.topbar')
+  ?.insertAdjacentHTML(
+    'beforeend',
+    '<button class="add-game" data-action="add-game" aria-label="Add game from catalog">＋ Add game</button>',
   );
 document
   .querySelector('.main-nav')
@@ -433,7 +440,7 @@ function escapeHtml(value) {
 }
 function visibleEntries() {
   const query = state.search.toLowerCase().trim();
-  return state.catalog.filter((entry) => {
+  const catalogEntries = state.catalog.filter((entry) => {
     const matchesType =
       state.filter === 'all' ||
       (state.filter === 'emulator'
@@ -446,11 +453,36 @@ function visibleEntries() {
               ? WATCH_KINDS.has(entry.kind)
               : state.filter === 'favorites'
                 ? state.favorites.has(entry.id)
-                : state.recent.has(entry.id));
+                : state.filter === 'rom-library'
+                  ? entry.backendType === 'emulator' || entry.kind === 'multi-system'
+                  : state.recent.has(entry.id));
     const haystack =
       `${entry.name} ${entry.description || ''} ${(entry.systems || []).join(' ')}`.toLowerCase();
     return matchesType && (!query || haystack.includes(query));
   });
+  const imported = importedGameStore.list();
+  const importedEntries =
+    state.filter === 'all' || state.filter === 'imported'
+      ? imported
+          .filter((game) => {
+            const haystack = `${game.name} ${game.providerId} ${(game.genres || []).join(' ')}`.toLowerCase();
+            return !query || haystack.includes(query);
+          })
+          .map((game) => ({
+            id: game.id,
+            name: game.name,
+            backendType: 'imported',
+            kind: 'game-library',
+            description: `Imported from ${game.providerId}`,
+            systems: game.genres,
+            capabilities: [],
+            providerId: game.providerId,
+            appId: game.appId,
+            deepLink: game.deepLink,
+            storeUrl: game.storeUrl,
+          }))
+      : [];
+  return [...catalogEntries, ...importedEntries];
 }
 function render() {
   renderWorkspaceControl();
@@ -488,10 +520,24 @@ function render() {
                 ? 'Choose runtime'
                 : entry.backendType === 'provider'
                   ? 'Open service'
-                  : entry.backendType === 'game'
-                    ? 'Play in browser'
-                    : 'Configure';
-          return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(entry.backendType === 'emulator' ? 'Emulation' : entry.backendType === 'game' ? 'Browser game' : entry.kind)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map((tag) => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="card-actions">${entry.backendType === 'provider' ? `<button class="details-button" data-details="${escapeHtml(entry.id)}">Details</button>` : ''}<button class="launch" data-launch="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}${entry.backendType === 'provider' ? providerHealthLabel(entry) : ''}</span></div></article>`;
+                  : entry.backendType === 'imported'
+                    ? 'Play'
+                    : entry.backendType === 'game'
+                      ? 'Play in browser'
+                      : 'Configure';
+          const cardType = entry.backendType === 'imported'
+            ? entry.providerId || 'Game'
+            : entry.backendType === 'emulator'
+              ? 'Emulation'
+              : entry.backendType === 'game'
+                ? 'Browser game'
+                : entry.kind;
+          const detailsLabel = entry.backendType === 'imported'
+            ? (entry.deepLink ? 'Deep link' : 'Store page')
+            : entry.backendType === 'provider'
+              ? providerHealthLabel(entry)
+              : '';
+          return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(cardType)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map((tag) => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="card-actions">${entry.backendType === 'provider' ? `<button class="details-button" data-details="${escapeHtml(entry.id)}">Details</button>` : ''}<button class="launch" data-launch="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}${detailsLabel ? ` · ${detailsLabel}` : ''}</span></div></article>`;
         })
         .join('')
     : '<div class="empty">No connections match this view. Try another filter or search term.</div>';
@@ -606,8 +652,31 @@ document.addEventListener('click', (event) => {
   }
   const launchButton = event.target.closest('[data-launch]');
   if (launchButton) {
-    const entry = state.catalog.find((item) => item.id === launchButton.dataset.launch);
+    const catalogEntry = state.catalog.find((item) => item.id === launchButton.dataset.launch);
+    const importedEntry = importedGameStore.list().find((item) => item.id === launchButton.dataset.launch);
+    const entry = catalogEntry || importedEntry;
     if (!entry) return;
+    if (importedEntry) {
+      const target = importedEntry.deepLink || importedEntry.storeUrl;
+      if (target) {
+        try {
+          const handoff = launchExternalSurface(target, {
+            behavior: resolveWorkspaceLaunchBehavior(
+              activeWorkspace,
+              settings['gaming.launchBehavior'],
+            ),
+            open: window.open.bind(window),
+            assign: window.location.assign.bind(window.location),
+          });
+          showToast(`${importedEntry.name}: ${handoff.mode === 'current-workspace' ? 'launched here' : 'launched'}.`);
+        } catch (error) {
+          showToast(error.message);
+        }
+        return;
+      }
+      showToast(`${importedEntry.name}: no launch target configured.`);
+      return;
+    }
     const plan = state.adapters?.get(entry.id)?.resolve();
     if (!plan || plan.status === 'unsupported') {
       showToast(`${entry.name}: no supported integration mode is available.`);
@@ -675,6 +744,57 @@ const importButton = event.target.closest('[data-action="import-roms"]');
       }
     };
     input.click();
+    return;
+  }
+  const addGameButton = event.target.closest('[data-action="add-game"]');
+  if (addGameButton) {
+    const dialog = document.querySelector('[data-add-game-dialog]');
+    const nameInput = document.querySelector('[data-add-game-name]');
+    const providerSelect = document.querySelector('[data-add-game-provider]');
+    const appIdInput = document.querySelector('[data-add-game-appid]');
+    if (nameInput) nameInput.value = '';
+    if (providerSelect) providerSelect.value = '';
+    if (appIdInput) appIdInput.value = '';
+    if (typeof dialog.showModal === 'function') dialog.showModal();
+    else dialog.setAttribute('open', '');
+    return;
+  }
+  const addGameClose = event.target.closest('[data-add-game-close]');
+  if (addGameClose) {
+    const dialog = document.querySelector('[data-add-game-dialog]');
+    if (typeof dialog.close === 'function') dialog.close();
+    else dialog?.removeAttribute('open');
+    return;
+  }
+  const addGameSave = event.target.closest('[data-add-game-save]');
+  if (addGameSave) {
+    const nameInput = document.querySelector('[data-add-game-name]');
+    const providerSelect = document.querySelector('[data-add-game-provider]');
+    const appIdInput = document.querySelector('[data-add-game-appid]');
+    const name = nameInput?.value?.trim();
+    const providerId = providerSelect?.value?.trim();
+    const appId = appIdInput?.value?.trim();
+    if (!name || !providerId || !appId) {
+      showToast('Please enter a game name, select a platform, and provide an app ID.');
+      return;
+    }
+    const providerEntry = state.catalog.find((e) => e.id === providerId);
+    const deepLinkFormats = providerEntry?.deepLinkFormats || {};
+    const deepLink = deepLinkFormats.run?.replace('{appid}', appId) || null;
+    const storeUrl = providerEntry?.url ? `${providerEntry.url}/app/${appId}` : null;
+    importedGameStore.add({
+      name,
+      providerId,
+      appId,
+      deepLink,
+      storeUrl,
+      genres: [],
+    });
+    showToast(`Added ${name} to your library`);
+    render();
+    const dialog = document.querySelector('[data-add-game-dialog]');
+    if (typeof dialog.close === 'function') dialog.close();
+    else dialog?.removeAttribute('open');
     return;
   }
 });

@@ -300,6 +300,82 @@ export async function scanFolderForRoms(folderPath) {
   return results;
 }
 
+const IMPORTED_GAMES_KEY = 'spartan-gaming.imported-games.v1';
+
+function validImportedGame(value) {
+  if (typeof value !== 'object' || value === null) return false;
+  const keys = Object.keys(value);
+  return (
+    keys.includes('name') &&
+    typeof value.name === 'string' &&
+    keys.includes('providerId') &&
+    typeof value.providerId === 'string' &&
+    keys.includes('appId') &&
+    typeof value.appId === 'string'
+  );
+}
+
+function normalizeImportedGame(value) {
+  if (!validImportedGame(value)) throw new TypeError('invalid imported game record');
+  const providerId = String(value.providerId).trim().toLowerCase();
+  if (!/^[a-z0-9][a-z0-9._-]{0,63}$/.test(providerId))
+    throw new TypeError('providerId must use a safe identifier');
+  const appId = String(value.appId).trim();
+  if (!/^[a-z0-9][a-z0-9._-]{0,127}$/.test(appId))
+    throw new TypeError('appId must use a safe identifier');
+  return Object.freeze({
+    id: `${providerId}:${appId}`,
+    name: String(value.name).trim(),
+    providerId,
+    appId,
+    deepLink: value.deepLink || null,
+    storeUrl: value.storeUrl || null,
+    genres: Array.isArray(value.genres) ? value.genres.slice(0, 10) : [],
+  });
+}
+
+export function createImportedGameStore({ storage = globalThis.localStorage } = {}) {
+  const key = IMPORTED_GAMES_KEY;
+  const read = () => {
+    try {
+      const parsed = JSON.parse(storage?.getItem(key) || '[]');
+      return Array.isArray(parsed) ? parsed.map(normalizeImportedGame) : [];
+    } catch {
+      return [];
+    }
+  };
+  const write = (records) =>
+    storage?.setItem(key, JSON.stringify(records.map((record) => ({ ...record }))));
+  return Object.freeze({
+    list() {
+      return Object.freeze(read().slice(0, 500));
+    },
+    add(record) {
+      const records = read();
+      const normalized = normalizeImportedGame(record);
+      const existing = records.find((r) => r.id === normalized.id);
+      if (!existing) records.push(normalized);
+      write(records);
+      return normalized;
+    },
+    remove(id) {
+      const before = read().length;
+      const records = read().filter((r) => r.id !== id);
+      write(records);
+      return records.length !== before;
+    },
+    get(id) {
+      return read().find((r) => r.id === id) || null;
+    },
+    findByProvider(providerId) {
+      return read().filter((r) => r.providerId === providerId);
+    },
+    clear() {
+      storage?.removeItem?.(key);
+    },
+  });
+}
+
 export {
   validRomRecord,
   normalizeRomRecord,

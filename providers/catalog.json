@@ -263,6 +263,118 @@
       ]
     },
     {
+      "id": "steam-library",
+      "name": "Steam",
+      "kind": "game-library",
+      "supportLevel": "A",
+      "integrationModes": ["browser-first", "official-launch"],
+      "url": "https://store.steampowered.com",
+      "requirements": ["steam-account", "steam-client"],
+      "capabilities": ["gamepad", "cloud-saves", "achievements", "overlay", "fullscreen"],
+      "deepLinkScheme": "steam",
+      "deepLinkFormats": {
+        "run": "steam://run/{appid}",
+        "store": "steam://store/{appid}"
+      },
+      "privacy": "Steam authentication, purchase history, and friend lists remain on the official Steam client and website. Spartan Gaming never captures Steam credentials or session tokens."
+    },
+    {
+      "id": "gog-library",
+      "name": "GOG",
+      "kind": "game-library",
+      "supportLevel": "B",
+      "integrationModes": ["browser-first", "official-launch"],
+      "url": "https://www.gog.com",
+      "requirements": ["gog-account", "gog-galaxy-client"],
+      "capabilities": ["gamepad", "cloud-saves", "achievements", "overlay", "fullscreen"],
+      "deepLinkScheme": "goggalaxy",
+      "deepLinkFormats": {
+        "run": "goggalaxy://game/{productId}",
+        "store": "goggalaxy://productId/{productId}"
+      },
+      "privacy": "GOG authentication, purchase history, and friend lists remain on the official GOG client and website. Spartan Gaming never captures GOG credentials or session tokens."
+    },
+    {
+      "id": "epic-library",
+      "name": "Epic Games",
+      "kind": "game-library",
+      "supportLevel": "B",
+      "integrationModes": ["browser-first", "official-launch"],
+      "url": "https://store.epicgames.com",
+      "requirements": ["epic-account", "epic-games-launcher"],
+      "capabilities": ["gamepad", "cloud-saves", "achievements", "overlay", "fullscreen"],
+      "deepLinkScheme": "com.epicgames.launcher",
+      "deepLinkFormats": {
+        "run": "com.epicgames.launcher://apps/{appid}?action=launch",
+        "store": "com.epicgames.launcher://apps/{appid}"
+      },
+      "privacy": "Epic authentication, purchase history, and friend lists remain on the official Epic client and website. Spartan Gaming never captures Epic credentials or session tokens."
+    },
+    {
+      "id": "ubisoft-library",
+      "name": "Ubisoft Connect",
+      "kind": "game-library",
+      "supportLevel": "B",
+      "integrationModes": ["browser-first", "official-launch"],
+      "url": "https://www.ubisoft.com",
+      "requirements": ["ubisoft-account", "ubisoft-connect-client"],
+      "capabilities": ["gamepad", "cloud-saves", "achievements", "overlay", "fullscreen"],
+      "deepLinkScheme": "uplay",
+      "deepLinkFormats": {
+        "run": "uplay://launch/{appid}/0",
+        "store": "uplay://info/{appid}"
+      },
+      "privacy": "Ubisoft authentication, purchase history, and friend lists remain on the official Ubisoft Connect client and website. Spartan Gaming never captures Ubisoft credentials or session tokens."
+    },
+    {
+      "id": "ea-library",
+      "name": "EA App",
+      "kind": "game-library",
+      "supportLevel": "C",
+      "integrationModes": ["browser-first", "official-launch"],
+      "url": "https://www.ea.com",
+      "requirements": ["ea-account", "ea-app-client"],
+      "capabilities": ["gamepad", "cloud-saves", "achievements", "overlay", "fullscreen"],
+      "deepLinkScheme": "eaapp",
+      "deepLinkFormats": {
+        "run": "eaapp://launch/{appid}",
+        "store": "https://www.ea.com/games/{appid}"
+      },
+      "privacy": "EA authentication, purchase history, and friend lists remain on the official EA client and website. Spartan Gaming never captures EA credentials or session tokens."
+    },
+    {
+      "id": "battlenet-library",
+      "name": "Battle.net",
+      "kind": "game-library",
+      "supportLevel": "B",
+      "integrationModes": ["browser-first", "official-launch"],
+      "url": "https://www.blizzard.com",
+      "requirements": ["battlenet-account", "battlenet-client"],
+      "capabilities": ["gamepad", "cloud-saves", "achievements", "overlay", "fullscreen"],
+      "deepLinkScheme": "battlenet",
+      "deepLinkFormats": {
+        "run": "battlenet://{appid}",
+        "store": "https://www.blizzard.com/games/{appid}"
+      },
+      "privacy": "Battle.net authentication, purchase history, and friend lists remain on the official Battle.net client and website. Spartan Gaming never captures Battle.net credentials or session tokens."
+    },
+    {
+      "id": "rockstar-library",
+      "name": "Rockstar Games",
+      "kind": "game-library",
+      "supportLevel": "C",
+      "integrationModes": ["browser-first", "official-launch"],
+      "url": "https://www.rockstargames.com",
+      "requirements": ["rockstar-account", "rockstar-games-launcher"],
+      "capabilities": ["gamepad", "cloud-saves", "achievements", "overlay", "fullscreen"],
+      "deepLinkScheme": "rockstar",
+      "deepLinkFormats": {
+        "run": "rockstar://launch/{appid}",
+        "store": "https://www.rockstargames.com/games/{appid}"
+      },
+      "privacy": "Rockstar authentication, purchase history, and friend lists remain on the official Rockstar client and website. Spartan Gaming never captures Rockstar credentials or session tokens."
+    },
+    {
       "id": "gamenative",
       "name": "GameNative",
       "kind": "native",
