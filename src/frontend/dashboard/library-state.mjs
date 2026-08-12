@@ -1,6 +1,3 @@
-import fs from 'fs';
-import path from 'path';
-
 export const FAVORITES_STORAGE_PREFIX = 'spartan-gaming.favorites.v2.';
 const LEGACY_FAVORITES_KEY = 'spartan-gaming.favorites.v1';
 
@@ -272,6 +269,10 @@ export function createRomLibraryStore({
 }
 
 export async function scanFolderForRoms(folderPath) {
+  const [{ default: fs }, { default: path }] = await Promise.all([
+    import('fs'),
+    import('path'),
+  ]);
   const romExtensions = new Set([
     'smc', 'sfc', 'nes', 'gba', 'gb', 'gbc', 'n64', 'z64',
     'iso', 'cue', 'bin', 'chd', 'wbfs', 'gcm', 'cso',

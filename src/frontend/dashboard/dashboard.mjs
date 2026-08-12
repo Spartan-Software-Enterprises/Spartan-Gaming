@@ -133,12 +133,6 @@ document
     '<button class="rom-scan" data-action="scan-folder" aria-label="Scan folder for ROMs">▼ Scan Folder</button>',
   );
 document
-  .querySelector('.topbar')
-  ?.insertAdjacentHTML(
-    'beforeend',
-    '<button class="rom-scan" data-action="scan-rom-folder" aria-label="Scan folder for ROMs">▼ Scan Folder</button>',
-  );
-document
   .querySelector('.main-nav')
   ?.insertAdjacentHTML(
     'beforeend',
@@ -654,29 +648,33 @@ const importButton = event.target.closest('[data-action="import-roms"]');
   }
   const scanButton = event.target.closest('[data-action="scan-folder"]');
   if (scanButton) {
-    state.romLibrary.scanFolderForRoms().then((paths) => {
-      if (paths.length > 0) {
-        showToast(`Found ${paths.length} ROM(s) in folder`);
-        render();
-      } else {
-        showToast('No ROMs found in the selected folder');
-      }
-    }).catch((error) => {
-      showToast(`Folder scan failed: ${error.message}`);
-    });
-    return;
-  }
-    };
-    input.click();
-    return;
-  }
-});
-document.querySelector('[data-provider-close]').addEventListener('click', closeProviderSurface);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.webkitdirectory = true;
+    input.multiple = true;
+    input.onchange = () => {
+      const files = Array.from(input.files || []);
+      if (files.length) {
+        const selectedRoms = files.map((file) => {
+          const path = file.webkitRelativePath || file.name;
+          const system = detectRomSystem(file.name);
+          const name = file.name.split('.').shift();
+          const extension = file.name.split('.').pop().toLowerCase();
+          const mime = file.type || detectRomMime(file.name);
+          return {
+            romPath: path,
+            system,
+            extension,
+            name,
+            mime,
+          };
+        });
         state.romLibrary.importFromPaths(selectedRoms);
         showToast(`Imported ${selectedRoms.length} ROM(s)`);
         render();
-      },
-    });
+      }
+    };
+    input.click();
     return;
   }
 });
