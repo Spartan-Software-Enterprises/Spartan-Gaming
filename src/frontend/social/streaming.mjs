@@ -1,7 +1,7 @@
 import '../pwa/register.mjs';
 import { createProviderIntegration } from '../providers/integration.mjs';
 
-const STREAM_SERVICE_IDS = Object.freeze([
+export const STREAM_SERVICE_IDS = Object.freeze([
   'twitch',
   'youtube-live',
   'kick',
