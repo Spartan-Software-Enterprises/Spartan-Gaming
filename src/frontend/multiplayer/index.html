@@ -80,5 +80,19 @@
         <button class="primary-button" data-session-save type="button">Create session</button>
       </div>
     </dialog>
+    <dialog class="manage-dialog" data-manage-dialog aria-labelledby="manage-dialog-title">
+      <form method="dialog">
+        <button class="dialog-close" data-manage-close aria-label="Close">×</button>
+      </form>
+      <div class="dialog-heading">
+        <p class="eyebrow accent">MANAGE SESSION</p>
+        <h2 id="manage-dialog-title" data-manage-title>Session</h2>
+        <p data-manage-detail>Manage players and session settings.</p>
+      </div>
+      <div class="manage-body" data-manage-body></div>
+      <div class="dialog-footer">
+        <button class="secondary-button" data-manage-close-action type="button">Close</button>
+      </div>
+    </dialog>
   </body>
 </html>

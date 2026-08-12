@@ -162,6 +162,33 @@ function getSelectedGameName() {
   return customInput?.value?.trim() || '';
 }
 
+function openManageDialog(sessionId) {
+  const session = multiplayerStore.getSessions().find((s) => s.id === sessionId);
+  if (!session) return;
+
+  const dialog = document.querySelector('[data-manage-dialog]');
+  const title = document.querySelector('[data-manage-title]');
+  const detail = document.querySelector('[data-manage-detail]');
+  const body = document.querySelector('[data-manage-body]');
+
+  title.textContent = session.name;
+  detail.textContent = `${session.game} · ${session.players?.length || 0}/${session.maxPlayers || 4} players`;
+
+  const players = session.players || [];
+  body.innerHTML = `
+    <div class="player-list">
+      ${players.length ? players.map((player) => `<div class="player"><div><div class="player-name">${escapeHtml(player.name)}</div><div class="player-role">${player.host ? 'Host' : 'Player'}</div></div></div>`).join('') : '<p class="empty">No players yet.</p>'}
+    </div>
+    <div class="actions">
+      <button class="secondary-button" data-copy-invite="${escapeHtml(session.id)}">Copy invite link</button>
+      <button class="secondary-button" data-close-session="${escapeHtml(session.id)}">Close session</button>
+    </div>
+  `;
+
+  if (typeof dialog.showModal === 'function') dialog.showModal();
+  else dialog.setAttribute('open', '');
+}
+
 function setupMultiplayer() {
   populateGameSelect();
   renderSessions();
@@ -212,12 +239,7 @@ function setupMultiplayer() {
     }
     const manageButton = event.target.closest('[data-manage]');
     if (manageButton) {
-      const session = multiplayerStore.getSessions().find((s) => s.id === manageButton.dataset.manage);
-      if (session) {
-        multiplayerStore.updateSession(session.id, { status: session.status === 'open' ? 'in-progress' : 'open' });
-        renderSessions();
-        showToast(`Session is now ${session.status === 'open' ? 'in progress' : 'open'}`);
-      }
+      openManageDialog(manageButton.dataset.manage);
       return;
     }
     const acceptButton = event.target.closest('[data-accept]');
@@ -253,6 +275,45 @@ function setupMultiplayer() {
       const dialog = document.querySelector('[data-multiplayer-dialog]');
       if (typeof dialog.close === 'function') dialog.close();
       else dialog?.removeAttribute('open');
+      return;
+    }
+    const manageCloseButton = event.target.closest('[data-manage-close]');
+    if (manageCloseButton) {
+      const dialog = document.querySelector('[data-manage-dialog]');
+      if (typeof dialog.close === 'function') dialog.close();
+      else dialog?.removeAttribute('open');
+      return;
+    }
+    const manageCloseAction = event.target.closest('[data-manage-close-action]');
+    if (manageCloseAction) {
+      const dialog = document.querySelector('[data-manage-dialog]');
+      if (typeof dialog.close === 'function') dialog.close();
+      else dialog?.removeAttribute('open');
+      return;
+    }
+    const copyInviteButton = event.target.closest('[data-copy-invite]');
+    if (copyInviteButton) {
+      const session = multiplayerStore.getSessions().find((s) => s.id === copyInviteButton.dataset.copyInvite);
+      if (session) {
+        const inviteLink = `${globalThis.location.origin}/multiplayer?join=${session.id}`;
+        navigator.clipboard?.writeText(inviteLink).then(
+          () => showToast('Invite link copied to clipboard'),
+          () => showToast('Failed to copy invite link'),
+        );
+      }
+      return;
+    }
+    const closeSessionButton = event.target.closest('[data-close-session]');
+    if (closeSessionButton) {
+      const session = multiplayerStore.getSessions().find((s) => s.id === closeSessionButton.dataset.closeSession);
+      if (session) {
+        multiplayerStore.updateSession(session.id, { status: 'closed' });
+        renderSessions();
+        showToast(`Session ${session.name} closed`);
+        const dialog = document.querySelector('[data-manage-dialog]');
+        if (typeof dialog.close === 'function') dialog.close();
+        else dialog?.removeAttribute('open');
+      }
       return;
     }
   });
