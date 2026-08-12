@@ -152,13 +152,29 @@ function openChat(friendId) {
   const messages = socialStore.getMessages().filter((m) => m.with === friendId);
   body.innerHTML = `
     <div class="chat-history">
-      ${messages.length ? messages.map((m) => `<div class="chat-message"><strong>${escapeHtml(m.from === 'you' ? 'You' : friend.name)}</strong> <span>${escapeHtml(m.text)}</span></div>`).join('') : '<p class="empty">No messages yet. Say hello!</p>'}
+      ${messages.length ? messages.map((m) => `<div class="chat-message"><div class="chat-message-header"><strong>${escapeHtml(m.from === 'you' ? 'You' : friend.name)}</strong><span class="chat-message-time">${escapeHtml(new Date(m.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))}</span></div><span>${escapeHtml(m.text)}</span></div>`).join('') : '<p class="empty">No messages yet. Say hello!</p>'}
     </div>
     <div class="chat-input">
-      <input data-chat-input type="text" placeholder="Type a message..." />
+      <input data-chat-input type="text" placeholder="Type a message..." autocomplete="off" />
       <button data-send-message data-id="${escapeHtml(friendId)}">Send</button>
     </div>
   `;
+
+  const history = body.querySelector('.chat-history');
+  if (history) history.scrollTop = history.scrollHeight;
+
+  const input = body.querySelector('[data-chat-input]');
+  input?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      const text = input.value.trim();
+      if (text) {
+        socialStore.addMessage({ with: friendId, from: 'you', text });
+        openChat(friendId);
+        showToast('Message sent');
+      }
+    }
+  });
 
   if (typeof dialog.showModal === 'function') dialog.showModal();
   else dialog.setAttribute('open', '');
