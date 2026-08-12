@@ -2,7 +2,7 @@ const ROUTES = Object.freeze({
   library: Object.freeze({ kind: 'filter', filter: 'all' }),
   providers: Object.freeze({ kind: 'navigate', href: '../providers/index.html' }),
   emulation: Object.freeze({ kind: 'navigate', href: '../emulation/index.html' }),
-  watch: Object.freeze({ kind: 'filter', filter: 'watch' }),
+  watch: Object.freeze({ kind: 'navigate', href: '../watch/index.html' }),
   browser: Object.freeze({ kind: 'filter', filter: 'browser' }),
   social: Object.freeze({ kind: 'navigate', href: '../social/index.html' }),
   multiplayer: Object.freeze({ kind: 'navigate', href: '../multiplayer/index.html' }),
