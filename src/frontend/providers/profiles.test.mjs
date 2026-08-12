@@ -56,6 +56,37 @@ test('provider profile store saves, exports, imports, and removes profiles', () 
   other.remove('twitch');
   assert.equal(other.list().length, 0);
 });
+
+test('provider profiles support multiple accounts per provider', () => {
+  const store = createProviderProfileStore({ storage: storage() });
+  store.save({ providerId: 'xbox-cloud', accountId: 'personal', accountLabel: 'Personal' });
+  store.save({ providerId: 'xbox-cloud', accountId: 'work', accountLabel: 'Work' });
+  assert.equal(store.list('xbox-cloud').length, 2);
+  assert.equal(store.get('xbox-cloud', 'personal').accountLabel, 'Personal');
+  assert.equal(store.get('xbox-cloud', 'work').accountLabel, 'Work');
+  store.remove('xbox-cloud', 'personal');
+  assert.equal(store.list('xbox-cloud').length, 1);
+  assert.equal(store.get('xbox-cloud', 'personal'), null);
+  assert.equal(store.get('xbox-cloud', 'work').accountLabel, 'Work');
+  store.remove('xbox-cloud');
+  assert.equal(store.list('xbox-cloud').length, 0);
+});
+
+test('provider profile store defaults accountId to default for backward compatibility', () => {
+  const store = createProviderProfileStore({ storage: storage() });
+  store.save({ providerId: 'geforce-now', accountLabel: 'Free tier' });
+  const profile = store.get('geforce-now');
+  assert.equal(profile.accountId, 'default');
+  assert.equal(store.get('geforce-now', 'default').accountLabel, 'Free tier');
+});
+
+test('provider profile store returns default account when no accountId specified', () => {
+  const store = createProviderProfileStore({ storage: storage() });
+  store.save({ providerId: 'xbox-cloud', accountId: 'personal', accountLabel: 'Personal' });
+  store.save({ providerId: 'xbox-cloud', accountId: 'default', accountLabel: 'Default' });
+  assert.equal(store.get('xbox-cloud').accountLabel, 'Default');
+  assert.equal(store.get('xbox-cloud', 'personal').accountLabel, 'Personal');
+});
 test('provider profile import rejects malformed data', () => {
   assert.throws(() => createProviderProfileStore({ storage: storage() }).import('{}'), /invalid/);
 });

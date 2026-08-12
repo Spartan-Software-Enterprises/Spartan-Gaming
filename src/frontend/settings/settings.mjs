@@ -3,7 +3,7 @@ import { settingsCategories } from './settings-data.mjs';
 import { createSettingsStore } from './profile.mjs';
 import { resolveSettingsAction } from './actions.mjs';
 import { applyRuntimeUiSettings } from './runtime-ui.mjs';
-import { clearProviderSessionState } from '../providers/session-cleanup.mjs';
+import { clearProviderSessionState, clearAutoLoginStorage } from '../providers/session-cleanup.mjs';
 import { createHostConfigFromSettings, detectHostPlatform } from '../host/config.mjs';
 import { renderSettingControl } from './control.mjs';
 import {
@@ -254,11 +254,13 @@ function bindControls() {
       }
       if (action.kind === 'clear-provider-sessions') {
         const result = clearProviderSessionState();
+        const autoLogin = clearAutoLoginStorage();
+        const total = result.removed.length + autoLogin.removed.length;
         const status = document.querySelector('[data-save-status]');
         try {
           await globalThis.spartanElectron?.clearProviderLogins?.();
           if (status)
-            status.textContent = `Provider logins cleared${result.removed.length ? ` with ${result.removed.length} Spartan handoff${result.removed.length === 1 ? '' : 's'}` : ''}.`;
+            status.textContent = `Provider logins cleared${total ? ` with ${total} Spartan handoff${total === 1 ? '' : 's'}` : ''}.`;
         } catch (error) {
           if (status)
             status.textContent = `Spartan handoffs cleared; provider login cleanup failed: ${error.message}`;

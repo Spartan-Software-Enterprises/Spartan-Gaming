@@ -4,6 +4,10 @@ export const PROVIDER_SESSION_KEYS = Object.freeze([
   'spartan-gaming.pending-host-pair.v1',
 ]);
 
+export const LOCAL_STORAGE_PROVIDER_KEYS = Object.freeze([
+  'spartan-gaming.auto-login.v1',
+]);
+
 export function clearProviderSessionState(
   storage = globalThis.sessionStorage,
   keys = PROVIDER_SESSION_KEYS,
@@ -17,4 +21,8 @@ export function clearProviderSessionState(
     removed.push(key);
   }
   return Object.freeze({ removed: Object.freeze(removed), officialSignOutRequired: true });
+}
+
+export function clearAutoLoginStorage(storage = globalThis.localStorage) {
+  return clearProviderSessionState(storage, LOCAL_STORAGE_PROVIDER_KEYS);
 }

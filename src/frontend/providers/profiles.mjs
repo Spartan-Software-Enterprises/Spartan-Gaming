@@ -24,6 +24,10 @@ function required(value, name) {
 }
 export function normalizeProviderProfile(profile) {
   required(profile?.providerId, 'profile.providerId');
+  const accountId =
+    typeof profile.accountId === 'string' && profile.accountId.trim()
+      ? profile.accountId.trim()
+      : 'default';
   const region =
     GLOBAL_REGION_VALUES[profile.region] ||
     (Object.values(GLOBAL_REGION_VALUES).includes(profile.region) ? profile.region : 'automatic');
@@ -36,6 +40,7 @@ export function normalizeProviderProfile(profile) {
       : 'Auto-detect';
   return Object.freeze({
     providerId: profile.providerId.trim(),
+    accountId,
     accountLabel: String(profile.accountLabel || ''),
     region,
     quality: ['prefer-latency', 'balanced', 'prefer-quality'].includes(profile.quality)
@@ -51,6 +56,11 @@ export function normalizeProviderProfile(profile) {
       .slice(0, 128),
     notes: String(profile.notes || ''),
   });
+}
+
+/** Composite storage key for multi-account profiles. */
+function profileKey(providerId, accountId) {
+  return `${providerId}::${accountId}`;
 }
 
 export function applyGlobalProviderPreferences(profile = {}, settings = {}) {
@@ -86,21 +96,48 @@ export function createProviderProfileStore({
   };
   const write = (profiles) => backend?.setItem(key, JSON.stringify(profiles.map(clone)));
   return {
-    list() {
-      return read().map(clone);
+    list(providerId) {
+      const profiles = read().map(clone);
+      return providerId
+        ? profiles.filter((profile) => profile.providerId === providerId)
+        : profiles;
     },
-    get(providerId) {
-      return read().find((profile) => profile.providerId === providerId);
+    get(providerId, accountId) {
+      const profiles = read();
+      if (accountId) {
+        const match = profiles.find(
+          (profile) => profile.providerId === providerId && profile.accountId === accountId,
+        );
+        return match ? clone(match) : null;
+      }
+      return (
+        clone(
+          profiles.find(
+            (profile) => profile.providerId === providerId && profile.accountId === 'default',
+          ) || profiles.find((profile) => profile.providerId === providerId),
+        ) || null
+      );
     },
     save(profile) {
       const normalized = normalizeProviderProfile(profile);
-      const profiles = read().filter((item) => item.providerId !== normalized.providerId);
+      const profiles = read().filter(
+        (item) =>
+          !(item.providerId === normalized.providerId && item.accountId === normalized.accountId),
+      );
       profiles.push(normalized);
       write(profiles);
       return clone(normalized);
     },
-    remove(providerId) {
-      write(read().filter((profile) => profile.providerId !== providerId));
+    remove(providerId, accountId) {
+      if (accountId) {
+        write(
+          read().filter(
+            (item) => !(item.providerId === providerId && item.accountId === accountId),
+          ),
+        );
+      } else {
+        write(read().filter((item) => item.providerId !== providerId));
+      }
     },
     export() {
       return JSON.stringify({ version: 1, profiles: read().map(clone) }, null, 2);

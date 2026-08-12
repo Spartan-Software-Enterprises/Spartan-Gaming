@@ -159,6 +159,7 @@ test('session preferences carry audio mix and processing policy', () => {
     channels: 2,
     spatialAudio: true,
     mono: true,
+    voiceChat: false,
   });
 });
 test('session preferences carry bounded caption settings', () => {

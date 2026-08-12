@@ -58,6 +58,11 @@ export const settingsCategories = [
         'Restore the active workspace and eligible game-session handoff on startup.',
         true,
       ),
+      toggle(
+        'session.autoLogin',
+        'Auto-login to last host',
+        'Remember the last authenticated host session in this app and reconnect automatically on the next launch. The handoff is stored only in the local app profile with a 30-day expiry; Spartan never reads logins from another browser.',
+      ),
       select(
         'general.startupPage',
         'Startup page',
@@ -817,6 +822,12 @@ export const settingsCategories = [
         'Prevent account metadata and sessions from crossing local gaming profiles.',
         true,
       ),
+      toggle(
+        'providers.autoLogin',
+        'Retain cloud service sign-ins',
+        'Keep cloud gaming service sign-ins inside the desktop app and sign in automatically on later launches. Disable to start each provider session signed out using an in-memory session.',
+        true,
+      ),
       action(
         'providers.manageProfiles',
         'Manage provider profiles',
@@ -1268,6 +1279,11 @@ export const settingsCategories = [
         'Microphone noise suppression',
         'Reduce background noise during voice chat and broadcasts.',
         true,
+      ),
+      toggle(
+        'media.voiceChat',
+        'Enable voice chat',
+        'Join the session voice channel with the selected microphone when the host supports it. Microphone permission is requested explicitly during the session.',
       ),
       select(
         'media.recordingCodec',

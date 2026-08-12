@@ -47,8 +47,11 @@ function renderProviders() {
   providerContainer.className = '';
   providerContainer.innerHTML = providers
     .map((provider) => {
-      const profile = store.get(provider.id);
-      return `<button class="provider-item ${provider.id === selectedId ? 'active' : ''}" data-provider="${escapeHtml(provider.id)}"><strong>${escapeHtml(provider.name)}</strong><small>${profile?.accountLabel ? `Profile: ${escapeHtml(profile.accountLabel)}` : 'No local profile configured'}</small></button>`;
+      const accounts = store.list(provider.id);
+      const profile = accounts[0];
+      const accountCount = accounts.length;
+      const label = accountCount > 1 ? `${accountCount} accounts` : profile?.accountLabel || 'No local profile configured';
+      return `<button class="provider-item ${provider.id === selectedId ? 'active' : ''}" data-provider="${escapeHtml(provider.id)}"><strong>${escapeHtml(provider.name)}</strong><small>${escapeHtml(label)}</small></button>`;
     })
     .join('');
 }

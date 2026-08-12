@@ -74,6 +74,11 @@ import {
   readSessionRecoveryHandoff,
   saveSessionRecoveryHandoff,
 } from '../session/recovery-handoff.mjs';
+import {
+  readAutoLoginHandoff,
+  saveAutoLoginHandoff,
+  shouldRememberAutoLogin,
+} from '../session/auto-login.mjs';
 import { createActiveProfileStorage } from '../profiles/storage.mjs';
 import { resolveSessionPauseAction } from './session-controls.mjs';
 import { formatDisplayNegotiation, resolveDisplayNegotiation } from '../display/negotiation.mjs';
@@ -417,6 +422,23 @@ async function connect(connectionValues = {}) {
       backendName,
       hostId: pendingHostPair?.hostId || recoveryHandoff?.hostId,
     });
+  if (
+    sessionPreferences.preferences.autoLogin &&
+    shouldRememberAutoLogin({
+      enabled: true,
+      authenticated,
+      context: { backendId, hostId: pendingHostPair?.hostId || recoveryHandoff?.hostId },
+    })
+  )
+    saveAutoLoginHandoff(globalThis.localStorage, {
+      endpoint: connection.endpoint,
+      sessionId: connection.sessionId,
+      ticket: connection.ticket,
+      backendId,
+      backendType: 'remote-play',
+      backendName,
+      hostId: pendingHostPair?.hostId || recoveryHandoff?.hostId,
+    });
   const selectedSignaling = resolveSignalingTransport({
     endpoint: connection.endpoint,
     policy: transportPolicy,
@@ -546,8 +568,18 @@ async function start() {
   try {
     await prepareSession();
     installTouchControls();
+    const autoLoginHandoff =
+      sessionPreferences.preferences.autoLogin && !(endpoint && ticket && sessionId)
+        ? readAutoLoginHandoff(globalThis.localStorage)
+        : null;
     if (endpoint && ticket && sessionId) await connect({ endpoint, ticket, sessionId });
     else if (endpoint && pendingHostPair) await connect({ endpoint, allowUnauthenticated: true });
+    else if (autoLoginHandoff)
+      await connect({
+        endpoint: autoLoginHandoff.endpoint,
+        sessionId: autoLoginHandoff.sessionId,
+        ticket: autoLoginHandoff.ticket,
+      });
     else if (query.get('demo') === '1') {
       const offer = manager.start({
         backend: { id: query.get('backend') || 'spartan-host', backendType: 'remote-play' },

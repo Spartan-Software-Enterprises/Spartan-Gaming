@@ -30,6 +30,7 @@ import {
 import { createSettingsStore } from '../settings/profile.mjs';
 import { launchExternalSurface } from '../launch/behavior.mjs';
 import { checkProviderCatalog } from '../providers/catalog-health.mjs';
+import { resolveProviderSessionOptions } from '../providers/session-options.mjs';
 import { resolveProviderStartupPolicy } from '../providers/startup-policy.mjs';
 import {
   clearSessionRecoveryHandoff,
@@ -241,11 +242,7 @@ function openProviderSurface(entry, plan) {
     typeof globalThis.spartanElectron.openProvider === 'function'
   ) {
     globalThis.spartanElectron
-      .openProvider(plan.url, entry.name, {
-        profileId: profileStorage.profileId,
-        isolateAccounts: settings['providers.isolateAccounts'] !== false,
-        autoDetect: settings['providers.autoDetect'] !== false,
-      })
+      .openProvider(plan.url, entry.name, resolveProviderSessionOptions(settings, { profileId: profileStorage.profileId }))
       .catch((error) => showToast(error.message));
     showToast(`${entry.name}: official player opened.`);
     return;
