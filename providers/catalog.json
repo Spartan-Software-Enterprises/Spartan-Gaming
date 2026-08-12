@@ -73,21 +73,27 @@
       "id": "twitch",
       "name": "Twitch",
       "kind": "live-streaming",
-      "supportLevel": "C",
+      "supportLevel": "B",
       "integrationModes": ["browser-first", "official-api", "official-embed"],
       "url": "https://www.twitch.tv/",
       "requirements": [],
-      "capabilities": ["video", "chat", "clips", "watch-parties", "creator-dashboard"]
+      "capabilities": ["video", "chat", "clips", "watch-parties", "creator-dashboard"],
+      "description": "Watch live streams, chat with communities, and discover creators.",
+      "privacy": "Official Twitch surfaces. Spartan Gaming does not capture Twitch credentials or chat content.",
+      "secure": true
     },
     {
       "id": "youtube-live",
       "name": "YouTube Live",
       "kind": "live-streaming",
-      "supportLevel": "C",
+      "supportLevel": "B",
       "integrationModes": ["browser-first", "official-api", "official-embed"],
       "url": "https://www.youtube.com/live",
       "requirements": ["google-account-for-creator-actions"],
-      "capabilities": ["video", "chat", "clips", "broadcast-management", "creator-dashboard"]
+      "capabilities": ["video", "chat", "clips", "broadcast-management", "creator-dashboard"],
+      "description": "Watch and manage YouTube live streams with official Google surfaces.",
+      "privacy": "Official Google surfaces. Spartan Gaming does not capture Google credentials or stream content.",
+      "secure": true
     },
     {
       "id": "discord",
@@ -97,7 +103,10 @@
       "integrationModes": ["browser-first", "official-launch", "official-embed"],
       "url": "https://discord.com/",
       "requirements": ["discord-account-for-social-actions"],
-      "capabilities": ["voice", "chat", "screen-share", "party-links"]
+      "capabilities": ["voice", "chat", "screen-share", "party-links"],
+      "description": "Voice, video, and text chat with friends and communities.",
+      "privacy": "Official Discord surfaces. Spartan Gaming does not capture Discord credentials or message content.",
+      "secure": true
     },
     {
       "id": "owncast",
@@ -216,7 +225,10 @@
       "integrationModes": ["browser-first", "official-launch", "official-embed"],
       "url": "https://steamcommunity.com/?subsection=broadcasts",
       "requirements": ["steam-account-for-social-actions"],
-      "capabilities": ["video", "chat", "friends", "fullscreen"]
+      "capabilities": ["video", "chat", "friends", "fullscreen"],
+      "description": "Watch and broadcast through Steam's official community surfaces.",
+      "privacy": "Official Steam surfaces. Spartan Gaming does not capture Steam credentials or broadcast content.",
+      "secure": true
     },
     {
       "id": "kick",
@@ -226,7 +238,10 @@
       "integrationModes": ["browser-first", "official-embed", "official-api"],
       "url": "https://kick.com/",
       "requirements": ["kick-account-for-creator-actions"],
-      "capabilities": ["video", "chat", "clips", "official-embed", "creator-dashboard"]
+      "capabilities": ["video", "chat", "clips", "official-embed", "creator-dashboard"],
+      "description": "Watch live streams and interact with creators on Kick.",
+      "privacy": "Official Kick surfaces. Spartan Gaming does not capture Kick credentials or chat content.",
+      "secure": true
     },
     {
       "id": "spartan-host",

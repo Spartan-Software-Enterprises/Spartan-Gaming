@@ -4,6 +4,7 @@ const ROUTES = Object.freeze({
   emulation: Object.freeze({ kind: 'navigate', href: '../emulation/index.html' }),
   watch: Object.freeze({ kind: 'filter', filter: 'watch' }),
   browser: Object.freeze({ kind: 'filter', filter: 'browser' }),
+  social: Object.freeze({ kind: 'navigate', href: '../social/index.html' }),
 });
 
 export function resolveDashboardSection(section) {
