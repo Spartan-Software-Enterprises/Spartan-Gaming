@@ -219,6 +219,23 @@ function setupSocial() {
     const parties = socialStore.getParties().filter((p) =>
       p.name.toLowerCase().includes(query),
     );
+    const messages = socialStore.getMessages();
+    const messageThreads = currentFilter === 'messages'
+      ? friends
+          .map((friend) => {
+            const threadMessages = messages.filter((m) => m.with === friend.id);
+            const lastMessage = threadMessages[threadMessages.length - 1];
+            return {
+              id: friend.id,
+              name: friend.name,
+              type: 'message',
+              status: friend.status || 'offline',
+              summary: lastMessage ? lastMessage.text : 'No messages yet',
+              messageCount: threadMessages.length,
+            };
+          })
+          .filter((thread) => thread.messageCount > 0)
+      : [];
     const entries = [
       ...(currentFilter === 'all' || currentFilter === 'friends'
         ? friends.map((friend) => ({
@@ -240,22 +257,25 @@ function setupSocial() {
             summary: `${party.members?.length || 0} members · ${party.open ? 'Open to join' : 'Invite only'}`,
           }))
         : []),
+      ...messageThreads,
     ];
 
     document.querySelector('[data-result-count]').textContent = `${entries.length} connection${entries.length === 1 ? '' : 's'}`;
     cards.innerHTML = entries.length
       ? entries
           .map((entry) => {
-            const tag = entry.type === 'friend' ? entry.status : `${entry.members} members`;
+            const tag = entry.type === 'friend' ? entry.status : entry.type === 'message' ? 'message' : `${entry.members} members`;
             const actionLabel =
               entry.type === 'friend'
                 ? entry.status === 'online'
                   ? 'Message'
                   : 'Invite'
-                : entry.status === 'open'
-                  ? 'Join'
-                  : 'Request invite';
-            return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(entry.type)}</span><button class="favorite" data-favorite="${escapeHtml(entry.id)}" aria-label="Favorite ${escapeHtml(entry.name)}">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(entry.summary)}</p><div class="chips"><span class="chip">${escapeHtml(tag)}</span></div><div class="card-actions"><button class="launch" data-action="${entry.type === 'friend' ? 'message' : 'join'}" data-id="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${entry.type === 'friend' ? 'Friend' : 'Party'}</span></div></article>`;
+                : entry.type === 'message'
+                  ? 'Open chat'
+                  : entry.status === 'open'
+                    ? 'Join'
+                    : 'Request invite';
+            return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(entry.type)}</span><button class="favorite" data-favorite="${escapeHtml(entry.id)}" aria-label="Favorite ${escapeHtml(entry.name)}">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(entry.summary)}</p><div class="chips"><span class="chip">${escapeHtml(tag)}</span></div><div class="card-actions"><button class="launch" data-action="${entry.type === 'friend' || entry.type === 'message' ? 'message' : 'join'}" data-id="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${entry.type === 'friend' ? 'Friend' : entry.type === 'message' ? 'Message' : 'Party'}</span></div></article>`;
           })
           .join('')
       : '<div class="empty">No social connections match this view.</div>';
