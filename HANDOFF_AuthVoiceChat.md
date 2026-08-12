@@ -1,14 +1,16 @@
 # Handoff: Automatic Login & Full Interactive Voice Chat
 
 ## 🎯 OBJECTIVE
+
 Implement automatic login credentials storage and full interactive voice chat integration for Spartan Gaming, ensuring all features are documented and ready for the next agent.
 
 ## 📋 CURRENT STATE ANALYSIS
 
 ### Authentication System (Current State)
+
 - **Session Storage**: `sessionStorage` used for pending host pairs, launches, and recovery
 - **Local Storage**: Used for session preferences, profiles, and persistent settings
-- **Current Flow**: 
+- **Current Flow**:
   - Host pairing uses one-time codes
   - Session recovery via `sessionStorage`
   - No persistent credential storage across sessions
@@ -16,6 +18,7 @@ Implement automatic login credentials storage and full interactive voice chat in
 - **Security**: No credentials stored; session-scoped only
 
 ### Voice Chat System (Current State)
+
 - **Microphone capture**: Via `getUserMedia` in `browser-publisher.mjs`
 - **Noise suppression**: Toggle `media.micNoiseSuppression` (default: `true`)
 - **Spatial audio**: Toggle `media.spatialAudio` (default: `false`)
@@ -24,6 +27,7 @@ Implement automatic login credentials storage and full interactive voice chat in
 - **Limitations**: Broadcast-only, not full interactive duplex
 
 ### Key Files Identified
+
 - `src/frontend/player/player.mjs` - Session management
 - `src/frontend/session/preferences.mjs` - Session preferences
 - `src/frontend/host/browser-publisher.mjs` - Microphone capture
@@ -34,8 +38,11 @@ Implement automatic login credentials storage and full interactive voice chat in
 ## 🔐 AUTOMATIC LOGIN IMPLEMENTATION
 
 ### 1. Credential Storage System
+
 #### a) `src/frontend/settings/settings-data.mjs`
+
 Add automatic login settings section:
+
 ```javascript
 toggle(
   'autoLogin',
@@ -52,7 +59,9 @@ toggle(
 ```
 
 #### b) `src/frontend/session/preferences.mjs`
+
 Modify `createSessionPreferences` to include:
+
 ```javascript
 const autoLogin = boundedOption(
   settings['auth.autoLogin'],
@@ -76,7 +85,9 @@ function readCredentialsFromStorage() {
 ```
 
 #### c) `src/frontend/player/player.mjs`
+
 Modify session startup to check for saved credentials:
+
 ```javascript
 // Check for saved credentials at session start
 const savedCreds = readCredentialsFromStorage();
@@ -88,6 +99,7 @@ if (savedCreds && savedCreds.autoLogin) {
 ```
 
 #### d) `src/frontend/player/player.mjs` - Login Flow
+
 ```javascript
 async function startSessionWithCredentials(creds) {
   // Use saved credentials for initial connection
@@ -106,6 +118,7 @@ async function startSessionWithCredentials(creds) {
 ### 2. Interactive Voice Chat Implementation
 
 #### a) `src/frontend/host/browser-publisher.mjs` - Microphone Capture Enhancement
+
 ```javascript
 async capture(options = {}) {
   // ... existing code ...
@@ -120,7 +133,9 @@ async capture(options = {}) {
 ```
 
 #### b) `src/frontend/session/preferences.mjs` - Voice Chat Settings
+
 Add voice chat preferences:
+
 ```javascript
 const enableVoiceChat = boundedOption(
   settings['auth.enableVoiceChat'],
@@ -140,11 +155,12 @@ const voiceNetworkMode = boundedOption(
 ```
 
 #### c) `src/frontend/player/player.mjs` - Voice Chat Integration
+
 ```javascript
 // Initialize voice chat session
 async function initializeVoiceChat() {
   if (!sessionPreferences.preferences.enableVoiceChat) return;
-  
+
   // Set up voice chat connection
   await setupVoiceConnection();
   // Set up bidirectional audio forwarding
@@ -155,6 +171,7 @@ async function initializeVoiceChat() {
 ```
 
 #### d) Voice Chat Signal Flow
+
 ```
 User A (Host)                          User B (Player)
   ↑ microphone                              ↑ microphone
@@ -169,10 +186,12 @@ User A (Host)                          User B (Player)
 ### Add to `ROADMAP.md`:
 
 #### Milestone: Authentication & Voice Chat
+
 ```markdown
 ## Milestone X: Automatic Login & Interactive Voice Chat
 
 ### ✅ Automatic Login
+
 - [x] Credential storage in localStorage
 - [x] Auto-login on subsequent launches
 - [x] Secure credential encryption
@@ -180,6 +199,7 @@ User A (Host)                          User B (Player)
 - [x] Credential clearing on logout
 
 ### ✅ Full Interactive Voice Chat
+
 - [x] Bidirectional microphone streaming
 - [x] Noise suppression toggle
 - [x] Spatial audio support
@@ -195,6 +215,7 @@ User A (Host)                          User B (Player)
 ## 📋 IMPLEMENTATION CHECKLIST
 
 ### Authentication (Automatic Login)
+
 - [x] Add `auth.autoLogin` setting in `src/frontend/settings/settings-data.mjs`
 - [x] Add `auth.saveCredentials` setting in `src/frontend/settings/settings-data.mjs`
 - [x] Implement `saveCredentialsToStorage()` in `src/frontend/session/preferences.mjs`
@@ -205,6 +226,7 @@ User A (Host)                          User B (Player)
 - [x] Test auto-login flow across sessions
 
 ### Voice Chat (Full Interactive)
+
 - [x] Add voice chat preferences in `src/frontend/session/preferences.mjs`
 - [x] Modify `src/frontend/host/browser-publisher.mjs` for interactive mode
 - [x] Add voice chat initialization in `src/frontend/player/player.mjs`
@@ -218,6 +240,7 @@ User A (Host)                          User B (Player)
 - [x] Test interrupt handling and cleanup
 
 ### 📁 Files to Create/Modify
+
 - `src/frontend/settings/settings-data.mjs` - Add auth settings
 - `src/frontend/session/preferences.mjs` - Add auth/voice settings
 - `src/frontend/player/player.mjs` - Add auto-login and voice chat
@@ -228,6 +251,7 @@ User A (Host)                          User B (Player)
 ## 📋 TESTING REQUIREMENTS
 
 ### Authentication Tests
+
 - [ ] Auto-login succeeds with valid saved credentials
 - [ ] Auto-login falls back to normal login on failure
 - [ ] Manual override works (disable auto-login)
@@ -236,6 +260,7 @@ User A (Host)                          User B (Player)
 - [ ] Cross-session credential persistence works
 
 ### Voice Chat Tests
+
 - [ ] Microphone capture works across platforms
 - [ ] Bidirectional audio forwarding works
 - [ ] Noise suppression toggle works
@@ -250,6 +275,7 @@ User A (Host)                          User B (Player)
 ## 📋 SECURITY CONSIDERATIONS
 
 ### Credential Storage
+
 - [ ] Credentials encrypted before localStorage storage
 - [ ] No credentials stored in plain text
 - [ ] Secure fallback when encryption fails
@@ -257,6 +283,7 @@ User A (Host)                          User B (Player)
 - [ ] Credentials cleared on session end
 
 ### Voice Chat Security
+
 - [ ] Microphone permission respected
 - [ ] No audio captured without user consent
 - [ ] No audio transmitted without active session
@@ -267,6 +294,7 @@ User A (Host)                          User B (Player)
 ## 📋 TEST DATA EXAMPLES
 
 ### Auto-Login Credentials Sample
+
 ```javascript
 {
   autoLogin: true,
@@ -279,6 +307,7 @@ User A (Host)                          User B (Player)
 ```
 
 ### Voice Chat Configuration Sample
+
 ```javascript
 {
   enableVoiceChat: true,
@@ -294,12 +323,14 @@ User A (Host)                          User B (Player)
 ```
 
 ## 📋 VERSION HISTORY
+
 - **v1.0**: Initial automatic login implementation
 - **v1.1**: Full interactive voice chat implementation
 - **v1.2**: Enhanced security and session state synchronization
 - **v1.2**: Cross-platform compatibility improvements
 
 ## 📋 KNOWN ISSUES & LIMITATIONS
+
 - [ ] Full interactive duplex voice chat may require additional WebRTC signaling
 - [ ] Cross-platform microphone compatibility varies
 - [ ] Noise suppression quality varies by platform
@@ -307,6 +338,7 @@ User A (Host)                          User B (Player)
 - [ ] Credential storage is local only (not cloud-synced)
 
 ## 📋 FUTURE ENHANCEMENTS
+
 - [ ] Cloud-synced credentials (with user consent)
 - [ ] Voice chat recording and playback
 - [ ] Voice chat transcriptions

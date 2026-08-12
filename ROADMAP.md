@@ -166,12 +166,14 @@
 ## Milestone X: Automatic Login & Interactive Voice Chat
 
 ### Automatic Login
+
 - [x] Credential storage in localStorage with encryption
 - [x] Auto-login on subsequent launches
 - [x] Manual override / disable toggle
 - [x] Secure credential clearing on logout
 
 ### Full Interactive Voice Chat
+
 - [x] Bidirectional microphone streaming
 - [x] Noise suppression toggle
 - [x] Spatial audio toggle
