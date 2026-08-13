@@ -7,9 +7,15 @@
       "name": "NVIDIA GeForce NOW",
       "kind": "cloud-gaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": [
+        "browser-first",
+        "official-launch"
+      ],
       "url": "https://www.nvidia.com/geforce-now/",
-      "requirements": ["provider-account", "supported-game-library"],
+      "requirements": [
+        "provider-account",
+        "supported-game-library"
+      ],
       "capabilities": [
         "gamepad",
         "keyboard",
@@ -24,109 +30,241 @@
       "name": "Xbox Cloud Gaming",
       "kind": "cloud-gaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": [
+        "browser-first",
+        "official-launch"
+      ],
       "url": "https://www.xbox.com/play",
-      "requirements": ["xbox-account", "supported-subscription-or-entitlement"],
-      "capabilities": ["gamepad", "keyboard", "touch-controls", "fullscreen", "adaptive-quality"]
+      "requirements": [
+        "xbox-account",
+        "supported-subscription-or-entitlement"
+      ],
+      "capabilities": [
+        "gamepad",
+        "keyboard",
+        "touch-controls",
+        "fullscreen",
+        "adaptive-quality"
+      ]
     },
     {
       "id": "amazon-luna",
       "name": "Amazon Luna",
       "kind": "cloud-gaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": [
+        "browser-first",
+        "official-launch"
+      ],
       "url": "https://luna.amazon.com/",
-      "requirements": ["amazon-account", "supported-channel-or-entitlement"],
-      "capabilities": ["gamepad", "keyboard", "mouse", "fullscreen", "adaptive-quality"]
+      "requirements": [
+        "amazon-account",
+        "supported-channel-or-entitlement"
+      ],
+      "capabilities": [
+        "gamepad",
+        "keyboard",
+        "mouse",
+        "fullscreen",
+        "adaptive-quality"
+      ]
     },
     {
       "id": "boosteroid",
       "name": "Boosteroid",
       "kind": "cloud-gaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": [
+        "browser-first",
+        "official-launch"
+      ],
       "url": "https://boosteroid.com/",
-      "requirements": ["provider-account", "supported-game-library"],
-      "capabilities": ["gamepad", "keyboard", "mouse", "fullscreen", "adaptive-quality"]
+      "requirements": [
+        "provider-account",
+        "supported-game-library"
+      ],
+      "capabilities": [
+        "gamepad",
+        "keyboard",
+        "mouse",
+        "fullscreen",
+        "adaptive-quality"
+      ]
     },
     {
       "id": "shadow-pc",
       "name": "Shadow PC",
       "kind": "cloud-pc",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": [
+        "browser-first",
+        "official-launch"
+      ],
       "url": "https://shadow.tech/",
-      "requirements": ["provider-account", "subscription"],
-      "capabilities": ["gamepad", "keyboard", "mouse", "multi-monitor", "clipboard", "fullscreen"]
+      "requirements": [
+        "provider-account",
+        "subscription"
+      ],
+      "capabilities": [
+        "gamepad",
+        "keyboard",
+        "mouse",
+        "multi-monitor",
+        "clipboard",
+        "fullscreen"
+      ]
     },
     {
       "id": "steam-remote-play",
       "name": "Steam Remote Play",
       "kind": "remote-play",
       "supportLevel": "D",
-      "integrationModes": ["official-launch", "user-owned-host"],
+      "integrationModes": [
+        "official-launch",
+        "user-owned-host"
+      ],
       "url": "https://store.steampowered.com/remoteplay/",
-      "requirements": ["steam-account", "user-owned-steam-host"],
-      "capabilities": ["gamepad", "keyboard", "mouse", "rumble", "fullscreen"]
+      "requirements": [
+        "steam-account",
+        "user-owned-steam-host"
+      ],
+      "capabilities": [
+        "gamepad",
+        "keyboard",
+        "mouse",
+        "rumble",
+        "fullscreen"
+      ]
     },
     {
       "id": "twitch",
       "name": "Twitch",
       "kind": "live-streaming",
       "supportLevel": "C",
-      "integrationModes": ["browser-first", "official-api", "official-embed"],
+      "integrationModes": [
+        "browser-first",
+        "official-api",
+        "official-embed"
+      ],
       "url": "https://www.twitch.tv/",
       "requirements": [],
-      "capabilities": ["video", "chat", "clips", "watch-parties", "creator-dashboard"]
+      "capabilities": [
+        "video",
+        "chat",
+        "clips",
+        "watch-parties",
+        "creator-dashboard"
+      ],
+      "description": "Watch live streams, chat with communities, and discover creators.",
+      "privacy": "Official Twitch surfaces. Spartan Gaming does not capture Twitch credentials or chat content.",
+      "secure": true
     },
     {
       "id": "youtube-live",
       "name": "YouTube Live",
       "kind": "live-streaming",
       "supportLevel": "C",
-      "integrationModes": ["browser-first", "official-api", "official-embed"],
+      "integrationModes": [
+        "browser-first",
+        "official-api",
+        "official-embed"
+      ],
       "url": "https://www.youtube.com/live",
-      "requirements": ["google-account-for-creator-actions"],
-      "capabilities": ["video", "chat", "clips", "broadcast-management", "creator-dashboard"]
+      "requirements": [
+        "google-account-for-creator-actions"
+      ],
+      "capabilities": [
+        "video",
+        "chat",
+        "clips",
+        "broadcast-management",
+        "creator-dashboard"
+      ],
+      "description": "Watch and manage YouTube live streams with official Google surfaces.",
+      "privacy": "Official Google surfaces. Spartan Gaming does not capture Google credentials or stream content.",
+      "secure": true
     },
     {
       "id": "discord",
       "name": "Discord",
       "kind": "social-streaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch", "official-embed"],
+      "integrationModes": [
+        "browser-first",
+        "official-launch",
+        "official-embed"
+      ],
       "url": "https://discord.com/",
-      "requirements": ["discord-account-for-social-actions"],
-      "capabilities": ["voice", "chat", "screen-share", "party-links"]
+      "requirements": [
+        "discord-account-for-social-actions"
+      ],
+      "capabilities": [
+        "voice",
+        "chat",
+        "screen-share",
+        "party-links"
+      ],
+      "description": "Voice, video, and text chat with friends and communities.",
+      "privacy": "Official Discord surfaces. Spartan Gaming does not capture Discord credentials or message content.",
+      "secure": true
     },
     {
       "id": "owncast",
       "name": "Owncast",
       "kind": "self-hosted-live-streaming",
       "supportLevel": "D",
-      "integrationModes": ["browser-first", "official-api", "self-hosted"],
+      "integrationModes": [
+        "browser-first",
+        "official-api",
+        "self-hosted"
+      ],
       "url": "https://owncast.online/",
-      "requirements": ["owncast-instance-for-hosting"],
-      "capabilities": ["video", "chat", "self-hosting", "custom-instance"]
+      "requirements": [
+        "owncast-instance-for-hosting"
+      ],
+      "capabilities": [
+        "video",
+        "chat",
+        "self-hosting",
+        "custom-instance"
+      ]
     },
     {
       "id": "playstation-plus-cloud",
       "name": "PlayStation Plus Cloud Streaming",
       "kind": "cloud-gaming",
       "supportLevel": "A",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": [
+        "browser-first",
+        "official-launch"
+      ],
       "url": "https://www.playstation.com/en-us/ps-plus/",
-      "requirements": ["playstation-network-account", "supported-plan", "supported-region"],
-      "capabilities": ["gamepad", "keyboard", "fullscreen", "adaptive-quality"]
+      "requirements": [
+        "playstation-network-account",
+        "supported-plan",
+        "supported-region"
+      ],
+      "capabilities": [
+        "gamepad",
+        "keyboard",
+        "fullscreen",
+        "adaptive-quality"
+      ]
     },
     {
       "id": "blacknut",
       "name": "Blacknut",
       "kind": "cloud-gaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": [
+        "browser-first",
+        "official-launch"
+      ],
       "url": "https://www.blacknut.com/",
-      "requirements": ["blacknut-account", "subscription"],
+      "requirements": [
+        "blacknut-account",
+        "subscription"
+      ],
       "capabilities": [
         "gamepad",
         "keyboard",
@@ -141,9 +279,15 @@
       "name": "Antstream Arcade",
       "kind": "cloud-gaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": [
+        "browser-first",
+        "official-launch"
+      ],
       "url": "https://www.antstream.com/",
-      "requirements": ["antstream-account", "subscription-or-trial"],
+      "requirements": [
+        "antstream-account",
+        "subscription-or-trial"
+      ],
       "capabilities": [
         "gamepad",
         "keyboard",
@@ -158,19 +302,41 @@
       "name": "Parsec",
       "kind": "remote-play",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch", "user-owned-host"],
+      "integrationModes": [
+        "browser-first",
+        "official-launch",
+        "user-owned-host"
+      ],
       "url": "https://parsec.app/",
-      "requirements": ["parsec-account", "host-permission"],
-      "capabilities": ["gamepad", "keyboard", "mouse", "rumble", "multi-monitor", "fullscreen"]
+      "requirements": [
+        "parsec-account",
+        "host-permission"
+      ],
+      "capabilities": [
+        "gamepad",
+        "keyboard",
+        "mouse",
+        "rumble",
+        "multi-monitor",
+        "fullscreen"
+      ]
     },
     {
       "id": "xbox-remote-play",
       "name": "Xbox Remote Play",
       "kind": "remote-play",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch", "user-owned-host"],
+      "integrationModes": [
+        "browser-first",
+        "official-launch",
+        "user-owned-host"
+      ],
       "url": "https://www.xbox.com/en-US/play/consoles",
-      "requirements": ["microsoft-account", "remote-features-enabled", "user-owned-xbox"],
+      "requirements": [
+        "microsoft-account",
+        "remote-features-enabled",
+        "user-owned-xbox"
+      ],
       "capabilities": [
         "gamepad",
         "keyboard",
@@ -185,19 +351,39 @@
       "name": "PlayStation Remote Play",
       "kind": "remote-play",
       "supportLevel": "B",
-      "integrationModes": ["official-launch", "user-owned-host"],
+      "integrationModes": [
+        "official-launch",
+        "user-owned-host"
+      ],
       "url": "https://www.playstation.com/en-us/remote-play/",
-      "requirements": ["playstation-network-account", "remote-play-enabled", "user-owned-console"],
-      "capabilities": ["gamepad", "keyboard", "rumble", "fullscreen", "adaptive-quality"]
+      "requirements": [
+        "playstation-network-account",
+        "remote-play-enabled",
+        "user-owned-console"
+      ],
+      "capabilities": [
+        "gamepad",
+        "keyboard",
+        "rumble",
+        "fullscreen",
+        "adaptive-quality"
+      ]
     },
     {
       "id": "sunshine-moonlight",
       "name": "Sunshine / Moonlight Compatible Host",
       "kind": "remote-play",
       "supportLevel": "D",
-      "integrationModes": ["user-owned-host", "self-hosted"],
+      "integrationModes": [
+        "user-owned-host",
+        "self-hosted"
+      ],
       "url": "https://docs.lizardbyte.dev/projects/sunshine/latest/",
-      "requirements": ["user-owned-host", "compatible-client-or-host", "explicit-pairing"],
+      "requirements": [
+        "user-owned-host",
+        "compatible-client-or-host",
+        "explicit-pairing"
+      ],
       "capabilities": [
         "gamepad",
         "keyboard",
@@ -213,29 +399,65 @@
       "name": "Steam Broadcasting",
       "kind": "live-streaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch", "official-embed"],
+      "integrationModes": [
+        "browser-first",
+        "official-launch",
+        "official-embed"
+      ],
       "url": "https://steamcommunity.com/?subsection=broadcasts",
-      "requirements": ["steam-account-for-social-actions"],
-      "capabilities": ["video", "chat", "friends", "fullscreen"]
+      "requirements": [
+        "steam-account-for-social-actions"
+      ],
+      "capabilities": [
+        "video",
+        "chat",
+        "friends",
+        "fullscreen"
+      ],
+      "description": "Watch and broadcast through Steam's official community surfaces.",
+      "privacy": "Official Steam surfaces. Spartan Gaming does not capture Steam credentials or broadcast content.",
+      "secure": true
     },
     {
       "id": "kick",
       "name": "KICK",
       "kind": "live-streaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-embed", "official-api"],
+      "integrationModes": [
+        "browser-first",
+        "official-embed",
+        "official-api"
+      ],
       "url": "https://kick.com/",
-      "requirements": ["kick-account-for-creator-actions"],
-      "capabilities": ["video", "chat", "clips", "official-embed", "creator-dashboard"]
+      "requirements": [
+        "kick-account-for-creator-actions"
+      ],
+      "capabilities": [
+        "video",
+        "chat",
+        "clips",
+        "official-embed",
+        "creator-dashboard"
+      ],
+      "description": "Watch live streams and interact with creators on Kick.",
+      "privacy": "Official Kick surfaces. Spartan Gaming does not capture Kick credentials or chat content.",
+      "secure": true
     },
     {
       "id": "spartan-host",
       "name": "Spartan Host",
       "kind": "remote-play",
       "supportLevel": "D",
-      "integrationModes": ["user-owned-host", "self-hosted"],
+      "integrationModes": [
+        "user-owned-host",
+        "self-hosted"
+      ],
       "url": "https://github.com/Spartan-Software-Enterprises/Spartan-Gaming",
-      "requirements": ["user-owned-host", "secure-pairing", "host-agent"],
+      "requirements": [
+        "user-owned-host",
+        "secure-pairing",
+        "host-agent"
+      ],
       "capabilities": [
         "gamepad",
         "keyboard",
@@ -248,13 +470,216 @@
       ]
     },
     {
+      "id": "steam-library",
+      "name": "Steam",
+      "kind": "game-library",
+      "supportLevel": "A",
+      "integrationModes": [
+        "browser-first",
+        "official-launch"
+      ],
+      "url": "https://store.steampowered.com",
+      "requirements": [
+        "steam-account",
+        "steam-client"
+      ],
+      "capabilities": [
+        "gamepad",
+        "cloud-saves",
+        "achievements",
+        "overlay",
+        "fullscreen"
+      ],
+      "deepLinkScheme": "steam",
+      "deepLinkFormats": {
+        "run": "steam://run/{appid}",
+        "store": "steam://store/{appid}"
+      },
+      "privacy": "Steam authentication, purchase history, and friend lists remain on the official Steam client and website. Spartan Gaming never captures Steam credentials or session tokens."
+    },
+    {
+      "id": "gog-library",
+      "name": "GOG",
+      "kind": "game-library",
+      "supportLevel": "B",
+      "integrationModes": [
+        "browser-first",
+        "official-launch"
+      ],
+      "url": "https://www.gog.com",
+      "requirements": [
+        "gog-account",
+        "gog-galaxy-client"
+      ],
+      "capabilities": [
+        "gamepad",
+        "cloud-saves",
+        "achievements",
+        "overlay",
+        "fullscreen"
+      ],
+      "deepLinkScheme": "goggalaxy",
+      "deepLinkFormats": {
+        "run": "goggalaxy://game/{productId}",
+        "store": "goggalaxy://productId/{productId}"
+      },
+      "privacy": "GOG authentication, purchase history, and friend lists remain on the official GOG client and website. Spartan Gaming never captures GOG credentials or session tokens."
+    },
+    {
+      "id": "epic-library",
+      "name": "Epic Games",
+      "kind": "game-library",
+      "supportLevel": "B",
+      "integrationModes": [
+        "browser-first",
+        "official-launch"
+      ],
+      "url": "https://store.epicgames.com",
+      "requirements": [
+        "epic-account",
+        "epic-games-launcher"
+      ],
+      "capabilities": [
+        "gamepad",
+        "cloud-saves",
+        "achievements",
+        "overlay",
+        "fullscreen"
+      ],
+      "deepLinkScheme": "com.epicgames.launcher",
+      "deepLinkFormats": {
+        "run": "com.epicgames.launcher://apps/{appid}?action=launch",
+        "store": "com.epicgames.launcher://apps/{appid}"
+      },
+      "privacy": "Epic authentication, purchase history, and friend lists remain on the official Epic client and website. Spartan Gaming never captures Epic credentials or session tokens."
+    },
+    {
+      "id": "ubisoft-library",
+      "name": "Ubisoft Connect",
+      "kind": "game-library",
+      "supportLevel": "B",
+      "integrationModes": [
+        "browser-first",
+        "official-launch"
+      ],
+      "url": "https://www.ubisoft.com",
+      "requirements": [
+        "ubisoft-account",
+        "ubisoft-connect-client"
+      ],
+      "capabilities": [
+        "gamepad",
+        "cloud-saves",
+        "achievements",
+        "overlay",
+        "fullscreen"
+      ],
+      "deepLinkScheme": "uplay",
+      "deepLinkFormats": {
+        "run": "uplay://launch/{appid}/0",
+        "store": "uplay://info/{appid}"
+      },
+      "privacy": "Ubisoft authentication, purchase history, and friend lists remain on the official Ubisoft Connect client and website. Spartan Gaming never captures Ubisoft credentials or session tokens."
+    },
+    {
+      "id": "ea-library",
+      "name": "EA App",
+      "kind": "game-library",
+      "supportLevel": "C",
+      "integrationModes": [
+        "browser-first",
+        "official-launch"
+      ],
+      "url": "https://www.ea.com",
+      "requirements": [
+        "ea-account",
+        "ea-app-client"
+      ],
+      "capabilities": [
+        "gamepad",
+        "cloud-saves",
+        "achievements",
+        "overlay",
+        "fullscreen"
+      ],
+      "deepLinkScheme": "eaapp",
+      "deepLinkFormats": {
+        "run": "eaapp://launch/{appid}",
+        "store": "https://www.ea.com/games/{appid}"
+      },
+      "privacy": "EA authentication, purchase history, and friend lists remain on the official EA client and website. Spartan Gaming never captures EA credentials or session tokens."
+    },
+    {
+      "id": "battlenet-library",
+      "name": "Battle.net",
+      "kind": "game-library",
+      "supportLevel": "B",
+      "integrationModes": [
+        "browser-first",
+        "official-launch"
+      ],
+      "url": "https://www.blizzard.com",
+      "requirements": [
+        "battlenet-account",
+        "battlenet-client"
+      ],
+      "capabilities": [
+        "gamepad",
+        "cloud-saves",
+        "achievements",
+        "overlay",
+        "fullscreen"
+      ],
+      "deepLinkScheme": "battlenet",
+      "deepLinkFormats": {
+        "run": "battlenet://{appid}",
+        "store": "https://www.blizzard.com/games/{appid}"
+      },
+      "privacy": "Battle.net authentication, purchase history, and friend lists remain on the official Battle.net client and website. Spartan Gaming never captures Battle.net credentials or session tokens."
+    },
+    {
+      "id": "rockstar-library",
+      "name": "Rockstar Games",
+      "kind": "game-library",
+      "supportLevel": "C",
+      "integrationModes": [
+        "browser-first",
+        "official-launch"
+      ],
+      "url": "https://www.rockstargames.com",
+      "requirements": [
+        "rockstar-account",
+        "rockstar-games-launcher"
+      ],
+      "capabilities": [
+        "gamepad",
+        "cloud-saves",
+        "achievements",
+        "overlay",
+        "fullscreen"
+      ],
+      "deepLinkScheme": "rockstar",
+      "deepLinkFormats": {
+        "run": "rockstar://launch/{appid}",
+        "store": "https://www.rockstargames.com/games/{appid}"
+      },
+      "privacy": "Rockstar authentication, purchase history, and friend lists remain on the official Rockstar client and website. Spartan Gaming never captures Rockstar credentials or session tokens."
+    },
+    {
       "id": "gamenative",
       "name": "GameNative",
       "kind": "native",
       "supportLevel": "D",
-      "integrationModes": ["official-launch", "browser-first"],
+      "integrationModes": [
+        "official-launch",
+        "browser-first"
+      ],
       "url": "https://gamenative.app/",
-      "requirements": ["android-device", "owned-game-library", "official-gamenative-install"],
+      "requirements": [
+        "android-device",
+        "owned-game-library",
+        "official-gamenative-install"
+      ],
       "capabilities": [
         "gamepad",
         "touch-controls",

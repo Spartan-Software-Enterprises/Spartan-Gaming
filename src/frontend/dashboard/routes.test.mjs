@@ -11,7 +11,10 @@ test('dashboard sections resolve to real frontend destinations or filters', () =
     kind: 'navigate',
     href: '../emulation/index.html',
   });
-  assert.deepEqual(resolveDashboardSection('watch'), { kind: 'filter', filter: 'watch' });
+  assert.deepEqual(resolveDashboardSection('watch'), {
+    kind: 'navigate',
+    href: '../watch/index.html',
+  });
   assert.deepEqual(resolveDashboardSection('browser'), { kind: 'filter', filter: 'browser' });
   assert.equal(resolveDashboardSection('unknown'), undefined);
 });

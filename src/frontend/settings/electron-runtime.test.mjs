@@ -54,8 +54,8 @@ test('Electron runtime settings default safely when values are absent', () => {
   assert.deepEqual(resolveElectronRuntimeSettings({}), {
     developerMode: false,
     hardwareAcceleration: true,
-    gpuPreference: undefined,
-    processModel: undefined,
+    gpuPreference: 'Automatic',
+    processModel: 'Default',
     crashReports: false,
     verboseLogs: false,
     logRetention: undefined,
@@ -92,7 +92,7 @@ test('Electron update status descriptions are bounded and actionable', async () 
 test('Electron runtime settings describe global shortcut registration outcomes', () => {
   assert.equal(
     describeElectronRuntimeResult({ startupPolicy: { requiresRestart: true } }),
-    'Saved locally; restart Spartan Gaming to apply startup changes.',
+    'Saved locally; restart Spartan Gaming to apply startup and performance changes.',
   );
   assert.equal(
     describeElectronRuntimeResult({

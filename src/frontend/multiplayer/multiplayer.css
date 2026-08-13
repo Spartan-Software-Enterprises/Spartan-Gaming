@@ -1,0 +1,182 @@
+.multiplayer-dialog {
+  width: min(600px, calc(100% - 28px));
+  padding: 0;
+  border: 1px solid #3b5861;
+  border-radius: 16px;
+  background: #121a22;
+  color: #e7edf3;
+  box-shadow: 0 24px 80px #000b;
+}
+.multiplayer-dialog::backdrop {
+  background: #05080bcc;
+  backdrop-filter: blur(4px);
+}
+.dialog-heading {
+  padding: 25px 27px 18px;
+  border-bottom: 1px solid #2a3540;
+}
+.dialog-heading h2 {
+  margin: 6px 0;
+  font-size: 28px;
+}
+.dialog-heading p:last-child {
+  margin: 0;
+  color: #8d9aa7;
+  font-size: 12px;
+}
+.dialog-close {
+  position: absolute;
+  top: 13px;
+  right: 16px;
+  border: 0;
+  background: transparent;
+  color: #b8c6cc;
+  font-size: 27px;
+  cursor: pointer;
+}
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 27px;
+}
+.dialog-footer p {
+  margin: 0;
+  color: #8d9aa7;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.secondary-link {
+  flex: none;
+  color: #50e1d1;
+  font-size: 12px;
+  text-decoration: none;
+}
+.multiplayer-dialog:not([open]) {
+  display: none;
+}
+.multiplayer-body {
+  padding: 20px 27px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.multiplayer-body .control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.multiplayer-body .control span {
+  font-size: 12px;
+  color: #8d9aa7;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.multiplayer-body input,
+.multiplayer-body select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #2a3540;
+  background: #0f161d;
+  color: #e7edf3;
+  font-size: 14px;
+}
+.multiplayer-body input:focus,
+.multiplayer-body select:focus {
+  outline: none;
+  border-color: #50e1d1;
+}
+@media (max-width: 600px) {
+  .dialog-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+.invitations {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.invitation {
+  padding: 16px;
+  border: 1px solid #2a3540;
+  border-radius: 12px;
+  background: #0f161d;
+}
+.invitation strong {
+  color: #e7edf3;
+}
+.invitation em {
+  color: #50e1d1;
+  font-style: normal;
+}
+.invite-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.status-open {
+  color: #2ecc71;
+}
+.status-playing {
+  color: #f1c40f;
+}
+.status-closed {
+  color: #e74c3c;
+}
+
+.manage-dialog {
+  width: min(600px, calc(100% - 28px));
+  padding: 0;
+  border: 1px solid #3b5861;
+  border-radius: 16px;
+  background: #121a22;
+  color: #e7edf3;
+  box-shadow: 0 24px 80px #000b;
+}
+.manage-dialog::backdrop {
+  background: #05080bcc;
+  backdrop-filter: blur(4px);
+}
+.manage-body {
+  padding: 20px 27px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.manage-body .player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.manage-body .player {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: 1px solid #2a3540;
+  border-radius: 8px;
+  background: #0f161d;
+}
+.manage-body .player-name {
+  font-weight: 600;
+}
+.manage-body .player-role {
+  font-size: 11px;
+  color: #8d9aa7;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.manage-body .actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.manage-dialog:not([open]) {
+  display: none;
+}

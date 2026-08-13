@@ -853,6 +853,10 @@ server.on('upgrade', (request, socket) => {
   const session = { accepted: false, sessionId: null, negotiated: null, send: connection.send };
   let buffer = Buffer.alloc(0);
   socket.on('data', (chunk) => {
+    if (!takeMessage()) {
+      socket.end(closeFrame());
+      return;
+    }
     buffer = parseFrames(
       Buffer.concat([buffer, chunk]),
       (text) => handleMessage(connection, text, session),

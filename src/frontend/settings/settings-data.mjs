@@ -482,6 +482,79 @@ export const settingsCategories = [
     ],
   },
   {
+    id: 'social',
+    label: 'Social Center',
+    icon: '◍',
+    description: 'Friends, parties, streaming status, and notifications.',
+    settings: [
+      toggle(
+        'social.showOnlineStatus',
+        'Show online status',
+        'Let friends see when you are online.',
+        true,
+      ),
+      toggle(
+        'social.showActivity',
+        'Show activity',
+        'Share what you are playing with friends.',
+        true,
+      ),
+      toggle(
+        'social.enableNotifications',
+        'Enable notifications',
+        'Receive friend requests, party invites, and social alerts.',
+        true,
+      ),
+      toggle(
+        'social.allowFriendRequests',
+        'Allow friend requests',
+        'Let other players send you friend requests.',
+        true,
+      ),
+      toggle(
+        'social.autoJoinParty',
+        'Auto-join party invites',
+        'Automatically join parties when invited by friends.',
+      ),
+    ],
+  },
+  {
+    id: 'multiplayer',
+    label: 'Multiplayer',
+    icon: '♟',
+    description: 'Game sessions, netplay, and session coordination.',
+    settings: [
+      toggle(
+        'multiplayer.netplay',
+        'Enable netplay',
+        'Allow multiplayer networking for cores and adapters that support it.',
+      ),
+      toggle(
+        'multiplayer.allowInvitations',
+        'Allow invitations',
+        'Let friends invite you to multiplayer sessions.',
+        true,
+      ),
+      toggle(
+        'multiplayer.showInLobby',
+        'Show in lobby',
+        'Make your sessions visible in the public multiplayer lobby.',
+      ),
+      select(
+        'multiplayer.defaultMaxPlayers',
+        'Default max players',
+        'Default maximum number of players for new sessions.',
+        ['2', '4', '8', '16', '32', '64'],
+        '4',
+      ),
+      toggle(
+        'multiplayer.autoSpectate',
+        'Auto-spectate when full',
+        'Automatically spectate when a session reaches maximum players.',
+      ),
+    ],
+  },
+  {
     id: 'controllers',
     label: 'Controllers',
     icon: '⌁',

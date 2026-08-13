@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#10151b" />
+    <title>Spartan Gaming — Multiplayer</title>
+    <link rel="stylesheet" href="../dashboard/dashboard.css" />
+    <link rel="stylesheet" href="./multiplayer.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="../dashboard/index.html" aria-label="Spartan Gaming home">
+          <span class="brand-mark">S</span><span>SPARTAN<br /><small>GAMING</small></span>
+        </a>
+        <nav class="main-nav" aria-label="Primary navigation">
+          <button class="nav-item" data-section="library">▦ <span>Library</span></button>
+          <button class="nav-item" data-section="providers">◈ <span>Providers</span></button>
+          <button class="nav-item" data-section="emulation">⌘ <span>Emulation</span></button>
+          <button class="nav-item" data-section="watch">◉ <span>Watch &amp; stream</span></button>
+          <button class="nav-item" data-section="social">◍ <span>Social Center</span></button>
+          <button class="nav-item is-active" data-section="multiplayer">♟ <span>Multiplayer</span></button>
+        </nav>
+        <div class="sidebar-bottom">
+          <a class="nav-item" href="../settings/index.html">⚙ <span>Settings</span></a>
+          <p>v0.1.0 · open source</p>
+        </div>
+      </aside>
+      <main class="content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">MULTIPLAYER</p>
+            <h1>Game sessions &amp; netplay</h1>
+          </div>
+          <div class="status-pill"><i></i> <span data-session-status>All systems ready</span></div>
+        </header>
+        <section class="hero" aria-labelledby="multiplayer-title">
+          <div>
+            <p class="eyebrow accent">COORDINATION</p>
+            <h2 id="multiplayer-title">Play together</h2>
+            <p class="hero-copy">
+              Create or join multiplayer sessions, invite friends, and coordinate netplay.
+            </p>
+            <button class="primary-button" data-action="create-session">＋ Create session</button>
+          </div>
+          <div class="hero-art" aria-hidden="true"><span>♟</span><span>⚔</span><span>★</span></div>
+        </section>
+        <section class="multiplayer-section">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">SESSIONS</p>
+              <h2>Active games</h2>
+            </div>
+            <span class="result-count" data-result-count></span>
+          </div>
+          <div class="cards" data-cards>
+            <div class="loading">Loading multiplayer sessions…</div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div class="toast" data-toast role="status" aria-live="polite"></div>
+    <script type="module" src="./multiplayer.mjs"></script>
+    <dialog class="multiplayer-dialog" data-multiplayer-dialog aria-labelledby="multiplayer-dialog-title">
+      <form method="dialog">
+        <button class="dialog-close" data-multiplayer-close aria-label="Close">×</button>
+      </form>
+      <div class="dialog-heading">
+        <p class="eyebrow accent">CREATE SESSION</p>
+        <h2 id="multiplayer-dialog-title">New multiplayer session</h2>
+        <p>Set up a new game session and invite friends to join.</p>
+      </div>
+      <div class="multiplayer-body">
+        <label class="control"><span>Session name</span><input data-session-name type="text" placeholder="e.g. Friday Night Gaming" required /></label>
+        <label class="control"><span>Game</span><select data-session-game><option value="">Type or select a game</option></select><input data-session-game-custom type="text" placeholder="Or type a custom game name" /></label>
+        <label class="control"><span>Max players</span><input data-session-max type="number" min="2" max="64" value="4" /></label>
+      </div>
+      <div class="dialog-footer">
+        <button class="primary-button" data-session-save type="button">Create session</button>
+      </div>
+    </dialog>
+    <dialog class="manage-dialog" data-manage-dialog aria-labelledby="manage-dialog-title">
+      <form method="dialog">
+        <button class="dialog-close" data-manage-close aria-label="Close">×</button>
+      </form>
+      <div class="dialog-heading">
+        <p class="eyebrow accent">MANAGE SESSION</p>
+        <h2 id="manage-dialog-title" data-manage-title>Session</h2>
+        <p data-manage-detail>Manage players and session settings.</p>
+      </div>
+      <div class="manage-body" data-manage-body></div>
+      <div class="dialog-footer">
+        <button class="secondary-button" data-manage-close-action type="button">Close</button>
+      </div>
+    </dialog>
+  </body>
+</html>

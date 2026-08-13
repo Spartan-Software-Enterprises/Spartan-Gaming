@@ -506,22 +506,6 @@ if (!hasSingleInstanceLock) {
 
 if (hasSingleInstanceLock)
   app.whenReady().then(async () => {
-    // Restore session state from previous launch (crash recovery)
-    let restoredSessionState = null;
-    try {
-      const saved = localStorage.getItem('spartan-gaming-session-state');
-      if (saved) {
-        restoredSessionState = JSON.parse(saved);
-        // Validate that the session hasn't been stale for too long
-        const savedTime = new Date(restoredSessionState.timestamp).getTime();
-        const maxStaleAge = 60_000; // 1 minute
-        if (Date.now() - savedTime > maxStaleAge) {
-          restoredSessionState = null;
-        }
-      }
-    } catch {
-      // Ignore errors from localStorage
-    }
     await loadElectronUpdater();
     await protocol.handle(
       APP_SCHEME,
@@ -712,10 +696,22 @@ app.on('before-quit', (event) => {
     return;
   }
   if (!quitting && applicationSessionActive() && windowRef && !windowRef.isDestroyed()) {
-    const canQuit = await windowRef.webContents.sendInputEvents
-      ? true
-      : confirm('Unsaved changes may be lost. Are you sure you want to quit?');
-    if (!canQuit) event.preventDefault();
+    event.preventDefault();
+    void dialog
+      .showMessageBox(windowRef, {
+        type: 'question',
+        buttons: ['Cancel', 'Quit'],
+        defaultId: 0,
+        cancelId: 0,
+        title: 'Quit Spartan Gaming',
+        message: 'A gaming session is active. Quit anyway?',
+      })
+      .then((result) => {
+        if (result.response === 1) {
+          quitting = true;
+          app.quit();
+        }
+      });
   }
 });
 

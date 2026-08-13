@@ -25,3 +25,4 @@ node_modules/
 # Chromium/depot_tools local state
 .gclient_entries
 src/third_party/depot_tools/
+.ssh/

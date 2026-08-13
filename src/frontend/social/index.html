@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#10151b" />
+    <title>Spartan Gaming — Social Center</title>
+    <link rel="stylesheet" href="../dashboard/dashboard.css" />
+    <link rel="stylesheet" href="./social.css" />
+    <style>
+      .social-dialog {
+        width: min(1000px, calc(100% - 28px));
+        padding: 0;
+        border: 1px solid #3b5861;
+        border-radius: 16px;
+        background: #121a22;
+        color: #e7edf3;
+        box-shadow: 0 24px 80px #000b;
+      }
+      .social-dialog::backdrop {
+        background: #05080bcc;
+        backdrop-filter: blur(4px);
+      }
+      .dialog-heading {
+        padding: 25px 27px 18px;
+        border-bottom: 1px solid #2a3540;
+      }
+      .dialog-heading h2 {
+        margin: 6px 0;
+        font-size: 28px;
+      }
+      .dialog-heading p:last-child {
+        margin: 0;
+        color: #8d9aa7;
+        font-size: 12px;
+      }
+      .dialog-close {
+        position: absolute;
+        top: 13px;
+        right: 16px;
+        border: 0;
+        background: transparent;
+        color: #b8c6cc;
+        font-size: 27px;
+        cursor: pointer;
+      }
+      .dialog-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 16px 27px;
+      }
+      .dialog-footer p {
+        margin: 0;
+        color: #8d9aa7;
+        font-size: 11px;
+        line-height: 1.4;
+      }
+      .secondary-link {
+        flex: none;
+        color: #50e1d1;
+        font-size: 12px;
+        text-decoration: none;
+      }
+      .social-dialog:not([open]) {
+        display: none;
+      }
+      @media (max-width: 600px) {
+        .dialog-footer {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="../dashboard/index.html" aria-label="Spartan Gaming home">
+          <span class="brand-mark">S</span><span>SPARTAN<br /><small>GAMING</small></span>
+        </a>
+        <nav class="main-nav" aria-label="Primary navigation">
+          <button class="nav-item" data-section="library">▦ <span>Library</span></button>
+          <button class="nav-item" data-section="providers">◈ <span>Providers</span></button>
+          <button class="nav-item" data-section="emulation">⌘ <span>Emulation</span></button>
+          <button class="nav-item" data-section="watch">◉ <span>Watch &amp; stream</span></button>
+          <button class="nav-item is-active" data-section="social">◍ <span>Social Center</span></button>
+        </nav>
+        <div class="sidebar-bottom">
+          <a class="nav-item" href="../settings/index.html">⚙ <span>Settings</span></a>
+          <p>v0.1.0 · open source</p>
+        </div>
+      </aside>
+      <main class="content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">SOCIAL CENTER</p>
+            <h1>Your gaming social space</h1>
+          </div>
+          <div class="status-pill"><i></i> <span data-session-status>All systems ready</span></div>
+        </header>
+        <section class="hero" aria-labelledby="presence-title">
+          <div>
+            <p class="eyebrow accent">ACTIVITY</p>
+            <h2 id="presence-title" data-presence-title>Online</h2>
+            <p class="hero-copy" data-presence-copy>
+              Share what you're playing and see what your friends are up to.
+            </p>
+            <button class="primary-button" data-action="set-status">Set status</button>
+          </div>
+          <div class="hero-art" aria-hidden="true"><span>✦</span><span>◒</span><span>╱╲</span></div>
+        </section>
+        <section class="social-section">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">CONNECTIONS</p>
+              <h2>Friends &amp; Parties</h2>
+            </div>
+            <span class="result-count" data-result-count></span>
+          </div>
+          <div class="toolbar">
+            <label class="search">
+              <span>⌕</span>
+              <input data-search type="search" placeholder="Search friends, parties, and games" aria-label="Search social" />
+            </label>
+            <div class="filters" role="group" aria-label="Social filters">
+              <button class="filter is-active" data-filter="all">All</button>
+              <button class="filter" data-filter="friends">Friends</button>
+              <button class="filter" data-filter="parties">Parties</button>
+              <button class="filter" data-filter="streaming">Streaming</button>
+              <button class="filter" data-filter="messages">Messages</button>
+            </div>
+          </div>
+          <div class="cards" data-cards>
+            <div class="loading">Loading your social connections…</div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div class="toast" data-toast role="status" aria-live="polite"></div>
+    <script type="module" src="./social.mjs"></script>
+    <dialog class="social-dialog" data-social-dialog aria-labelledby="social-dialog-title">
+      <form method="dialog">
+        <button class="dialog-close" data-social-close aria-label="Close social view">×</button>
+      </form>
+      <div class="dialog-heading">
+        <p class="eyebrow accent">SOCIAL</p>
+        <h2 id="social-dialog-title" data-social-title>Social</h2>
+        <p data-social-detail>Connect with friends and share your gaming.</p>
+      </div>
+      <div class="dialog-body" data-social-body></div>
+      <div class="dialog-footer">
+        <p data-social-notes>Your privacy matters. Messages are end-to-end encrypted.</p>
+        <a class="secondary-link" data-social-external target="_blank" rel="noopener">Learn more ↗</a>
+      </div>
+    </dialog>
+  </body>
+</html>
