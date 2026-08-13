@@ -103,3 +103,25 @@ test('browser emulator input bridge does not send input while stopped', async ()
   assert.equal(events.length, 0);
   bridge.close();
 });
+test('browser emulator input bridge leaves keyboard events alone until the runtime canvas has focus', async () => {
+  const events = [];
+  const canvas = {};
+  const host = target();
+  host.document = { activeElement: null };
+  const runtime = {
+    state: 'running',
+    input: (event) => {
+      events.push(event);
+    },
+  };
+  const bridge = createBrowserEmulatorInputBridge({ runtime, target: host, canvas });
+  let prevented = 0;
+  bridge.start();
+  host.dispatch('keydown', { code: 'Enter', preventDefault() { prevented += 1; } });
+  host.document.activeElement = canvas;
+  host.dispatch('keydown', { code: 'Enter', preventDefault() { prevented += 1; } });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(prevented, 1);
+  assert.equal(events.length, 1);
+  bridge.close();
+});

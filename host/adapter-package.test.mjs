@@ -39,6 +39,37 @@ test('package manifests normalize traversal-safe virtual-gamepad packages', () =
   assert.equal(normalized.kind, 'virtual-gamepad');
   assert.equal(normalized.platform, 'win32');
 });
+test('package manifests normalize files and reject traversal, duplicates, and symlink-like entries', () => {
+  const normalized = normalizeAdapterPackageManifest(manifest);
+  assert.equal(normalized.totalBytes, readme.byteLength + binary.byteLength);
+  assert.throws(
+    () =>
+      normalizeAdapterPackageManifest({
+        ...manifest,
+        files: [{ ...manifest.files[0], path: '../escape' }],
+      }),
+    /relative path/,
+  );
+  assert.throws(
+    () =>
+      normalizeAdapterPackageManifest({
+        ...manifest,
+        files: [{ ...manifest.files[0] }, { ...manifest.files[0] }],
+      }),
+    /duplicate/,
+  );
+  assert.throws(
+    () =>
+      normalizeAdapterPackageManifest({
+        ...manifest,
+        files: [{ path: 'link', type: 'symlink', sizeBytes: 0 }],
+      }),
+    /entry type/,
+  );
+});
+test('package manifests accept an emulator executable', () => {
+  assert.equal(normalizeAdapterPackageManifest({ ...manifest, kind: 'emulator' }).kind, 'emulator');
+});
 test('package extraction plans keep every target inside the destination', () => {
   const destination = resolve('/tmp/spartan-package');
   const plan = createPackageExtractionPlan({ manifest, destination });

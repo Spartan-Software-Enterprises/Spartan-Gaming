@@ -13,6 +13,10 @@ const hostService = fs.readFileSync('deploy/host/spartan-host.service', 'utf8');
 const turnService = fs.readFileSync('deploy/turn/coturn.service', 'utf8');
 const macHostPlist = fs.readFileSync('deploy/host/macos/com.spartan.gaming.host.plist', 'utf8');
 const windowsHostReadme = fs.readFileSync('deploy/host/windows/README.md', 'utf8');
+const dockerignore = fs.readFileSync('.dockerignore', 'utf8');
+const dockerignoreEntries = new Set(
+  dockerignore.split(/\r?\n/u).map((entry) => entry.trim()).filter(Boolean),
+);
 
 test('signaling image is minimal, non-root, and health checked', () => {
   assert.match(dockerfile, /^FROM node:22-bookworm-slim/m);
@@ -34,6 +38,11 @@ test('Compose keeps the reference signaling service local and requires a secret'
   assert.match(compose, /read_only: true/);
   assert.match(compose, /cap_drop:\s*\n\s*- ALL/);
   assert.match(compose, /no-new-privileges:true/);
+});
+
+test('Docker build context excludes secrets and local build artifacts', () => {
+  for (const entry of ['.git', '.env*', '*.pem', '*.key', 'node_modules', 'out'])
+    assert.ok(dockerignoreEntries.has(entry), `missing Docker ignore entry: ${entry}`);
 });
 
 test('production preflight is part of the published deployment surface', () => {

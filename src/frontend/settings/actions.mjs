@@ -10,6 +10,7 @@ export const SETTINGS_ACTIONS = Object.freeze({
   'providers.manageHosts': route('../host/index.html'),
   'providers.clearSessions': Object.freeze({ kind: 'clear-provider-sessions' }),
   'host.exportConfig': Object.freeze({ kind: 'export-host-config' }),
+  'accounts.clearCredentials': Object.freeze({ kind: 'clear-credentials' }),
   'performance.taskManager': route('../diagnostics/index.html?focus=performance'),
   'performance.diagnostics': route('../diagnostics/index.html'),
   'privacy.permissions': route('../diagnostics/index.html?focus=permissions'),

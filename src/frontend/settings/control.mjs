@@ -14,7 +14,7 @@ export function renderSettingControl(setting, value) {
     return `<select data-key="${key}">${setting.options.map((option) => `<option value="${escapeHtml(option)}"${option === value ? ' selected' : ''}>${escapeHtml(setting.optionLabels?.[option] || option)}</option>`).join('')}</select>`;
   if (setting.type === 'range')
     return `<div class="range-control"><input type="range" min="${escapeHtml(setting.min)}" max="${escapeHtml(setting.max)}" step="${escapeHtml(setting.step)}" value="${escapeHtml(value)}" data-key="${key}"><output>${escapeHtml(value)}${escapeHtml(setting.unit)}</output></div>`;
-  if (setting.type === 'text')
-    return `<input class="text-input" type="text" value="${escapeHtml(value)}" placeholder="Not configured" data-key="${key}">`;
+  if (setting.type === 'text' || setting.type === 'secret')
+    return `<input class="text-input" type="${setting.type === 'secret' ? 'password' : 'text'}" value="${escapeHtml(value)}" placeholder="Not configured" autocomplete="${setting.type === 'secret' ? 'new-password' : 'off'}" data-key="${key}">`;
   return `<button class="action-button" data-action="${key}">${escapeHtml(setting.actionLabel)}</button>`;
 }

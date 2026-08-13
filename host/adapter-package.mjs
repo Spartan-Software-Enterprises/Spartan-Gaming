@@ -7,7 +7,7 @@ import { createArchiveReader } from './archive-readers.mjs';
 const PLATFORMS = new Set(['win32', 'darwin', 'linux', 'universal']);
 const FORMATS = new Set(['zip', 'tar', 'tar.zst', 'directory']);
 const TYPES = new Set(['file', 'directory']);
-const KINDS = new Set(['capture', 'audio', 'input', 'virtual-gamepad']);
+const KINDS = new Set(['capture', 'audio', 'input', 'virtual-gamepad', 'emulator']);
 const MAX_FILES = 100_000;
 const MAX_TOTAL_BYTES = 5_000_000_000;
 

@@ -135,8 +135,7 @@ function renderNav() {
       activeCategory = button.dataset.category;
       render();
     }),
-  );
-}
+  );}
 
 function renderContent() {
   const previousStatus = document.querySelector('[data-save-status]')?.textContent;
@@ -267,6 +266,19 @@ function bindControls() {
         }
         return;
       }
+      if (action.kind === 'clear-credentials') {
+        for (const key of [
+          'accounts.defaultLogin',
+          'accounts.syncApiKey',
+          'accounts.hostApiKey',
+          'accounts.providerClientId',
+          'accounts.providerApiKey',
+        ])
+          state[key] = '';
+        saveState();
+        renderContent();
+        return;
+      }
       if (action.kind === 'export-diagnostics') {
         const status = document.querySelector('[data-save-status]');
         if (!globalThis.spartanElectron?.exportDiagnostics) {
@@ -339,8 +351,7 @@ function bindControls() {
         return;
       }
     }),
-  );
-}
+  );}
 
 function render() {
   renderNav();

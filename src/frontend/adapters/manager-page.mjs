@@ -5,10 +5,12 @@ import {
   detectAdapterPlatform,
   readAdapterManifestBundle,
 } from './manager.mjs';
+import { createAdapterReleaseInstallRequest } from './install.mjs';
 
 const state = {
   cores: [],
   records: [],
+  releaseFeed: null,
   platform: detectAdapterPlatform(),
   allowUnsigned: false,
   query: '',
@@ -42,6 +44,41 @@ function statusLabel(row) {
           ? 'Blocked by trust policy'
           : 'Adapter not installed';
 }
+function releaseLabel(row) {
+  const release = row.release;
+  if (!release) return null;
+  if (release.status === 'install-available') return `Release v${release.to} available`;
+  if (release.status === 'update-available') return `Update v${release.from} → v${release.to}`;
+  if (release.status === 'up-to-date') return `Up to date · v${release.version}`;
+  return null;
+}
+function releaseAction(row) {
+  return row.release?.status === 'install-available'
+    ? 'Install'
+    : row.release?.status === 'update-available'
+      ? 'Update'
+      : null;
+}
+function renderInstallHandoff(row, button) {
+  button.disabled = true;
+  try {
+    const request = createAdapterReleaseInstallRequest({
+      plan: row.release,
+      platform: state.platform,
+      consent: true,
+    });
+    const blob = new Blob([JSON.stringify(request, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `spartan-adapter-${request.id}-${request.to}.install.json`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 0);
+    toast(`${request.id}: consented install handoff downloaded. Apply it with the host updater.`);
+  } catch (error) {
+    toast(error.message);
+  }
+  button.disabled = false;
+}
 function render() {
   const query = state.query.toLowerCase();
   const rows =
@@ -55,12 +92,26 @@ function render() {
   document.querySelector('[data-status]').textContent = `${state.platform} · ${rows.length} shown`;
   runtimeList.innerHTML = rows.length
     ? rows
-        .map(
-          (row) =>
-            `<article class="runtime-row"><div><h3>${escapeHtml(row.name)}</h3><p>${escapeHtml(row.id)} · ${escapeHtml(row.mode)} · ${escapeHtml(row.license || 'License not declared')}</p><div class="tags">${row.systems.map((system) => `<span class="tag">${escapeHtml(system)}</span>`).join('')}</div></div><span class="status ${escapeHtml(row.status)}">${escapeHtml(statusLabel(row))}</span><small>${escapeHtml(row.reason || 'Ready for the selected runtime.')}</small></article>`,
-        )
+        .map((row) => {
+          const action = releaseAction(row);
+          const label = releaseLabel(row);
+          return `<article class="runtime-row"><div><h3>${escapeHtml(row.name)}</h3><p>${escapeHtml(row.id)} · ${escapeHtml(row.mode)} · ${escapeHtml(row.license || 'License not declared')}</p><div class="tags">${row.systems.map((system) => `<span class="tag">${escapeHtml(system)}</span>`).join('')}${label ? `<span class="tag release">${escapeHtml(label)}</span>` : ''}</div></div><span class="status ${escapeHtml(row.status)}">${escapeHtml(statusLabel(row))}</span><small>${escapeHtml(row.reason || 'Ready for the selected runtime.')}</small>${action ? `<button class="secondary" data-install="${escapeHtml(row.id)}" type="button">${escapeHtml(action)}</button>` : ''}</article>`;
+        })
         .join('')
     : '<p class="empty">No cores match this search.</p>';
+  runtimeList.querySelectorAll('[data-install]').forEach((button) =>
+    button.addEventListener('click', () => {
+      const row = state.model?.rows.find((item) => item.id === button.dataset.install);
+      if (!row) return;
+      if (
+        !globalThis.confirm(
+          `Create a signed ${releaseAction(row)} handoff for ${row.name}? The host updater verifies and applies it.`,
+        )
+      )
+        return;
+      renderInstallHandoff(row, button);
+    }),
+  );
   const manifests = state.model?.manifests || [];
   manifestList.innerHTML = manifests.length
     ? manifests
@@ -75,6 +126,7 @@ function rebuild() {
   state.model = createAdapterManagerModel({
     cores: state.cores,
     records: state.records,
+    feed: state.releaseFeed,
     platform: state.platform,
     allowUnsigned: state.allowUnsigned,
   });
@@ -88,6 +140,8 @@ async function load() {
     state.cores = manifest.projects;
     const injected = globalThis.__SPARTAN_ADAPTER_MANIFESTS__;
     if (injected) state.records = [...readAdapterManifestBundle(injected)];
+    const releaseFeed = globalThis.__SPARTAN_RELEASE_FEED__;
+    state.releaseFeed = releaseFeed || null;
     state.allowUnsigned = createSettingsStore().read()['advanced.allowUnsignedAdapters'] === true;
     document.querySelector('[data-platform]').value = state.platform;
     rebuild();

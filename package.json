@@ -67,7 +67,11 @@
     "frontend:serve": "node scripts/frontend/serve.mjs",
     "frontend:build": "node scripts/frontend/build.mjs",
     "lan:demo": "node scripts/lan-demo.mjs",
-    "test:redis-broker": "node --test signaling/redis-broker.integration.test.mjs"
+    "test:redis-broker": "node --test signaling/redis-broker.integration.test.mjs",
+    "seed:build": "node scripts/emulators/build-seed.mjs",
+    "app:package": "node scripts/app/package.mjs",
+    "app:serve": "node host/app-host.mjs",
+    "app:test": "node --test host/adapter-home.test.mjs host/app-host.test.mjs host/adapter-seed.test.mjs host/desktop-shell.test.mjs host/wine.test.mjs host/game-launcher.test.mjs scripts/emulators/build-seed.test.mjs scripts/app/package.test.mjs"
   },
   "engines": {
     "node": ">=20"

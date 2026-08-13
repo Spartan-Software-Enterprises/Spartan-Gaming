@@ -37,6 +37,13 @@ const text = (key, label, description, defaultValue = '') => ({
   type: 'text',
   default: defaultValue,
 });
+const secret = (key, label, description, defaultValue = '') => ({
+  key,
+  label,
+  description,
+  type: 'secret',
+  default: defaultValue,
+});
 const action = (key, label, description, actionLabel) => ({
   key,
   label,
@@ -478,8 +485,7 @@ export const settingsCategories = [
         'streaming.showTelemetry',
         'Show stream telemetry',
         'Expose ping, jitter, packet loss, decode time, and frame pacing.',
-      ),
-    ],
+      ),    ],
   },
   {
     id: 'social',
@@ -551,6 +557,68 @@ export const settingsCategories = [
         'multiplayer.autoSpectate',
         'Auto-spectate when full',
         'Automatically spectate when a session reaches maximum players.',
+      ),    ],
+  },
+  {
+    id: 'accounts',
+    label: 'Accounts & API',
+    icon: '▤',
+    description: 'Connection preferences and optional credentials used by approved integrations.',
+    settings: [
+      text(
+        'accounts.defaultLogin',
+        'Default login label',
+        'A local label for the account you use most often. Spartan Gaming never asks for a provider password here.',
+        '',
+      ),
+      select(
+        'accounts.loginMode',
+        'Login handoff',
+        'Choose how provider sign-in is handled when a service opens.',
+        ['Official service in Spartan Gaming', 'System browser handoff', 'Ask every time'],
+        'Official service in Spartan Gaming',
+      ),
+      text(
+        'accounts.syncEndpoint',
+        'Self-hosted sync endpoint',
+        'Optional HTTPS endpoint for your own Spartan sync service.',
+        '',
+      ),
+      secret(
+        'accounts.syncApiKey',
+        'Self-hosted sync API key',
+        'Optional API key for the self-hosted sync endpoint. Stored only in this local profile; clear it when you finish setup.',
+        '',
+      ),
+      text(
+        'accounts.hostEndpoint',
+        'Default host endpoint',
+        'Optional user-owned Spartan Host endpoint used for remote play.',
+        '',
+      ),
+      secret(
+        'accounts.hostApiKey',
+        'Host API key',
+        'Optional API key for your user-owned host. It is never exported with settings.',
+        '',
+      ),
+      text(
+        'accounts.providerClientId',
+        'Provider client ID',
+        'Optional OAuth client ID for a provider integration that explicitly documents custom clients.',
+        '',
+      ),
+      secret(
+        'accounts.providerApiKey',
+        'Provider API key',
+        'Optional API key for provider APIs such as catalog or creator tools. Only enter keys supplied by the official provider.',
+        '',
+      ),
+      action(
+        'accounts.clearCredentials',
+        'Clear saved credentials',
+        'Remove all optional API keys and login labels from this local profile.',
+        'Clear credentials',
       ),
     ],
   },
@@ -760,6 +828,13 @@ export const settingsCategories = [
         'Emulation frontend',
         'Choose the runtime used for compatible cores and standalone adapters.',
         ['Automatic', 'Spartan runtime', 'Libretro host', 'Native adapter'],
+        'Automatic',
+      ),
+      select(
+        'emulation.windowsCompatibility',
+        'Windows emulator compatibility',
+        'Linux fallback for Windows-only emulator builds. Wine is deterministic; PlayOnLinux manages named Wine prefixes.',
+        ['Automatic', 'Wine', 'PlayOnLinux', 'Disabled'],
         'Automatic',
       ),
       toggle(
@@ -1603,6 +1678,23 @@ export const settingsCategories = [
         'updates.autoUpdate',
         'Automatically update Spartan Gaming',
         'Check the selected channel automatically and download verified application updates when available.',
+        true,
+      ),
+      toggle(
+        'updates.adapterUpdates',
+        'Update adapters automatically',
+        'Keep provider and emulator adapters current within the selected channel.',
+        true,
+      ),
+      toggle(
+        'updates.coreUpdates',
+        'Update emulator cores automatically',
+        'Update cores while preserving pinned versions and save compatibility.',
+      ),
+      toggle(
+        'updates.catalogUpdates',
+        'Update provider and game metadata',
+        'Refresh compatibility, artwork, and capability metadata.',
         true,
       ),
       toggle(

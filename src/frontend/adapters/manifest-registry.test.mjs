@@ -7,7 +7,7 @@ import {
   normalizeAdapterManifest,
   verifyAdapterSignature,
 } from './manifest-registry.mjs';
-import { createAdapterInstallRequest } from './install.mjs';
+import { createAdapterInstallRequest, createAdapterReleaseInstallRequest } from './install.mjs';
 
 const signed = {
   id: 'dolphin-native',
@@ -127,6 +127,36 @@ test('adapter install requests require consent and a verified artifact descripto
   });
   assert.equal(request.artifact.url, 'https://downloads.example.test/dolphin.tar.zst');
   assert.equal(request.installScope, 'user');
+  assert.equal(Object.hasOwn(request, 'credential'), false);
+});
+test('release install requests map install-available plans and preserve artifact metadata', () => {
+  const candidate = {
+    ...signed,
+    version: '1.1.0',
+    integrity: 'sha256-newer',
+    artifact: {
+      url: 'https://downloads.example.test/dolphin.tar.zst',
+      sizeBytes: 1024,
+      integrity: 'sha256-newer',
+    },
+  };
+  const plan = {
+    status: 'install-available',
+    id: 'dolphin-native',
+    from: null,
+    to: '1.1.0',
+    adapter: candidate,
+    readiness: { status: 'ready', id: 'dolphin-native', trust: 'signed', version: '1.1.0' },
+  };
+  assert.throws(
+    () => createAdapterReleaseInstallRequest({ plan, platform: 'linux' }),
+    /consent/,
+  );
+  const request = createAdapterReleaseInstallRequest({ plan, platform: 'linux', consent: true });
+  assert.equal(request.from, '1.1.0');
+  assert.equal(request.to, '1.1.0');
+  assert.equal(request.artifact.integrity, 'sha256-newer');
+  assert.equal(request.id, 'dolphin-native');
   assert.equal(Object.hasOwn(request, 'credential'), false);
 });
 test('adapter manifests reject insecure or mismatched artifact metadata', () => {

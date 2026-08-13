@@ -243,6 +243,8 @@ export function createEncoderPlan({
     String(fps * 2),
   );
   if (selected?.encoder.includes('vaapi')) args.push('-vf', 'format=nv12,hwupload');
+  else if (encoder === 'libx264') args.push('-tune', 'zerolatency', '-preset', 'ultrafast');
+  else if (encoder === 'libvpx-vp9') args.push('-tune', 'zerolatency', '-deadline', 'realtime');
   args.push('-f', outputFormat, 'pipe:1');
   const hardware = Boolean(selected);
   return Object.freeze({

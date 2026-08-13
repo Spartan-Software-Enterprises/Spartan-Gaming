@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const PLATFORMS = new Set(['win32', 'darwin', 'linux']);
 const FORMATS = new Set(['node-addon']);
+const CONFIGURATIONS = new Set(['Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel']);
 const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/;
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const manifestPath = path.join(repositoryRoot, 'native/package-manifest.json');
@@ -89,6 +90,8 @@ export function createNativePackageBuildPlan({
   const normalized = normalizeNativePackageManifest(manifest);
   const selected = normalized.packages.find((entry) => entry.platform === platform);
   if (!selected) throw new TypeError(`no native package is defined for ${platform}`);
+  if (!CONFIGURATIONS.has(configuration))
+    throw new TypeError(`unsupported native package configuration: ${configuration}`);
   const source = path.resolve(sourceRoot, selected.sourceDirectory);
   const out = path.resolve(outRoot || path.join(sourceRoot, 'out', selected.id));
   const install = path.resolve(installRoot || path.join(out, 'install'));

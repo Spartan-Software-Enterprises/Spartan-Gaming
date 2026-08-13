@@ -40,6 +40,24 @@ function assertArray(value, field, id) {
   if (!Array.isArray(value)) throw new TypeError(`${id}: ${field} must be an array`);
 }
 
+function assertHttpsUrl(value, id) {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'https:' || url.username || url.password) throw new Error();
+  } catch {
+    throw new TypeError(`${id}: url must use HTTPS without credentials`);
+  }
+}
+
+function assertDate(value, source) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/u.test(value))
+    throw new TypeError(`${source} updatedAt must use YYYY-MM-DD`);
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day)
+    throw new TypeError(`${source} updatedAt must be a valid date`);
+}
+
 function validateEntry(entry, source) {
   const id = entry?.id ?? '<unknown>';
   assertString(entry?.id, 'id', id);
@@ -55,8 +73,7 @@ function validateEntry(entry, source) {
     assertArray(entry.integrationModes, 'integrationModes', id);
     assertArray(entry.capabilities, 'capabilities', id);
     assertString(entry.url, 'url', id);
-    if (source === 'game' && !/^https:\/\//i.test(entry.url))
-      throw new TypeError(`${id}: browser-game url must use HTTPS`);
+    assertHttpsUrl(entry.url, id);
     assertArray(entry.requirements, 'requirements', id);
     if (source === 'game') {
       assertArray(entry.genres, 'genres', id);
@@ -66,6 +83,7 @@ function validateEntry(entry, source) {
     assertArray(entry.systems, 'systems', id);
     assertString(entry.mode, 'mode', id);
     assertString(entry.url, 'url', id);
+    assertHttpsUrl(entry.url, id);
     assertString(entry.license, 'license', id);
   }
   return entry;
@@ -136,5 +154,11 @@ export function validateCatalogManifest(manifest, source) {
   const key = source === 'provider' ? 'providers' : source === 'emulator' ? 'projects' : 'games';
   const entries = manifest[key];
   assertArray(entries, key, source);
+  assertDate(manifest.updatedAt, source);
+  const ids = new Set();
+  for (const entry of entries) {
+    if (ids.has(entry?.id)) throw new Error(`duplicate ${source} catalog id: ${entry.id}`);
+    ids.add(entry?.id);
+  }
   return entries.map((entry) => validateEntry(entry, source));
 }

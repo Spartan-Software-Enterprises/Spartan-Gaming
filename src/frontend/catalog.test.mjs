@@ -56,6 +56,7 @@ test('catalog validates browser-game manifests separately from providers and emu
       validateCatalogManifest(
         {
           catalogVersion: 1,
+          updatedAt: '2026-08-08',
           games: [
             {
               id: 'unsafe',
@@ -78,6 +79,7 @@ test('catalog validates browser-game manifests separately from providers and emu
       validateCatalogManifest(
         {
           catalogVersion: 1,
+          updatedAt: '2026-08-08',
           games: [
             {
               id: 'http-game',
@@ -96,6 +98,40 @@ test('catalog validates browser-game manifests separately from providers and emu
         'game',
       ),
     /must use HTTPS/,
+  );
+});
+
+test('catalog manifests require valid update dates, HTTPS URLs, and source-local IDs', () => {
+  const provider = {
+    id: 'provider-one',
+    name: 'Provider',
+    kind: 'cloud-gaming',
+    supportLevel: 'A',
+    integrationModes: [],
+    capabilities: [],
+    url: 'https://example.test',
+    requirements: [],
+  };
+  assert.throws(
+    () =>
+      validateCatalogManifest({ catalogVersion: 1, updatedAt: '2026-02-30', providers: [provider] }, 'provider'),
+    /valid date/,
+  );
+  assert.throws(
+    () =>
+      validateCatalogManifest(
+        { catalogVersion: 1, updatedAt: '2026-08-08', providers: [{ ...provider, url: 'https://user:pass@example.test' }] },
+        'provider',
+      ),
+    /without credentials/,
+  );
+  assert.throws(
+    () =>
+      validateCatalogManifest(
+        { catalogVersion: 1, updatedAt: '2026-08-08', providers: [provider, provider] },
+        'provider',
+      ),
+    /duplicate provider catalog id/,
   );
 });
 

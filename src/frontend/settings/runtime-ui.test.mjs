@@ -11,6 +11,7 @@ test('runtime UI settings normalize appearance, accessibility, and overlay prefe
       'appearance.uiScale': 200,
       'accessibility.reduceMotion': true,
       'accessibility.highContrast': true,
+      'accessibility.colorVision': 'Deuteranopia',
       'gaming.showOverlay': false,
       'gaming.hideBrowserChrome': false,
       'gaming.overlayOpacity': 5,
@@ -50,7 +51,7 @@ test('runtime UI settings normalize appearance, accessibility, and overlay prefe
     largeText: false,
     focusRing: true,
     screenReaderHints: false,
-    colorVision: 'None',
+    colorVision: 'Deuteranopia',
     showOverlay: false,
     hideBrowserChrome: false,
     overlayPosition: 'Bottom left',
@@ -89,8 +90,7 @@ test('runtime UI applies the configured document locale with a safe fallback', (
   applyRuntimeUiSettings(documentRef, { 'general.language': 'Japanese' });
   assert.equal(root.lang, 'ja');
   applyRuntimeUiSettings(documentRef, { 'general.language': 'unsupported' });
-  assert.equal(root.lang, 'en');
-});
+  assert.equal(root.lang, 'en');});
 
 test('runtime UI settings apply data attributes, CSS variables, and one shared style element', () => {
   const root = {
@@ -122,13 +122,14 @@ test('runtime UI settings apply data attributes, CSS variables, and one shared s
     'appearance.accent': 'Violet',
     'gaming.showOverlay': false,
     'accessibility.largeText': true,
+    'accessibility.colorVision': 'Tritanopia',
   });
   applyRuntimeUiSettings(documentRef, {
     'appearance.accent': 'Violet',
     'gaming.showOverlay': false,
     'accessibility.largeText': true,
-  });
-  assert.equal(root.dataset.spartanOverlay, 'hidden');
+    'accessibility.colorVision': 'Tritanopia',
+  });  assert.equal(root.dataset.spartanOverlay, 'hidden');
   assert.equal(root.dataset.spartanDeviceMode, 'desktop');
   assert.equal(root.dataset.spartanTabLayout, 'top');
   assert.equal(root.dataset.spartanStatusBar, 'hidden');
@@ -138,9 +139,16 @@ test('runtime UI settings apply data attributes, CSS variables, and one shared s
   assert.equal(root.dataset.spartanEnginePolicy, 'chromium-capable');
   assert.equal(root.dataset.spartanLargeText, '');
   assert.equal(root.dataset.spartanScreenReaderHints, undefined);
+  assert.equal(root.dataset.spartanColorVision, 'Tritanopia');
   assert.equal(root.style.values.get('--spartan-accent'), '#9a84ff');
   assert.equal(root.style.values.get('--cyan'), '#9a84ff');
   assert.equal(nodes.size, 1);
+  assert.match(nodes.get('spartan-runtime-ui-styles').textContent, /data-spartan-color-vision="Tritanopia"/);
+  assert.match(nodes.get('spartan-runtime-ui-styles').textContent, /\.status-pill\[data-status="error"\] i/);
+});
+
+test('runtime UI falls back safely for an unknown color vision mode', () => {
+  assert.equal(resolveRuntimeUiSettings({'accessibility.colorVision': 'invalid'}).colorVision, 'None');
 });
 
 test('runtime UI exposes Fire TV remote-navigation metadata', () => {

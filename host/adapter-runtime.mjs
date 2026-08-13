@@ -152,3 +152,43 @@ export function createInstalledAdapterRuntime({
     },
   });
 }
+
+/** Resolve a signed installed emulator to a local executable for the host. */
+export function createInstalledEmulatorRuntime({
+  installRoot,
+  id,
+  platform,
+  fsImpl = defaultFs,
+  verifyManifest,
+} = {}) {
+  const root = resolve(required(installRoot, 'installRoot'));
+  const emulatorId = segment(id, 'id');
+  if (!PLATFORMS.has(platform))
+    throw new TypeError(`unsupported emulator runtime platform: ${platform}`);
+  if (!fsImpl || typeof fsImpl.readFile !== 'function')
+    throw new TypeError('filesystem adapter must implement readFile');
+  if (typeof verifyManifest !== 'function') throw new TypeError('verifyManifest is required');
+  const currentPath = inside(root, join(root, emulatorId, 'current.json'));
+  return Object.freeze({
+    async inspect() {
+      const pointer = await readJson(fsImpl, currentPath, 'emulator pointer');
+      if (pointer.id !== emulatorId) throw new Error('installed emulator pointer id mismatch');
+      const version = segment(pointer.version, 'installed emulator version');
+      const target = inside(root, join(root, emulatorId, version));
+      const manifest = normalizeAdapterPackageManifest(
+        await readJson(fsImpl, join(target, 'manifest.json'), 'emulator package manifest'),
+      );
+      if (manifest.id !== emulatorId || manifest.version !== version)
+        throw new Error('installed emulator manifest identity mismatch');
+      if (manifest.kind !== 'emulator') throw new Error('installed package is not an emulator');
+      if (manifest.platform !== 'universal' && manifest.platform !== platform)
+        throw new Error('installed emulator platform mismatch');
+      if (!manifest.entrypoint) throw new Error('installed emulator has no entrypoint');
+      if (!(await verifyManifest({ manifest, target })))
+        throw new Error('installed emulator manifest verification failed');
+      const entrypoint = inside(target, resolve(target, ...manifest.entrypoint.split('/')));
+      await fsImpl.access(entrypoint);
+      return Object.freeze({ id: emulatorId, version, manifest, target, entrypoint });
+    },
+  });
+}

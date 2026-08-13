@@ -6,6 +6,7 @@ import test from 'node:test';
 import {
   createInstalledAdapterManifestVerifier,
   createInstalledAdapterRuntime,
+  createInstalledEmulatorRuntime,
 } from './adapter-runtime.mjs';
 
 const manifest = {
@@ -134,4 +135,35 @@ test('installed adapter manifest verifier requires a public key and verifies fil
     },
   });
   assert.equal(await verifier({ manifest, target: '/tmp/adapter' }), false);
+});
+test('installed emulator runtime resolves a verified package executable', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'spartan-emulator-'));
+  try {
+    const target = join(root, 'dolphin', '1.0.0');
+    const emulator = {
+      ...manifest,
+      id: 'dolphin',
+      kind: 'emulator',
+      entrypoint: 'bin/dolphin',
+      files: [
+        { path: 'bin', type: 'directory', sizeBytes: 0 },
+        { path: 'bin/dolphin', sizeBytes: 1, integrity: 'sha256-file' },
+      ],
+    };
+    await mkdir(join(target, 'bin'), { recursive: true });
+    await writeFile(join(target, 'bin', 'dolphin'), 'x');
+    await writeFile(join(root, 'dolphin', 'current.json'), JSON.stringify({ id: 'dolphin', version: '1.0.0' }));
+    await writeFile(join(target, 'manifest.json'), JSON.stringify(emulator));
+    const runtime = createInstalledEmulatorRuntime({
+      installRoot: root,
+      id: 'dolphin',
+      platform: 'linux',
+      verifyManifest: async () => true,
+    });
+    assert.equal((await runtime.inspect()).entrypoint, join(target, 'bin', 'dolphin'));
+    await rm(join(target, 'bin', 'dolphin'));
+    await assert.rejects(() => runtime.inspect(), /ENOENT/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });

@@ -41,6 +41,9 @@ test('provider details preserve bounded launch evidence without secrets', () => 
   assert.equal(model.readinessStatus, 'ready');
   assert.equal(model.url, 'https://player.twitch.tv/?channel=spartan');
   assert.equal(Object.hasOwn(model, 'token'), false);
+  assert.ok(model.streamPresets.length >= 5);
+  assert.ok(model.bandwidthEstimate.totalGb > 0);
+  assert.equal(typeof model.deepLinkSupported, 'boolean');
 });
 
 test('provider details reject mismatched plans', () => {

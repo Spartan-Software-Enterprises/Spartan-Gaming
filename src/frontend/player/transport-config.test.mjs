@@ -83,6 +83,22 @@ test('player resolves WebTransport for HTTPS signaling and WebSocket for WSS', (
     }),
     'webtransport',
   );
+  assert.equal(
+    resolveSignalingTransport({
+      endpoint: 'https://relay.example.test/signal',
+      policy: { preference: 'webrtc' },
+      webTransportAvailable: true,
+    }),
+    'webtransport',
+  );
+  assert.equal(
+    resolveSignalingTransport({
+      endpoint: 'wss://relay.example.test/signal',
+      policy: { preference: 'webrtc' },
+      webSocketAvailable: true,
+    }),
+    'websocket',
+  );
 });
 
 test('player fails clearly when a requested transport is unavailable', () => {
@@ -126,4 +142,17 @@ test('player signaling endpoint precedence preserves explicit handoffs before cu
     'wss://recovery.example/signal',
   );
   assert.equal(resolveSignalingEndpoint(), '');
+});
+
+test('player transport selection rejects unsafe endpoints before choosing a transport', () => {
+  assert.throws(() => resolveSignalingTransport({ endpoint: 'ws://relay.example.test/signal' }), /secure URL/);
+  assert.throws(
+    () => resolveSignalingTransport({ endpoint: 'wss://user:ticket@relay.example.test/signal' }),
+    /secure URL/,
+  );
+  assert.throws(() => resolveSignalingTransport({ endpoint: 'not a URL' }), /invalid/);
+  assert.equal(
+    resolveSignalingTransport({ endpoint: 'ws://localhost:8790/signal', webSocketAvailable: true }),
+    'websocket',
+  );
 });

@@ -41,9 +41,12 @@ export function createBrowserEmulatorInputBridge({
   const previous = new Map();
   let timer = null;
   let active = false;
+  const keyboardFocused = () =>
+    ['running', 'paused'].includes(runtime.state) &&
+    (!canvas || target.document?.activeElement === canvas);
   const keydown = (event) => {
     const action = keyboardBindings[event.code];
-    if (!action || pressed.has(event.code)) return;
+    if (!action || pressed.has(event.code) || !keyboardFocused()) return;
     pressed.add(event.code);
     event.preventDefault?.();
     emit(runtime, {

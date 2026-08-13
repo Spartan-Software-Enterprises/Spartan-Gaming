@@ -131,6 +131,8 @@ test('session manager follows offer, answer, and close lifecycle', () => {
         createSessionEnvelope({
           sessionId: offer.sessionId,
           type: 'session.answer',
+          messageId: 'msg-after-close-01',
+          sequence: reconnect.sequence + 2,
           payload: { accepted: true },
         }),
       ),
@@ -261,6 +263,44 @@ test('session manager refuses an explicitly rejected host answer', () => {
     /rejected by host/,
   );
   assert.equal(manager.state, 'negotiating');
+});
+
+test('session manager ignores duplicate and stale state-changing messages', () => {
+  const manager = createSessionManager({ idFactory: () => 'ses-replay' });
+  const offer = manager.start({ backend: { id: 'host' } });
+  const answer = createSessionEnvelope({
+    sessionId: offer.sessionId,
+    type: 'session.answer',
+    sequence: 2,
+    messageId: 'msg-answer-0001',
+    payload: { accepted: true },
+  });
+  assert.equal(manager.receive(answer), 'connected');
+  assert.equal(manager.receive(answer), 'connected');
+  assert.equal(
+    manager.receive(
+      createSessionEnvelope({
+        sessionId: offer.sessionId,
+        type: 'session.close',
+        sequence: 1,
+        messageId: 'msg-close-00001',
+        payload: {},
+      }),
+    ),
+    'connected',
+  );
+  assert.equal(
+    manager.receive(
+      createSessionEnvelope({
+        sessionId: offer.sessionId,
+        type: 'session.close',
+        sequence: 3,
+        messageId: 'msg-close-00002',
+        payload: {},
+      }),
+    ),
+    'closed',
+  );
 });
 
 test('host identity and pairing metadata travel only in the session offer', () => {

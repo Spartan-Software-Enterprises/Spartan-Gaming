@@ -47,6 +47,7 @@ const FRONTEND_PREFERENCES = Object.freeze({
 });
 const SHADER_PRESETS = new Set(['Off', 'Sharp bilinear', 'CRT subtle', 'CRT scanlines', 'LCD']);
 const SAVE_LOCATIONS = new Set(['Profile storage', 'Game folder', 'Custom folder']);
+const WINDOWS_COMPATIBILITY = new Set(['Automatic', 'Wine', 'PlayOnLinux', 'Disabled']);
 
 export function resolveEmulationPreferences(settings = {}) {
   const frontend = FRONTEND_PREFERENCES[settings['emulation.frontend']] || 'automatic';
@@ -60,6 +61,11 @@ export function resolveEmulationPreferences(settings = {}) {
   const saveLocation = SAVE_LOCATIONS.has(settings['emulation.saveLocation'])
     ? settings['emulation.saveLocation']
     : 'Profile storage';
+  const windowsCompatibility = WINDOWS_COMPATIBILITY.has(
+    settings['emulation.windowsCompatibility'],
+  )
+    ? settings['emulation.windowsCompatibility']
+    : undefined;
   return Object.freeze({
     preference: frontend,
     renderer,
@@ -74,6 +80,7 @@ export function resolveEmulationPreferences(settings = {}) {
     shaderPreset,
     rewind: settings['emulation.rewind'] === true,
     netplay: settings['emulation.netplay'] === true,
+    ...(windowsCompatibility ? { windowsCompatibility } : {}),
   });
 }
 

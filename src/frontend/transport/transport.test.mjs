@@ -200,6 +200,48 @@ test('WebRTC transport applies validated ephemeral ICE configuration', () => {
   assert.equal(configuration.iceTransportPolicy, 'relay');
   assert.equal(configuration.iceServers[0].urls[0], 'stun:stun.example.test');
 });
+test('WebRTC transport exposes host-created data channels', () => {
+  let instance;
+  class FakePeer {
+    constructor() {
+      instance = this;
+    }
+    close() {}
+  }
+  const transport = createWebRtcTransport({ RTCPeerConnectionImpl: FakePeer });
+  const channels = [];
+  transport.on('datachannel', (channel) => channels.push(channel));
+  instance.ondatachannel({ channel: { label: 'host-control' } });
+  assert.deepEqual(channels, [{ label: 'host-control' }]);
+});
 test('transport message validation fails closed for unknown types', () => {
   assert.throws(() => validateTransportMessage({ ...message, type: 'private.command' }), /invalid/);
+});
+test('transport message validation rejects malformed envelope fields', () => {
+  for (const invalid of [
+    { ...message, messageId: 'short' },
+    { ...message, messageId: 12345678 },
+    { ...message, sessionId: 'invalid space' },
+    { ...message, sessionId: 12345678 },
+    { ...message, sentAt: 'not-a-timestamp' },
+    { ...message, sentAt: '2024-02-30T00:00:00Z' },
+    { ...message, sentAt: '2024-01-01T24:00:00Z' },
+    { ...message, sequence: -1 },
+    { ...message, sequence: 1.5 },
+    { ...message, sequence: Number.MAX_SAFE_INTEGER + 1 },
+    { ...message, payload: [] },
+    { ...message, unexpected: true },
+  ]) assert.throws(() => validateTransportMessage(invalid), /invalid/);
+  assert.doesNotThrow(() => validateTransportMessage({ ...message, sequence: 0 }));
+});
+
+test('transport message validation restricts session controls to pause and resume', () => {
+  assert.doesNotThrow(() =>
+    validateTransportMessage({ ...message, type: 'session.control', payload: { action: 'pause' } }),
+  );
+  assert.throws(
+    () =>
+      validateTransportMessage({ ...message, type: 'session.control', payload: { action: 'quit' } }),
+    /session control/,
+  );
 });

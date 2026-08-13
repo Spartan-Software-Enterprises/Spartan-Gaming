@@ -26,7 +26,7 @@ function normalizeValue(setting, value) {
   }
   if (setting.type === 'select')
     return setting.options.includes(value) || setting.accepts?.(value) ? value : setting.default;
-  if (setting.type === 'text')
+  if (setting.type === 'text' || setting.type === 'secret')
     return typeof value === 'string' ? value.slice(0, 2048) : setting.default;
   return setting.default;
 }
@@ -92,11 +92,14 @@ export function createSettingsStore({
       return write(defaultSettings, { allowProfileSwitch: false });
     },
     export() {
+      const safe = Object.fromEntries(
+        Object.entries(read()).filter(([key]) => definitions.get(key)?.type !== 'secret'),
+      );
       return JSON.stringify(
         {
           version: SETTINGS_EXPORT_VERSION,
           exportedAt: new Date().toISOString(),
-          settings: read(),
+          settings: safe,
         },
         null,
         2,

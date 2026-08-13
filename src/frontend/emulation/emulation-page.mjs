@@ -21,6 +21,12 @@ import { createBrowserEmulatorRuntime } from './browser-runtime.mjs';
 import { createBrowserEmulatorInputBridge } from './browser-input.mjs';
 import { createNativeHostLaunchRequest } from './host-launch.mjs';
 import { savePendingLaunchHandoff } from '../launch/handoff.mjs';
+import {
+  createAdapterManagerModel,
+  detectAdapterPlatform,
+  readAdapterManifestBundle,
+} from '../adapters/manager.mjs';
+import { createAdapterReleaseInstallRequest } from '../adapters/install.mjs';
 import { createActiveProfileStorage } from '../profiles/storage.mjs';
 
 const profileStorage = createActiveProfileStorage();
@@ -34,6 +40,10 @@ const state = {
   report: null,
   capabilitiesReady: false,
   preferences: resolveEmulationPreferences(),
+  adapterRecords: [],
+  releaseFeed: null,
+  adapterPlatform: detectAdapterPlatform(),
+  adapterModel: null,
 };
 const library = createEmulationLibraryStore({ storage: profileStorage });
 const browserAdapters = createBrowserEmulatorAdapterRegistry(discoverBrowserEmulatorAdapters());
@@ -48,7 +58,7 @@ const notice = document.querySelector('[data-notice]');
 const runtimePanel = document.createElement('section');
 runtimePanel.className = 'runtime-manager panel';
 runtimePanel.innerHTML =
-  '<div class="panel-head"><div><p class="eyebrow">TRUSTED RUNTIME PROFILES</p><h2>Manage local runtimes</h2></div><span>Metadata only</span></div><p class="runtime-help">Profiles describe user-owned native adapters, Libretro hosts, or browser runtimes. Spartan Gaming never launches a path from this page; a signed host adapter performs any native handoff.</p><form class="runtime-form" data-runtime-form><label>ID<input name="id" required pattern="[a-z0-9][a-z0-9._-]{1,63}" placeholder="dolphin-linux"></label><label>Name<input name="name" required maxlength="160" placeholder="Dolphin Linux"></label><label>Kind<select name="kind"><option value="native-emulator">Native emulator</option><option value="native-adapter">Native adapter</option><option value="libretro-core">Libretro core host</option><option value="browser-wasm">Browser WASM</option></select></label><label>Platform<select name="platform"><option value="any">Any</option><option value="linux">Linux</option><option value="darwin">macOS</option><option value="win32">Windows</option><option value="browser">Browser</option></select></label><label>Version<input name="version" required placeholder="5.0"></label><label>Core IDs<input name="coreIds" required placeholder="dolphin, libretro"></label><label class="wide">Executable or adapter path<input name="executablePath" placeholder="/opt/dolphin/dolphin-emu"></label><label>Trust<select name="trust"><option value="user-approved">User approved</option><option value="signed">Signed</option><option value="unverified">Unverified (not selectable)</option></select></label><label>Notes<input name="notes" maxlength="500" placeholder="Optional local notes"></label><button class="file-button" type="submit">＋ Save runtime profile</button></form><div data-runtime-list class="runtime-list"><p class="empty">No custom runtime profiles.</p></div>';
+  '<div class="panel-head"><div><p class="eyebrow">TRUSTED RUNTIME PROFILES</p><h2>Manage local runtimes</h2></div><span>Metadata only</span></div><p class="runtime-help">Profiles describe user-owned native adapters, Libretro hosts, or browser runtimes. Spartan Gaming never launches a path from this page; a signed host adapter performs any native handoff.</p><form class="runtime-form" data-runtime-form><label>ID<input name="id" required pattern="[a-z0-9][a-z0-9._-]{1,63}" placeholder="dolphin-linux"></label><label>Name<input name="name" required maxlength="160" placeholder="Dolphin Linux"></label><label>Kind<select name="kind"><option value="native-emulator">Native emulator</option><option value="native-adapter">Native adapter</option><option value="libretro-core">Libretro core host</option><option value="browser-wasm">Browser WASM</option></select></label><label>Platform<select name="platform"><option value="any">Any</option><option value="linux">Linux</option><option value="darwin">macOS</option><option value="win32">Windows</option><option value="browser">Browser</option></select></label><label>Version<input name="version" required placeholder="5.0"></label><label>Core IDs<input name="coreIds" required placeholder="dolphin, libretro"></label><label class="wide">Executable or adapter path<input name="executablePath" placeholder="/opt/dolphin/dolphin-emu"></label><label>Windows execution<select name="execution"><option value="native">Native</option><option value="wine">Wine</option><option value="playonlinux">PlayOnLinux</option></select></label><label>PlayOnLinux profile<input name="playOnLinuxProfile" placeholder="Spartan Gaming"></label><label>Trust<select name="trust"><option value="user-approved">User approved</option><option value="signed">Signed</option><option value="unverified">Unverified (not selectable)</option></select></label><label>Notes<input name="notes" maxlength="500" placeholder="Optional local notes"></label><button class="file-button" type="submit">＋ Save runtime profile</button></form><div data-runtime-list class="runtime-list"><p class="empty">No custom runtime profiles.</p></div>';
 coreList.closest('.panel').before(runtimePanel);
 runtimePanel.insertAdjacentHTML(
   'beforeend',
@@ -234,6 +244,47 @@ function renderLaunchPlan(plan, core) {
   }
   planPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
+function releaseCardRow(core) {
+  const row = state.adapterModel?.rows.find((item) => item.id === core.id);
+  const release = row?.release;
+  if (!release) return '';
+  const label =
+    release.status === 'install-available'
+      ? `Release v${release.to} available`
+      : release.status === 'update-available'
+        ? `Update v${release.from} → v${release.to}`
+        : release.status === 'up-to-date'
+          ? 'Adapter up to date'
+          : '';
+  if (!label) return '';
+  const action =
+    release.status === 'install-available'
+      ? 'Install adapter'
+      : release.status === 'update-available'
+        ? 'Update adapter'
+        : '';
+  return `<div class="release-row"><span class="tag release">${escapeHtml(label)}</span>${action ? `<button class="secondary" data-adapter-install="${escapeHtml(core.id)}" type="button">${escapeHtml(action)}</button>` : ''}</div>`;
+}
+function downloadAdapterHandoff(row, button) {
+  button.disabled = true;
+  try {
+    const request = createAdapterReleaseInstallRequest({
+      plan: row.release,
+      platform: state.adapterPlatform,
+      consent: true,
+    });
+    const blob = new Blob([JSON.stringify(request, null, 2)], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `spartan-adapter-${request.id}-${request.to}.install.json`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 0);
+    toast(`${request.id}: consented install handoff downloaded. Apply it with the host updater.`);
+  } catch (error) {
+    toast(error.message);
+  }
+  button.disabled = false;
+}
 function renderCores() {
   document.querySelector('[data-core-count]').textContent =
     `${state.cores.length} runtimes · ${state.capabilitiesReady ? 'browser probed' : 'checking browser'}`;
@@ -262,9 +313,24 @@ function renderCores() {
         .map((feature) => `<span class="tag">${escapeHtml(feature)}</span>`)
         .join(
           '',
-        )}</div><small class="core-note">${escapeHtml(issues[0]?.message || integration.notes[0] || 'User-selected files only')}</small><button class="launch" data-launch="${escapeHtml(core.id)}" ${state.gameFiles.length ? '' : 'disabled'}>Prepare launch plan</button></article>`;
+        )}</div><small class="core-note">${escapeHtml(issues[0]?.message || integration.notes[0] || 'User-selected files only')}</small>${releaseCardRow(core)}<button class="launch" data-launch="${escapeHtml(core.id)}" ${state.gameFiles.length ? '' : 'disabled'}>Prepare launch plan</button></article>`;
     })
     .join('');
+  coreList.querySelectorAll('[data-adapter-install]').forEach((button) =>
+    button.addEventListener('click', () => {
+      const row = state.adapterModel?.rows.find(
+        (item) => item.id === button.dataset.adapterInstall,
+      );
+      if (!row) return;
+      if (
+        !globalThis.confirm(
+          `Create a signed install handoff for ${row.name}? The host updater verifies and applies it.`,
+        )
+      )
+        return;
+      downloadAdapterHandoff(row, button);
+    }),
+  );
   coreList.querySelectorAll('[data-launch]').forEach((button) =>
     button.addEventListener('click', () => {
       const core = state.cores.find((item) => item.id === button.dataset.launch);
@@ -297,6 +363,17 @@ async function loadCores() {
       response.json(),
     );
     state.cores = manifest.projects;
+    const injected = globalThis.__SPARTAN_ADAPTER_MANIFESTS__;
+    if (injected) state.adapterRecords = [...readAdapterManifestBundle(injected)];
+    const releaseFeed = globalThis.__SPARTAN_RELEASE_FEED__;
+    state.releaseFeed = releaseFeed || null;
+    state.adapterModel = createAdapterManagerModel({
+      cores: state.cores,
+      records: state.adapterRecords,
+      feed: state.releaseFeed,
+      platform: state.adapterPlatform,
+      allowUnsigned: createSettingsStore().read()['advanced.allowUnsignedAdapters'] === true,
+    });
     renderCores();
     collectCapabilities()
       .then((report) => {
@@ -354,6 +431,8 @@ document.querySelector('[data-runtime-form]').addEventListener('submit', (event)
         .map((value) => value.trim())
         .filter(Boolean),
       executablePath: form.elements.executablePath.value,
+      execution: form.elements.execution.value,
+      playOnLinuxProfile: form.elements.playOnLinuxProfile.value,
       trust: form.elements.trust.value,
       notes: form.elements.notes.value,
     });
@@ -362,6 +441,7 @@ document.querySelector('[data-runtime-form]').addEventListener('submit', (event)
     renderCores();
     form.reset();
     form.elements.platform.value = 'any';
+    form.elements.execution.value = 'native';
     form.elements.trust.value = 'user-approved';
     toast('Runtime profile saved as metadata only.');
   } catch (error) {

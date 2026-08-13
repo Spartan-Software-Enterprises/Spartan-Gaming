@@ -12,6 +12,18 @@ const VALID_MESSAGE_TYPES = new Set([
   'telemetry.health',
   'session.close',
 ]);
+const ENVELOPE_FIELDS = new Set([
+  'protocol',
+  'messageId',
+  'sessionId',
+  'type',
+  'sentAt',
+  'sequence',
+  'payload',
+]);
+const IDENTIFIER = /^[A-Za-z0-9._:-]{8,128}$/u;
+const RFC3339_TIMESTAMP =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-](\d{2}):(\d{2}))$/u;
 
 function required(value, name) {
   if (!value) throw new TypeError(`${name} is required`);
@@ -29,6 +41,30 @@ function events() {
       for (const handler of listeners.get(type) || []) handler(payload);
     },
   };
+}
+function validTimestamp(value) {
+  const match = typeof value === 'string' ? value.match(RFC3339_TIMESTAMP) : null;
+  if (!match) return false;
+  const [year, month, day, hour, minute, second] = match.slice(1, 7).map(Number);
+  const offsetHour = Number(match[7] || 0);
+  const offsetMinute = Number(match[8] || 0);
+  const calendar = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+  return (
+    Number.isFinite(Date.parse(value)) &&
+    month >= 1 &&
+    month <= 12 &&
+    hour <= 23 &&
+    minute <= 59 &&
+    second <= 59 &&
+    offsetHour <= 23 &&
+    offsetMinute <= 59 &&
+    calendar.getUTCFullYear() === year &&
+    calendar.getUTCMonth() === month - 1 &&
+    calendar.getUTCDate() === day &&
+    calendar.getUTCHours() === hour &&
+    calendar.getUTCMinutes() === minute &&
+    calendar.getUTCSeconds() === second
+  );
 }
 
 export function applyJitterBufferTarget(receiver, targetMs) {
@@ -51,12 +87,21 @@ export function applyJitterBufferTarget(receiver, targetMs) {
 export function validateTransportMessage(message) {
   if (
     !message ||
+    typeof message !== 'object' ||
+    Array.isArray(message) ||
+    Object.keys(message).some((key) => !ENVELOPE_FIELDS.has(key)) ||
     message.protocol !== 'spartan-gaming/1' ||
     typeof message.messageId !== 'string' ||
+    !IDENTIFIER.test(message.messageId) ||
     typeof message.sessionId !== 'string' ||
+    !IDENTIFIER.test(message.sessionId) ||
     !VALID_MESSAGE_TYPES.has(message.type) ||
+    !validTimestamp(message.sentAt) ||
     !message.payload ||
-    typeof message.payload !== 'object'
+    typeof message.payload !== 'object' ||
+    Array.isArray(message.payload) ||
+    (message.sequence !== undefined &&
+      (!Number.isSafeInteger(message.sequence) || message.sequence < 0))
   )
     throw new TypeError('invalid Spartan Gaming transport message');
   if (message.type === 'session.control' && !['pause', 'resume'].includes(message.payload.action))
@@ -268,6 +313,7 @@ export function createWebRtcTransport({
     if (event.candidate) bus.emit('icecandidate', event.candidate);
   };
   peer.ontrack = (event) => bus.emit('track', event);
+  peer.ondatachannel = (event) => bus.emit('datachannel', event.channel);
   const transport = {
     get state() {
       return state;

@@ -39,6 +39,7 @@ import {
 import { resolveStartupRoute } from '../startup/route.mjs';
 import { createActiveProfileStorage } from '../profiles/storage.mjs';
 import { createProviderDetailsModel } from '../providers/details.mjs';
+import { createCloudGameDeepLink } from '../providers/cloud-features.mjs';
 import { nextConsoleMode, resolveConsoleMode } from '../platform/console-mode.mjs';
 import { resolveElectronRuntimeSettings } from '../settings/electron-runtime.mjs';
 
@@ -147,6 +148,7 @@ document
     '<button class="nav-item" data-section="browser">▣ <span>Browser games</span></button>',
   );
 const cards = document.querySelector('[data-cards]');
+const resultCount = document.querySelector('[data-result-count]');
 const toast = document.querySelector('[data-toast]');
 const sessionStatus = document.querySelector('[data-session-status]');
 const statusPill = sessionStatus.closest('.status-pill');
@@ -182,6 +184,8 @@ consoleModeToggle?.addEventListener('click', () => {
 let sessionStatusId = 'idle';
 let toastTimer;
 let selectedProviderDetails = null;
+let providerReturnFocus = null;
+resultCount?.setAttribute('aria-live', 'polite');
 document
   .querySelector('.topbar')
   ?.insertAdjacentHTML(
@@ -267,6 +271,7 @@ function renderResume() {
   button.textContent = presentation.actionLabel;
 }
 function openProviderSurface(entry, plan) {
+  providerReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   const integration = plan.integration || {};
   if (
     globalThis.spartanElectron?.isElectron &&
@@ -319,7 +324,20 @@ function openProviderDetails(entry, plan) {
   document.querySelector('[data-provider-details-title]').textContent = model.name;
   document.querySelector('[data-provider-details-subtitle]').textContent =
     `${model.kind} · Support ${model.supportLevel} · ${model.readinessStatus.replaceAll('-', ' ')}`;
-  content.innerHTML = `<div class="details-summary"><p>${escapeHtml(model.readinessReason)}</p><div class="details-facts"><span><strong>Mode</strong>${escapeHtml(model.mode || 'Unavailable')}</span><span><strong>Quality</strong>${escapeHtml(model.quality)}</span><span><strong>Region</strong>${escapeHtml(model.regionLabel)}</span><span><strong>Controller</strong>${escapeHtml(model.controllerProfile)}</span></div></div><div class="details-columns"><section><h3>Supported surfaces</h3><p>${escapeHtml(model.surfaces.join(' · ') || 'Official web experience')}</p><h3>Capabilities</h3><p>${escapeHtml(model.capabilities.join(' · ') || 'Provider-defined')}</p></section><section><h3>Setup requirements</h3><p>${escapeHtml(model.requirements.join(' · ') || 'None listed')}</p><h3>Readiness notes</h3><p>${escapeHtml([...model.troubleshooting, ...model.notes, ...(model.blocking.length ? [`Blocking: ${model.blocking.join(', ')}`] : [])].join(' ') || 'No additional notes.')}</p></section></div><p class="details-privacy">Authentication, subscriptions, provider permissions, and account sessions remain on the official service. Spartan Gaming stores no provider tokens in this flow.</p>`;
+  const deepLinkHtml = model.deepLinkSupported
+    ? `<div class="details-deeplink" style="margin-top:14px;padding:12px;border:1px solid #2a3540;border-radius:8px;background:#171e26"><label style="display:block;font-size:11px;font-weight:700;margin-bottom:6px;color:#a0aec0">Direct Game Launch (Deep Link)</label><div style="display:flex;gap:8px"><input type="text" data-deeplink-game placeholder="Enter Game Title or ID (e.g. Halo Infinite)" style="flex:1;padding:6px 10px;border:1px solid #2a3540;border-radius:6px;background:#0d1117;color:#fff;font-size:12px"><button type="button" data-deeplink-launch style="padding:6px 14px;border:0;border-radius:6px;background:#50e1d1;color:#0d1117;font-weight:700;cursor:pointer">Launch Game</button></div></div>`
+    : '';
+  content.innerHTML = `<div class="details-summary"><p>${escapeHtml(model.readinessReason)}</p><div class="details-facts"><span><strong>Mode</strong>${escapeHtml(model.mode || 'Unavailable')}</span><span><strong>Quality</strong>${escapeHtml(model.quality)}</span><span><strong>Data Usage</strong>~${escapeHtml(model.bandwidthEstimate.totalGb)} GB/hr</span><span><strong>Region</strong>${escapeHtml(model.regionLabel)}</span><span><strong>Controller</strong>${escapeHtml(model.controllerProfile)}</span></div>${deepLinkHtml}</div><div class="details-columns"><section><h3>Supported surfaces</h3><p>${escapeHtml(model.surfaces.join(' · ') || 'Official web experience')}</p><h3>Capabilities</h3><p>${escapeHtml(model.capabilities.join(' · ') || 'Provider-defined')}</p></section><section><h3>Setup requirements</h3><p>${escapeHtml(model.requirements.join(' · ') || 'None listed')}</p><h3>Readiness notes</h3><p>${escapeHtml([...model.troubleshooting, ...model.notes, ...(model.blocking.length ? [`Blocking: ${model.blocking.join(', ')}`] : [])].join(' ') || 'No additional notes.')}</p></section></div><p class="details-privacy">Authentication, subscriptions, provider permissions, and account sessions remain on the official service. Spartan Gaming stores no provider tokens in this flow.</p>`;
+  content.querySelector('[data-deeplink-launch]')?.addEventListener('click', () => {
+    const input = content.querySelector('[data-deeplink-game]');
+    const gameId = input?.value?.trim();
+    if (!gameId) return;
+    const url = createCloudGameDeepLink(model.providerId, gameId);
+    if (url) {
+      closeProviderDetails();
+      launchEntry(entry, { ...plan, action: 'open-url', url });
+    }
+  });
   document.querySelector('[data-provider-details-external]').href = model.url;
   document.querySelector('[data-provider-details-launch]').textContent =
     model.action === 'embed-url' ? 'Open official player' : 'Open official service';
@@ -377,6 +395,28 @@ function launchEntry(entry, plan) {
   if (plan.action === 'embed-url') {
     openProviderSurface(entry, plan);
     showToast(`${entry.name}: official embed opened.`);
+    return;
+  }
+  if (plan.action === 'open-native-client') {
+    const launch = plan.nativeLaunch;
+    if (launch?.discovery?.found === true) {
+      showToast(`${entry.name}: launch via the official ${launch.client.name} client.`);
+      launchExternalSurface(launch.client.officialUrl, {
+        behavior: resolveWorkspaceLaunchBehavior(
+          activeWorkspace,
+          settings['gaming.launchBehavior'],
+        ),
+        open: window.open.bind(window),
+        assign: window.location.assign.bind(window.location),
+      });
+      return;
+    }
+    if (launch?.status === 'ready' && launch.client?.officialUrl) {
+      showToast(`${entry.name}: official native client not detected. Opening the download page in Spartan Gaming.`);
+      openProviderSurface(entry, { ...plan, action: 'embed-url', url: launch.client.officialUrl });
+      return;
+    }
+    showToast(`${entry.name}: native client launch needs the official app installed and signed in.`);
     return;
   }
   if (plan.action === 'open-url' || plan.action === 'configure-api') {
@@ -486,10 +526,18 @@ function visibleEntries() {
       : [];
   return [...catalogEntries, ...importedEntries];
 }
+function updateFilterControls() {
+  document.querySelectorAll('[data-filter]').forEach((button) => {
+    const active = button.dataset.filter === state.filter;
+    button.classList.toggle('is-active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+}
 function render() {
   renderWorkspaceControl();
+  updateFilterControls();
   const entries = visibleEntries();
-  document.querySelector('[data-result-count]').textContent =
+  resultCount.textContent =
     `${entries.length} connection${entries.length === 1 ? '' : 's'}`;
   cards.innerHTML = entries.length
     ? entries
@@ -527,6 +575,14 @@ function render() {
                     : entry.backendType === 'game'
                       ? 'Play in browser'
                       : 'Configure';
+          const nativeLaunch = plan?.nativeLaunch;
+          const nativeTag = nativeLaunch
+            ? nativeLaunch.discovery?.found === true
+              ? 'Native client ready'
+              : nativeLaunch.status === 'ready'
+                ? 'Native client needed'
+                : null
+            : null;
           const cardType = entry.backendType === 'imported'
             ? entry.providerId || 'Game'
             : entry.backendType === 'emulator'
@@ -539,7 +595,7 @@ function render() {
             : entry.backendType === 'provider'
               ? providerHealthLabel(entry)
               : '';
-          return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(cardType)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map((tag) => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}</div><div class="card-actions">${entry.backendType === 'provider' ? `<button class="details-button" data-details="${escapeHtml(entry.id)}">Details</button>` : ''}<button class="launch" data-launch="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}${detailsLabel ? ` · ${detailsLabel}` : ''}</span></div></article>`;
+          return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(cardType)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites" aria-pressed="${favorite}">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map((tag) => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}${nativeTag ? `<span class="chip native">${escapeHtml(nativeTag)}</span>` : ''}</div><div class="card-actions">${entry.backendType === 'provider' ? `<button class="details-button" data-details="${escapeHtml(entry.id)}">Details</button>` : ''}<button class="launch" data-launch="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}${detailsLabel ? ` · ${detailsLabel}` : ''}</span></div></article>`;
         })
         .join('')
     : '<div class="empty">No connections match this view. Try another filter or search term.</div>';
@@ -620,17 +676,10 @@ document.querySelector('[data-workspace-select]')?.addEventListener('change', (e
 document.querySelectorAll('[data-filter]').forEach((button) =>
   button.addEventListener('click', () => {
     state.filter = button.dataset.filter;
-    document
-      .querySelectorAll('[data-filter]')
-      .forEach((item) => item.classList.toggle('is-active', item === button));
     render();
   }),
 );
-document
-  .querySelectorAll('[data-filter]')
-  .forEach((button) =>
-    button.classList.toggle('is-active', button.dataset.filter === state.filter),
-  );
+updateFilterControls();
 document.addEventListener('click', (event) => {
   const favoriteButton = event.target.closest('[data-favorite]');
   if (favoriteButton) {
@@ -803,6 +852,8 @@ const importButton = event.target.closest('[data-action="import-roms"]');
 document.querySelector('[data-provider-close]').addEventListener('click', closeProviderSurface);
 providerDialog.addEventListener('close', () => {
   document.querySelector('[data-provider-frame]').src = 'about:blank';
+  providerReturnFocus?.focus();
+  providerReturnFocus = null;
 });
 document
   .querySelector('[data-provider-details-close]')
@@ -844,9 +895,6 @@ document.querySelectorAll('[data-section]').forEach((button) =>
       return;
     }
     state.filter = route.filter;
-    document
-      .querySelectorAll('[data-filter]')
-      .forEach((item) => item.classList.toggle('is-active', item.dataset.filter === state.filter));
     render();
   }),
 );

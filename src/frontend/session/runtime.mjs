@@ -3,6 +3,8 @@ import { applyJitterBufferTarget, validateTransportMessage } from '../transport/
 import { createWebRtcTelemetryCollector } from './telemetry.mjs';
 import { createReconnectController } from './reconnect-controller.mjs';
 
+const MAX_PENDING_ICE_CANDIDATES = 64;
+
 function eventBus() {
   const listeners = new Map();
   return {
@@ -33,18 +35,41 @@ export function createSessionRuntime({
   let sequence = 0;
   let dataChannel = null;
   let activePreferences = null;
+  let remoteDescriptionReady = false;
   let unbind = [];
+  const pendingIceCandidates = [];
   const telemetry = media?.peerConnection?.getStats
     ? createWebRtcTelemetryCollector({ peerConnection: media.peerConnection })
     : null;
   const send = (message) => {
     const validated = validateTransportMessage(message);
     if (dataChannel?.readyState === 'open') {
-      dataChannel.send(JSON.stringify(validated));
-      return validated;
+      try {
+        dataChannel.send(JSON.stringify(validated));
+        return validated;
+      } catch {
+        // fall through to signaling when the data channel failed
+      }
     }
     signaling.send(validated);
     return validated;
+  };
+  const bindDataChannel = (channel) => {
+    dataChannel = channel;
+    dataChannel.onmessage = (event) => {
+      try {
+        receive(JSON.parse(typeof event.data === 'string' ? event.data : String(event.data)));
+      } catch (error) {
+        bus.emit('error', error);
+      }
+    };
+  };
+  const addIceCandidate = (candidate) =>
+    Promise.resolve()
+      .then(() => media.addIceCandidate(candidate))
+      .catch((error) => bus.emit('error', error));
+  const drainIceCandidates = async () => {
+    while (pendingIceCandidates.length) await addIceCandidate(pendingIceCandidates.shift());
   };
   const receive = (message) => {
     const validated = validateTransportMessage(message);
@@ -56,14 +81,30 @@ export function createSessionRuntime({
       bus.emit('error', error);
       return false;
     }
-    if (validated.type === 'session.answer' && media && validated.payload.sdp)
-      Promise.resolve(media.acceptAnswer(validated.payload.sdp)).catch((error) =>
-        bus.emit('error', error),
-      );
-    if (validated.type === 'session.ice-candidate' && media && validated.payload.candidate)
-      Promise.resolve(media.addIceCandidate(validated.payload.candidate)).catch((error) =>
-        bus.emit('error', error),
-      );
+    if (validated.type === 'session.answer' && media && validated.payload.sdp) {
+      try {
+        Promise.resolve(media.acceptAnswer(validated.payload.sdp))
+          .then(() => {
+            remoteDescriptionReady = true;
+            return drainIceCandidates();
+          })
+          .catch((error) => {
+            pendingIceCandidates.length = 0;
+            manager.fail();
+            bus.emit('error', error);
+          });
+      } catch (error) {
+        pendingIceCandidates.length = 0;
+        manager.fail();
+        bus.emit('error', error);
+      }
+    }
+    if (validated.type === 'session.ice-candidate' && media && validated.payload.candidate) {
+      if (remoteDescriptionReady) void addIceCandidate(validated.payload.candidate);
+      else if (pendingIceCandidates.length < MAX_PENDING_ICE_CANDIDATES)
+        pendingIceCandidates.push(validated.payload.candidate);
+      else bus.emit('error', new Error('pending ICE candidate limit exceeded'));
+    }
     if (validated.type === 'telemetry.health' && manager.quality.id !== beforeQuality)
       send(
         createSessionEnvelope({
@@ -119,6 +160,7 @@ export function createSessionRuntime({
         bus.emit('track', event);
       }),
     );
+    unbind.push(media.on('datachannel', bindDataChannel));
     unbind.push(media.on('close', (event) => bus.emit('media.close', event)));
     if (telemetry) {
       unbind.push(
@@ -140,7 +182,8 @@ export function createSessionRuntime({
   };
   const reconnectController = createReconnectController({
     ...reconnect,
-    attempt: () => {
+    attempt: async () => {
+      if (signaling.state !== 'open') await signaling.connect();
       const envelope = manager.requestReconnect();
       send(envelope);
       bus.emit('reconnect', envelope);
@@ -167,19 +210,14 @@ export function createSessionRuntime({
       activePreferences = preferences || null;
       sessionId = offer.sessionId;
       sequence = offer.sequence;
+      remoteDescriptionReady = false;
+      pendingIceCandidates.length = 0;
       bind();
       await signaling.connect();
       let outbound = offer;
       if (media) {
-        dataChannel = media.createDataChannel?.();
-        if (dataChannel)
-          dataChannel.onmessage = (event) => {
-            try {
-              receive(JSON.parse(typeof event.data === 'string' ? event.data : String(event.data)));
-            } catch (error) {
-              bus.emit('error', error);
-            }
-          };
+        const channel = media.createDataChannel?.();
+        if (channel) bindDataChannel(channel);
         const sdp = await media.createOffer();
         outbound = createSessionEnvelope({
           sessionId,
@@ -231,6 +269,25 @@ export function createSessionRuntime({
     close() {
       reconnectController.cancel();
       telemetry?.stop();
+      pendingIceCandidates.length = 0;
+      if (
+        sessionId &&
+        ['preparing', 'negotiating', 'connected', 'reconnecting'].includes(manager.state)
+      ) {
+        try {
+          send(
+            createSessionEnvelope({
+              sessionId,
+              type: 'session.close',
+              sequence: ++sequence,
+              sentAt: clock(),
+              payload: {},
+            }),
+          );
+        } catch (error) {
+          bus.emit('error', error);
+        }
+      }
       manager.close();
       dataChannel?.close?.();
       media?.close?.();

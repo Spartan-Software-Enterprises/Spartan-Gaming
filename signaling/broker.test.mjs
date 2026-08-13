@@ -28,10 +28,10 @@ test('signaling broker authenticates scoped tickets and routes messages between 
   });
   client.send(offer());
   assert.deepEqual(received, [['host', 'session.offer']]);
-  assert.deepEqual(broker.stats(), { sessions: 1, participants: 2 });
+  assert.deepEqual(broker.stats(), { sessions: 1, participants: 2, droppedDeliveries: 0 });
   host.detach();
   client.detach();
-  assert.deepEqual(broker.stats(), { sessions: 0, participants: 0 });
+  assert.deepEqual(broker.stats(), { sessions: 0, participants: 0, droppedDeliveries: 0 });
   now += 1;
 });
 
@@ -125,7 +125,31 @@ test('signaling broker does not propagate a failing recipient socket to the send
       }),
     ),
   );
-  assert.deepEqual(broker.stats(), { sessions: 1, participants: 2 });
+  assert.deepEqual(broker.stats(), { sessions: 1, participants: 1, droppedDeliveries: 1 });
   client.detach();
   host.detach();
+});
+
+test('signaling broker isolates failed recipient deliveries', () => {
+  const broker = createSignalingBroker({ secret: 'test-only-secret' });
+  const client = broker.attach({
+    sessionId: 'ses-signal-04',
+    role: 'client',
+    ticket: broker.issueTicket({ sessionId: 'ses-signal-04', role: 'client' }),
+    send() {},
+  });
+  broker.attach({
+    sessionId: 'ses-signal-04',
+    role: 'host',
+    ticket: broker.issueTicket({ sessionId: 'ses-signal-04', role: 'host' }),
+    send() {
+      throw new Error('socket write failed');
+    },
+  });
+  assert.doesNotThrow(() =>
+    client.send(
+      createSessionEnvelope({ sessionId: 'ses-signal-04', type: 'session.offer', payload: {} }),
+    ),
+  );
+  assert.deepEqual(broker.stats(), { sessions: 1, participants: 1, droppedDeliveries: 1 });
 });

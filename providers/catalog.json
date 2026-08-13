@@ -9,7 +9,17 @@
       "supportLevel": "B",
       "integrationModes": [
         "browser-first",
-        "official-launch"
+        "official-launch",
+        "native-client"
+      ],
+      "nativeClients": [
+        {
+          "name": "GeForce NOW",
+          "platforms": [
+            "win32",
+            "darwin"
+          ]
+        }
       ],
       "url": "https://www.nvidia.com/geforce-now/",
       "requirements": [
@@ -32,7 +42,16 @@
       "supportLevel": "B",
       "integrationModes": [
         "browser-first",
-        "official-launch"
+        "official-launch",
+        "native-client"
+      ],
+      "nativeClients": [
+        {
+          "name": "Xbox",
+          "platforms": [
+            "win32"
+          ]
+        }
       ],
       "url": "https://www.xbox.com/play",
       "requirements": [
@@ -98,7 +117,18 @@
       "supportLevel": "B",
       "integrationModes": [
         "browser-first",
-        "official-launch"
+        "official-launch",
+        "native-client"
+      ],
+      "nativeClients": [
+        {
+          "name": "Shadow",
+          "platforms": [
+            "win32",
+            "darwin",
+            "linux"
+          ]
+        }
       ],
       "url": "https://shadow.tech/",
       "requirements": [
@@ -121,7 +151,18 @@
       "supportLevel": "D",
       "integrationModes": [
         "official-launch",
-        "user-owned-host"
+        "user-owned-host",
+        "native-client"
+      ],
+      "nativeClients": [
+        {
+          "name": "Steam",
+          "platforms": [
+            "win32",
+            "darwin",
+            "linux"
+          ]
+        }
       ],
       "url": "https://store.steampowered.com/remoteplay/",
       "requirements": [
@@ -192,7 +233,18 @@
       "integrationModes": [
         "browser-first",
         "official-launch",
-        "official-embed"
+        "official-embed",
+        "native-client"
+      ],
+      "nativeClients": [
+        {
+          "name": "Discord",
+          "platforms": [
+            "win32",
+            "darwin",
+            "linux"
+          ]
+        }
       ],
       "url": "https://discord.com/",
       "requirements": [
@@ -305,7 +357,18 @@
       "integrationModes": [
         "browser-first",
         "official-launch",
-        "user-owned-host"
+        "user-owned-host",
+        "native-client"
+      ],
+      "nativeClients": [
+        {
+          "name": "Parsec",
+          "platforms": [
+            "win32",
+            "darwin",
+            "linux"
+          ]
+        }
       ],
       "url": "https://parsec.app/",
       "requirements": [
@@ -353,7 +416,17 @@
       "supportLevel": "B",
       "integrationModes": [
         "official-launch",
-        "user-owned-host"
+        "user-owned-host",
+        "native-client"
+      ],
+      "nativeClients": [
+        {
+          "name": "PS Remote Play",
+          "platforms": [
+            "win32",
+            "darwin"
+          ]
+        }
       ],
       "url": "https://www.playstation.com/en-us/remote-play/",
       "requirements": [
@@ -376,7 +449,18 @@
       "supportLevel": "D",
       "integrationModes": [
         "user-owned-host",
-        "self-hosted"
+        "self-hosted",
+        "native-client"
+      ],
+      "nativeClients": [
+        {
+          "name": "Moonlight",
+          "platforms": [
+            "win32",
+            "darwin",
+            "linux"
+          ]
+        }
       ],
       "url": "https://docs.lizardbyte.dev/projects/sunshine/latest/",
       "requirements": [
@@ -402,7 +486,18 @@
       "integrationModes": [
         "browser-first",
         "official-launch",
-        "official-embed"
+        "official-embed",
+        "native-client"
+      ],
+      "nativeClients": [
+        {
+          "name": "Steam",
+          "platforms": [
+            "win32",
+            "darwin",
+            "linux"
+          ]
+        }
       ],
       "url": "https://steamcommunity.com/?subsection=broadcasts",
       "requirements": [

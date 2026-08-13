@@ -16,6 +16,7 @@ const MODE_ORDER = Object.freeze({
     'self-hosted',
   ],
   native: [
+    'native-client',
     'user-owned-host',
     'self-hosted',
     'official-launch',
@@ -189,12 +190,25 @@ function createOfficialEmbedUrl(entry, profile = {}) {
   return null;
 }
 
+function nativeClientFor(entry, profile) {
+  if (typeof profile.platform !== 'string' || !Array.isArray(entry.nativeClients)) return null;
+  const client = entry.nativeClients.find(
+    (candidate) =>
+      Array.isArray(candidate.platforms) &&
+      (candidate.platforms.includes(profile.platform) || candidate.platforms.includes('universal')),
+  );
+  return client
+    ? Object.freeze({ providerId: entry.id, platform: profile.platform, name: client.name })
+    : null;
+}
+
 export function createProviderIntegration(entry, { profile = {}, report = {} } = {}) {
   if (!entry || entry.backendType !== 'provider')
     throw new TypeError('A normalized provider entry is required');
   const preset = SPECIAL_PROFILES[entry.id] || {};
   const regionHint = Object.hasOwn(REGION_LABELS, profile.region) ? profile.region : 'automatic';
   const embedUrl = createOfficialEmbedUrl(entry, profile);
+  const nativeClient = nativeClientFor(entry, profile);
   const preferred =
     embedUrl && (!profile.launchMode || profile.launchMode === 'browser')
       ? ['official-embed', ...MODE_ORDER.browser]
@@ -211,6 +225,10 @@ export function createProviderIntegration(entry, { profile = {}, report = {} } =
   );
   const requirements = Object.freeze([...(entry.requirements || [])]);
   const notes = [...(preset.notes || [])];
+  if (nativeClient)
+    notes.push(
+      `Launching through the official native ${nativeClient.name} client; the client must be installed and signed in.`,
+    );
   if (entry.nativeApp?.platform === 'android')
     notes.push(
       `Android companion: ${entry.nativeApp.packageName}. Installation and permissions remain user-controlled.`,
@@ -238,6 +256,7 @@ export function createProviderIntegration(entry, { profile = {}, report = {} } =
     providerId: entry.id,
     mode,
     embedUrl,
+    nativeClient,
     controllerProfile,
     quality:
       profile.quality && profile.quality !== 'balanced'

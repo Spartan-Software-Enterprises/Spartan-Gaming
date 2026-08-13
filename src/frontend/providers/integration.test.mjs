@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createProviderIntegration, providerTroubleshooting } from './integration.mjs';
 import './details.test.mjs';
+import './cloud-features.test.mjs';
 
 const xbox = {
   id: 'xbox-cloud-gaming',

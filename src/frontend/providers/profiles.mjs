@@ -1,4 +1,5 @@
 export const PROVIDER_PROFILES_KEY = 'spartan-gaming.provider-profiles.v1';
+export const PROVIDER_PROFILE_EXPORT_VERSION = 1;
 const GLOBAL_REGION_VALUES = Object.freeze({
   Automatic: 'automatic',
   'North America': 'north-america',
@@ -14,6 +15,10 @@ const CONTROLLER_PROFILE_VALUES = new Set([
   'Keyboard and mouse',
 ]);
 const CONTROLLER_PROFILE_ID = /^[a-z0-9][a-z0-9._-]{1,63}$/;
+const MAX_PROFILES = 50;
+const MAX_PROVIDER_ID_LENGTH = 64;
+const MAX_ACCOUNT_LABEL_LENGTH = 128;
+const MAX_NOTES_LENGTH = 4096;
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
@@ -22,8 +27,16 @@ function required(value, name) {
   if (typeof value !== 'string' || !value.trim())
     throw new TypeError(`${name} must be a non-empty string`);
 }
+function text(value, limit) {
+  return String(value || '')
+    .trim()
+    .slice(0, limit);
+}
 export function normalizeProviderProfile(profile) {
   required(profile?.providerId, 'profile.providerId');
+  const providerId = profile.providerId.trim();
+  if (!/^[a-z0-9][a-z0-9-]*$/u.test(providerId) || providerId.length > MAX_PROVIDER_ID_LENGTH)
+    throw new TypeError('profile.providerId must be a bounded lowercase identifier');
   const accountId =
     typeof profile.accountId === 'string' && profile.accountId.trim()
       ? profile.accountId.trim()
@@ -39,9 +52,9 @@ export function normalizeProviderProfile(profile) {
       ? requestedControllerProfile
       : 'Auto-detect';
   return Object.freeze({
-    providerId: profile.providerId.trim(),
+    providerId,
     accountId,
-    accountLabel: String(profile.accountLabel || ''),
+    accountLabel: text(profile.accountLabel, MAX_ACCOUNT_LABEL_LENGTH),
     region,
     quality: ['prefer-latency', 'balanced', 'prefer-quality'].includes(profile.quality)
       ? profile.quality
@@ -51,10 +64,8 @@ export function normalizeProviderProfile(profile) {
       : 'browser',
     controllerProfile,
     autoFullscreen: profile.autoFullscreen !== false,
-    embedTarget: String(profile.embedTarget || '')
-      .trim()
-      .slice(0, 128),
-    notes: String(profile.notes || ''),
+    embedTarget: text(profile.embedTarget, 128),
+    notes: text(profile.notes, MAX_NOTES_LENGTH),
   });
 }
 
@@ -89,7 +100,7 @@ export function createProviderProfileStore({
   const read = () => {
     try {
       const parsed = JSON.parse(backend?.getItem(key) || '[]');
-      return Array.isArray(parsed) ? parsed.map(normalizeProviderProfile) : [];
+      return Array.isArray(parsed) ? parsed.map(normalizeProviderProfile).slice(0, MAX_PROFILES) : [];
     } catch {
       return [];
     }
@@ -124,6 +135,8 @@ export function createProviderProfileStore({
         (item) =>
           !(item.providerId === normalized.providerId && item.accountId === normalized.accountId),
       );
+      if (profiles.length >= MAX_PROFILES)
+        throw new Error(`provider profile limit of ${MAX_PROFILES} reached`);
       profiles.push(normalized);
       write(profiles);
       return clone(normalized);
@@ -140,13 +153,24 @@ export function createProviderProfileStore({
       }
     },
     export() {
-      return JSON.stringify({ version: 1, profiles: read().map(clone) }, null, 2);
+      return JSON.stringify(
+        { version: PROVIDER_PROFILE_EXPORT_VERSION, profiles: read().map(clone) },
+        null,
+        2,
+      );
     },
     import(serialized) {
       const parsed = typeof serialized === 'string' ? JSON.parse(serialized) : serialized;
-      if (!Array.isArray(parsed?.profiles))
+      if (
+        parsed?.version !== PROVIDER_PROFILE_EXPORT_VERSION ||
+        !Array.isArray(parsed.profiles) ||
+        parsed.profiles.length > MAX_PROFILES
+      )
         throw new TypeError('provider profile export is invalid');
       const profiles = parsed.profiles.map(normalizeProviderProfile);
+      const keys = profiles.map((profile) => profileKey(profile.providerId, profile.accountId));
+      if (new Set(keys).size !== profiles.length)
+        throw new TypeError('provider profile export contains duplicate provider IDs');
       write(profiles);
       return this.list();
     },

@@ -84,6 +84,7 @@ export function createReconnectController({
     );
     try {
       const result = attempt({ attempt: plan.attempt, delayMs: plan.delayMs });
+      if (result && typeof result.then === 'function') result.catch(fail);
       return emit(
         snapshot('waiting', {
           attempt: plan.attempt,

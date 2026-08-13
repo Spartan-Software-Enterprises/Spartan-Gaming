@@ -173,7 +173,7 @@ header,
 .runtime-row,
 .manifest-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
   align-items: center;
   gap: 14px;
   padding: 13px;
@@ -205,6 +205,10 @@ header,
   background: #26323c;
   color: #b8c7cc;
   font-size: 9px;
+}
+.tag.release {
+  background: #20406e;
+  color: #a9d4ff;
 }
 .status {
   padding: 5px 7px;

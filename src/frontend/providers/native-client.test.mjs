@@ -1,0 +1,7 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {createNativeClientLaunchPlan, getNativeClientDescriptor, normalizeNativeClientDescriptor, selectNativeClient} from './native-client.mjs';
+
+test('native client descriptors normalize and select the official client per platform', () => { const descriptor = getNativeClientDescriptor('steam-remote-play'); assert.equal(descriptor.name, 'Steam'); assert.ok(descriptor.platforms.linux.executableCandidates.includes('steam')); assert.equal(selectNativeClient('nvidia-geforce-now', 'win32').appName, 'GeForce NOW'); assert.equal(selectNativeClient('amazon-luna', 'linux'), null); });
+test('native client launch plans are ready, consent-gated, and metadata-only', () => { const plan = createNativeClientLaunchPlan({providerId: 'parsec', platform: 'linux'}); assert.equal(plan.status, 'ready'); assert.equal(plan.kind, 'native-client'); assert.equal(plan.launch.consent, true); assert.equal(plan.requires[0], 'official-native-client-installed'); assert.equal(createNativeClientLaunchPlan({providerId: 'amazon-luna', platform: 'linux'}).status, 'unsupported'); });
+test('native client descriptors reject non-HTTPS and incomplete metadata', () => { assert.throws(() => normalizeNativeClientDescriptor({...getNativeClientDescriptor('steam-remote-play'), officialUrl: 'http://store.steampowered.com'}), /https/); assert.throws(() => normalizeNativeClientDescriptor({...getNativeClientDescriptor('steam-remote-play'), platforms: {}}), /platform/); });

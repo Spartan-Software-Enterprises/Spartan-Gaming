@@ -60,6 +60,7 @@ export function createSignalingBroker({
 } = {}) {
   const signingSecret = requiredString(secret, 'secret');
   const sessions = new Map();
+  let droppedDeliveries = 0;
   const ticket = ({ sessionId, role, subject = role, ttlMs = sessionTtlMs } = {}) => {
     requiredString(sessionId, 'sessionId');
     if (!SESSION_ID.test(sessionId)) throw new TypeError('sessionId has invalid characters');
@@ -114,8 +115,8 @@ export function createSignalingBroker({
             try {
               recipient.send(validated);
             } catch {
-              /* a failing recipient socket is cleaned up by the agent; never
-                 propagate the failure back to the sender */
+              session.participants.delete(recipientRole);
+              droppedDeliveries += 1;
             }
         if (validated.type === 'session.close') detach();
         return validated;
@@ -143,6 +144,7 @@ export function createSignalingBroker({
           (count, session) => count + session.participants.size,
           0,
         ),
+        droppedDeliveries,
       });
     },
   });

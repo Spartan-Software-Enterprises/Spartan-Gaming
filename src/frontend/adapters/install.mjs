@@ -29,6 +29,7 @@ export function createAdapterInstallRequest({ updatePlan, platform, consent = fa
     to: required(updatePlan.to, 'update.to'),
     platform: platform || 'universal',
     artifact: manifest.artifact,
+    ...(manifest.package ? { package: manifest.package } : {}),
     verification: Object.freeze({
       integrity: manifest.integrity,
       signature: manifest.signature,
@@ -37,4 +38,27 @@ export function createAdapterInstallRequest({ updatePlan, platform, consent = fa
     installScope: 'user',
     requiresRestart: true,
   });
+}
+
+/** Map a release planner result (install-available) onto the update-plan shape required by an install request. */
+export function toAdapterUpdatePlan(plan) {
+  if (!plan) throw new TypeError('a release plan is required');
+  if (plan.status === 'install-available') {
+    const adapter = plan.candidate || plan.adapter;
+    if (!adapter) throw new TypeError('install-available plan requires a candidate adapter');
+    return Object.freeze({
+      status: 'update-available',
+      id: adapter.id,
+      from: adapter.version,
+      to: adapter.version,
+      adapter,
+      readiness: plan.readiness,
+    });
+  }
+  return plan;
+}
+
+/** Build a consented install handoff from a release planner plan without side effects. */
+export function createAdapterReleaseInstallRequest({ plan, platform, consent = false } = {}) {
+  return createAdapterInstallRequest({ updatePlan: toAdapterUpdatePlan(plan), platform, consent });
 }

@@ -4,6 +4,7 @@ import {
   createAdapterManagerModel,
   detectAdapterPlatform,
   readAdapterManifestBundle,
+  readReleaseFeed,
 } from './manager.mjs';
 
 const signed = {
@@ -42,4 +43,74 @@ test('adapter manager normalizes manifest bundles and detects desktop platforms'
 test('adapter manager rejects malformed manifest bundles', () => {
   assert.throws(() => readAdapterManifestBundle({ records: [{ id: 'broken' }] }), /non-empty/);
   assert.throws(() => readAdapterManifestBundle({ records: 'broken' }), /contain/);
+});
+test('adapter manager merges release feed records ahead of injected manifests', () => {
+  const rawFeed = {
+    schemaVersion: 1,
+    records: [{ ...signed, id: 'dolphin', version: '2.0.0', integrity: 'sha256-feed' }],
+  };
+  assert.equal(readReleaseFeed(rawFeed)[0].id, 'dolphin');
+  const model = createAdapterManagerModel({
+    platform: 'linux',
+    records: [{ ...signed, id: 'dolphin', version: '1.0.0' }],
+    feed: rawFeed,
+    cores: [{ id: 'dolphin', name: 'Dolphin', mode: 'native' }],
+  });
+  assert.equal(model.registry.get('dolphin').version, '2.0.0');
+  assert.throws(() => readReleaseFeed({ schemaVersion: 2, records: [] }), /schemaVersion/);
+});
+test('adapter manager exposes install and update plans from the release feed', () => {
+  const feed = {
+    schemaVersion: 1,
+    records: [
+      {
+        ...signed,
+        id: 'pcsx2',
+        version: '1.1.0',
+        integrity: 'sha256-feed',
+        artifact: {
+          url: 'https://downloads.example.test/pcsx2.tar.zst',
+          sizeBytes: 1024,
+          integrity: 'sha256-feed',
+        },
+      },
+      { ...signed, id: 'dolphin', version: '2.0.0', integrity: 'sha256-dolphin' },
+    ],
+  };
+  const fresh = createAdapterManagerModel({
+    platform: 'linux',
+    feed,
+    cores: [
+      { id: 'pcsx2', name: 'PCSX2', mode: 'native' },
+      { id: 'dolphin', name: 'Dolphin', mode: 'native' },
+    ],
+  });
+  assert.equal(fresh.rows[0].release.status, 'install-available');
+  assert.equal(fresh.rows[0].release.to, '1.1.0');
+  const current = createAdapterManagerModel({
+    platform: 'linux',
+    records: [{ ...signed, id: 'pcsx2', version: '1.0.0' }],
+    feed,
+    cores: [{ id: 'pcsx2', name: 'PCSX2', mode: 'native' }],
+  });
+  assert.equal(current.rows[0].release.status, 'update-available');
+  assert.equal(current.rows[0].release.from, '1.0.0');
+  assert.equal(current.rows[0].release.to, '1.1.0');
+  const upToDate = createAdapterManagerModel({
+    platform: 'linux',
+    records: [{ ...signed, id: 'pcsx2', version: '1.1.0' }],
+    feed,
+    cores: [{ id: 'pcsx2', name: 'PCSX2', mode: 'native' }],
+  });
+  assert.equal(upToDate.rows[0].release.status, 'up-to-date');
+  const none = createAdapterManagerModel({
+    platform: 'linux',
+    records: [],
+    feed: {
+      schemaVersion: 1,
+      records: [{ ...signed, id: 'unrelated', version: '9.9.9', integrity: 'sha256-x' }],
+    },
+    cores: [{ id: 'pcsx2', name: 'PCSX2', mode: 'native' }],
+  });
+  assert.equal(none.rows[0].release, null);
 });

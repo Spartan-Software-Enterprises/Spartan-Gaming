@@ -2,6 +2,14 @@ import { createQualityController } from './quality.mjs';
 import { createReconnectPolicy } from './recovery.mjs';
 
 const PROTOCOL = 'spartan-gaming/1';
+const MAX_SEEN_MESSAGE_IDS = 256;
+const STATE_CHANGING_MESSAGES = new Set([
+  'session.answer',
+  'session.reconnect',
+  'session.close',
+  'session.control',
+]);
+let envelopeCounter = 0;
 const DEFAULT_CAPABILITIES = Object.freeze({
   transports: ['webrtc', 'websocket'],
   video: {
@@ -253,7 +261,7 @@ export function createSessionEnvelope({
   type,
   payload,
   sequence = 0,
-  messageId = `msg-${Date.now()}-${sequence}`,
+  messageId = `msg-${Date.now()}-${sequence}-${++envelopeCounter}`,
   sentAt = new Date().toISOString(),
 }) {
   requiredString(sessionId, 'sessionId');
@@ -280,11 +288,21 @@ export function createSessionManager({
   let sequence = 0;
   let quality = createQualityController();
   let recovery = createReconnectPolicy();
+  let latestRemoteSequence = -1;
+  const seenMessageIds = new Set();
+  const seenMessageOrder = [];
   const transition = (next) => {
     if (!transitions[state].includes(next))
       throw new Error(`Invalid session transition: ${state} -> ${next}`);
     state = next;
     return state;
+  };
+  const rememberMessage = (messageId) => {
+    if (seenMessageIds.has(messageId)) return false;
+    seenMessageIds.add(messageId);
+    seenMessageOrder.push(messageId);
+    if (seenMessageOrder.length > MAX_SEEN_MESSAGE_IDS) seenMessageIds.delete(seenMessageOrder.shift());
+    return true;
   };
   return {
     get state() {
@@ -329,6 +347,9 @@ export function createSessionManager({
         quality: quality.profile,
       };
       sequence = 0;
+      latestRemoteSequence = -1;
+      seenMessageIds.clear();
+      seenMessageOrder.length = 0;
       transition('negotiating');
       const payload = {
         role: 'client',
@@ -368,6 +389,11 @@ export function createSessionManager({
     receive(message) {
       if (!session || message?.sessionId !== session.id)
         throw new Error('Message belongs to another session');
+      if (!rememberMessage(message.messageId)) return state;
+      if (STATE_CHANGING_MESSAGES.has(message.type) && Number.isInteger(message.sequence)) {
+        if (message.sequence <= latestRemoteSequence) return state;
+        latestRemoteSequence = message.sequence;
+      }
       sequence = Math.max(
         sequence,
         Number.isInteger(message.sequence) ? message.sequence : sequence,
@@ -414,6 +440,11 @@ export function createSessionManager({
         payload: { attempt: plan.attempt, delayMs: plan.delayMs },
       });
     },
+    fail() {
+      if (['preparing', 'negotiating', 'connected', 'reconnecting'].includes(state))
+        transition('error');
+      return state;
+    },
     close() {
       if (
         state === 'preparing' ||
@@ -432,6 +463,9 @@ export function createSessionManager({
       session = null;
       state = 'idle';
       sequence = 0;
+      latestRemoteSequence = -1;
+      seenMessageIds.clear();
+      seenMessageOrder.length = 0;
       recovery.reset();
     },
   };

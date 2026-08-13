@@ -103,3 +103,55 @@ test('native adapter installer fails closed when no signature verifier is suppli
     await fs.rm(root, { recursive: true, force: true });
   }
 });
+test('native adapter installer extracts and activates a verified emulator package', async () => {
+  const binary = new Uint8Array([1, 2, 3, 4]);
+  const header = new Uint8Array(512);
+  header.set(new TextEncoder().encode('bin/dolphin'), 0);
+  header.set(new TextEncoder().encode(binary.length.toString(8).padStart(11, '0')), 124);
+  header[156] = 48;
+  const archive = new Uint8Array(512 + binary.length + 508 + 1024);
+  archive.set(header);
+  archive.set(binary, 512);
+  const archiveIntegrity = `sha256-${createHash('sha256').update(archive).digest('base64url')}`;
+  const entryIntegrity = `sha256-${createHash('sha256').update(binary).digest('base64url')}`;
+  const packageManifest = {
+    id: 'dolphin-native',
+    version: '1.1.0',
+    kind: 'emulator',
+    platform: 'linux',
+    format: 'tar',
+    signature: { algorithm: 'ECDSA-P256-SHA256', signer: 'release', value: 'package-signature' },
+    entrypoint: 'bin/dolphin',
+    files: [
+      { path: 'bin', type: 'directory', sizeBytes: 0 },
+      { path: 'bin/dolphin', sizeBytes: binary.length, integrity: entryIntegrity },
+    ],
+  };
+  const packaged = {
+    ...request,
+    artifact: { url: request.artifact.url, sizeBytes: archive.length, integrity: archiveIntegrity },
+    verification: { ...request.verification, integrity: archiveIntegrity },
+    package: packageManifest,
+  };
+  const root = await fs.mkdtemp(join(tmpdir(), 'spartan-adapter-'));
+  try {
+    const installer = createNativeAdapterInstaller({
+      installRoot: root,
+      download: async () => archive,
+      verifySignature: async () => true,
+      verifyPackageManifest: async ({ manifest: value }) => value.signature.signer === 'release',
+    });
+    const result = await installer.install(packaged);
+    assert.equal(result.status, 'installed');
+    assert.deepEqual(
+      await fs.readFile(join(root, 'dolphin-native', '1.1.0', 'bin', 'dolphin')),
+      Buffer.from(binary),
+    );
+    assert.equal(
+      JSON.parse(await fs.readFile(join(root, 'dolphin-native', 'current.json'), 'utf8')).integrity,
+      entryIntegrity,
+    );
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});

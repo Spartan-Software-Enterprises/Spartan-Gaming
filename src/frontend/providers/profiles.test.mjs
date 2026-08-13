@@ -129,3 +129,23 @@ test('provider profiles keep embed targets non-secret and bounded', () => {
   assert.equal(Object.hasOwn(profile, 'password'), false);
   assert.ok(profile.embedTarget.length <= 128);
 });
+test('provider profiles bound untrusted metadata and exports', () => {
+  const profile = normalizeProviderProfile({
+    providerId: 'twitch',
+    accountLabel: 'a'.repeat(200),
+    notes: 'n'.repeat(5000),
+  });
+  assert.equal(profile.accountLabel.length, 128);
+  assert.equal(profile.notes.length, 4096);
+  assert.throws(() => normalizeProviderProfile({ providerId: '../unsafe' }), /bounded lowercase identifier/);
+  const store = createProviderProfileStore({ storage: storage() });
+  assert.throws(() => store.import({ version: 2, profiles: [] }), /invalid/);
+  assert.throws(
+    () =>
+      store.import({
+        version: 1,
+        profiles: Array.from({ length: 51 }, (_, index) => ({ providerId: `provider-${index}` })),
+      }),
+    /invalid/,
+  );
+});
