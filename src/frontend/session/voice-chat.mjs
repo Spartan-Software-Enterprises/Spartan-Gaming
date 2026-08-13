@@ -1,9 +1,4 @@
-const VOICE_CHAT_REASONS = new Set([
-  'disabled',
-  'no-microphone',
-  'permission-required',
-  'ready',
-]);
+const VOICE_CHAT_REASONS = new Set(['disabled', 'no-microphone', 'permission-required', 'ready']);
 
 /**
  * Resolve whether the client can join the session voice channel. Voice chat
@@ -16,7 +11,8 @@ export function resolveVoiceChatPolicy({
   audioInput = 'System default',
   micPermission = 'unknown',
 } = {}) {
-  if (enabled !== true) return Object.freeze({ available: false, enabled: false, reason: 'disabled' });
+  if (enabled !== true)
+    return Object.freeze({ available: false, enabled: false, reason: 'disabled' });
   if (audioInput === 'No microphone')
     return Object.freeze({ available: false, enabled: false, reason: 'no-microphone' });
   if (micPermission !== 'granted')

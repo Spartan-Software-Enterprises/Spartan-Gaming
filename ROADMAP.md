@@ -185,19 +185,21 @@
 - [x] Interrupt handling and cleanup
 - [x] Cross-platform support (Windows, macOS, Linux)
 
-
 ## Milestone: Voice Intelligence & Session Capture
 
 ### ✅ Voice Chat Transcription (Contract)
+
 - [x] Bounded transcription preferences
 - [x] Consent-gated readiness resolution
 - [x] Redacted transcript export
 
 ### ✅ Advanced Noise Suppression
+
 - [x] Bounded profiles: off, basic, aggressive, ml
 - [x] Platform capability matrix with graceful step-down
 
 ### ✅ Session Recording (Contract)
+
 - [x] Consent-gated readiness with display permission check
 - [x] Retention window computation with auto-pruning
 - [x] Redacted metadata export

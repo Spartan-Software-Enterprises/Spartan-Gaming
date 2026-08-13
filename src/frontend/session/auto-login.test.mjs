@@ -43,10 +43,7 @@ test('auto-login handoff bounds and requires the authenticated connection fields
   assert.equal(createAutoLoginHandoff({ ...valid, sessionId: '' }, now), null);
   assert.equal(createAutoLoginHandoff({ ...valid, ticket: '' }, now), null);
   assert.equal(createAutoLoginHandoff({ ...valid, endpoint: 'http://insecure.test' }, now), null);
-  assert.equal(
-    createAutoLoginHandoff({ ...valid, expiresAt: now - 1000 }, now),
-    null,
-  );
+  assert.equal(createAutoLoginHandoff({ ...valid, expiresAt: now - 1000 }, now), null);
   const legacy = createAutoLoginHandoff(valid, 'invalid');
   assert.ok(legacy);
   assert.ok(legacy.expiresAt <= Date.now() + AUTO_LOGIN_TTL_MS);

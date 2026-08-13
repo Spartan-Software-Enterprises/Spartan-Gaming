@@ -12,7 +12,11 @@ test('voice chat fails closed without the explicit setting', () => {
     enabled: false,
     reason: 'disabled',
   });
-  assert.deepEqual(resolveVoiceChatPolicy(), { available: false, enabled: false, reason: 'disabled' });
+  assert.deepEqual(resolveVoiceChatPolicy(), {
+    available: false,
+    enabled: false,
+    reason: 'disabled',
+  });
 });
 
 test('voice chat requires a real microphone selection', () => {
@@ -25,16 +29,21 @@ test('voice chat requires a real microphone selection', () => {
     { available: false, enabled: false, reason: 'no-microphone' },
   );
   assert.deepEqual(
-    resolveVoiceChatPolicy({ enabled: true, audioInput: 'System default', micPermission: 'granted' }),
+    resolveVoiceChatPolicy({
+      enabled: true,
+      audioInput: 'System default',
+      micPermission: 'granted',
+    }),
     { available: true, enabled: true, reason: 'ready' },
   );
 });
 
 test('voice chat requires explicit microphone permission', () => {
-  assert.deepEqual(
-    resolveVoiceChatPolicy({ enabled: true, audioInput: 'System default' }),
-    { available: false, enabled: false, reason: 'permission-required' },
-  );
+  assert.deepEqual(resolveVoiceChatPolicy({ enabled: true, audioInput: 'System default' }), {
+    available: false,
+    enabled: false,
+    reason: 'permission-required',
+  });
   assert.deepEqual(
     resolveVoiceChatPolicy({
       enabled: true,

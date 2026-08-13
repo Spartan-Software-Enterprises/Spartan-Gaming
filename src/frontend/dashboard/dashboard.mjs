@@ -242,7 +242,11 @@ function openProviderSurface(entry, plan) {
     typeof globalThis.spartanElectron.openProvider === 'function'
   ) {
     globalThis.spartanElectron
-      .openProvider(plan.url, entry.name, resolveProviderSessionOptions(settings, { profileId: profileStorage.profileId }))
+      .openProvider(
+        plan.url,
+        entry.name,
+        resolveProviderSessionOptions(settings, { profileId: profileStorage.profileId }),
+      )
       .catch((error) => showToast(error.message));
     showToast(`${entry.name}: official player opened.`);
     return;

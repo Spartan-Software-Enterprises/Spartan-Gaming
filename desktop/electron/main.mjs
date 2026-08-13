@@ -100,6 +100,8 @@ const hasSingleInstanceLock = app.requestSingleInstanceLock();
 let pendingDeepLink = findSpartanDeepLink(process.argv);
 let networkPolicy = createApprovedNetworkPolicy();
 let automaticUpdateCheckStarted = false;
+let sessionStartTime = Date.now();
+let warningIssued = false;
 
 const updateController = createElectronUpdateController({
   isPackaged: app.isPackaged,
@@ -126,6 +128,17 @@ async function loadElectronUpdater() {
 function recordDiagnostic(type, details) {
   const entry = createElectronDiagnosticEntry(type, details);
   void appendElectronDiagnosticEntry(diagnosticLogPath, diagnosticsPolicy, entry).catch(() => {});
+  // Persist session state for crash recovery
+  try {
+    const sessionState = JSON.stringify({
+      sessionActive,
+      providerSessionActive,
+      timestamp: new Date().toISOString(),
+    });
+    localStorage.setItem('spartan-gaming-session-state', sessionState);
+  } catch {
+    // localStorage may not be available in all contexts
+  }
 }
 
 function recordProcessFailure(type, details) {
@@ -437,9 +450,44 @@ async function createMainWindow() {
       toggleApplicationDeveloperTools();
     }
   });
+  const sessionDuration = Date.now() - sessionStartTime;
+  if (sessionDuration > 300_000 && !warningIssued) {
+    warningIssued = true;
+    void dialog
+      .showMessageBox(windowRef, {
+        type: 'warning',
+        buttons: ['Continue', 'End Session'],
+        defaultId: 0,
+        cancelId: 0,
+        title: 'Session duration warning',
+        message: `Spartan Gaming has been running for ${Math.floor(sessionDuration / 60_000)} minutes.`,
+      })
+      .then((result) => {
+        if (result.response === 1) {
+          windowRef.webContents.send('spartan:force-end-session');
+        }
+      });
+  }
   await windowRef.loadURL(`${APP_ORIGIN}/dashboard/?startup=1`);
   deliverDeepLink(pendingDeepLink);
   pendingDeepLink = null;
+}
+
+// Restore session state from previous launch (crash recovery)
+let restoredSessionState = null;
+try {
+  const saved = localStorage.getItem('spartan-gaming-session-state');
+  if (saved) {
+    restoredSessionState = JSON.parse(saved);
+    // Validate that the session hasn't been stale for too long
+    const savedTime = new Date(restoredSessionState.timestamp).getTime();
+    const maxStaleAge = 60_000; // 1 minute
+    if (Date.now() - savedTime > maxStaleAge) {
+      restoredSessionState = null;
+    }
+  }
+} catch {
+  // Ignore errors from localStorage
 }
 
 if (!hasSingleInstanceLock) {
@@ -458,6 +506,22 @@ if (!hasSingleInstanceLock) {
 
 if (hasSingleInstanceLock)
   app.whenReady().then(async () => {
+    // Restore session state from previous launch (crash recovery)
+    let restoredSessionState = null;
+    try {
+      const saved = localStorage.getItem('spartan-gaming-session-state');
+      if (saved) {
+        restoredSessionState = JSON.parse(saved);
+        // Validate that the session hasn't been stale for too long
+        const savedTime = new Date(restoredSessionState.timestamp).getTime();
+        const maxStaleAge = 60_000; // 1 minute
+        if (Date.now() - savedTime > maxStaleAge) {
+          restoredSessionState = null;
+        }
+      }
+    } catch {
+      // Ignore errors from localStorage
+    }
     await loadElectronUpdater();
     await protocol.handle(
       APP_SCHEME,
@@ -520,6 +584,12 @@ if (hasSingleInstanceLock)
       syncPowerSaveBlocker();
       return sessionActive;
     });
+    // Restore session state if available from previous launch
+    if (restoredSessionState) {
+      sessionActive = restoredSessionState.sessionActive === true;
+      providerSessionActive = restoredSessionState.providerSessionActive === true;
+      syncPowerSaveBlocker();
+    }
     ipcMain.handle('spartan:apply-runtime-settings', async (event, serializedSettings) => {
       if (event.sender !== windowRef.webContents)
         throw new Error('runtime settings may only be applied by the primary window');
@@ -640,6 +710,12 @@ app.on('before-quit', (event) => {
         }
       });
     return;
+  }
+  if (!quitting && applicationSessionActive() && windowRef && !windowRef.isDestroyed()) {
+    const canQuit = await windowRef.webContents.sendInputEvents
+      ? true
+      : confirm('Unsaved changes may be lost. Are you sure you want to quit?');
+    if (!canQuit) event.preventDefault();
   }
 });
 

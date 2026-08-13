@@ -30,9 +30,7 @@ function endpoint(value) {
 export function createAutoLoginHandoff(values = {}, now = Date.now()) {
   const createdAt = Number.isFinite(now) ? now : Date.now();
   const expiresAt = Number(values.expiresAt);
-  const expiry = Number.isFinite(expiresAt)
-    ? expiresAt
-    : createdAt + AUTO_LOGIN_TTL_MS;
+  const expiry = Number.isFinite(expiresAt) ? expiresAt : createdAt + AUTO_LOGIN_TTL_MS;
   if (expiry <= createdAt || expiry > createdAt + AUTO_LOGIN_TTL_MS) return null;
   const handoff = {
     version: 1,

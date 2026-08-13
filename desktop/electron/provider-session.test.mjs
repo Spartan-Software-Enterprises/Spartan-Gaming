@@ -31,16 +31,13 @@ test('provider sessions retain the shared compatibility partition when isolation
     resolveProviderPartition({ profileId: 'family', isolateAccounts: false }),
     SHARED_PROVIDER_PARTITION,
   );
-  assert.deepEqual(
-    normalizeProviderSessionOptions({ profileId: '../unsafe', autoDetect: false }),
-    {
-      profileId: 'gaming',
-      accountId: 'default',
-      isolateAccounts: true,
-      autoDetect: false,
-      autoLogin: true,
-    },
-  );
+  assert.deepEqual(normalizeProviderSessionOptions({ profileId: '../unsafe', autoDetect: false }), {
+    profileId: 'gaming',
+    accountId: 'default',
+    isolateAccounts: true,
+    autoDetect: false,
+    autoLogin: true,
+  });
 });
 
 test('provider sessions drop retained sign-ins when automatic login is disabled', () => {

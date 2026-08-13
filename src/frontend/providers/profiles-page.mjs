@@ -50,7 +50,10 @@ function renderProviders() {
       const accounts = store.list(provider.id);
       const profile = accounts[0];
       const accountCount = accounts.length;
-      const label = accountCount > 1 ? `${accountCount} accounts` : profile?.accountLabel || 'No local profile configured';
+      const label =
+        accountCount > 1
+          ? `${accountCount} accounts`
+          : profile?.accountLabel || 'No local profile configured';
       return `<button class="provider-item ${provider.id === selectedId ? 'active' : ''}" data-provider="${escapeHtml(provider.id)}"><strong>${escapeHtml(provider.name)}</strong><small>${escapeHtml(label)}</small></button>`;
     })
     .join('');

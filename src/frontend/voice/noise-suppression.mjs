@@ -1,4 +1,3 @@
-
 // src/frontend/voice/noise-suppression.mjs
 const NOISE_SUPPRESSION_PROFILES = Object.freeze(['off', 'basic', 'aggressive', 'ml']);
 const PLATFORM_CAPABILITIES = Object.freeze({
@@ -16,23 +15,42 @@ export function normalizeNoiseSuppressionPreference(raw) {
 export function resolveEffectiveNoiseSuppression(requested, platform) {
   const requestedProfile = normalizeNoiseSuppressionPreference(requested);
   const supported = PLATFORM_CAPABILITIES[platform] ?? PLATFORM_CAPABILITIES.unknown;
-  if (supported.includes(requestedProfile)) return { requested: requestedProfile, effective: requestedProfile, downgraded: false, reason: 'ok' };
+  if (supported.includes(requestedProfile))
+    return {
+      requested: requestedProfile,
+      effective: requestedProfile,
+      downgraded: false,
+      reason: 'ok',
+    };
   const order = ['ml', 'aggressive', 'basic', 'off'];
   const requestedIndex = order.indexOf(requestedProfile);
   let effective = 'off';
   for (let i = requestedIndex; i < order.length; i++) {
-    if (supported.includes(order[i])) { effective = order[i]; break; }
+    if (supported.includes(order[i])) {
+      effective = order[i];
+      break;
+    }
   }
-  return { requested: requestedProfile, effective, downgraded: effective !== requestedProfile, reason: effective === requestedProfile ? 'ok' : 'platform-capability-limited' };
+  return {
+    requested: requestedProfile,
+    effective,
+    downgraded: effective !== requestedProfile,
+    reason: effective === requestedProfile ? 'ok' : 'platform-capability-limited',
+  };
 }
 
 export function buildNoiseSuppressionConstraints(effectiveProfile) {
   const profile = normalizeNoiseSuppressionPreference(effectiveProfile);
   switch (profile) {
-    case 'off': return { noiseSuppression: false, echoCancellation: false, autoGainControl: false };
-    case 'basic': return { noiseSuppression: true, echoCancellation: false, autoGainControl: false };
-    case 'aggressive': return { noiseSuppression: true, echoCancellation: true, autoGainControl: false };
-    case 'ml': return { noiseSuppression: true, echoCancellation: true, autoGainControl: true };
-    default: return { noiseSuppression: true, echoCancellation: false, autoGainControl: false };
+    case 'off':
+      return { noiseSuppression: false, echoCancellation: false, autoGainControl: false };
+    case 'basic':
+      return { noiseSuppression: true, echoCancellation: false, autoGainControl: false };
+    case 'aggressive':
+      return { noiseSuppression: true, echoCancellation: true, autoGainControl: false };
+    case 'ml':
+      return { noiseSuppression: true, echoCancellation: true, autoGainControl: true };
+    default:
+      return { noiseSuppression: true, echoCancellation: false, autoGainControl: false };
   }
 }
