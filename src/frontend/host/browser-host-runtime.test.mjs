@@ -101,7 +101,7 @@ test('browser host runtime joins signaling, negotiates an offer, answers SDP, an
   assert.equal(signal.sent.at(-1).type, 'session.ice-candidate');
   signal.emit('message', {
     ...offer,
-    messageId: 'msg-ice',
+    messageId: 'msg-ice-01',
     type: 'session.ice-candidate',
     sequence: 1,
     payload: { candidate: { candidate: 'remote' } },
