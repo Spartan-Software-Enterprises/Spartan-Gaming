@@ -6,7 +6,6 @@ package com.spartan.gaming.app
 
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.os.Bundle
@@ -61,6 +60,7 @@ class MainActivity : Activity() {
         webView.addJavascriptInterface(nativeBridge, "SpartanAndroid")
         setContentView(webView)
         webView.loadUrl(FRONTEND_URL)
+        GithubReleaseUpdate.check(this)
     }
 
     override fun onResume() {
@@ -85,6 +85,9 @@ class MainActivity : Activity() {
     private fun configureWebView(view: WebView) {
         assetLoader = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
+            .addPathHandler("/providers/", WebViewAssetLoader.AssetsPathHandler(this))
+            .addPathHandler("/emulators/", WebViewAssetLoader.AssetsPathHandler(this))
+            .addPathHandler("/games/", WebViewAssetLoader.AssetsPathHandler(this))
             .build()
         view.setBackgroundColor(Color.rgb(16, 21, 27))
         view.settings.apply {
@@ -102,9 +105,7 @@ class MainActivity : Activity() {
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                 val target = request.url
                 if (target.scheme == "https" && target.host == ASSET_HOST) return false
-                if (target.scheme == "https") {
-                    startActivity(Intent(Intent.ACTION_VIEW, target))
-                }
+                if (target.scheme == "https") return false
                 return true
             }
         }

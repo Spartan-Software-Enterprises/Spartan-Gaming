@@ -48,6 +48,7 @@ import { createProviderDetailsModel } from '../providers/details.mjs';
 import { createCloudGameDeepLink } from '../providers/cloud-features.mjs';
 import { nextConsoleMode, resolveConsoleMode } from '../platform/console-mode.mjs';
 import { resolveElectronRuntimeSettings } from '../settings/electron-runtime.mjs';
+import { resolveEmulatorCoreForRom } from '../emulation/core-selection.mjs';
 
 const profileStorage = createActiveProfileStorage();
 const launchHistory = createLaunchHistoryStore({ storage: profileStorage });
@@ -288,6 +289,10 @@ function openProviderSurface(entry, plan) {
   providerReturnFocus =
     document.activeElement instanceof HTMLElement ? document.activeElement : null;
   const integration = plan.integration || {};
+  if (globalThis.SpartanAndroid && plan.url) {
+    window.location.assign(plan.url);
+    return;
+  }
   if (
     globalThis.spartanElectron?.isElectron &&
     typeof globalThis.spartanElectron.openProvider === 'function'
@@ -522,6 +527,24 @@ function visibleEntries() {
     return matchesType && (!query || haystack.includes(query));
   });
   const imported = importedGameStore.list();
+  const romEntries =
+    state.filter === 'rom-library'
+      ? state.romLibrary
+          .list()
+          .filter((rom) =>
+            `${rom.name} ${rom.system} ${rom.extension}`.toLowerCase().includes(query),
+          )
+          .map((rom) => ({
+            id: `rom:${rom.romPath}`,
+            name: rom.name,
+            backendType: 'rom',
+            kind: 'rom-library',
+            description: `${rom.system} · ${rom.extension.toUpperCase()} · core selected automatically`,
+            systems: [rom.system],
+            capabilities: ['gamepad', 'save-state'],
+            rom,
+          }))
+      : [];
   const importedEntries =
     state.filter === 'all' || state.filter === 'imported'
       ? imported
@@ -544,7 +567,7 @@ function visibleEntries() {
             storeUrl: game.storeUrl,
           }))
       : [];
-  return [...catalogEntries, ...importedEntries];
+  return [...catalogEntries, ...romEntries, ...importedEntries];
 }
 function updateFilterControls() {
   document.querySelectorAll('[data-filter]').forEach((button) => {
@@ -591,9 +614,11 @@ function render() {
                   ? 'Open service'
                   : entry.backendType === 'imported'
                     ? 'Play'
-                    : entry.backendType === 'game'
-                      ? 'Play in browser'
-                      : 'Configure';
+                    : entry.backendType === 'rom'
+                      ? 'Open with core'
+                      : entry.backendType === 'game'
+                        ? 'Play in browser'
+                        : 'Configure';
           const nativeLaunch = plan?.nativeLaunch;
           const nativeTag = nativeLaunch
             ? nativeLaunch.discovery?.found === true
@@ -605,11 +630,13 @@ function render() {
           const cardType =
             entry.backendType === 'imported'
               ? entry.providerId || 'Game'
-              : entry.backendType === 'emulator'
-                ? 'Emulation'
-                : entry.backendType === 'game'
-                  ? 'Browser game'
-                  : entry.kind;
+              : entry.backendType === 'rom'
+                ? 'ROM Library'
+                : entry.backendType === 'emulator'
+                  ? 'Emulation'
+                  : entry.backendType === 'game'
+                    ? 'Browser game'
+                    : entry.kind;
           const detailsLabel =
             entry.backendType === 'imported'
               ? entry.deepLink
@@ -625,10 +652,15 @@ function render() {
 }
 async function loadCatalog() {
   try {
+    const readCatalog = (url) =>
+      fetch(url).then((response) => {
+        if (!response.ok) throw new Error(`catalog request failed: ${response.status}`);
+        return response.json();
+      });
     const [providers, emulators, games] = await Promise.all([
-      fetch('../../../providers/catalog.json').then((response) => response.json()),
-      fetch('../../../emulators/catalog.json').then((response) => response.json()),
-      fetch('../../../games/catalog.json').then((response) => response.json()),
+      readCatalog('../../../providers/catalog.json'),
+      readCatalog('../../../emulators/catalog.json'),
+      readCatalog('../../../games/catalog.json'),
     ]);
     validateCatalogManifest(providers, 'provider');
     validateCatalogManifest(emulators, 'emulator');
@@ -727,10 +759,29 @@ document.addEventListener('click', (event) => {
   const launchButton = event.target.closest('[data-launch]');
   if (launchButton) {
     const catalogEntry = state.catalog.find((item) => item.id === launchButton.dataset.launch);
+    const romEntry = visibleEntries().find(
+      (item) => item.id === launchButton.dataset.launch && item.backendType === 'rom',
+    );
     const importedEntry = importedGameStore
       .list()
       .find((item) => item.id === launchButton.dataset.launch);
     const entry = catalogEntry || importedEntry;
+    if (romEntry) {
+      const core = resolveEmulatorCoreForRom(
+        romEntry.rom,
+        state.catalog.filter((item) => item.backendType === 'emulator'),
+      );
+      if (!core) {
+        showToast('No emulator core is available for this ROM.');
+        return;
+      }
+      sessionStorage.setItem(
+        'spartan-gaming.pending-rom.v1',
+        JSON.stringify({ rom: romEntry.rom, coreId: core.id }),
+      );
+      window.location.assign('../emulation/index.html');
+      return;
+    }
     if (!entry) return;
     if (importedEntry) {
       const target = importedEntry.deepLink || importedEntry.storeUrl;

@@ -13,18 +13,33 @@ test('Android shell packages the shared frontend through a safe asset origin', (
   const gradleProperties = read('gradle.properties');
   const build = read('app/build.gradle.kts');
   const activity = read('app/src/main/kotlin/com/spartan/gaming/app/MainActivity.kt');
+  const updater = read('app/src/main/kotlin/com/spartan/gaming/app/GithubReleaseUpdate.kt');
   const manifest = read('app/src/main/AndroidManifest.xml');
   assert.match(settings, /include\(":app"\)/);
   assert.match(wrapper, /gradle-8\.11\.1-bin\.zip/);
   assert.match(gradleProperties, /android\.useAndroidX=true/);
   assert.match(gradleProperties, /android\.enableJetifier=true/);
   assert.match(build, /packageFrontendAssets/);
+  assert.match(build, /packageCatalogAssets/);
+  assert.match(build, /into\("providers"\)/);
+  assert.match(build, /into\("emulators"\)/);
+  assert.match(build, /into\("games"\)/);
   assert.match(build, /androidx\.webkit:webkit/);
   assert.match(activity, /WebViewAssetLoader/);
   assert.match(activity, /appassets\.androidplatform\.net/);
+  assert.match(activity, /addPathHandler\("\/providers\//);
+  assert.match(activity, /addPathHandler\("\/emulators\//);
+  assert.match(activity, /addPathHandler\("\/games\//);
+  assert.match(activity, /if \(target\.scheme == "https"\) return false/);
   assert.match(activity, /allowFileAccess = false/);
   assert.match(activity, /addJavascriptInterface\(nativeBridge, "SpartanAndroid"\)/);
   assert.match(activity, /GameNativeHandoff\.launchOrInstall/);
+  assert.match(activity, /GithubReleaseUpdate\.check/);
+  assert.match(
+    updater,
+    /api\.github\.com\/repos\/Spartan-Software-Enterprises\/Spartan-Gaming\/releases/,
+  );
+  assert.match(updater, /setCancelable\(false\)/);
   assert.match(manifest, /android:usesCleartextTraffic="false"/);
   assert.match(manifest, /android\.permission\.INTERNET/);
 });

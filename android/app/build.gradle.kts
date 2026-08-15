@@ -29,7 +29,7 @@ android {
         minSdk = 26
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0-beta.1"
+        versionName = "0.1.0-beta.2"
     }
 
     compileOptions {
@@ -83,8 +83,15 @@ val packageFrontendAssets = tasks.register<Sync>("packageFrontendAssets") {
     into(layout.buildDirectory.dir("generated/assets/frontend"))
 }
 
+val packageCatalogAssets = tasks.register<Sync>("packageCatalogAssets") {
+    into(layout.buildDirectory.dir("generated/assets"))
+    from(rootProject.file("../providers")) { into("providers") }
+    from(rootProject.file("../emulators")) { into("emulators") }
+    from(rootProject.file("../games")) { into("games") }
+}
+
 tasks.named("preBuild") {
-    dependsOn(packageFrontendAssets)
+    dependsOn(packageFrontendAssets, packageCatalogAssets)
 }
 
 tasks.configureEach {

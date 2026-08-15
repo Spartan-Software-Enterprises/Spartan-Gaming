@@ -28,6 +28,7 @@ import {
 } from '../adapters/manager.mjs';
 import { createAdapterReleaseInstallRequest } from '../adapters/install.mjs';
 import { createActiveProfileStorage } from '../profiles/storage.mjs';
+import { resolveEmulatorCoreForRom } from './core-selection.mjs';
 
 const profileStorage = createActiveProfileStorage();
 const runtimeStore = createRuntimeProfileStore({ storage: profileStorage });
@@ -363,6 +364,14 @@ async function loadCores() {
       response.json(),
     );
     state.cores = manifest.projects;
+    let pendingRom = null;
+    try {
+      pendingRom = JSON.parse(sessionStorage.getItem('spartan-gaming.pending-rom.v1') || 'null');
+      sessionStorage.removeItem('spartan-gaming.pending-rom.v1');
+    } catch {}
+    const pendingCore = pendingRom?.rom
+      ? resolveEmulatorCoreForRom(pendingRom.rom, state.cores)
+      : null;
     const injected = globalThis.__SPARTAN_ADAPTER_MANIFESTS__;
     if (injected) state.adapterRecords = [...readAdapterManifestBundle(injected)];
     const releaseFeed = globalThis.__SPARTAN_RELEASE_FEED__;
@@ -375,6 +384,13 @@ async function loadCores() {
       allowUnsigned: createSettingsStore().read()['advanced.allowUnsignedAdapters'] === true,
     });
     renderCores();
+    if (pendingCore) {
+      toast(
+        `${pendingRom.rom.name}: ${pendingCore.name} selected automatically. Re-select the ROM file to launch it.`,
+      );
+      const launchButton = coreList.querySelector(`[data-launch="${pendingCore.id}"]`);
+      launchButton?.focus();
+    }
     collectCapabilities()
       .then((report) => {
         state.report = report;
