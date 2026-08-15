@@ -21,7 +21,7 @@ test('host deployment plans are cross-platform, shell-free, and explicit about o
     port: 9000,
   });
   const hasPathSuffix = (suffix) =>
-    plan.args.some((value) => value.replaceAll('\\\\', '/').endsWith(suffix));
+    plan.args.some((value) => value.replaceAll('\\', '/').endsWith(suffix));
   assert.equal(plan.platform, 'win32');
   assert.equal(plan.args.includes('--enable-input'), true);
   assert.equal(plan.args.includes('--config'), true);
