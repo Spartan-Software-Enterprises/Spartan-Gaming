@@ -61,6 +61,10 @@ jobs:
         run: npm run test:werift
       - name: Run optional virtual gamepad adapter contract
         run: npm run test:virtual-gamepad
+      - name: Run Bluetooth device contract
+        run: npm run test:bluetooth
+      - name: Run hardware driver safety contract
+        run: npm run test:hardware-drivers
       - name: Run device presentation contract
         run: npm run test:platform
       - name: Run display policy contract

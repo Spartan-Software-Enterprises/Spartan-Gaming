@@ -100,6 +100,10 @@ required_files=(
   host/adapter-installer.test.mjs
   host/adapter-package.mjs
   host/adapter-package.test.mjs
+  host/bluetooth.mjs
+  host/bluetooth.test.mjs
+  host/hardware-drivers.mjs
+  host/hardware-drivers.test.mjs
   host/archive-readers.mjs
   host/archive-readers.test.mjs
   host/package-signing.mjs
