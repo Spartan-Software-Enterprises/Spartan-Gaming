@@ -330,23 +330,13 @@ test('runtime UI settings toggle the player chrome dataset', () => {
 });
 
 test('runtime UI settings track the live visual viewport for responsive layouts', () => {
-  const root = {
-    dataset: {},
-    style: {
-      values: new Map(),
-      setProperty(key, value) {
-        this.values.set(key, value);
-      },
-    },
-  };
+  const root = { dataset: {}, style: { values: new Map(), setProperty(key, value) { this.values.set(key, value); } } };
   const listeners = new Map();
   const visualViewport = {
     width: 390,
     height: 740,
     offsetTop: 12,
-    addEventListener(type, callback) {
-      listeners.set(`visual:${type}`, callback);
-    },
+    addEventListener(type, callback) { listeners.set(`visual:${type}`, callback); },
     removeEventListener() {},
   };
   const windowRef = {
@@ -354,31 +344,18 @@ test('runtime UI settings track the live visual viewport for responsive layouts'
     innerWidth: 390,
     innerHeight: 844,
     visualViewport,
-    addEventListener(type, callback) {
-      listeners.set(type, callback);
-    },
+    addEventListener(type, callback) { listeners.set(type, callback); },
     removeEventListener() {},
-    requestAnimationFrame(callback) {
-      callback();
-      return 1;
-    },
+    requestAnimationFrame(callback) { callback(); return 1; },
     cancelAnimationFrame() {},
   };
   const nodes = new Map();
   const documentRef = {
     defaultView: windowRef,
     documentElement: root,
-    head: {
-      append(node) {
-        nodes.set(node.id, node);
-      },
-    },
-    getElementById(id) {
-      return nodes.get(id);
-    },
-    createElement() {
-      return { id: '', textContent: '' };
-    },
+    head: { append(node) { nodes.set(node.id, node); } },
+    getElementById(id) { return nodes.get(id); },
+    createElement() { return { id: '', textContent: '' }; },
   };
   applyRuntimeUiSettings(documentRef, {});
   assert.equal(root.dataset.spartanDeviceMode, 'mobile');
