@@ -6,6 +6,7 @@
   "main": "desktop/electron/main.mjs",
   "private": true,
   "author": "Spartan Software Enterprises",
+  "homepage": "https://github.com/Spartan-Software-Enterprises/Spartan-Gaming",
   "description": "Cross-platform frontend and orchestration layer for cloud gaming, streaming, and emulation.",
   "type": "module",
   "scripts": {
