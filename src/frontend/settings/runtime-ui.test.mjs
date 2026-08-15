@@ -328,3 +328,44 @@ test('runtime UI settings toggle the player chrome dataset', () => {
   applyRuntimeUiSettings(documentRef, { 'gaming.hideBrowserChrome': true });
   assert.equal(root.dataset.spartanHideBrowserChrome, '');
 });
+
+test('runtime UI settings track the live visual viewport for responsive layouts', () => {
+  const root = { dataset: {}, style: { values: new Map(), setProperty(key, value) { this.values.set(key, value); } } };
+  const listeners = new Map();
+  const visualViewport = {
+    width: 390,
+    height: 740,
+    offsetTop: 12,
+    addEventListener(type, callback) { listeners.set(`visual:${type}`, callback); },
+    removeEventListener() {},
+  };
+  const windowRef = {
+    navigator: { userAgent: 'Mozilla/5.0 Android', platform: 'Linux armv8l', maxTouchPoints: 5 },
+    innerWidth: 390,
+    innerHeight: 844,
+    visualViewport,
+    addEventListener(type, callback) { listeners.set(type, callback); },
+    removeEventListener() {},
+    requestAnimationFrame(callback) { callback(); return 1; },
+    cancelAnimationFrame() {},
+  };
+  const nodes = new Map();
+  const documentRef = {
+    defaultView: windowRef,
+    documentElement: root,
+    head: { append(node) { nodes.set(node.id, node); } },
+    getElementById(id) { return nodes.get(id); },
+    createElement() { return { id: '', textContent: '' }; },
+  };
+  applyRuntimeUiSettings(documentRef, {});
+  assert.equal(root.dataset.spartanDeviceMode, 'mobile');
+  assert.equal(root.dataset.spartanViewport, 'narrow');
+  assert.equal(root.style.values.get('--spartan-viewport-width'), '390px');
+  assert.equal(root.style.values.get('--spartan-viewport-height'), '740px');
+  visualViewport.width = 820;
+  visualViewport.height = 1180;
+  listeners.get('visual:resize')();
+  assert.equal(root.style.values.get('--spartan-viewport-width'), '820px');
+  assert.equal(root.style.values.get('--spartan-viewport-height'), '1180px');
+  assert.equal(root.dataset.spartanViewport, 'wide');
+});

@@ -44,6 +44,64 @@ const TV_NAVIGATION_INTERVALS = Object.freeze({
   'Low power': 150,
 });
 
+const VIEWPORT_SYNC_KEY = '__spartanViewportSync';
+
+function viewportMetrics(windowRef = globalThis) {
+  const visualViewport = windowRef?.visualViewport;
+  const width = Number(visualViewport?.width || windowRef?.innerWidth);
+  const height = Number(visualViewport?.height || windowRef?.innerHeight);
+  return {
+    width: Number.isFinite(width) && width > 0 ? width : 1280,
+    height: Number.isFinite(height) && height > 0 ? height : 720,
+    offsetTop: Number.isFinite(Number(visualViewport?.offsetTop))
+      ? Number(visualViewport.offsetTop)
+      : 0,
+  };
+}
+
+function applyViewportMetrics(documentRef) {
+  const windowRef = documentRef?.defaultView || globalThis;
+  const metrics = viewportMetrics(windowRef);
+  const root = documentRef?.documentElement;
+  if (!root) return metrics;
+  root.style.setProperty('--spartan-viewport-width', `${metrics.width}px`);
+  root.style.setProperty('--spartan-viewport-height', `${metrics.height}px`);
+  root.style.setProperty('--spartan-viewport-offset-top', `${metrics.offsetTop}px`);
+  root.dataset.spartanViewport = metrics.width <= 720 ? 'narrow' : 'wide';
+  return metrics;
+}
+
+function syncViewportMetrics(documentRef) {
+  const windowRef = documentRef?.defaultView || globalThis;
+  const previous = documentRef[VIEWPORT_SYNC_KEY];
+  previous?.dispose?.();
+  let frame = null;
+  const refresh = () => {
+    if (frame !== null) return;
+    const schedule = windowRef.requestAnimationFrame || ((callback) => setTimeout(callback, 0));
+    frame = schedule(() => {
+      frame = null;
+      applyViewportMetrics(documentRef);
+    });
+  };
+  const events = ['resize', 'orientationchange'];
+  events.forEach((event) => windowRef.addEventListener?.(event, refresh, { passive: true }));
+  windowRef.visualViewport?.addEventListener?.('resize', refresh, { passive: true });
+  windowRef.visualViewport?.addEventListener?.('scroll', refresh, { passive: true });
+  applyViewportMetrics(documentRef);
+  documentRef[VIEWPORT_SYNC_KEY] = {
+    dispose() {
+      events.forEach((event) => windowRef.removeEventListener?.(event, refresh));
+      windowRef.visualViewport?.removeEventListener?.('resize', refresh);
+      windowRef.visualViewport?.removeEventListener?.('scroll', refresh);
+      if (frame !== null) {
+        (windowRef.cancelAnimationFrame || clearTimeout)(frame);
+        frame = null;
+      }
+    },
+  };
+}
+
 export function resolveRuntimeUiSettings(settings = {}, environment = {}) {
   const accent = ACCENTS[settings['appearance.accent']] || ACCENTS.Cyan;
   const theme = THEMES[settings['appearance.theme']] || 'dark';
@@ -166,6 +224,17 @@ html[data-spartan-device-mode="television"] .content,html[data-spartan-device-mo
 html[data-spartan-device-mode="television"][data-spartan-tv-pointer="hidden"]{cursor:none}
 html[data-spartan-device-mode="mobile"] body,html[data-spartan-device-mode="handheld"] body{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 html[data-spartan-device-mode="mobile"] .content,html[data-spartan-device-mode="handheld"] .content,html[data-spartan-device-mode="mobile"] .main,html[data-spartan-device-mode="handheld"] .main{padding-bottom:calc(45px + env(safe-area-inset-bottom))}
+html,html body{max-width:100%;min-width:0;overflow-x:hidden}
+html body{min-height:var(--spartan-viewport-height,100dvh)}
+html[data-spartan-device-mode="mobile"] .app-shell,html[data-spartan-device-mode="handheld"] .app-shell,html[data-spartan-device-mode="mobile"] .app,html[data-spartan-device-mode="handheld"] .app{min-height:var(--spartan-viewport-height,100dvh)}
+html[data-spartan-device-mode="mobile"] .content,html[data-spartan-device-mode="handheld"] .content,html[data-spartan-device-mode="mobile"] .main,html[data-spartan-device-mode="handheld"] .main{width:100%;max-width:none;min-width:0;padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}
+html[data-spartan-device-mode="mobile"] .cards,html[data-spartan-device-mode="handheld"] .cards{grid-template-columns:minmax(0,1fr)!important}
+html[data-spartan-device-mode="mobile"] .hero,html[data-spartan-device-mode="handheld"] .hero{min-height:min(260px,42dvh)}
+html[data-spartan-device-mode="mobile"] .topbar,html[data-spartan-device-mode="handheld"] .topbar,html[data-spartan-device-mode="mobile"] .toolbar,html[data-spartan-device-mode="handheld"] .toolbar{max-width:100%;flex-wrap:wrap}
+html[data-spartan-device-mode="mobile"] button,html[data-spartan-device-mode="mobile"] input,html[data-spartan-device-mode="mobile"] select,html[data-spartan-device-mode="handheld"] button,html[data-spartan-device-mode="handheld"] input,html[data-spartan-device-mode="handheld"] select{max-width:100%}
+html[data-spartan-device-mode="mobile"] .panel,html[data-spartan-device-mode="handheld"] .panel,html[data-spartan-device-mode="mobile"] .card,html[data-spartan-device-mode="handheld"] .card{min-width:0;overflow-wrap:anywhere}
+html[data-spartan-device-mode="mobile"] .dialog,html[data-spartan-device-mode="handheld"] .dialog,html[data-spartan-device-mode="mobile"] .provider-dialog,html[data-spartan-device-mode="handheld"] .provider-dialog{max-width:calc(100vw - 28px);max-height:calc(var(--spartan-viewport-height,100dvh) - 28px);overflow:auto}
+html[data-spartan-device-mode="television"] body{min-height:var(--spartan-viewport-height,100dvh)}
 `;
 
 export function applyRuntimeUiSettings(documentRef, settings = {}, { navigation = {} } = {}) {
@@ -195,6 +264,7 @@ export function applyRuntimeUiSettings(documentRef, settings = {}, { navigation 
     }).applyPolicy(androidPolicy);
   }
   const root = documentRef.documentElement;
+  syncViewportMetrics(documentRef);
   root.dataset.spartanTheme = resolved.theme;
   root.lang = resolved.locale;
   root.dataset.spartanDensity = resolved.density;
