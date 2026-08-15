@@ -59,7 +59,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 22
       - name: Install native verification tooling
         run: npm install --ignore-scripts --no-audit --no-fund
       - name: Require native package and platform capabilities
