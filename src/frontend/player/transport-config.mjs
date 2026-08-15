@@ -54,8 +54,7 @@ export function resolveSignalingTransport({
   if (
     parsed.username ||
     parsed.password ||
-    !['https:', 'wss:'].includes(parsed.protocol) &&
-      !(parsed.protocol === 'ws:' && loopback)
+    (!['https:', 'wss:'].includes(parsed.protocol) && !(parsed.protocol === 'ws:' && loopback))
   )
     throw new TypeError('signaling endpoint must use a secure URL or loopback WebSocket');
   const protocol = parsed.protocol;

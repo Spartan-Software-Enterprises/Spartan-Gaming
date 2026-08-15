@@ -231,7 +231,8 @@ test('transport message validation rejects malformed envelope fields', () => {
     { ...message, sequence: Number.MAX_SAFE_INTEGER + 1 },
     { ...message, payload: [] },
     { ...message, unexpected: true },
-  ]) assert.throws(() => validateTransportMessage(invalid), /invalid/);
+  ])
+    assert.throws(() => validateTransportMessage(invalid), /invalid/);
   assert.doesNotThrow(() => validateTransportMessage({ ...message, sequence: 0 }));
 });
 
@@ -241,7 +242,11 @@ test('transport message validation restricts session controls to pause and resum
   );
   assert.throws(
     () =>
-      validateTransportMessage({ ...message, type: 'session.control', payload: { action: 'quit' } }),
+      validateTransportMessage({
+        ...message,
+        type: 'session.control',
+        payload: { action: 'quit' },
+      }),
     /session control/,
   );
 });

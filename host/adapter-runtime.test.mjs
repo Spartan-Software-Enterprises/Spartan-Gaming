@@ -152,7 +152,10 @@ test('installed emulator runtime resolves a verified package executable', async 
     };
     await mkdir(join(target, 'bin'), { recursive: true });
     await writeFile(join(target, 'bin', 'dolphin'), 'x');
-    await writeFile(join(root, 'dolphin', 'current.json'), JSON.stringify({ id: 'dolphin', version: '1.0.0' }));
+    await writeFile(
+      join(root, 'dolphin', 'current.json'),
+      JSON.stringify({ id: 'dolphin', version: '1.0.0' }),
+    );
     await writeFile(join(target, 'manifest.json'), JSON.stringify(emulator));
     const runtime = createInstalledEmulatorRuntime({
       installRoot: root,

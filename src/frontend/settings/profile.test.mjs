@@ -51,8 +51,12 @@ test('settings store saves, resets, exports, and imports portable profiles', () 
 });
 
 test('settings exports omit API keys while retaining non-secret connection preferences', () => {
-  const store = createSettingsStore({storage: storage()});
-  store.save({'accounts.providerApiKey': 'api-secret', 'accounts.hostApiKey': 'host-secret', 'accounts.hostEndpoint': 'https://host.example'});
+  const store = createSettingsStore({ storage: storage() });
+  store.save({
+    'accounts.providerApiKey': 'api-secret',
+    'accounts.hostApiKey': 'host-secret',
+    'accounts.hostEndpoint': 'https://host.example',
+  });
   const exported = JSON.parse(store.export());
   assert.equal(exported.settings['accounts.hostEndpoint'], 'https://host.example');
   assert.equal('accounts.providerApiKey' in exported.settings, false);

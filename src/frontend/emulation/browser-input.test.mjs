@@ -117,9 +117,19 @@ test('browser emulator input bridge leaves keyboard events alone until the runti
   const bridge = createBrowserEmulatorInputBridge({ runtime, target: host, canvas });
   let prevented = 0;
   bridge.start();
-  host.dispatch('keydown', { code: 'Enter', preventDefault() { prevented += 1; } });
+  host.dispatch('keydown', {
+    code: 'Enter',
+    preventDefault() {
+      prevented += 1;
+    },
+  });
   host.document.activeElement = canvas;
-  host.dispatch('keydown', { code: 'Enter', preventDefault() { prevented += 1; } });
+  host.dispatch('keydown', {
+    code: 'Enter',
+    preventDefault() {
+      prevented += 1;
+    },
+  });
   await new Promise((resolve) => setTimeout(resolve, 0));
   assert.equal(prevented, 1);
   assert.equal(events.length, 1);

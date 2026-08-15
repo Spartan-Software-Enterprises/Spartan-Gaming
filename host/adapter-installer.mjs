@@ -1,10 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { promises as defaultFs } from 'node:fs';
 import { resolve, join, relative, isAbsolute } from 'node:path';
-import {
-  extractAdapterArchive,
-  normalizeAdapterPackageManifest,
-} from './adapter-package.mjs';
+import { extractAdapterArchive, normalizeAdapterPackageManifest } from './adapter-package.mjs';
 
 const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/;
 const MAX_ARTIFACT_BYTES = 5_000_000_000;
@@ -181,9 +178,8 @@ export function createNativeAdapterInstaller({
             { encoding: 'utf8', flag: 'wx' },
           );
           pointerIntegrity =
-            plan.packageManifest.files.find(
-              (file) => file.path === plan.packageManifest.entrypoint,
-            )?.integrity || plan.artifact.integrity;
+            plan.packageManifest.files.find((file) => file.path === plan.packageManifest.entrypoint)
+              ?.integrity || plan.artifact.integrity;
         } else {
           await fsImpl.writeFile(join(plan.paths.staging, 'adapter.artifact'), content, {
             flag: 'wx',

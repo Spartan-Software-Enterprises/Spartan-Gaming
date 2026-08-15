@@ -114,13 +114,20 @@ test('catalog manifests require valid update dates, HTTPS URLs, and source-local
   };
   assert.throws(
     () =>
-      validateCatalogManifest({ catalogVersion: 1, updatedAt: '2026-02-30', providers: [provider] }, 'provider'),
+      validateCatalogManifest(
+        { catalogVersion: 1, updatedAt: '2026-02-30', providers: [provider] },
+        'provider',
+      ),
     /valid date/,
   );
   assert.throws(
     () =>
       validateCatalogManifest(
-        { catalogVersion: 1, updatedAt: '2026-08-08', providers: [{ ...provider, url: 'https://user:pass@example.test' }] },
+        {
+          catalogVersion: 1,
+          updatedAt: '2026-08-08',
+          providers: [{ ...provider, url: 'https://user:pass@example.test' }],
+        },
         'provider',
       ),
     /without credentials/,

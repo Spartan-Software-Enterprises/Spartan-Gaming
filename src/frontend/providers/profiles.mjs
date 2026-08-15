@@ -100,7 +100,9 @@ export function createProviderProfileStore({
   const read = () => {
     try {
       const parsed = JSON.parse(backend?.getItem(key) || '[]');
-      return Array.isArray(parsed) ? parsed.map(normalizeProviderProfile).slice(0, MAX_PROFILES) : [];
+      return Array.isArray(parsed)
+        ? parsed.map(normalizeProviderProfile).slice(0, MAX_PROFILES)
+        : [];
     } catch {
       return [];
     }

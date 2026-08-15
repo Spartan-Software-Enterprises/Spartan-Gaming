@@ -3,10 +3,13 @@ import assert from 'node:assert/strict';
 
 test('multiplayer page loads imported games from localStorage', async () => {
   const backend = new Map();
-  backend.set('spartan-gaming.imported-games.v1', JSON.stringify([
-    { id: 'game-1', name: 'Test Game 1' },
-    { id: 'game-2', name: 'Test Game 2' },
-  ]));
+  backend.set(
+    'spartan-gaming.imported-games.v1',
+    JSON.stringify([
+      { id: 'game-1', name: 'Test Game 1' },
+      { id: 'game-2', name: 'Test Game 2' },
+    ]),
+  );
   const storage = {
     getItem: (key) => backend.get(key) || null,
     setItem: (key, value) => backend.set(key, value),
@@ -62,10 +65,13 @@ test('multiplayer store bounds invitations to 200 entries', async () => {
 
 test('multiplayer page loads imported games from localStorage', async () => {
   const backend = new Map();
-  backend.set('spartan-gaming.imported-games.v1', JSON.stringify([
-    { id: 'game-1', name: 'Test Game 1' },
-    { id: 'game-2', name: 'Test Game 2' },
-  ]));
+  backend.set(
+    'spartan-gaming.imported-games.v1',
+    JSON.stringify([
+      { id: 'game-1', name: 'Test Game 1' },
+      { id: 'game-2', name: 'Test Game 2' },
+    ]),
+  );
   const storage = {
     getItem: (key) => backend.get(key) || null,
     setItem: (key, value) => backend.set(key, value),

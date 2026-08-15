@@ -20,7 +20,9 @@
           <button class="nav-item" data-section="emulation">⌘ <span>Emulation</span></button>
           <button class="nav-item" data-section="watch">◉ <span>Watch &amp; stream</span></button>
           <button class="nav-item" data-section="social">◍ <span>Social Center</span></button>
-          <button class="nav-item is-active" data-section="multiplayer">♟ <span>Multiplayer</span></button>
+          <button class="nav-item is-active" data-section="multiplayer">
+            ♟ <span>Multiplayer</span>
+          </button>
         </nav>
         <div class="sidebar-bottom">
           <a class="nav-item" href="../settings/index.html">⚙ <span>Settings</span></a>
@@ -62,7 +64,11 @@
     </div>
     <div class="toast" data-toast role="status" aria-live="polite"></div>
     <script type="module" src="./multiplayer.mjs"></script>
-    <dialog class="multiplayer-dialog" data-multiplayer-dialog aria-labelledby="multiplayer-dialog-title">
+    <dialog
+      class="multiplayer-dialog"
+      data-multiplayer-dialog
+      aria-labelledby="multiplayer-dialog-title"
+    >
       <form method="dialog">
         <button class="dialog-close" data-multiplayer-close aria-label="Close">×</button>
       </form>
@@ -72,9 +78,19 @@
         <p>Set up a new game session and invite friends to join.</p>
       </div>
       <div class="multiplayer-body">
-        <label class="control"><span>Session name</span><input data-session-name type="text" placeholder="e.g. Friday Night Gaming" required /></label>
-        <label class="control"><span>Game</span><select data-session-game><option value="">Type or select a game</option></select><input data-session-game-custom type="text" placeholder="Or type a custom game name" /></label>
-        <label class="control"><span>Max players</span><input data-session-max type="number" min="2" max="64" value="4" /></label>
+        <label class="control"
+          ><span>Session name</span
+          ><input data-session-name type="text" placeholder="e.g. Friday Night Gaming" required
+        /></label>
+        <label class="control"
+          ><span>Game</span
+          ><select data-session-game>
+            <option value="">Type or select a game</option></select
+          ><input data-session-game-custom type="text" placeholder="Or type a custom game name"
+        /></label>
+        <label class="control"
+          ><span>Max players</span><input data-session-max type="number" min="2" max="64" value="4"
+        /></label>
       </div>
       <div class="dialog-footer">
         <button class="primary-button" data-session-save type="button">Create session</button>

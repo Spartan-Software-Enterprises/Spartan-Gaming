@@ -42,7 +42,9 @@ function renderWatchPage(providerEntries = [], filter = 'all') {
     ? services
         .map((entry) => {
           const integration = createProviderIntegration(entry, {});
-          const caps = integration.surfaces.map((s) => `<span class="chip">${escapeHtml(s)}</span>`).join('');
+          const caps = integration.surfaces
+            .map((s) => `<span class="chip">${escapeHtml(s)}</span>`)
+            .join('');
           const authLabel =
             entry.id === 'steam-broadcasting'
               ? 'Steam OpenID'
@@ -80,12 +82,15 @@ function setupWatchPage(providerEntries = []) {
       return !query || haystack.includes(query);
     });
 
-    document.querySelector('[data-result-count]').textContent = `${services.length} service${services.length === 1 ? '' : 's'}`;
+    document.querySelector('[data-result-count]').textContent =
+      `${services.length} service${services.length === 1 ? '' : 's'}`;
     cards.innerHTML = services.length
       ? services
           .map((entry) => {
             const integration = createProviderIntegration(entry, {});
-            const caps = integration.surfaces.map((s) => `<span class="chip">${escapeHtml(s)}</span>`).join('');
+            const caps = integration.surfaces
+              .map((s) => `<span class="chip">${escapeHtml(s)}</span>`)
+              .join('');
             const authLabel =
               entry.id === 'steam-broadcasting'
                 ? 'Steam OpenID'
@@ -111,7 +116,8 @@ function setupWatchPage(providerEntries = []) {
           const body = document.querySelector('[data-stream-body]');
           if (title) title.textContent = entry.name;
           if (detail) detail.textContent = entry.description || 'Official embedded surface.';
-          if (body) body.innerHTML = `<iframe src="${escapeHtml(integration.embedUrl)}" style="width:100%;height:60vh;border:0;background:#000" allow="autoplay; encrypted-media; fullscreen" sandbox="allow-scripts allow-same-origin allow-presentation"></iframe>`;
+          if (body)
+            body.innerHTML = `<iframe src="${escapeHtml(integration.embedUrl)}" style="width:100%;height:60vh;border:0;background:#000" allow="autoplay; encrypted-media; fullscreen" sandbox="allow-scripts allow-same-origin allow-presentation"></iframe>`;
           if (typeof dialog?.showModal === 'function') dialog.showModal();
           else dialog?.setAttribute('open', '');
         } else {

@@ -61,9 +61,7 @@ export function resolveEmulationPreferences(settings = {}) {
   const saveLocation = SAVE_LOCATIONS.has(settings['emulation.saveLocation'])
     ? settings['emulation.saveLocation']
     : 'Profile storage';
-  const windowsCompatibility = WINDOWS_COMPATIBILITY.has(
-    settings['emulation.windowsCompatibility'],
-  )
+  const windowsCompatibility = WINDOWS_COMPATIBILITY.has(settings['emulation.windowsCompatibility'])
     ? settings['emulation.windowsCompatibility']
     : undefined;
   return Object.freeze({

@@ -1,4 +1,8 @@
-import { calculateBandwidthUsage, createCloudGameDeepLink, listCloudStreamPresets } from './cloud-features.mjs';
+import {
+  calculateBandwidthUsage,
+  createCloudGameDeepLink,
+  listCloudStreamPresets,
+} from './cloud-features.mjs';
 
 function list(value) {
   return Object.freeze(Array.isArray(value) ? [...value] : []);

@@ -137,7 +137,10 @@ test('provider profiles bound untrusted metadata and exports', () => {
   });
   assert.equal(profile.accountLabel.length, 128);
   assert.equal(profile.notes.length, 4096);
-  assert.throws(() => normalizeProviderProfile({ providerId: '../unsafe' }), /bounded lowercase identifier/);
+  assert.throws(
+    () => normalizeProviderProfile({ providerId: '../unsafe' }),
+    /bounded lowercase identifier/,
+  );
   const store = createProviderProfileStore({ storage: storage() });
   assert.throws(() => store.import({ version: 2, profiles: [] }), /invalid/);
   assert.throws(

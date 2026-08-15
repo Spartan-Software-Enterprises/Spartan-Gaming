@@ -18,7 +18,9 @@
           <button class="nav-item" data-section="library">▦ <span>Library</span></button>
           <button class="nav-item" data-section="providers">◈ <span>Providers</span></button>
           <button class="nav-item" data-section="emulation">⌘ <span>Emulation</span></button>
-          <button class="nav-item is-active" data-section="watch">◉ <span>Watch &amp; stream</span></button>
+          <button class="nav-item is-active" data-section="watch">
+            ◉ <span>Watch &amp; stream</span>
+          </button>
           <button class="nav-item" data-section="social">◍ <span>Social Center</span></button>
           <button class="nav-item" data-section="multiplayer">♟ <span>Multiplayer</span></button>
         </nav>
@@ -56,7 +58,12 @@
           <div class="toolbar">
             <label class="search">
               <span>⌕</span>
-              <input data-search type="search" placeholder="Search streaming services" aria-label="Search streaming services" />
+              <input
+                data-search
+                type="search"
+                placeholder="Search streaming services"
+                aria-label="Search streaming services"
+              />
             </label>
             <div class="filters" role="group" aria-label="Streaming filters">
               <button class="filter is-active" data-filter="all">All</button>
@@ -84,7 +91,9 @@
       <div class="dialog-body" data-stream-body></div>
       <div class="dialog-footer">
         <p data-stream-notes>Streaming requires a compatible service account.</p>
-        <a class="secondary-link" data-stream-external target="_blank" rel="noopener">Learn more ↗</a>
+        <a class="secondary-link" data-stream-external target="_blank" rel="noopener"
+          >Learn more ↗</a
+        >
       </div>
     </dialog>
   </body>

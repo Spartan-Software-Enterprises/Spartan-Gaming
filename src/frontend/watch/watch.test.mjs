@@ -4,9 +4,19 @@ import { STREAM_SERVICE_IDS } from '../social/streaming.mjs';
 
 const mockProviderEntries = [
   { id: 'twitch', name: 'Twitch', kind: 'live-streaming', description: 'Twitch streaming' },
-  { id: 'youtube-live', name: 'YouTube Live', kind: 'live-streaming', description: 'YouTube streaming' },
+  {
+    id: 'youtube-live',
+    name: 'YouTube Live',
+    kind: 'live-streaming',
+    description: 'YouTube streaming',
+  },
   { id: 'kick', name: 'Kick', kind: 'live-streaming', description: 'Kick streaming' },
-  { id: 'steam-broadcasting', name: 'Steam Broadcasting', kind: 'social-streaming', description: 'Steam streaming' },
+  {
+    id: 'steam-broadcasting',
+    name: 'Steam Broadcasting',
+    kind: 'social-streaming',
+    description: 'Steam streaming',
+  },
   { id: 'discord', name: 'Discord', kind: 'social-streaming', description: 'Discord' },
   { id: 'steam-library', name: 'Steam', kind: 'game-library', description: 'Steam games' },
 ];

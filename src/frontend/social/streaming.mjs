@@ -31,12 +31,15 @@ export function renderStreamServices(providerEntries = []) {
   if (!cards) return;
 
   const services = providerEntries.filter((entry) => STREAM_SERVICE_IDS.includes(entry.id));
-  document.querySelector('[data-result-count]').textContent = `${services.length} service${services.length === 1 ? '' : 's'}`;
+  document.querySelector('[data-result-count]').textContent =
+    `${services.length} service${services.length === 1 ? '' : 's'}`;
 
   cards.innerHTML = services
     .map((entry) => {
       const integration = createProviderIntegration(entry, {});
-      const caps = integration.surfaces.map((s) => `<span class="chip">${escapeHtml(s)}</span>`).join('');
+      const caps = integration.surfaces
+        .map((s) => `<span class="chip">${escapeHtml(s)}</span>`)
+        .join('');
       const authLabel =
         entry.id === 'steam-broadcasting'
           ? 'Steam OpenID'
@@ -62,7 +65,8 @@ export function setupStreamServices(providerEntries = []) {
           const body = document.querySelector('[data-social-body]');
           if (title) title.textContent = entry.name;
           if (detail) detail.textContent = entry.description || 'Official embedded surface.';
-          if (body) body.innerHTML = `<iframe src="${escapeHtml(integration.embedUrl)}" style="width:100%;height:60vh;border:0;background:#000" allow="autoplay; encrypted-media; fullscreen" sandbox="allow-scripts allow-same-origin allow-presentation"></iframe>`;
+          if (body)
+            body.innerHTML = `<iframe src="${escapeHtml(integration.embedUrl)}" style="width:100%;height:60vh;border:0;background:#000" allow="autoplay; encrypted-media; fullscreen" sandbox="allow-scripts allow-same-origin allow-presentation"></iframe>`;
           if (typeof dialog?.showModal === 'function') dialog.showModal();
           else dialog?.setAttribute('open', '');
         } else {

@@ -22,7 +22,13 @@ import {
   createWorkspaceStore,
   resolveWorkspaceLaunchBehavior,
 } from '../workspaces/workspaces.mjs';
-import { createFavoritesStore, createRomLibraryStore, createImportedGameStore, detectRomSystem, detectRomMime } from './library-state.mjs';
+import {
+  createFavoritesStore,
+  createRomLibraryStore,
+  createImportedGameStore,
+  detectRomSystem,
+  detectRomMime,
+} from './library-state.mjs';
 import {
   createCommunityProviderCatalogStore,
   mergeCommunityProviders,
@@ -57,9 +63,9 @@ const recoveryHandoff =
 const startupRoute =
   new URLSearchParams(globalThis.location?.search || '').get('startup') === '1'
     ? resolveStartupRoute(settings, {
-          recovery: recoveryHandoff,
-          lastLaunch: launchHistory.latest(),
-        })
+        recovery: recoveryHandoff,
+        lastLaunch: launchHistory.latest(),
+      })
     : null;
 if (startupRoute && typeof globalThis.location?.replace === 'function')
   globalThis.location.replace(startupRoute);
@@ -80,9 +86,17 @@ const state = {
   compatibility: null,
   report: null,
   providerHealth: new Map(),
-  filter: ['all', 'cloud', 'watch', 'browser', 'emulator', 'favorites', 'recent', 'rom-library', 'imported'].includes(
-    requestedFilter,
-  )
+  filter: [
+    'all',
+    'cloud',
+    'watch',
+    'browser',
+    'emulator',
+    'favorites',
+    'recent',
+    'rom-library',
+    'imported',
+  ].includes(requestedFilter)
     ? requestedFilter
     : 'all',
   search: '',
@@ -271,7 +285,8 @@ function renderResume() {
   button.textContent = presentation.actionLabel;
 }
 function openProviderSurface(entry, plan) {
-  providerReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  providerReturnFocus =
+    document.activeElement instanceof HTMLElement ? document.activeElement : null;
   const integration = plan.integration || {};
   if (
     globalThis.spartanElectron?.isElectron &&
@@ -412,11 +427,15 @@ function launchEntry(entry, plan) {
       return;
     }
     if (launch?.status === 'ready' && launch.client?.officialUrl) {
-      showToast(`${entry.name}: official native client not detected. Opening the download page in Spartan Gaming.`);
+      showToast(
+        `${entry.name}: official native client not detected. Opening the download page in Spartan Gaming.`,
+      );
       openProviderSurface(entry, { ...plan, action: 'embed-url', url: launch.client.officialUrl });
       return;
     }
-    showToast(`${entry.name}: native client launch needs the official app installed and signed in.`);
+    showToast(
+      `${entry.name}: native client launch needs the official app installed and signed in.`,
+    );
     return;
   }
   if (plan.action === 'open-url' || plan.action === 'configure-api') {
@@ -507,7 +526,8 @@ function visibleEntries() {
     state.filter === 'all' || state.filter === 'imported'
       ? imported
           .filter((game) => {
-            const haystack = `${game.name} ${game.providerId} ${(game.genres || []).join(' ')}`.toLowerCase();
+            const haystack =
+              `${game.name} ${game.providerId} ${(game.genres || []).join(' ')}`.toLowerCase();
             return !query || haystack.includes(query);
           })
           .map((game) => ({
@@ -537,8 +557,7 @@ function render() {
   renderWorkspaceControl();
   updateFilterControls();
   const entries = visibleEntries();
-  resultCount.textContent =
-    `${entries.length} connection${entries.length === 1 ? '' : 's'}`;
+  resultCount.textContent = `${entries.length} connection${entries.length === 1 ? '' : 's'}`;
   cards.innerHTML = entries.length
     ? entries
         .map((entry) => {
@@ -583,18 +602,22 @@ function render() {
                 ? 'Native client needed'
                 : null
             : null;
-          const cardType = entry.backendType === 'imported'
-            ? entry.providerId || 'Game'
-            : entry.backendType === 'emulator'
-              ? 'Emulation'
-              : entry.backendType === 'game'
-                ? 'Browser game'
-                : entry.kind;
-          const detailsLabel = entry.backendType === 'imported'
-            ? (entry.deepLink ? 'Deep link' : 'Store page')
-            : entry.backendType === 'provider'
-              ? providerHealthLabel(entry)
-              : '';
+          const cardType =
+            entry.backendType === 'imported'
+              ? entry.providerId || 'Game'
+              : entry.backendType === 'emulator'
+                ? 'Emulation'
+                : entry.backendType === 'game'
+                  ? 'Browser game'
+                  : entry.kind;
+          const detailsLabel =
+            entry.backendType === 'imported'
+              ? entry.deepLink
+                ? 'Deep link'
+                : 'Store page'
+              : entry.backendType === 'provider'
+                ? providerHealthLabel(entry)
+                : '';
           return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(cardType)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites" aria-pressed="${favorite}">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map((tag) => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}${nativeTag ? `<span class="chip native">${escapeHtml(nativeTag)}</span>` : ''}</div><div class="card-actions">${entry.backendType === 'provider' ? `<button class="details-button" data-details="${escapeHtml(entry.id)}">Details</button>` : ''}<button class="launch" data-launch="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}${detailsLabel ? ` · ${detailsLabel}` : ''}</span></div></article>`;
         })
         .join('')
@@ -704,7 +727,9 @@ document.addEventListener('click', (event) => {
   const launchButton = event.target.closest('[data-launch]');
   if (launchButton) {
     const catalogEntry = state.catalog.find((item) => item.id === launchButton.dataset.launch);
-    const importedEntry = importedGameStore.list().find((item) => item.id === launchButton.dataset.launch);
+    const importedEntry = importedGameStore
+      .list()
+      .find((item) => item.id === launchButton.dataset.launch);
     const entry = catalogEntry || importedEntry;
     if (!entry) return;
     if (importedEntry) {
@@ -719,7 +744,9 @@ document.addEventListener('click', (event) => {
             open: window.open.bind(window),
             assign: window.location.assign.bind(window.location),
           });
-          showToast(`${importedEntry.name}: ${handoff.mode === 'current-workspace' ? 'launched here' : 'launched'}.`);
+          showToast(
+            `${importedEntry.name}: ${handoff.mode === 'current-workspace' ? 'launched here' : 'launched'}.`,
+          );
         } catch (error) {
           showToast(error.message);
         }
@@ -735,12 +762,13 @@ document.addEventListener('click', (event) => {
     }
     launchEntry(entry, plan);
   }
-const importButton = event.target.closest('[data-action="import-roms"]');
+  const importButton = event.target.closest('[data-action="import-roms"]');
   if (importButton) {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
-    input.accept = '.zip,.smc,.sfc,.nes,.gba,.gb,.gbc,.n64,.z64,.iso,.cue,.bin,.chd,.wbfs,.gcm,.cso,.nds,.3ds,.a26,.vec,.smd,.md,.sms,.gg,.pce,.ws,.rom';
+    input.accept =
+      '.zip,.smc,.sfc,.nes,.gba,.gb,.gbc,.n64,.z64,.iso,.cue,.bin,.chd,.wbfs,.gcm,.cso,.nds,.3ds,.a26,.vec,.smd,.md,.sms,.gg,.pce,.ws,.rom';
     input.onchange = () => {
       const files = Array.from(input.files || []);
       if (files.length) {

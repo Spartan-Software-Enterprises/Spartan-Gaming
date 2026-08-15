@@ -104,7 +104,8 @@ function renderSessions() {
   const sessions = multiplayerStore.getSessions();
   const invitations = multiplayerStore.getInvitations();
 
-  document.querySelector('[data-result-count]').textContent = `${sessions.length} session${sessions.length === 1 ? '' : 's'}`;
+  document.querySelector('[data-result-count]').textContent =
+    `${sessions.length} session${sessions.length === 1 ? '' : 's'}`;
 
   const pendingInvitations = invitations.filter((i) => i.status === 'pending');
 
@@ -113,13 +114,19 @@ function renderSessions() {
     : '';
 
   if (sessions.length === 0 && pendingInvitations.length === 0) {
-    cards.innerHTML += '<div class="empty">No active multiplayer sessions. Create one to get started.</div>';
+    cards.innerHTML +=
+      '<div class="empty">No active multiplayer sessions. Create one to get started.</div>';
     return;
   }
 
   cards.innerHTML += sessions
     .map((session) => {
-      const statusClass = session.status === 'open' ? 'status-open' : session.status === 'in-progress' ? 'status-playing' : 'status-closed';
+      const statusClass =
+        session.status === 'open'
+          ? 'status-open'
+          : session.status === 'in-progress'
+            ? 'status-playing'
+            : 'status-closed';
       return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(session.game || 'Game session')}</span><span class="status ${statusClass}">${escapeHtml(session.status || 'open')}</span></div><h3>${escapeHtml(session.name || 'Untitled session')}</h3><p>${escapeHtml(session.description || 'No description')}</p><div class="chips"><span class="chip">${escapeHtml(session.players?.length || 0)}/${escapeHtml(session.maxPlayers || 4)} players</span><span class="chip">${escapeHtml(session.host || 'Unknown host')}</span></div><div class="card-actions"><button class="launch" data-join="${escapeHtml(session.id)}">${session.status === 'open' ? 'Join' : 'Spectate'}</button><button class="secondary-button" data-manage="${escapeHtml(session.id)}">Manage</button></div></article>`;
     })
     .join('');
@@ -208,7 +215,10 @@ function setupMultiplayer() {
   document.querySelector('[data-session-save]')?.addEventListener('click', () => {
     const name = document.querySelector('[data-session-name]')?.value?.trim();
     const game = getSelectedGameName();
-    const maxPlayers = Math.max(2, Math.min(64, Number(document.querySelector('[data-session-max]')?.value || 4)));
+    const maxPlayers = Math.max(
+      2,
+      Math.min(64, Number(document.querySelector('[data-session-max]')?.value || 4)),
+    );
     if (!name || !game) {
       showToast('Please enter a session name and select or enter a game.');
       return;
@@ -244,7 +254,9 @@ function setupMultiplayer() {
     }
     const acceptButton = event.target.closest('[data-accept]');
     if (acceptButton) {
-      const invitation = multiplayerStore.getInvitations().find((i) => i.id === acceptButton.dataset.accept);
+      const invitation = multiplayerStore
+        .getInvitations()
+        .find((i) => i.id === acceptButton.dataset.accept);
       if (invitation) {
         multiplayerStore.updateInvitation(invitation.id, { status: 'accepted' });
         multiplayerStore.addSession({
@@ -262,7 +274,9 @@ function setupMultiplayer() {
     }
     const declineButton = event.target.closest('[data-decline]');
     if (declineButton) {
-      const invitation = multiplayerStore.getInvitations().find((i) => i.id === declineButton.dataset.decline);
+      const invitation = multiplayerStore
+        .getInvitations()
+        .find((i) => i.id === declineButton.dataset.decline);
       if (invitation) {
         multiplayerStore.updateInvitation(invitation.id, { status: 'declined' });
         showToast('Invitation declined');
@@ -293,7 +307,9 @@ function setupMultiplayer() {
     }
     const copyInviteButton = event.target.closest('[data-copy-invite]');
     if (copyInviteButton) {
-      const session = multiplayerStore.getSessions().find((s) => s.id === copyInviteButton.dataset.copyInvite);
+      const session = multiplayerStore
+        .getSessions()
+        .find((s) => s.id === copyInviteButton.dataset.copyInvite);
       if (session) {
         const inviteLink = `${globalThis.location.origin}/multiplayer?join=${session.id}`;
         navigator.clipboard?.writeText(inviteLink).then(
@@ -305,7 +321,9 @@ function setupMultiplayer() {
     }
     const closeSessionButton = event.target.closest('[data-close-session]');
     if (closeSessionButton) {
-      const session = multiplayerStore.getSessions().find((s) => s.id === closeSessionButton.dataset.closeSession);
+      const session = multiplayerStore
+        .getSessions()
+        .find((s) => s.id === closeSessionButton.dataset.closeSession);
       if (session) {
         multiplayerStore.updateSession(session.id, { status: 'closed' });
         renderSessions();

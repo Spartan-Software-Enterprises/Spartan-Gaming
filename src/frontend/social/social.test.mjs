@@ -23,7 +23,9 @@ test('social store persists friends, messages, parties, and presence', () => {
   assert.deepEqual(store.getFriends(), [{ id: 'friend-1', name: 'Alice', status: 'online' }]);
   assert.strictEqual(store.getMessages().length, 1);
   assert.strictEqual(store.getMessages()[0].text, 'Hi');
-  assert.deepEqual(store.getParties(), [{ id: 'party-1', name: 'Gaming Party', open: true, members: ['friend-1'] }]);
+  assert.deepEqual(store.getParties(), [
+    { id: 'party-1', name: 'Gaming Party', open: true, members: ['friend-1'] },
+  ]);
   assert.strictEqual(store.getPresence().status, 'online');
   assert.strictEqual(store.getPresence().activity, 'Zelda');
 });

@@ -120,7 +120,24 @@ test('browser adapter loader fails closed for consent, trust, and integrity erro
 
 test('browser adapter loader verifies the signed descriptor before fetching its entrypoint', async () => {
   let requests = 0;
-  const subtle = {...subtleStub(), async verify() { return false; }};
-  await assert.rejects(() => loadVerifiedBrowserEmulatorAdapter({manifest, consent: true, trustedSigners: {'spartan-release': {}}, fetchImpl: async () => { requests += 1; }, subtle}), /signature verification failed/);
+  const subtle = {
+    ...subtleStub(),
+    async verify() {
+      return false;
+    },
+  };
+  await assert.rejects(
+    () =>
+      loadVerifiedBrowserEmulatorAdapter({
+        manifest,
+        consent: true,
+        trustedSigners: { 'spartan-release': {} },
+        fetchImpl: async () => {
+          requests += 1;
+        },
+        subtle,
+      }),
+    /signature verification failed/,
+  );
   assert.equal(requests, 0);
 });

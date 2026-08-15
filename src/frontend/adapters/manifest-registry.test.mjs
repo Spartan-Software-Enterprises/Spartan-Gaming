@@ -148,10 +148,7 @@ test('release install requests map install-available plans and preserve artifact
     adapter: candidate,
     readiness: { status: 'ready', id: 'dolphin-native', trust: 'signed', version: '1.1.0' },
   };
-  assert.throws(
-    () => createAdapterReleaseInstallRequest({ plan, platform: 'linux' }),
-    /consent/,
-  );
+  assert.throws(() => createAdapterReleaseInstallRequest({ plan, platform: 'linux' }), /consent/);
   const request = createAdapterReleaseInstallRequest({ plan, platform: 'linux', consent: true });
   assert.equal(request.from, '1.1.0');
   assert.equal(request.to, '1.1.0');

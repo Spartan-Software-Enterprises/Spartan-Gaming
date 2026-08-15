@@ -485,7 +485,8 @@ export const settingsCategories = [
         'streaming.showTelemetry',
         'Show stream telemetry',
         'Expose ping, jitter, packet loss, decode time, and frame pacing.',
-      ),    ],
+      ),
+    ],
   },
   {
     id: 'social',
@@ -557,7 +558,8 @@ export const settingsCategories = [
         'multiplayer.autoSpectate',
         'Auto-spectate when full',
         'Automatically spectate when a session reaches maximum players.',
-      ),    ],
+      ),
+    ],
   },
   {
     id: 'accounts',

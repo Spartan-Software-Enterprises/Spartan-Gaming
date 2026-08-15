@@ -91,7 +91,10 @@ export function normalizeAdapterManifest(record) {
       throw new TypeError('adapter.package.entrypoint must reference a declared file');
     const packageSignature = record.package.signature
       ? Object.freeze({
-          algorithm: required(record.package.signature.algorithm, 'adapter.package.signature.algorithm'),
+          algorithm: required(
+            record.package.signature.algorithm,
+            'adapter.package.signature.algorithm',
+          ),
           signer: required(record.package.signature.signer, 'adapter.package.signature.signer'),
           value: required(record.package.signature.value, 'adapter.package.signature.value'),
         })

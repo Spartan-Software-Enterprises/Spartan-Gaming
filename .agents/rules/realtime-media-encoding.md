@@ -1,6 +1,7 @@
 # Real-Time Media Encoding Invariants
 
 When creating FFmpeg process execution plans for real-time streaming (e.g., WebRTC host pipelines):
+
 1. **Never use default lookahead queues for software video encoders**: Default H.264/VP9 settings buffer multiple frames, preventing immediate stdout delivery.
 2. **Apply Zero-Latency Tuning**:
    - For `libx264`: Always include `-tune zerolatency -preset ultrafast`

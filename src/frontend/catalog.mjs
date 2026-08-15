@@ -54,7 +54,11 @@ function assertDate(value, source) {
     throw new TypeError(`${source} updatedAt must use YYYY-MM-DD`);
   const [year, month, day] = value.split('-').map(Number);
   const date = new Date(Date.UTC(year, month - 1, day));
-  if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day)
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  )
     throw new TypeError(`${source} updatedAt must be a valid date`);
 }
 

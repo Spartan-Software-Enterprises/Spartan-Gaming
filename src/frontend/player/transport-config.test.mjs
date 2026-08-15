@@ -145,7 +145,10 @@ test('player signaling endpoint precedence preserves explicit handoffs before cu
 });
 
 test('player transport selection rejects unsafe endpoints before choosing a transport', () => {
-  assert.throws(() => resolveSignalingTransport({ endpoint: 'ws://relay.example.test/signal' }), /secure URL/);
+  assert.throws(
+    () => resolveSignalingTransport({ endpoint: 'ws://relay.example.test/signal' }),
+    /secure URL/,
+  );
   assert.throws(
     () => resolveSignalingTransport({ endpoint: 'wss://user:ticket@relay.example.test/signal' }),
     /secure URL/,

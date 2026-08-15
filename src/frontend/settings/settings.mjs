@@ -135,7 +135,8 @@ function renderNav() {
       activeCategory = button.dataset.category;
       render();
     }),
-  );}
+  );
+}
 
 function renderContent() {
   const previousStatus = document.querySelector('[data-save-status]')?.textContent;
@@ -351,7 +352,8 @@ function bindControls() {
         return;
       }
     }),
-  );}
+  );
+}
 
 function render() {
   renderNav();

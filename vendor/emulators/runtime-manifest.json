@@ -3,24 +3,115 @@
   "platform": "linux-x86_64",
   "policy": "Upstream emulator binaries only; no ROMs, BIOS, keys, firmware, or game files.",
   "runtimes": [
-    {"id":"pcsx2","version":"2.6.3","license":"GPL-3.0-or-later","entrypoint":"pcsx2-v2.6.3-linux-x86_64.AppImage","source":"https://github.com/PCSX2/pcsx2/releases/download/v2.6.3/pcsx2-v2.6.3-linux-appimage-x64-Qt.AppImage","sha256":"8ce7de8613c17b00b01028a512dd1b81998b6626ebbe93a067e0eb20aeedd5bf"},
-    {"id":"ppsspp","version":"1.20.4","license":"GPL-2.0-or-later","entrypoint":"ppsspp-v1.20.4-linux-x86_64.AppImage","source":"https://github.com/hrydgard/ppsspp/releases/download/v1.20.4/PPSSPP-v1.20.4-anylinux-x86_64.AppImage","sha256":"661c098e6b7f7610171a57b7c533ce8bba6f2312b71e76d61e850461973eba21"},
-    {"id":"duckstation","version":"latest","license":"GPL-3.0-or-later","entrypoint":"duckstation-latest-linux-x86_64.AppImage","source":"https://github.com/stenzek/duckstation/releases/download/latest/DuckStation-x64.AppImage","sha256":"09a03eb4e5b1d03098c3616da86cea729bb60b533291b20d863b758fdbd756bd"},
-    {"id":"vita3k","version":"continuous","license":"GPL-2.0","entrypoint":"vita3k-continuous-linux-x86_64.AppImage","source":"https://github.com/Vita3K/Vita3K/releases/download/continuous/Vita3K-x86_64.AppImage","sha256":"eba6a71b3b3868224c5433864be2020f69ed21a511401938bdcf21a79d5d37be"},
-    {"id":"melonds","version":"1.1","license":"GPL-2.0-or-later","entrypoint":"melonds-1.1-ubuntu-x86_64.zip","source":"https://github.com/melonDS-emu/melonDS/releases/download/1.1/melonDS-1.1-ubuntu-x86_64.zip","sha256":"99465129f5413b2aad332e4377e523cf3cda905dc329d47dcb1ad01ce2cb3f66"},
-    {"id":"azahar","version":"2125.1.3","license":"GPL-2.0-or-later","entrypoint":"azahar-libretro-linux-x86_64-2125.1.3.zip","source":"https://github.com/azahar-emu/azahar/releases/download/2125.1.3/azahar-libretro-linux-x86_64-2125.1.3.zip","sha256":"1d9fab3ac29b2e93b6bf8e9b2ffa2a20e85a2788f914cd873a0c3280ada9c8ae"},
-    {"id":"mame","version":"0289","license":"GPL-2.0-or-later","entrypoint":"mame0289lx.zip","source":"https://github.com/mamedev/mame/releases/download/mame0289/mame0289lx.zip","sha256":"d5d8f40223aef8afddbb846c003402d4e348d07d3a867e6686267895ddbd2817"},
-    {"id":"xemu","version":"0.8.136","license":"GPL-2.0-or-later","entrypoint":"xemu-0.8.136-linux-x86_64.AppImage","source":"https://github.com/xemu-project/xemu/releases/download/v0.8.136/xemu-0.8.136-x86_64.AppImage","sha256":"ac77363a599109194ba2af3caa695348d199f515cf1d0fde091beb629e0c3103"},
-    {"id":"dosbox-staging","version":"0.82.2","license":"GPL-2.0-or-later","entrypoint":"dosbox-staging-v0.82.2-linux-x86_64.tar.xz","source":"https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.2/dosbox-staging-linux-x86_64-v0.82.2.tar.xz","sha256":"bc229df72ea103b7865cdca67324772dbffa8e58866477e69a79638b723a0442"},
-    {"id":"ruffle","version":"0.5.0","license":"MIT OR Apache-2.0","entrypoint":"ruffle-v0.5.0-linux-x86_64.tar.gz","source":"https://github.com/ruffle-rs/ruffle/releases/download/v0.5.0/ruffle-0.5.0-linux-x86_64.tar.gz","sha256":"aab2f543666d8e7a2712c51e74bdbcd5fe05d5c1b65d8d834ee50379a397ad6a"}
+    {
+      "id": "pcsx2",
+      "version": "2.6.3",
+      "license": "GPL-3.0-or-later",
+      "entrypoint": "pcsx2-v2.6.3-linux-x86_64.AppImage",
+      "source": "https://github.com/PCSX2/pcsx2/releases/download/v2.6.3/pcsx2-v2.6.3-linux-appimage-x64-Qt.AppImage",
+      "sha256": "8ce7de8613c17b00b01028a512dd1b81998b6626ebbe93a067e0eb20aeedd5bf"
+    },
+    {
+      "id": "ppsspp",
+      "version": "1.20.4",
+      "license": "GPL-2.0-or-later",
+      "entrypoint": "ppsspp-v1.20.4-linux-x86_64.AppImage",
+      "source": "https://github.com/hrydgard/ppsspp/releases/download/v1.20.4/PPSSPP-v1.20.4-anylinux-x86_64.AppImage",
+      "sha256": "661c098e6b7f7610171a57b7c533ce8bba6f2312b71e76d61e850461973eba21"
+    },
+    {
+      "id": "duckstation",
+      "version": "latest",
+      "license": "GPL-3.0-or-later",
+      "entrypoint": "duckstation-latest-linux-x86_64.AppImage",
+      "source": "https://github.com/stenzek/duckstation/releases/download/latest/DuckStation-x64.AppImage",
+      "sha256": "09a03eb4e5b1d03098c3616da86cea729bb60b533291b20d863b758fdbd756bd"
+    },
+    {
+      "id": "vita3k",
+      "version": "continuous",
+      "license": "GPL-2.0",
+      "entrypoint": "vita3k-continuous-linux-x86_64.AppImage",
+      "source": "https://github.com/Vita3K/Vita3K/releases/download/continuous/Vita3K-x86_64.AppImage",
+      "sha256": "eba6a71b3b3868224c5433864be2020f69ed21a511401938bdcf21a79d5d37be"
+    },
+    {
+      "id": "melonds",
+      "version": "1.1",
+      "license": "GPL-2.0-or-later",
+      "entrypoint": "melonds-1.1-ubuntu-x86_64.zip",
+      "source": "https://github.com/melonDS-emu/melonDS/releases/download/1.1/melonDS-1.1-ubuntu-x86_64.zip",
+      "sha256": "99465129f5413b2aad332e4377e523cf3cda905dc329d47dcb1ad01ce2cb3f66"
+    },
+    {
+      "id": "azahar",
+      "version": "2125.1.3",
+      "license": "GPL-2.0-or-later",
+      "entrypoint": "azahar-libretro-linux-x86_64-2125.1.3.zip",
+      "source": "https://github.com/azahar-emu/azahar/releases/download/2125.1.3/azahar-libretro-linux-x86_64-2125.1.3.zip",
+      "sha256": "1d9fab3ac29b2e93b6bf8e9b2ffa2a20e85a2788f914cd873a0c3280ada9c8ae"
+    },
+    {
+      "id": "mame",
+      "version": "0289",
+      "license": "GPL-2.0-or-later",
+      "entrypoint": "mame0289lx.zip",
+      "source": "https://github.com/mamedev/mame/releases/download/mame0289/mame0289lx.zip",
+      "sha256": "d5d8f40223aef8afddbb846c003402d4e348d07d3a867e6686267895ddbd2817"
+    },
+    {
+      "id": "xemu",
+      "version": "0.8.136",
+      "license": "GPL-2.0-or-later",
+      "entrypoint": "xemu-0.8.136-linux-x86_64.AppImage",
+      "source": "https://github.com/xemu-project/xemu/releases/download/v0.8.136/xemu-0.8.136-x86_64.AppImage",
+      "sha256": "ac77363a599109194ba2af3caa695348d199f515cf1d0fde091beb629e0c3103"
+    },
+    {
+      "id": "dosbox-staging",
+      "version": "0.82.2",
+      "license": "GPL-2.0-or-later",
+      "entrypoint": "dosbox-staging-v0.82.2-linux-x86_64.tar.xz",
+      "source": "https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.2/dosbox-staging-linux-x86_64-v0.82.2.tar.xz",
+      "sha256": "bc229df72ea103b7865cdca67324772dbffa8e58866477e69a79638b723a0442"
+    },
+    {
+      "id": "ruffle",
+      "version": "0.5.0",
+      "license": "MIT OR Apache-2.0",
+      "entrypoint": "ruffle-v0.5.0-linux-x86_64.tar.gz",
+      "source": "https://github.com/ruffle-rs/ruffle/releases/download/v0.5.0/ruffle-0.5.0-linux-x86_64.tar.gz",
+      "sha256": "aab2f543666d8e7a2712c51e74bdbcd5fe05d5c1b65d8d834ee50379a397ad6a"
+    }
   ],
   "unavailableUpstream": [
-    {"id":"dolphin","reason":"No GitHub release asset for Linux x86_64 in the current upstream API; use the official Dolphin download channel."},
-    {"id":"rpcs3","reason":"Current GitHub release has no downloadable assets; use the official RPCS3 release channel."},
-    {"id":"cemu","reason":"Current Cemu GitHub repository has no release API assets for Linux; Cemu is Windows-focused."},
-    {"id":"flycast","reason":"The current GitHub repository path does not expose a release asset; use the official Flycast build channel."},
-    {"id":"scummvm","reason":"The current GitHub release exposes no binary assets; use the official ScummVM build channel."},
-    {"id":"retroarch","reason":"GitHub release exposes source-only assets; platform binary packaging remains a separate RetroArch distribution boundary."},
-    {"id":"sameboy","reason":"GitHub latest release exposes macOS and Windows artifacts, but no Linux x86_64 binary."}
+    {
+      "id": "dolphin",
+      "reason": "No GitHub release asset for Linux x86_64 in the current upstream API; use the official Dolphin download channel."
+    },
+    {
+      "id": "rpcs3",
+      "reason": "Current GitHub release has no downloadable assets; use the official RPCS3 release channel."
+    },
+    {
+      "id": "cemu",
+      "reason": "Current Cemu GitHub repository has no release API assets for Linux; Cemu is Windows-focused."
+    },
+    {
+      "id": "flycast",
+      "reason": "The current GitHub repository path does not expose a release asset; use the official Flycast build channel."
+    },
+    {
+      "id": "scummvm",
+      "reason": "The current GitHub release exposes no binary assets; use the official ScummVM build channel."
+    },
+    {
+      "id": "retroarch",
+      "reason": "GitHub release exposes source-only assets; platform binary packaging remains a separate RetroArch distribution boundary."
+    },
+    {
+      "id": "sameboy",
+      "reason": "GitHub latest release exposes macOS and Windows artifacts, but no Linux x86_64 binary."
+    }
   ]
 }

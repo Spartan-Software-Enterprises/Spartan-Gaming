@@ -183,9 +183,11 @@
         >
       </div>
     </dialog>
-    <dialog class="details-dialog"
+    <dialog
+      class="details-dialog"
       data-provider-details-dialog
-      aria-labelledby="provider-details-title">
+      aria-labelledby="provider-details-title"
+    >
       <form method="dialog">
         <button
           class="dialog-close"
@@ -216,12 +218,32 @@
       <div class="dialog-heading">
         <p class="eyebrow accent">IMPORT GAME</p>
         <h2 id="add-game-title" data-add-game-title>Add a game from a catalog</h2>
-        <p data-add-game-detail>Enter the game name and select the platform to import it into your library.</p>
+        <p data-add-game-detail>
+          Enter the game name and select the platform to import it into your library.
+        </p>
       </div>
       <div class="add-game-body">
-        <label class="control"><span>Game name</span><input data-add-game-name type="text" placeholder="e.g. Cyberpunk 2077" required /></label>
-        <label class="control"><span>Platform</span><select data-add-game-provider><option value="">Select platform</option><option value="steam-library">Steam</option><option value="gog-library">GOG</option><option value="epic-library">Epic Games</option><option value="ubisoft-library">Ubisoft Connect</option><option value="ea-library">EA App</option><option value="battlenet-library">Battle.net</option><option value="rockstar-library">Rockstar Games</option></select></label>
-        <label class="control"><span>App ID or product ID</span><input data-add-game-appid type="text" placeholder="e.g. 1091500" /></label>
+        <label class="control"
+          ><span>Game name</span
+          ><input data-add-game-name type="text" placeholder="e.g. Cyberpunk 2077" required
+        /></label>
+        <label class="control"
+          ><span>Platform</span
+          ><select data-add-game-provider>
+            <option value="">Select platform</option>
+            <option value="steam-library">Steam</option>
+            <option value="gog-library">GOG</option>
+            <option value="epic-library">Epic Games</option>
+            <option value="ubisoft-library">Ubisoft Connect</option>
+            <option value="ea-library">EA App</option>
+            <option value="battlenet-library">Battle.net</option>
+            <option value="rockstar-library">Rockstar Games</option>
+          </select></label
+        >
+        <label class="control"
+          ><span>App ID or product ID</span
+          ><input data-add-game-appid type="text" placeholder="e.g. 1091500"
+        /></label>
       </div>
       <div class="dialog-footer">
         <button class="primary-button" data-add-game-save type="button">Add to library</button>

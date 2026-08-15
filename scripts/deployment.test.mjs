@@ -15,7 +15,10 @@ const macHostPlist = fs.readFileSync('deploy/host/macos/com.spartan.gaming.host.
 const windowsHostReadme = fs.readFileSync('deploy/host/windows/README.md', 'utf8');
 const dockerignore = fs.readFileSync('.dockerignore', 'utf8');
 const dockerignoreEntries = new Set(
-  dockerignore.split(/\r?\n/u).map((entry) => entry.trim()).filter(Boolean),
+  dockerignore
+    .split(/\r?\n/u)
+    .map((entry) => entry.trim())
+    .filter(Boolean),
 );
 
 test('signaling image is minimal, non-root, and health checked', () => {

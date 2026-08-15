@@ -36,7 +36,7 @@ function decodePath(pathname) {
   }
 }
 
-function createAssetResolver({
+export function createAssetResolver({
   root = frontendRoot,
   publicRoot = repositoryRoot,
   runtimeRoot = null,
@@ -109,7 +109,7 @@ async function injectContextScript(file, contextScript) {
   return Buffer.from(html);
 }
 
-async function sendFile(response, file, method = 'GET', contextScript = null) {
+export async function sendFile(response, file, method = 'GET', contextScript = null) {
   try {
     let info = await stat(file);
     if (info.isDirectory()) {

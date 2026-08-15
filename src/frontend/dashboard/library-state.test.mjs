@@ -3,7 +3,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { createFavoritesStore, createRomLibraryStore, validRomRecord, normalizeRomRecord, scanFolderForRoms } from './library-state.mjs';
+import {
+  createFavoritesStore,
+  createRomLibraryStore,
+  validRomRecord,
+  normalizeRomRecord,
+  scanFolderForRoms,
+} from './library-state.mjs';
 
 function storage() {
   const values = new Map();
@@ -45,7 +51,7 @@ test('rom library validates and normalizes records', () => {
     system: 'snes',
     extension: 'smc',
     name: 'Super Mario',
-    mime: 'application/x-snes-rom'
+    mime: 'application/x-snes-rom',
   };
   assert.ok(validRomRecord(validRecord));
   const normalized = normalizeRomRecord(validRecord);
@@ -59,7 +65,7 @@ test('rom library rejects invalid records', () => {
     romPath: '/games/SuperMario.smc',
     system: 'snes',
     extension: 'smc',
-    name: 'Super Mario'
+    name: 'Super Mario',
     // missing mime
   };
   assert.equal(validRomRecord(invalidRecord), false);
@@ -74,7 +80,7 @@ test('rom library stores and retrieves records', () => {
     system: 'arcade',
     extension: 'zip',
     name: 'The Legend of Zelda',
-    mime: 'application/zip'
+    mime: 'application/zip',
   };
   store.add(record);
   const list = store.list();
@@ -91,14 +97,14 @@ test('rom library removes records by path', () => {
     system: 'arcade',
     extension: 'zip',
     name: 'Metroid',
-    mime: 'application/zip'
+    mime: 'application/zip',
   });
   store.add({
     romPath: '/games/Mario.smc',
     system: 'snes',
     extension: 'smc',
     name: 'Super Mario',
-    mime: 'application/x-snes-rom'
+    mime: 'application/x-snes-rom',
   });
   assert.strictEqual(store.list().length, 2);
   assert.ok(store.remove('/games/Metroid.zip'));
@@ -115,14 +121,14 @@ test('rom library searches by name, system, and extension', () => {
     system: 'arcade',
     extension: 'zip',
     name: 'Contra',
-    mime: 'application/zip'
+    mime: 'application/zip',
   });
   store.add({
     romPath: '/games/Mario.smc',
     system: 'snes',
     extension: 'smc',
     name: 'Super Mario',
-    mime: 'application/x-snes-rom'
+    mime: 'application/x-snes-rom',
   });
   let results = store.find('mario');
   assert.strictEqual(results.length, 1);
@@ -141,7 +147,7 @@ test('rom library imports from paths and applies system detection', () => {
   const results = store.importFromPaths([
     '/games/Pokemon.gba',
     '/games/Link.smc',
-    '/games/Tetris.nes'
+    '/games/Tetris.nes',
   ]);
   assert.strictEqual(results.length, 3);
   assert.strictEqual(results[0].system, 'gba');
@@ -162,7 +168,7 @@ test('rom library clears storage', () => {
     system: 'arcade',
     extension: 'zip',
     name: 'Test Game',
-    mime: 'application/zip'
+    mime: 'application/zip',
   });
   assert.strictEqual(store.list().length, 1);
   store.clear();
@@ -176,8 +182,8 @@ test('scan folder for roms finds valid files', async () => {
   fs.writeFileSync(path.join(tempDir, 'readme.txt'), '');
   const results = await scanFolderForRoms(tempDir);
   assert.strictEqual(results.length, 2);
-  assert.ok(results.some(r => r.endsWith('game.smc')));
-  assert.ok(results.some(r => r.endsWith('rom.zip')));
+  assert.ok(results.some((r) => r.endsWith('game.smc')));
+  assert.ok(results.some((r) => r.endsWith('rom.zip')));
   fs.rmSync(tempDir, { recursive: true, force: true });
 });
 
@@ -189,8 +195,8 @@ test('scan folder for roms handles nested directories', async () => {
   fs.writeFileSync(path.join(subDir, 'nested.nes'), '');
   const results = await scanFolderForRoms(tempDir);
   assert.strictEqual(results.length, 2);
-  assert.ok(results.some(r => r.endsWith('top.gba')));
-  assert.ok(results.some(r => r.endsWith('nested.nes')));
+  assert.ok(results.some((r) => r.endsWith('top.gba')));
+  assert.ok(results.some((r) => r.endsWith('nested.nes')));
   fs.rmSync(tempDir, { recursive: true, force: true });
 });
 

@@ -23,19 +23,19 @@ test('cloud stream presets provide normalized specifications and bandwidth per h
 
   const presets = listCloudStreamPresets();
   assert.ok(presets.length >= 5);
-  assert.ok(presets.some(p => p.id === 'ultra-low-latency-720p60'));
+  assert.ok(presets.some((p) => p.id === 'ultra-low-latency-720p60'));
 });
 
 test('calculateBandwidthUsage computes accurate MB and GB usage for cloud gaming sessions', () => {
-  const usage60m = calculateBandwidthUsage({bitrateKbps: 12000, durationMinutes: 60});
+  const usage60m = calculateBandwidthUsage({ bitrateKbps: 12000, durationMinutes: 60 });
   assert.equal(usage60m.totalMb, 5149.84);
   assert.equal(usage60m.totalGb, 5.03);
 
-  const usage30m = calculateBandwidthUsage({bitrateKbps: 5000, durationMinutes: 30});
+  const usage30m = calculateBandwidthUsage({ bitrateKbps: 5000, durationMinutes: 30 });
   assert.equal(usage30m.totalMb, 1072.88);
   assert.equal(usage30m.totalGb, 1.05);
 
-  const fallback = calculateBandwidthUsage({bitrateKbps: -100, durationMinutes: 0});
+  const fallback = calculateBandwidthUsage({ bitrateKbps: -100, durationMinutes: 0 });
   assert.equal(fallback.bitrateKbps, 250);
   assert.equal(fallback.durationMinutes, 1);
 });
@@ -59,7 +59,7 @@ test('createCloudGameDeepLink builds official deep link URLs for cloud providers
 });
 
 test('probeProviderRegionLatency measures network latency to cloud regional endpoints', async () => {
-  const fakeFetch = () => Promise.resolve({ok: true});
+  const fakeFetch = () => Promise.resolve({ ok: true });
   const result = await probeProviderRegionLatency({
     endpointUrl: 'https://westus.cloudgaming.xbox.com/ping',
     fetchImpl: fakeFetch,
@@ -79,10 +79,10 @@ test('probeProviderRegionLatency measures network latency to cloud regional endp
 
 test('selectOptimalCloudRegion selects the region with lowest latency', () => {
   const regionData = {
-    'north-america': {success: true, latencyMs: 25},
-    europe: {success: true, latencyMs: 110},
-    'asia-pacific': {success: true, latencyMs: 185},
-    'latin-america': {success: false, latencyMs: null},
+    'north-america': { success: true, latencyMs: 25 },
+    europe: { success: true, latencyMs: 110 },
+    'asia-pacific': { success: true, latencyMs: 185 },
+    'latin-america': { success: false, latencyMs: null },
   };
 
   const optimal = selectOptimalCloudRegion(regionData);

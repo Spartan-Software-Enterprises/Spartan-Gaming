@@ -51,7 +51,13 @@ export function createSocialStore({ storage = globalThis.localStorage } = {}) {
       write('parties', parties);
     },
     getPresence() {
-      return read('presence') || { status: 'online', activity: null, updatedAt: new Date().toISOString() };
+      return (
+        read('presence') || {
+          status: 'online',
+          activity: null,
+          updatedAt: new Date().toISOString(),
+        }
+      );
     },
     setPresence(presence) {
       write('presence', { ...read('presence'), ...presence, updatedAt: new Date().toISOString() });
@@ -91,9 +97,16 @@ function renderFriends() {
   const presence = socialStore.getPresence();
 
   document.querySelector('[data-presence-title]').textContent =
-    presence.status === 'online' ? 'Online' : presence.status === 'away' ? 'Away' : presence.status === 'busy' ? 'Busy' : 'Offline';
-  document.querySelector('[data-presence-copy]').textContent =
-    presence.activity ? `Playing ${presence.activity}` : 'Set your status to let friends know what you\'re playing.';
+    presence.status === 'online'
+      ? 'Online'
+      : presence.status === 'away'
+        ? 'Away'
+        : presence.status === 'busy'
+          ? 'Busy'
+          : 'Offline';
+  document.querySelector('[data-presence-copy]').textContent = presence.activity
+    ? `Playing ${presence.activity}`
+    : "Set your status to let friends know what you're playing.";
 
   const entries = [
     ...friends.map((friend) => ({
@@ -102,7 +115,10 @@ function renderFriends() {
       type: 'friend',
       status: friend.status || 'offline',
       activity: friend.activity,
-      summary: friend.status === 'online' ? `Online${friend.activity ? ` · ${friend.activity}` : ''}` : 'Offline',
+      summary:
+        friend.status === 'online'
+          ? `Online${friend.activity ? ` · ${friend.activity}` : ''}`
+          : 'Offline',
     })),
     ...parties.map((party) => ({
       id: party.id,
@@ -114,15 +130,13 @@ function renderFriends() {
     })),
   ];
 
-  document.querySelector('[data-result-count]').textContent = `${entries.length} connection${entries.length === 1 ? '' : 's'}`;
+  document.querySelector('[data-result-count]').textContent =
+    `${entries.length} connection${entries.length === 1 ? '' : 's'}`;
 
   cards.innerHTML = entries.length
     ? entries
         .map((entry) => {
-          const tag =
-            entry.type === 'friend'
-              ? entry.status
-              : `${entry.members} members`;
+          const tag = entry.type === 'friend' ? entry.status : `${entry.members} members`;
           const actionLabel =
             entry.type === 'friend'
               ? entry.status === 'online'
@@ -215,13 +229,21 @@ function setupSocial() {
       const services = providerEntries.filter((entry) =>
         ['twitch', 'youtube-live', 'kick', 'steam-broadcasting', 'discord'].includes(entry.id),
       );
-      document.querySelector('[data-result-count]').textContent = `${services.length} service${services.length === 1 ? '' : 's'}`;
+      document.querySelector('[data-result-count]').textContent =
+        `${services.length} service${services.length === 1 ? '' : 's'}`;
       cards.innerHTML = services.length
         ? services
             .map((entry) => {
               const integration = createProviderIntegration(entry, {});
-              const caps = integration.surfaces.map((s) => `<span class="chip">${escapeHtml(s)}</span>`).join('');
-              const authLabel = entry.id === 'steam-broadcasting' ? 'Steam OpenID' : entry.id === 'discord' ? 'OAuth' : 'Official';
+              const caps = integration.surfaces
+                .map((s) => `<span class="chip">${escapeHtml(s)}</span>`)
+                .join('');
+              const authLabel =
+                entry.id === 'steam-broadcasting'
+                  ? 'Steam OpenID'
+                  : entry.id === 'discord'
+                    ? 'OAuth'
+                    : 'Official';
               return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(entry.kind)}</span><button class="favorite" data-favorite="${escapeHtml(entry.id)}" aria-label="Favorite ${escapeHtml(entry.name)}">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(entry.description || 'Official streaming or social surface. Opens in an isolated provider view.')}</p><div class="chips">${caps}</div><div class="card-actions"><button class="launch" data-stream="${escapeHtml(entry.id)}">Open ${escapeHtml(entry.name)}</button><span class="details">${entry.secure !== false ? 'Secure' : 'Standard'} · ${authLabel}</span></div></article>`;
             })
             .join('')
@@ -229,29 +251,26 @@ function setupSocial() {
       return;
     }
 
-    const friends = socialStore.getFriends().filter((f) =>
-      f.name.toLowerCase().includes(query),
-    );
-    const parties = socialStore.getParties().filter((p) =>
-      p.name.toLowerCase().includes(query),
-    );
+    const friends = socialStore.getFriends().filter((f) => f.name.toLowerCase().includes(query));
+    const parties = socialStore.getParties().filter((p) => p.name.toLowerCase().includes(query));
     const messages = socialStore.getMessages();
-    const messageThreads = currentFilter === 'messages'
-      ? friends
-          .map((friend) => {
-            const threadMessages = messages.filter((m) => m.with === friend.id);
-            const lastMessage = threadMessages[threadMessages.length - 1];
-            return {
-              id: friend.id,
-              name: friend.name,
-              type: 'message',
-              status: friend.status || 'offline',
-              summary: lastMessage ? lastMessage.text : 'No messages yet',
-              messageCount: threadMessages.length,
-            };
-          })
-          .filter((thread) => thread.messageCount > 0)
-      : [];
+    const messageThreads =
+      currentFilter === 'messages'
+        ? friends
+            .map((friend) => {
+              const threadMessages = messages.filter((m) => m.with === friend.id);
+              const lastMessage = threadMessages[threadMessages.length - 1];
+              return {
+                id: friend.id,
+                name: friend.name,
+                type: 'message',
+                status: friend.status || 'offline',
+                summary: lastMessage ? lastMessage.text : 'No messages yet',
+                messageCount: threadMessages.length,
+              };
+            })
+            .filter((thread) => thread.messageCount > 0)
+        : [];
     const entries = [
       ...(currentFilter === 'all' || currentFilter === 'friends'
         ? friends.map((friend) => ({
@@ -260,7 +279,10 @@ function setupSocial() {
             type: 'friend',
             status: friend.status || 'offline',
             activity: friend.activity,
-            summary: friend.status === 'online' ? `Online${friend.activity ? ` · ${friend.activity}` : ''}` : 'Offline',
+            summary:
+              friend.status === 'online'
+                ? `Online${friend.activity ? ` · ${friend.activity}` : ''}`
+                : 'Offline',
           }))
         : []),
       ...(currentFilter === 'all' || currentFilter === 'parties'
@@ -276,11 +298,17 @@ function setupSocial() {
       ...messageThreads,
     ];
 
-    document.querySelector('[data-result-count]').textContent = `${entries.length} connection${entries.length === 1 ? '' : 's'}`;
+    document.querySelector('[data-result-count]').textContent =
+      `${entries.length} connection${entries.length === 1 ? '' : 's'}`;
     cards.innerHTML = entries.length
       ? entries
           .map((entry) => {
-            const tag = entry.type === 'friend' ? entry.status : entry.type === 'message' ? 'message' : `${entry.members} members`;
+            const tag =
+              entry.type === 'friend'
+                ? entry.status
+                : entry.type === 'message'
+                  ? 'message'
+                  : `${entry.members} members`;
             const actionLabel =
               entry.type === 'friend'
                 ? entry.status === 'online'

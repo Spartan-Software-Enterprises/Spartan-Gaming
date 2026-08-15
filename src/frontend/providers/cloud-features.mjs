@@ -16,7 +16,7 @@ const CLOUD_STREAM_PRESETS = Object.freeze({
     height: 1080,
     framerate: 60,
     bitrateKbps: 12000,
-    dataUsageGbPerHour: 5.40,
+    dataUsageGbPerHour: 5.4,
     description: 'Optimal balance of image fidelity and streaming stability for standard displays.',
   }),
   'high-quality-1440p60': Object.freeze({
@@ -99,9 +99,15 @@ export function listCloudStreamPresets() {
 /**
  * Calculate expected bandwidth and data transfer for a cloud gaming session duration.
  */
-export function calculateBandwidthUsage({bitrateKbps = 12000, durationMinutes = 60} = {}) {
-  const boundedBitrate = Math.max(250, Math.min(100000, Number.isFinite(Number(bitrateKbps)) ? Number(bitrateKbps) : 12000));
-  const boundedDuration = Math.max(1, Math.min(1440, Number.isFinite(Number(durationMinutes)) ? Number(durationMinutes) : 60));
+export function calculateBandwidthUsage({ bitrateKbps = 12000, durationMinutes = 60 } = {}) {
+  const boundedBitrate = Math.max(
+    250,
+    Math.min(100000, Number.isFinite(Number(bitrateKbps)) ? Number(bitrateKbps) : 12000),
+  );
+  const boundedDuration = Math.max(
+    1,
+    Math.min(1440, Number.isFinite(Number(durationMinutes)) ? Number(durationMinutes) : 60),
+  );
 
   const totalBits = boundedBitrate * 1000 * boundedDuration * 60;
   const totalBytes = totalBits / 8;
@@ -152,11 +158,14 @@ export function probeProviderRegionLatency({
   fetchImpl = globalThis.fetch,
 } = {}) {
   if (!endpointUrl || typeof fetchImpl !== 'function') {
-    return Promise.resolve(Object.freeze({success: false, latencyMs: null, reason: 'Invalid parameters'}));
+    return Promise.resolve(
+      Object.freeze({ success: false, latencyMs: null, reason: 'Invalid parameters' }),
+    );
   }
 
   const start = globalThis.performance?.now?.() ?? Date.now();
-  const controller = typeof globalThis.AbortController === 'function' ? new globalThis.AbortController() : null;
+  const controller =
+    typeof globalThis.AbortController === 'function' ? new globalThis.AbortController() : null;
   const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
 
   return fetchImpl(endpointUrl, {
@@ -173,13 +182,13 @@ export function probeProviderRegionLatency({
         endpointUrl,
       });
     })
-    .catch(error => {
+    .catch((error) => {
       if (timer) clearTimeout(timer);
       return Object.freeze({
         success: false,
         latencyMs: null,
         endpointUrl,
-        reason: error?.name === 'AbortError' ? 'timed out' : (error?.message || 'probe failed'),
+        reason: error?.name === 'AbortError' ? 'timed out' : error?.message || 'probe failed',
       });
     });
 }

@@ -90,7 +90,8 @@ test('runtime UI applies the configured document locale with a safe fallback', (
   applyRuntimeUiSettings(documentRef, { 'general.language': 'Japanese' });
   assert.equal(root.lang, 'ja');
   applyRuntimeUiSettings(documentRef, { 'general.language': 'unsupported' });
-  assert.equal(root.lang, 'en');});
+  assert.equal(root.lang, 'en');
+});
 
 test('runtime UI settings apply data attributes, CSS variables, and one shared style element', () => {
   const root = {
@@ -129,7 +130,8 @@ test('runtime UI settings apply data attributes, CSS variables, and one shared s
     'gaming.showOverlay': false,
     'accessibility.largeText': true,
     'accessibility.colorVision': 'Tritanopia',
-  });  assert.equal(root.dataset.spartanOverlay, 'hidden');
+  });
+  assert.equal(root.dataset.spartanOverlay, 'hidden');
   assert.equal(root.dataset.spartanDeviceMode, 'desktop');
   assert.equal(root.dataset.spartanTabLayout, 'top');
   assert.equal(root.dataset.spartanStatusBar, 'hidden');
@@ -143,12 +145,21 @@ test('runtime UI settings apply data attributes, CSS variables, and one shared s
   assert.equal(root.style.values.get('--spartan-accent'), '#9a84ff');
   assert.equal(root.style.values.get('--cyan'), '#9a84ff');
   assert.equal(nodes.size, 1);
-  assert.match(nodes.get('spartan-runtime-ui-styles').textContent, /data-spartan-color-vision="Tritanopia"/);
-  assert.match(nodes.get('spartan-runtime-ui-styles').textContent, /\.status-pill\[data-status="error"\] i/);
+  assert.match(
+    nodes.get('spartan-runtime-ui-styles').textContent,
+    /data-spartan-color-vision="Tritanopia"/,
+  );
+  assert.match(
+    nodes.get('spartan-runtime-ui-styles').textContent,
+    /\.status-pill\[data-status="error"\] i/,
+  );
 });
 
 test('runtime UI falls back safely for an unknown color vision mode', () => {
-  assert.equal(resolveRuntimeUiSettings({'accessibility.colorVision': 'invalid'}).colorVision, 'None');
+  assert.equal(
+    resolveRuntimeUiSettings({ 'accessibility.colorVision': 'invalid' }).colorVision,
+    'None',
+  );
 });
 
 test('runtime UI exposes Fire TV remote-navigation metadata', () => {

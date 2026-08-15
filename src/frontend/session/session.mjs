@@ -301,7 +301,8 @@ export function createSessionManager({
     if (seenMessageIds.has(messageId)) return false;
     seenMessageIds.add(messageId);
     seenMessageOrder.push(messageId);
-    if (seenMessageOrder.length > MAX_SEEN_MESSAGE_IDS) seenMessageIds.delete(seenMessageOrder.shift());
+    if (seenMessageOrder.length > MAX_SEEN_MESSAGE_IDS)
+      seenMessageIds.delete(seenMessageOrder.shift());
     return true;
   };
   return {

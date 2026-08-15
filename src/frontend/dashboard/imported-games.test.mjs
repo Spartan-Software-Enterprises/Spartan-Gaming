@@ -66,8 +66,14 @@ test('imported game store normalizes and validates records', () => {
   const store = createImportedGameStore({ storage: backend });
 
   assert.throws(() => store.add({ name: 'No provider' }), /invalid imported game record/);
-  assert.throws(() => store.add({ name: 'Bad', providerId: 'steam-library' }), /invalid imported game record/);
-  assert.throws(() => store.add({ name: 'Bad', providerId: 'steam-library', appId: 'bad id!' }), /safe identifier/);
+  assert.throws(
+    () => store.add({ name: 'Bad', providerId: 'steam-library' }),
+    /invalid imported game record/,
+  );
+  assert.throws(
+    () => store.add({ name: 'Bad', providerId: 'steam-library', appId: 'bad id!' }),
+    /safe identifier/,
+  );
 });
 
 test('imported game store bounds to 500 entries', () => {
