@@ -35,6 +35,16 @@ Inspect `AGENTS.md` or `CLAUDE.md` if either is added in a future checkout.
 
 ## Latest continuation snapshot
 
+- The canonical KVM checkout is `/home/ubuntu/Spartan-Gaming` and `main` is
+  the only active branch. It is synchronized with `origin/main` at `a5ba72d`;
+  the former migration checkout is retained only as a synchronized safety copy.
+  The software-verifiable roadmap surface is complete. The current canonical
+  verification pass reports 812 serialized tests passed, 5 expected environment
+  skips, 0 failures, and 14/14 focused Windows/macOS virtual-gamepad contract
+  tests passed. Physical device, native-driver, provider-account, production
+  relay, package-signing, and release-candidate evidence remain intentionally
+  open external gates.
+
 - Roadmap acceptance schema version 2 now fails closed on the five public-release
   gate families that the original ledger did not evaluate. Completion requires
   real packaged-app screenshots/interactions across eight canonical device
