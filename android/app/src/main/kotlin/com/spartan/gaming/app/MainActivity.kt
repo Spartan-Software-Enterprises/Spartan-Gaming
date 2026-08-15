@@ -5,11 +5,9 @@
 package com.spartan.gaming.app
 
 import android.app.Activity
-import android.content.Context
 import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.os.Bundle
-import android.view.Window
 import android.view.WindowManager
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -20,8 +18,8 @@ import android.widget.Toast
 import androidx.webkit.WebViewAssetLoader
 import com.spartan.gaming.android.SpartanAndroidBridge
 import com.spartan.gaming.android.controller.AndroidControllerInventory
-import com.spartan.gaming.android.gamenative.GameNativeHandoff
 import com.spartan.gaming.android.gamemode.AndroidGameModeBridge
+import com.spartan.gaming.android.gamenative.GameNativeHandoff
 import org.json.JSONObject
 
 /** Minimal Android shell for the shared frontend and bounded native bridge. */
@@ -30,24 +28,26 @@ class MainActivity : Activity() {
     private lateinit var assetLoader: WebViewAssetLoader
     private var bridge: SpartanAndroidBridge? = null
 
-    private val resultSink = object : SpartanAndroidBridge.ResultSink {
-        override fun emit(requestId: String, action: String, accepted: Boolean) {
-            val result = JSONObject().apply {
-                put("version", 1)
-                put("requestId", requestId)
-                put("action", action)
-                put("status", if (accepted) "accepted" else "rejected")
-            }
-            if (::webView.isInitialized) {
-                webView.post {
-                    webView.evaluateJavascript(
-                        "window.dispatchEvent(new CustomEvent('spartan:android-result',{detail:$result}));",
-                        null,
-                    )
+    private val resultSink =
+        object : SpartanAndroidBridge.ResultSink {
+            override fun emit(requestId: String, action: String, accepted: Boolean) {
+                val result =
+                    JSONObject().apply {
+                        put("version", 1)
+                        put("requestId", requestId)
+                        put("action", action)
+                        put("status", if (accepted) "accepted" else "rejected")
+                    }
+                if (::webView.isInitialized) {
+                    webView.post {
+                        webView.evaluateJavascript(
+                            "window.dispatchEvent(new CustomEvent('spartan:android-result',{detail:$result}));",
+                            null,
+                        )
+                    }
                 }
             }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,12 +83,13 @@ class MainActivity : Activity() {
     }
 
     private fun configureWebView(view: WebView) {
-        assetLoader = WebViewAssetLoader.Builder()
-            .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
-            .addPathHandler("/providers/", WebViewAssetLoader.AssetsPathHandler(this))
-            .addPathHandler("/emulators/", WebViewAssetLoader.AssetsPathHandler(this))
-            .addPathHandler("/games/", WebViewAssetLoader.AssetsPathHandler(this))
-            .build()
+        assetLoader =
+            WebViewAssetLoader.Builder()
+                .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
+                .addPathHandler("/providers/", WebViewAssetLoader.AssetsPathHandler(this))
+                .addPathHandler("/emulators/", WebViewAssetLoader.AssetsPathHandler(this))
+                .addPathHandler("/games/", WebViewAssetLoader.AssetsPathHandler(this))
+                .build()
         view.setBackgroundColor(Color.rgb(16, 21, 27))
         view.settings.apply {
             javaScriptEnabled = true
@@ -98,17 +99,23 @@ class MainActivity : Activity() {
             allowContentAccess = false
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
         }
-        view.webViewClient = object : WebViewClient() {
-            override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? =
-                request?.url?.let(assetLoader::shouldInterceptRequest)
+        view.webViewClient =
+            object : WebViewClient() {
+                override fun shouldInterceptRequest(
+                    view: WebView?,
+                    request: WebResourceRequest?,
+                ): WebResourceResponse? = request?.url?.let(assetLoader::shouldInterceptRequest)
 
-            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-                val target = request.url
-                if (target.scheme == "https" && target.host == ASSET_HOST) return false
-                if (target.scheme == "https") return false
-                return true
+                override fun shouldOverrideUrlLoading(
+                    view: WebView,
+                    request: WebResourceRequest,
+                ): Boolean {
+                    val target = request.url
+                    if (target.scheme == "https" && target.host == ASSET_HOST) return false
+                    if (target.scheme == "https") return false
+                    return true
+                }
             }
-        }
     }
 
     private class NativeHandler(private val activity: MainActivity) : SpartanAndroidBridge.Handler {
@@ -119,9 +126,12 @@ class MainActivity : Activity() {
                 activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             }
             when (payload.optString("orientation")) {
-                "portrait" -> activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-                "landscape" -> activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-                "sensor" -> activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
+                "portrait" ->
+                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                "landscape" ->
+                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                "sensor" ->
+                    activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
             }
             return true
         }
@@ -148,7 +158,8 @@ class MainActivity : Activity() {
             return try {
                 GameNativeHandoff.launchOrInstall(activity, appId.toInt(), store)
             } catch (_: RuntimeException) {
-                Toast.makeText(activity, "GameNative handoff unavailable", Toast.LENGTH_SHORT).show()
+                Toast.makeText(activity, "GameNative handoff unavailable", Toast.LENGTH_SHORT)
+                    .show()
                 false
             }
         }
@@ -156,6 +167,7 @@ class MainActivity : Activity() {
 
     companion object {
         const val ASSET_HOST = "appassets.androidplatform.net"
-        const val FRONTEND_URL = "https://appassets.androidplatform.net/assets/frontend/dashboard/index.html"
+        const val FRONTEND_URL =
+            "https://appassets.androidplatform.net/assets/frontend/dashboard/index.html"
     }
 }
