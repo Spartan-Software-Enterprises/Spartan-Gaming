@@ -20,17 +20,19 @@ test('host deployment plans are cross-platform, shell-free, and explicit about o
     enableInput: true,
     port: 9000,
   });
+  const hasPathSuffix = (suffix) =>
+    plan.args.some((value) => value.replaceAll('\\\\', '/').endsWith(suffix));
   assert.equal(plan.platform, 'win32');
   assert.equal(plan.args.includes('--enable-input'), true);
   assert.equal(plan.args.includes('--config'), true);
   assert.equal(
-    plan.args.some((value) => value.endsWith('C:/Spartan/host.json')),
+    hasPathSuffix('C:/Spartan/host.json'),
     true,
   );
   assert.equal(plan.args.includes('--virtual-gamepad-backend'), true);
   assert.equal(plan.args.includes('--virtual-gamepad-install-root'), true);
   assert.equal(
-    plan.args.some((value) => value.endsWith('C:/Spartan/adapters')),
+    hasPathSuffix('C:/Spartan/adapters'),
     true,
   );
   assert.equal(plan.args.includes('--virtual-gamepad-adapter-id'), true);
