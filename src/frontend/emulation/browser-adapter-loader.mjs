@@ -127,6 +127,13 @@ export async function loadVerifiedBrowserEmulatorAdapter({
   const publicKeyJwk = trustedSigners?.[signer];
   if (!publicKeyJwk)
     throw new Error(`no trusted public key is configured for adapter signer ${signer}`);
+  const verified = await verifyAdapterSignature({
+    data: canonicalPayload(normalized),
+    signature: normalized.signature,
+    publicKeyJwk,
+    subtle,
+  });
+  if (!verified) throw new Error('browser adapter signature verification failed');
   const response = await fetchImpl(entrypoint, {
     method: 'GET',
     credentials: 'omit',
@@ -141,13 +148,6 @@ export async function loadVerifiedBrowserEmulatorAdapter({
   const digest = base64Url(await subtle.digest('SHA-256', moduleBytes));
   if (digest !== normalized.integrity.slice('sha256-'.length))
     throw new Error('browser adapter integrity verification failed');
-  const verified = await verifyAdapterSignature({
-    data: canonicalPayload(normalized),
-    signature: normalized.signature,
-    publicKeyJwk,
-    subtle,
-  });
-  if (!verified) throw new Error('browser adapter signature verification failed');
   const module = await importBrowserModule(moduleBytes, { BlobImpl, URLImpl, importModule });
   const adapter = adapterFromModule(module, normalized.id);
   return Object.freeze({
