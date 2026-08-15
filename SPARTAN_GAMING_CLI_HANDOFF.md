@@ -4,7 +4,7 @@ Updated: 2026-08-15
 
 ## Source of truth
 
-The active branch is `main` at `318dfac`, synchronized with GitHub. The latest prerelease is `v0.1.0-beta.6`. The canonical checkout is `/home/ubuntu/Spartan-Gaming` on the KVM.
+The active branch is `main` at `b2726d0`, synchronized with GitHub. The latest prerelease is `v0.1.0-beta.6`. The canonical checkout is `/home/ubuntu/Spartan-Gaming` on the KVM.
 
 OpenCode configuration is `/home/userland/.config/opencode/opencode.jsonc`, which loads `/home/userland/AGENTS.md`. Follow that file before repository actions.
 
