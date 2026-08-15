@@ -159,6 +159,10 @@ The fail-closed `roadmap:acceptance` ledger mirrors those gates. Its operator-ru
 
 Windows and macOS virtual-gamepad packages also fail closed until a verified native driver binding is injected; their package contracts never claim button, axis, or rumble execution from a placeholder adapter.
 
+Bluetooth support is defined through a permission-gated host contract for Classic and BLE discovery, HID controllers/keyboards/mice/remotes, audio input/output, haptics, battery state, pairing, reconnect, and forget flows. Device identifiers are opaque and bounded, raw addresses are not retained, unknown devices are never auto-paired, and native platform adapters remain responsible for privileged operations and any separately verified driver installation.
+
+`host/hardware-drivers.mjs` defines the safe automatic-driver boundary: only curated, signed HTTPS descriptors with a SHA-256 artifact, exact hardware match, explicit user consent, and administrator approval can produce an install plan. Platform installers remain injected native code with transactional verification and rollback; the project never executes a downloaded driver or silently elevates privileges.
+
 Spartan Gaming is in active foundation implementation. The shared frontend, Electron-first shell, Android policy/shell boundaries, controller profiles, provider and emulator catalogs, host control plane, deployment contracts, and diagnostics are implemented and automated-test covered. A checked roadmap item can represent a verified contract or development artifact; it does not replace physical hardware, production deployment, driver, store, signing, or certification evidence where the roadmap calls for it.
 
 ## Architecture at a glance
