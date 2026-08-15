@@ -5,6 +5,52 @@ import { fileURLToPath } from 'node:url';
 import { verifyReleaseManifest } from '../native/verify-release.mjs';
 
 const PLATFORMS = Object.freeze(['win32', 'darwin', 'linux']);
+const DEVICE_TARGETS = Object.freeze([
+  'win32',
+  'darwin',
+  'linux',
+  'steam-deck',
+  'android',
+  'fire-tv',
+  'chromeos',
+  'roku',
+]);
+const OFFLINE_TARGETS = Object.freeze(['win32', 'darwin', 'linux', 'android']);
+const INPUT_FAMILIES = Object.freeze(['keyboard', 'mouse', 'touch', 'remote', 'controllers']);
+const INPUT_WORKFLOWS = Object.freeze([
+  'navigation',
+  'textEntry',
+  'gameplay',
+  'overlays',
+  'settings',
+  'recovery',
+]);
+const OFFLINE_WORKFLOWS = Object.freeze([
+  'coldStart',
+  'library',
+  'settings',
+  'controllers',
+  'installedRuntimes',
+]);
+const PROVIDER_WORKFLOWS = Object.freeze([
+  'signIn',
+  'signOut',
+  'restartPersistence',
+  'expiredSessionRecovery',
+  'accountSwitching',
+]);
+const RELEASE_CHECKS = Object.freeze([
+  'signedInstallers',
+  'updateRollback',
+  'accessibility',
+  'crashRecovery',
+  'performance',
+  'longSessionStability',
+  'capture',
+  'audio',
+  'input',
+  'regression',
+]);
 const ALIASES = Object.freeze({
   windows: 'win32',
   win: 'win32',
@@ -186,6 +232,95 @@ function steamOsGate(reports) {
   });
 }
 
+function verifiedChecks(record, checks) {
+  return checks.every((check) => record?.[check] === 'verified');
+}
+
+function deviceVisualGate(reports) {
+  const byTarget = new Map(reports.map((report) => [text(report?.target).toLowerCase(), report]));
+  const missing = DEVICE_TARGETS.filter((target) => {
+    const report = byTarget.get(target);
+    return (
+      !report ||
+      report.kind !== 'device-visual-report' ||
+      report.verification !== 'real-device-exercise' ||
+      report.status !== 'ready' ||
+      report.packagedApplication !== 'verified' ||
+      report.screenshots !== 'verified' ||
+      report.interactions !== 'verified'
+    );
+  });
+  return Object.freeze({
+    id: 'real-device-visuals',
+    status: missing.length ? 'missing' : 'verified',
+    missing: Object.freeze(missing),
+  });
+}
+
+function inputCoverageGate(report) {
+  const ready =
+    report?.kind === 'input-coverage-report' &&
+    report?.verification === 'real-device-exercise' &&
+    report?.status === 'ready' &&
+    verifiedChecks(report.families, INPUT_FAMILIES) &&
+    verifiedChecks(report.workflows, INPUT_WORKFLOWS);
+  return Object.freeze({ id: 'physical-input-coverage', status: ready ? 'verified' : 'missing' });
+}
+
+function offlineGate(reports) {
+  const byTarget = new Map(
+    reports.map((report) => [platform(report?.platform) || text(report?.platform), report]),
+  );
+  const missing = OFFLINE_TARGETS.filter((target) => {
+    const report = byTarget.get(target);
+    return (
+      !report ||
+      report.kind !== 'offline-runtime-report' ||
+      report.verification !== 'network-disabled-exercise' ||
+      report.status !== 'ready' ||
+      report.networkDisabled !== true ||
+      !verifiedChecks(report.workflows, OFFLINE_WORKFLOWS)
+    );
+  });
+  return Object.freeze({
+    id: 'offline-runtime',
+    status: missing.length ? 'missing' : 'verified',
+    missing: Object.freeze(missing),
+  });
+}
+
+function providerGate(reports, expectedProviderIds) {
+  const byProvider = new Map(reports.map((report) => [text(report?.providerId), report]));
+  const missing = expectedProviderIds.filter((providerId) => {
+    const report = byProvider.get(providerId);
+    return (
+      !report ||
+      report.kind !== 'provider-account-report' ||
+      report.verification !== 'real-service-exercise' ||
+      report.status !== 'ready' ||
+      !verifiedChecks(report.workflows, PROVIDER_WORKFLOWS)
+    );
+  });
+  return Object.freeze({
+    id: 'provider-account-lifecycle',
+    status: expectedProviderIds.length > 0 && missing.length === 0 ? 'verified' : 'missing',
+    missing: Object.freeze(missing),
+  });
+}
+
+function releaseCandidateGate(report) {
+  const ready =
+    report?.kind === 'release-candidate-report' &&
+    report?.verification === 'release-candidate-exercise' &&
+    report?.status === 'ready' &&
+    /^[0-9a-f]{7,40}$/i.test(text(report.commit)) &&
+    verifiedChecks(report.checks, RELEASE_CHECKS);
+  return Object.freeze({
+    id: 'release-candidate-qualification',
+    status: ready ? 'verified' : 'missing',
+  });
+}
+
 /** Assess the external evidence required before the final roadmap boxes may be checked. */
 export function assessRoadmapAcceptance({
   productionReport,
@@ -193,6 +328,12 @@ export function assessRoadmapAcceptance({
   virtualGamepadReports = [],
   signedPackageReports = [],
   steamOsReports = [],
+  deviceVisualReports = [],
+  inputCoverageReport = {},
+  offlineReports = [],
+  providerReports = [],
+  expectedProviderIds = [],
+  releaseCandidateReport = {},
 } = {}) {
   const production = productionGate(readJson(productionReport, 'productionReport'));
   const hardwareEvidence = hardwareReports.map((report) => readJson(report, 'hardware report'));
@@ -203,6 +344,11 @@ export function assessRoadmapAcceptance({
     readJson(report, 'signed-package report'),
   );
   const steamEvidence = steamOsReports.map((report) => readJson(report, 'SteamOS hardware report'));
+  const visualEvidence = deviceVisualReports.map((report) =>
+    readJson(report, 'device visual report'),
+  );
+  const offlineEvidence = offlineReports.map((report) => readJson(report, 'offline report'));
+  const providerEvidence = providerReports.map((report) => readJson(report, 'provider report'));
   rejectDuplicateReports(hardwareEvidence, reportPlatform, 'hardware reports');
   rejectDuplicateReports(virtualEvidence, reportPlatform, 'virtual-gamepad reports');
   rejectDuplicateReports(signingEvidence, reportPlatform, 'signed-package reports');
@@ -211,13 +357,49 @@ export function assessRoadmapAcceptance({
     (report) => steamOsTarget(report?.target),
     'SteamOS reports',
   );
+  rejectDuplicateReports(
+    visualEvidence,
+    (report) => text(report?.target).toLowerCase(),
+    'device visual reports',
+  );
+  rejectDuplicateReports(
+    offlineEvidence,
+    (report) => platform(report?.platform) || text(report?.platform),
+    'offline reports',
+  );
+  rejectDuplicateReports(
+    providerEvidence,
+    (report) => text(report?.providerId),
+    'provider reports',
+  );
   const hardware = hardwareGate(hardwareEvidence);
   const virtualGamepads = virtualDriverGate(virtualEvidence);
   const signing = signingGate(signingEvidence);
   const steamOs = steamOsGate(steamEvidence);
-  const gates = Object.freeze([production, hardware, virtualGamepads, signing, steamOs]);
+  const visuals = deviceVisualGate(visualEvidence);
+  const inputs = inputCoverageGate(readJson(inputCoverageReport, 'inputCoverageReport'));
+  const offline = offlineGate(offlineEvidence);
+  const providers = providerGate(
+    providerEvidence,
+    expectedProviderIds.map((id) => text(id)).filter(Boolean),
+  );
+  const releaseCandidate = releaseCandidateGate(
+    readJson(releaseCandidateReport, 'releaseCandidateReport'),
+  );
+  const gates = Object.freeze([
+    production,
+    hardware,
+    virtualGamepads,
+    signing,
+    steamOs,
+    visuals,
+    inputs,
+    offline,
+    providers,
+    releaseCandidate,
+  ]);
   return Object.freeze({
-    version: 1,
+    version: 2,
     kind: 'roadmap-acceptance',
     status: gates.every((gate) => gate.status === 'verified') ? 'complete' : 'incomplete',
     gates,
@@ -237,6 +419,7 @@ export async function assessRoadmapAcceptanceWithSignedManifests({
   signedManifestPaths = [],
   publicKeyJwk,
   verifyManifest = verifyReleaseManifest,
+  ...acceptanceEvidence
 } = {}) {
   if (signedManifestPaths.length && (!publicKeyJwk || typeof publicKeyJwk !== 'object'))
     throw new TypeError('publicKeyJwk is required when signed manifests are supplied');
@@ -251,6 +434,7 @@ export async function assessRoadmapAcceptanceWithSignedManifests({
     virtualGamepadReports,
     steamOsReports,
     signedPackageReports: [...signedPackageReports, ...verifiedManifests],
+    ...acceptanceEvidence,
   });
 }
 
@@ -259,6 +443,11 @@ function argumentValues(argv, name) {
   for (let index = 0; index < argv.length; index += 1)
     if (argv[index] === name && argv[index + 1]) values.push(argv[index + 1]);
   return values;
+}
+function requiredArgument(argv, name) {
+  const value = argumentValues(argv, name)[0];
+  if (!value) throw new Error(`${name} is required`);
+  return value;
 }
 async function loadReports(paths, name) {
   return Promise.all(
@@ -281,8 +470,10 @@ async function writeReport(file, report) {
 if (path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1] || '')) {
   try {
     const argv = process.argv.slice(2);
-    const productionPath = argumentValues(argv, '--production-report')[0];
-    if (!productionPath) throw new Error('--production-report is required');
+    const productionPath = requiredArgument(argv, '--production-report');
+    const inputCoveragePath = requiredArgument(argv, '--input-coverage-report');
+    const providerCatalogPath = requiredArgument(argv, '--provider-catalog');
+    const releaseCandidatePath = requiredArgument(argv, '--release-candidate-report');
     const publicKeyPath = argumentValues(argv, '--public-key-file')[0];
     const signedManifestPaths = argumentValues(argv, '--signed-manifest');
     const publicKeyJwk = publicKeyPath
@@ -308,6 +499,22 @@ if (path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1
       ),
       signedManifestPaths,
       publicKeyJwk,
+      deviceVisualReports: await loadReports(
+        argumentValues(argv, '--device-visual-report'),
+        'device visual report',
+      ),
+      inputCoverageReport: JSON.parse(await readFile(path.resolve(inputCoveragePath), 'utf8')),
+      offlineReports: await loadReports(argumentValues(argv, '--offline-report'), 'offline report'),
+      providerReports: await loadReports(
+        argumentValues(argv, '--provider-report'),
+        'provider report',
+      ),
+      expectedProviderIds: JSON.parse(await readFile(path.resolve(providerCatalogPath), 'utf8'))
+        .providers.filter((provider) => ['cloud-gaming', 'cloud-pc'].includes(provider.kind))
+        .map((provider) => provider.id),
+      releaseCandidateReport: JSON.parse(
+        await readFile(path.resolve(releaseCandidatePath), 'utf8'),
+      ),
     });
     await writeReport(argumentValues(argv, '--report-file')[0], result);
     console.log(JSON.stringify(result, null, 2));

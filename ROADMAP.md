@@ -18,6 +18,7 @@
 - [ ] Verify cold start, local library/settings/controller workflows, and locally installed runtimes with networking disabled.
 - [ ] Verify provider sign-in, sign-out, restart persistence, expired-session recovery, and account switching for every supported cloud-gaming service.
 - [ ] Complete signed installers, update/rollback, accessibility, crash recovery, performance, long-session stability, capture/audio/input, and release-candidate regression testing before any public-complete claim.
+- [x] Enforce a fail-closed roadmap acceptance ledger for every public-release, production, native-hardware, virtual-driver, signing, provider-account, offline-runtime, physical-input, real-device visual, SteamOS, and release-candidate evidence gate.
 
 ## Milestone 1: standalone application shell
 

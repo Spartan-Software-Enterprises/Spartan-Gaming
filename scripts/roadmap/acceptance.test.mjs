@@ -74,6 +74,88 @@ const steamOs = (target) => ({
     ].map((check) => [check, 'verified']),
   ),
 });
+const deviceVisual = (target) => ({
+  kind: 'device-visual-report',
+  verification: 'real-device-exercise',
+  target,
+  status: 'ready',
+  packagedApplication: 'verified',
+  screenshots: 'verified',
+  interactions: 'verified',
+});
+const offline = (platform) => ({
+  kind: 'offline-runtime-report',
+  verification: 'network-disabled-exercise',
+  platform,
+  status: 'ready',
+  networkDisabled: true,
+  workflows: Object.fromEntries(
+    ['coldStart', 'library', 'settings', 'controllers', 'installedRuntimes'].map((item) => [
+      item,
+      'verified',
+    ]),
+  ),
+});
+const provider = (providerId) => ({
+  kind: 'provider-account-report',
+  verification: 'real-service-exercise',
+  providerId,
+  status: 'ready',
+  workflows: Object.fromEntries(
+    ['signIn', 'signOut', 'restartPersistence', 'expiredSessionRecovery', 'accountSwitching'].map(
+      (item) => [item, 'verified'],
+    ),
+  ),
+});
+const publicReleaseEvidence = {
+  deviceVisualReports: [
+    'win32',
+    'darwin',
+    'linux',
+    'steam-deck',
+    'android',
+    'fire-tv',
+    'chromeos',
+    'roku',
+  ].map(deviceVisual),
+  inputCoverageReport: {
+    kind: 'input-coverage-report',
+    verification: 'real-device-exercise',
+    status: 'ready',
+    families: Object.fromEntries(
+      ['keyboard', 'mouse', 'touch', 'remote', 'controllers'].map((item) => [item, 'verified']),
+    ),
+    workflows: Object.fromEntries(
+      ['navigation', 'textEntry', 'gameplay', 'overlays', 'settings', 'recovery'].map((item) => [
+        item,
+        'verified',
+      ]),
+    ),
+  },
+  offlineReports: ['win32', 'darwin', 'linux', 'android'].map(offline),
+  expectedProviderIds: ['cloud-one', 'cloud-two'],
+  providerReports: ['cloud-one', 'cloud-two'].map(provider),
+  releaseCandidateReport: {
+    kind: 'release-candidate-report',
+    verification: 'release-candidate-exercise',
+    status: 'ready',
+    commit: '0123456789abcdef',
+    checks: Object.fromEntries(
+      [
+        'signedInstallers',
+        'updateRollback',
+        'accessibility',
+        'crashRecovery',
+        'performance',
+        'longSessionStability',
+        'capture',
+        'audio',
+        'input',
+        'regression',
+      ].map((item) => [item, 'verified']),
+    ),
+  },
+};
 
 test('roadmap acceptance stays incomplete and names every missing external gate', () => {
   const result = assessRoadmapAcceptance({
@@ -89,6 +171,11 @@ test('roadmap acceptance stays incomplete and names every missing external gate'
     'desktop-virtual-gamepads',
     'external-package-signing',
     'steam-os-hardware',
+    'real-device-visuals',
+    'physical-input-coverage',
+    'offline-runtime',
+    'provider-account-lifecycle',
+    'release-candidate-qualification',
   ]);
 });
 
@@ -179,6 +266,7 @@ test('roadmap acceptance fails closed on duplicate evidence identities', () => {
 
 test('roadmap acceptance completes only with all production, hardware, driver, and signing evidence', () => {
   const result = assessRoadmapAcceptance({
+    ...publicReleaseEvidence,
     productionReport: production,
     hardwareReports: [hardware('linux'), hardware('win32'), hardware('darwin')],
     virtualGamepadReports: [virtual('win32'), virtual('darwin')],
@@ -194,6 +282,7 @@ test('roadmap acceptance requires Linux hardware readiness and desktop injection
   const linux = hardware('linux');
   linux.hardware = { state: 'unavailable' };
   const result = assessRoadmapAcceptance({
+    ...publicReleaseEvidence,
     productionReport: production,
     hardwareReports: [linux, hardware('win32'), hardware('darwin')],
     virtualGamepadReports: [virtual('win32'), virtual('darwin')],
@@ -207,6 +296,7 @@ test('roadmap acceptance requires Linux hardware readiness and desktop injection
 test('roadmap acceptance verifies supplied signed manifests before accepting package custody', async () => {
   const calls = [];
   const result = await assessRoadmapAcceptanceWithSignedManifests({
+    ...publicReleaseEvidence,
     productionReport: production,
     hardwareReports: [hardware('linux'), hardware('win32'), hardware('darwin')],
     virtualGamepadReports: [virtual('win32'), virtual('darwin')],
@@ -252,6 +342,39 @@ test('roadmap acceptance requires both physical SteamOS targets and every handhe
   ]);
 });
 
+test('roadmap acceptance fails closed for incomplete public-release evidence', () => {
+  const visuals = publicReleaseEvidence.deviceVisualReports.filter(
+    (report) => report.target !== 'fire-tv',
+  );
+  const offlineReports = publicReleaseEvidence.offlineReports.map((report) =>
+    report.platform === 'android'
+      ? { ...report, workflows: { ...report.workflows, installedRuntimes: 'missing' } }
+      : report,
+  );
+  const result = assessRoadmapAcceptance({
+    ...publicReleaseEvidence,
+    deviceVisualReports: visuals,
+    offlineReports,
+    providerReports: [provider('cloud-one')],
+    releaseCandidateReport: {
+      ...publicReleaseEvidence.releaseCandidateReport,
+      checks: { ...publicReleaseEvidence.releaseCandidateReport.checks, accessibility: 'missing' },
+    },
+    productionReport: production,
+  });
+  assert.deepEqual(result.gates.find((gate) => gate.id === 'real-device-visuals').missing, [
+    'fire-tv',
+  ]);
+  assert.deepEqual(result.gates.find((gate) => gate.id === 'offline-runtime').missing, ['android']);
+  assert.deepEqual(result.gates.find((gate) => gate.id === 'provider-account-lifecycle').missing, [
+    'cloud-two',
+  ]);
+  assert.equal(
+    result.gates.find((gate) => gate.id === 'release-candidate-qualification').status,
+    'missing',
+  );
+});
+
 test('roadmap acceptance workflow requires the complete runner-local evidence layout', () => {
   assert.match(acceptanceWorkflow, /workflow_dispatch:/);
   assert.match(acceptanceWorkflow, /runs-on: \$\{\{ inputs\.runner_label \}\}/);
@@ -264,6 +387,11 @@ test('roadmap acceptance workflow requires the complete runner-local evidence la
   assert.match(acceptanceWorkflow, /--steamos-report/);
   assert.match(acceptanceWorkflow, /virtual-gamepad\/win32\.json/);
   assert.match(acceptanceWorkflow, /virtual-gamepad\/darwin\.json/);
+  assert.match(acceptanceWorkflow, /device-visual\/fire-tv\.json/);
+  assert.match(acceptanceWorkflow, /offline\/android\.json/);
+  assert.match(acceptanceWorkflow, /input\/coverage\.json/);
+  assert.match(acceptanceWorkflow, /release-candidate\/qualification\.json/);
+  assert.match(acceptanceWorkflow, /--provider-catalog providers\/catalog\.json/);
   assert.match(acceptanceWorkflow, /--signed-manifest/);
   assert.match(acceptanceWorkflow, /--public-key-file/);
   assert.match(acceptanceWorkflow, /actions\/upload-artifact@v7/);

@@ -9,7 +9,7 @@ on:
         default: 'self-hosted'
         type: string
       evidence_root:
-        description: 'Runner-local evidence root containing production, desktop, SteamOS, virtual-gamepad, and signed-manifest reports'
+        description: 'Runner-local evidence root containing all production, device, account, and release reports'
         required: true
         type: string
       public_key_file:
@@ -43,9 +43,16 @@ jobs:
             hardware/linux.json hardware/win32.json hardware/darwin.json \
             steam-os/steam-deck.json steam-os/steam-machine.json \
             virtual-gamepad/win32.json virtual-gamepad/darwin.json \
+            device-visual/win32.json device-visual/darwin.json device-visual/linux.json \
+            device-visual/steam-deck.json device-visual/android.json \
+            device-visual/fire-tv.json device-visual/chromeos.json device-visual/roku.json \
+            input/coverage.json \
+            offline/win32.json offline/darwin.json offline/linux.json offline/android.json \
+            release-candidate/qualification.json \
             signed-manifests/linux.json signed-manifests/win32.json signed-manifests/darwin.json; do
             test -f "$EVIDENCE_ROOT/$file"
           done
+          node -e "const fs=require('fs'); const c=require('./providers/catalog.json'); for (const p of c.providers.filter(({kind}) => ['cloud-gaming','cloud-pc'].includes(kind))) if (!fs.existsSync(process.env.EVIDENCE_ROOT + '/providers/' + p.id + '.json')) process.exitCode=1"
       - name: Verify complete roadmap evidence
         shell: bash
         env:
@@ -53,6 +60,11 @@ jobs:
           PUBLIC_KEY_FILE: ${{ inputs.public_key_file }}
         run: |
           set -euo pipefail
+          mapfile -t PROVIDER_IDS < <(node -e "const c=require('./providers/catalog.json'); for (const p of c.providers.filter(({kind}) => ['cloud-gaming','cloud-pc'].includes(kind))) console.log(p.id)")
+          PROVIDER_ARGS=()
+          for provider_id in "${PROVIDER_IDS[@]}"; do
+            PROVIDER_ARGS+=(--provider-report "$EVIDENCE_ROOT/providers/$provider_id.json")
+          done
           npm run roadmap:acceptance -- \
             --production-report "$EVIDENCE_ROOT/production/rollout.json" \
             --hardware-report "$EVIDENCE_ROOT/hardware/linux.json" \
@@ -62,6 +74,22 @@ jobs:
             --steamos-report "$EVIDENCE_ROOT/steam-os/steam-machine.json" \
             --virtual-gamepad-report "$EVIDENCE_ROOT/virtual-gamepad/win32.json" \
             --virtual-gamepad-report "$EVIDENCE_ROOT/virtual-gamepad/darwin.json" \
+            --device-visual-report "$EVIDENCE_ROOT/device-visual/win32.json" \
+            --device-visual-report "$EVIDENCE_ROOT/device-visual/darwin.json" \
+            --device-visual-report "$EVIDENCE_ROOT/device-visual/linux.json" \
+            --device-visual-report "$EVIDENCE_ROOT/device-visual/steam-deck.json" \
+            --device-visual-report "$EVIDENCE_ROOT/device-visual/android.json" \
+            --device-visual-report "$EVIDENCE_ROOT/device-visual/fire-tv.json" \
+            --device-visual-report "$EVIDENCE_ROOT/device-visual/chromeos.json" \
+            --device-visual-report "$EVIDENCE_ROOT/device-visual/roku.json" \
+            --input-coverage-report "$EVIDENCE_ROOT/input/coverage.json" \
+            --offline-report "$EVIDENCE_ROOT/offline/win32.json" \
+            --offline-report "$EVIDENCE_ROOT/offline/darwin.json" \
+            --offline-report "$EVIDENCE_ROOT/offline/linux.json" \
+            --offline-report "$EVIDENCE_ROOT/offline/android.json" \
+            --provider-catalog providers/catalog.json \
+            "${PROVIDER_ARGS[@]}" \
+            --release-candidate-report "$EVIDENCE_ROOT/release-candidate/qualification.json" \
             --signed-manifest "$EVIDENCE_ROOT/signed-manifests/linux.json" \
             --signed-manifest "$EVIDENCE_ROOT/signed-manifests/win32.json" \
             --signed-manifest "$EVIDENCE_ROOT/signed-manifests/darwin.json" \

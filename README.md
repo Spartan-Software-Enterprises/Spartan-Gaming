@@ -155,6 +155,8 @@ CI builds and tests development surfaces across its supported runner matrix. The
 
 Public release requires more than green unit tests. Spartan's release gates include repeatable interaction tests, screenshot comparisons, packaged-app visual inspection, controller/keyboard/mouse/touch/remote navigation, offline cold starts, provider login and recovery, accessibility, performance, crash recovery, updates, and real-device evidence for every claimed platform.
 
+The fail-closed `roadmap:acceptance` ledger mirrors those gates. Its operator-run workflow requires canonical real-device visual, physical-input, network-disabled runtime, complete cloud-provider account lifecycle, production, native hardware, signed package, SteamOS, and commit-bound release-candidate reports before it can emit `complete`; automated browser or capability observations alone remain insufficient.
+
 Spartan Gaming is in active foundation implementation. The shared frontend, Electron-first shell, Android policy/shell boundaries, controller profiles, provider and emulator catalogs, host control plane, deployment contracts, and diagnostics are implemented and automated-test covered. A checked roadmap item can represent a verified contract or development artifact; it does not replace physical hardware, production deployment, driver, store, signing, or certification evidence where the roadmap calls for it.
 
 ## Architecture at a glance

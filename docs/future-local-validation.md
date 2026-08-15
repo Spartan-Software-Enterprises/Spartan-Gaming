@@ -133,8 +133,8 @@ Initialize and validate the directory before running any report command:
 ```bash
 : "${EVIDENCE:?Set EVIDENCE to a dedicated protected evidence directory}"
 case "$EVIDENCE" in /|/tmp|/home|/root) echo "unsafe EVIDENCE path" >&2; exit 1;; esac
-install -d -m 700 "$EVIDENCE"/{hardware,native,signing,production}
-chmod 700 "$EVIDENCE" "$EVIDENCE"/{hardware,native,signing,production}
+install -d -m 700 "$EVIDENCE"/{hardware,native,signing,production,steam-os,device-visual,input,offline,providers,release-candidate}
+chmod 700 "$EVIDENCE" "$EVIDENCE"/{hardware,native,signing,production,steam-os,device-visual,input,offline,providers,release-candidate}
 ```
 
 Use mode `0700` for the directory tree and mode `0600` for reports. Never commit
@@ -174,15 +174,35 @@ npm run roadmap:acceptance -- \
   --steamos-report "$EVIDENCE/steam-os/steam-machine.json" \
   --virtual-gamepad-report "$EVIDENCE/native/win32-virtual-gamepad.json" \
   --virtual-gamepad-report "$EVIDENCE/native/darwin-virtual-gamepad.json" \
+  --device-visual-report "$EVIDENCE/device-visual/<target>.json" \
+  --input-coverage-report "$EVIDENCE/input/coverage.json" \
+  --offline-report "$EVIDENCE/offline/<platform>.json" \
+  --provider-catalog providers/catalog.json \
+  --provider-report "$EVIDENCE/providers/<provider-id>.json" \
+  --release-candidate-report "$EVIDENCE/release-candidate/qualification.json" \
   --signed-package-report "$EVIDENCE/signing/win32.json" \
   --signed-package-report "$EVIDENCE/signing/darwin.json" \
   --signed-package-report "$EVIDENCE/signing/linux.json" \
   --report-file "$EVIDENCE/acceptance.json"
 ```
 
-The final status is accepted only when every gate reports `verified` and the
-result is `complete`. Missing hardware, missing drivers, missing custody, or
-missing production evidence must remain visible as blockers.
+Repeat `--device-visual-report` for Windows, macOS, Linux, Steam Deck, Android,
+Fire TV, ChromeOS, and Roku; repeat `--offline-report` for Windows, macOS,
+Linux, and Android; and repeat `--provider-report` for every `cloud-gaming` and
+`cloud-pc` entry in the supplied catalog. The manually dispatched
+`roadmap-acceptance.yml` workflow assembles the full canonical argument list
+and is preferred for final acceptance.
+
+The final status is accepted only when all ten gates report `verified` and the
+result is `complete`. In addition to production, native hardware, driver,
+signing, and SteamOS evidence, version 2 requires packaged-app screenshots and
+interactions on every claimed device class; keyboard, mouse, touch, remote,
+and controller coverage across all release workflows; cold-start and local
+runtime use with networking disabled; every supported cloud provider's full
+account lifecycle; and a commit-bound release-candidate qualification covering
+installers, updates/rollback, accessibility, recovery, performance, stability,
+capture, audio, input, and regression. Browser emulation and capability-only
+reports cannot satisfy these gates.
 
 ## Local GUI and device QA
 

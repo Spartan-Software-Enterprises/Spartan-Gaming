@@ -1,6 +1,6 @@
 # Spartan Gaming agent handoff
 
-Updated: 2026-08-11
+Updated: 2026-08-15
 
 This is the durable continuation point for Codex, OpenCode, and other CLI
 agents. Read it before changing the repository, then verify Git state because
@@ -34,6 +34,16 @@ Keep temporary Playwright reports and screenshots outside the repository.
 Inspect `AGENTS.md` or `CLAUDE.md` if either is added in a future checkout.
 
 ## Latest continuation snapshot
+
+- Roadmap acceptance schema version 2 now fails closed on the five public-release
+  gate families that the original ledger did not evaluate. Completion requires
+  real packaged-app screenshots/interactions across eight canonical device
+  targets, every physical input family across six workflows, network-disabled
+  cold-start/local-runtime exercises on Windows/macOS/Linux/Android, every
+  cloud-gaming and cloud-PC provider in the checked-in catalog, and a
+  commit-bound ten-check release-candidate qualification. The self-hosted
+  workflow validates and passes every runner-local report explicitly; no open
+  physical or operator-controlled roadmap item is claimed complete.
 
 - The current unpublished increment makes the previously inert `performance.gpuPreference` and `performance.processModel` settings operational in the Electron desktop shell. `gpuPreference` is bounded to `Automatic`, `Power saving GPU`, and `High performance GPU`; selecting `Power saving GPU` disables hardware acceleration before Electron becomes ready. `processModel` is bounded to `Default`, `Maximum isolation`, and `Low memory`; `Maximum isolation` appends `--site-per-process`, while `Low memory` is a deliberate no-op because no safe documented Chromium switch reduces memory usage without breaking functionality. Both settings are normalized, persisted to `startup-policy.json`, and reported through the bounded restart-required policy. Focused startup-policy tests pass; repository checks pass 442/442 and the serialized suite passes 639 of 644 with five expected environment/platform skips. Implementation evidence: GPU preference "Power saving GPU" maps to `app.disableHardwareAcceleration()` (cross-platform safe option); "High performance GPU" is a no-op (Electron has no documented API for discrete GPU selection). Process model "Maximum isolation" appends `--site-per-process` (already default in modern Chromium, harmless); "Low memory" is a no-op (no safe Chromium switch). Both settings are startup-only (require restart), invalid values fall back to safe defaults, and all focused tests pass across Electron contracts (16/16), startup policy (7/7), and the full serialized suite.
 - The current unpublished increment makes Updates functional in packaged
