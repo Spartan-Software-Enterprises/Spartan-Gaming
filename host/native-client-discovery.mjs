@@ -1,4 +1,4 @@
-import { promises as defaultFs } from 'node:fs';
+import { constants, promises as defaultFs } from 'node:fs';
 import { homedir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
 import { selectNativeClient } from '../src/frontend/providers/native-client.mjs';
@@ -33,8 +33,8 @@ export function createNativeClientDiscovery({
 } = {}) {
   if (!['win32', 'darwin', 'linux'].includes(platform))
     throw new TypeError(`unsupported native client discovery platform: ${platform}`);
-  if (!fsImpl || typeof fsImpl.access !== 'function')
-    throw new TypeError('filesystem adapter must implement access');
+  if (!fsImpl || typeof fsImpl.access !== 'function' || typeof fsImpl.stat !== 'function')
+    throw new TypeError('filesystem adapter must implement access and stat');
   const roots = Array.isArray(baseDirs)
     ? baseDirs.map(String).filter(Boolean)
     : defaultBaseDirs(platform, env, home);
@@ -54,7 +54,9 @@ export function createNativeClientDiscovery({
       );
       for (const path of probes) {
         try {
-          await fsImpl.access(path);
+          const info = await fsImpl.stat(path);
+          if (!info.isFile()) throw new Error('not a regular file');
+          await fsImpl.access(path, constants.X_OK);
           return Object.freeze({
             found: true,
             path,

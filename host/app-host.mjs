@@ -1,4 +1,5 @@
 import { createServer, request as httpRequest } from 'node:http';
+import { request as httpsRequest } from 'node:https';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createAssetResolver, sendFile } from '../scripts/frontend/serve.mjs';
@@ -11,11 +12,20 @@ function required(value, name) {
 }
 
 /** Transparent byte proxy: forward the client's upgrade handshake to the agent and pipe both sockets. */
-export function createWebSocketProxy({ endpoint, onOpen = () => {}, onClose = () => {} } = {}) {
+export function createWebSocketProxy({
+  endpoint,
+  onOpen = () => {},
+  onClose = () => {},
+  requestImpl = null,
+  secureRequestImpl = null,
+} = {}) {
   const target = new URL(required(endpoint, 'endpoint'));
   if (!['ws:', 'wss:'].includes(target.protocol))
     throw new TypeError('endpoint must use the ws: or wss: scheme');
   const upstreamSockets = new Set();
+  const requestTransport =
+    target.protocol === 'wss:' ? secureRequestImpl || httpsRequest : requestImpl || httpRequest;
+  const defaultPort = target.protocol === 'wss:' ? 443 : 80;
   const handshake = (request, socket, head) => {
     const upstream = new URL(request.url || '/', `http://${target.host}`);
     const baseHeaders = {
@@ -26,10 +36,10 @@ export function createWebSocketProxy({ endpoint, onOpen = () => {}, onClose = ()
       'sec-websocket-version': request.headers['sec-websocket-version'] || '13',
     };
     if (request.headers.origin) baseHeaders.origin = request.headers.origin;
-    const client = httpRequest(
+    const client = requestTransport(
       {
         host: target.hostname,
-        port: Number(target.port || 80),
+        port: Number(target.port || defaultPort),
         method: 'GET',
         path: upstream.pathname + upstream.search,
         headers: baseHeaders,

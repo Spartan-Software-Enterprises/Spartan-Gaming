@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import test from 'node:test';
-import { createAppHostServer } from './app-host.mjs';
+import { createAppHostServer, createWebSocketProxy } from './app-host.mjs';
 
 const repositoryRoot = resolve(import.meta.dirname, '..');
 const frontendRoot = resolve(repositoryRoot, 'src/frontend');
@@ -159,4 +159,26 @@ test('app host proxies /session upgrades to an embedded agent and reports its he
   } finally {
     await agent.close();
   }
+});
+
+test('wss websocket proxy selects HTTPS transport and port 443', () => {
+  let captured;
+  const fakeClient = {
+    on() {
+      return this;
+    },
+    end() {},
+  };
+  const proxy = createWebSocketProxy({
+    endpoint: 'wss://agent.example.test/session',
+    secureRequestImpl: (options) => {
+      captured = options;
+      return fakeClient;
+    },
+  });
+  proxy.handshake({ url: '/session', headers: {} }, { end() {} }, Buffer.alloc(0));
+  assert.equal(captured.protocol, undefined);
+  assert.equal(captured.host, 'agent.example.test');
+  assert.equal(captured.port, 443);
+  assert.equal(captured.path, '/session');
 });

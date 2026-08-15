@@ -8,7 +8,7 @@ import { createNativeClientDiscovery } from './native-client-discovery.mjs';
 test('native client discovery finds and misses official client executables', async () => {
   const root = await mkdtemp(join(tmpdir(), 'spartan-client-'));
   try {
-    await writeFile(join(root, 'steam'), '#!/bin/sh');
+    await writeFile(join(root, 'steam'), '#!/bin/sh', { mode: 0o755 });
     const discovery = createNativeClientDiscovery({ platform: 'linux', baseDirs: [root] });
     const found = await discovery.discover('steam-remote-play');
     assert.equal(found.found, true);

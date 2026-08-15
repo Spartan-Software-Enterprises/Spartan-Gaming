@@ -341,6 +341,7 @@ export async function buildAppBundle(plan) {
     buildHost: hostPlatform(),
     runtime: plan.node ? 'bundled node >=20' : 'node >=20',
     entrypoint: 'host/app-host.mjs',
+    launcher: plan.platform === 'win32' ? 'spartan-gaming.bat' : 'spartan-gaming',
     publicRoot: 'public',
     emulatorRoot: plan.emulators ? 'emulators' : null,
     compatibility:
@@ -364,7 +365,8 @@ export async function buildAppBundle(plan) {
     'utf8',
   );
   const launcher = launcherScript(plan);
-  await writeFile(path.join(plan.bundle, 'spartan-gaming'), launcher, { mode: 0o755 });
+  const launcherName = plan.platform === 'win32' ? 'spartan-gaming.bat' : 'spartan-gaming';
+  await writeFile(path.join(plan.bundle, launcherName), launcher, { mode: 0o755 });
   return Object.freeze({
     bundle: plan.bundle,
     manifest,
@@ -464,12 +466,7 @@ export async function executeInstallerPlan(installers, plan) {
   const results = [];
   for (const installer of installers) {
     if (installer.kind === 'portable') {
-      command(
-        'tar',
-        ['--exclude=spartan-gaming', '-czf', installer.target, '.'],
-        installer.cwd,
-        'portable archive',
-      );
+      command('tar', ['-czf', installer.target, '.'], installer.cwd, 'portable archive');
       results.push(Object.freeze({ kind: 'portable', target: installer.target }));
     } else if (installer.kind === 'deb') {
       await rm(installer.root, { recursive: true, force: true });
