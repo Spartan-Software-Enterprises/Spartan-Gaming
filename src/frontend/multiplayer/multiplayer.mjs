@@ -1,4 +1,5 @@
 import '../pwa/register.mjs';
+import { bindPrimaryNavigation } from '../primary-navigation.mjs';
 
 const STORAGE_PREFIX = 'spartan-gaming.multiplayer.v1.';
 
@@ -197,6 +198,7 @@ function openManageDialog(sessionId) {
 }
 
 function setupMultiplayer() {
+  bindPrimaryNavigation();
   populateGameSelect();
   renderSessions();
 

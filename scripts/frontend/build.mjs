@@ -48,6 +48,19 @@ export async function buildFrontendDistribution({
     await cp(path.join(publicDirectory, directory), path.join(output, directory), {
       recursive: true,
     });
+  await mkdir(path.join(output, 'catalogs'), { recursive: true });
+  await cp(
+    path.join(publicDirectory, 'providers/catalog.json'),
+    path.join(output, 'catalogs/providers.json'),
+  );
+  await cp(
+    path.join(publicDirectory, 'emulators/catalog.json'),
+    path.join(output, 'catalogs/emulators.json'),
+  );
+  await cp(
+    path.join(publicDirectory, 'games/catalog.json'),
+    path.join(output, 'catalogs/games.json'),
+  );
   await cp(path.join(publicDirectory, 'favicon.ico'), path.join(output, 'favicon.ico'));
   const manifest = Object.freeze({
     schemaVersion: 1,
@@ -73,6 +86,9 @@ export async function buildFrontendDistribution({
     'emulators/catalog.json',
     'games/catalog.json',
     'spartan-frontend-manifest.json',
+    'catalogs/providers.json',
+    'catalogs/emulators.json',
+    'catalogs/games.json',
   ];
   for (const relative of required) {
     try {

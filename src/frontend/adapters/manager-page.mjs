@@ -134,7 +134,7 @@ function rebuild() {
 }
 async function load() {
   try {
-    const manifest = await fetch('../../../emulators/catalog.json').then((response) =>
+    const manifest = await fetch('../../catalogs/emulators.json').then((response) =>
       response.json(),
     );
     state.cores = manifest.projects;

@@ -23,6 +23,14 @@ test('frontend distribution build packages pages, catalogs, service worker, and 
     );
     assert.match(await readFile(path.join(result.output, 'games/catalog.json'), 'utf8'), /HexGL/);
     assert.match(
+      await readFile(path.join(result.output, 'catalogs/providers.json'), 'utf8'),
+      /GeForce NOW/,
+    );
+    assert.match(
+      await readFile(path.join(result.output, 'catalogs/emulators.json'), 'utf8'),
+      /RetroArch/,
+    );
+    assert.match(
       await readFile(path.join(result.output, 'pwa/spartan-mark.svg'), 'utf8'),
       /Spartan Gaming/,
     );

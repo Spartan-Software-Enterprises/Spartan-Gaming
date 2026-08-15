@@ -360,7 +360,7 @@ async function loadCores() {
   try {
     state.preferences = resolveEmulationPreferences(createSettingsStore().read());
     if (gameFolderLabel) gameFolderLabel.hidden = !state.preferences.scanLibraries;
-    const manifest = await fetch('../../../emulators/catalog.json').then((response) =>
+    const manifest = await fetch('../../catalogs/emulators.json').then((response) =>
       response.json(),
     );
     state.cores = manifest.projects;

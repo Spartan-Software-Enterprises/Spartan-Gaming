@@ -1,6 +1,7 @@
 import '../pwa/register.mjs';
 import { createProviderIntegration } from '../providers/integration.mjs';
 import { setupStreamServices, renderStreamServices } from './streaming.mjs';
+import { bindPrimaryNavigation } from '../primary-navigation.mjs';
 
 const STORAGE_PREFIX = 'spartan-gaming.social.v1.';
 
@@ -195,6 +196,7 @@ function openChat(friendId) {
 }
 
 function setupSocial() {
+  bindPrimaryNavigation();
   const search = document.querySelector('[data-search]');
   const filterButtons = document.querySelectorAll('[data-filter]');
   let currentFilter = 'all';
