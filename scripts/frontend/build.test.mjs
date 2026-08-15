@@ -57,14 +57,16 @@ test('frontend server can serve the packaged distribution root', async () => {
   });
   const address = await frontend.listen();
   try {
-    const page = await fetch(`http://127.0.0.1:${address.port}/dashboard/`);
-    const adapters = await fetch(`http://127.0.0.1:${address.port}/adapters/`);
-    const catalog = await fetch(`http://127.0.0.1:${address.port}/providers/catalog.json`);
-    const games = await fetch(`http://127.0.0.1:${address.port}/games/catalog.json`);
-    assert.equal(page.status, 200);
-    assert.equal(adapters.status, 200);
-    assert.equal(catalog.status, 200);
-    assert.equal(games.status, 200);
+    for (const pathname of [
+      '/dashboard/',
+      '/adapters/',
+      '/providers/catalog.json',
+      '/games/catalog.json',
+    ]) {
+      const response = await fetch(`http://127.0.0.1:${address.port}${pathname}`);
+      assert.equal(response.status, 200, pathname);
+      await response.arrayBuffer();
+    }
   } finally {
     await frontend.close();
     await rm(root, { recursive: true, force: true, maxRetries: 8, retryDelay: 100 });
