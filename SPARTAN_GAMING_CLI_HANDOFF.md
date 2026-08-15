@@ -22,7 +22,7 @@ the branch may have advanced since this note was written.
 
 ## Repository workflow
 
-    cd /data/data/com.termux/files/home/Spartan-Gaming
+    cd /home/ubuntu/Spartan-Gaming
     git status -sb
     git pull --ff-only origin main
     npm ci --ignore-scripts --no-audit --no-fund
