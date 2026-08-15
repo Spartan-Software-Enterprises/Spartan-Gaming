@@ -50,6 +50,12 @@ export function createAssetResolver({
   return (pathname) => {
     const decoded = decodePath(pathname);
     if (!decoded) return { status: 400 };
+    if (decoded === '/catalogs/providers.json')
+      return { file: path.join(publicRoot, 'providers/catalog.json') };
+    if (decoded === '/catalogs/emulators.json')
+      return { file: path.join(publicRoot, 'emulators/catalog.json') };
+    if (decoded === '/catalogs/games.json')
+      return { file: path.join(publicRoot, 'games/catalog.json') };
     if (decoded === '/service-worker.mjs') return { file: path.join(root, 'service-worker.mjs') };
     if (decoded.startsWith('/pwa/'))
       return { file: safePath(path.join(root, 'pwa'), decoded.slice('/pwa'.length)) };
@@ -91,9 +97,12 @@ export function createAssetResolver({
         'readiness',
         'session',
         'settings',
+        'social',
         'startup',
         'transport',
         'workspaces',
+        'multiplayer',
+        'watch',
       ].includes(firstSegment)
     )
       return { file: safePath(root, decoded) };

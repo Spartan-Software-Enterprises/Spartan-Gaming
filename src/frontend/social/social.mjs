@@ -1,6 +1,7 @@
 import '../pwa/register.mjs';
+import { createFrontendCatalog, validateCatalogManifest } from '../catalog.mjs';
 import { createProviderIntegration } from '../providers/integration.mjs';
-import { setupStreamServices, renderStreamServices } from './streaming.mjs';
+import { setupStreamServices } from './streaming.mjs';
 import { bindPrimaryNavigation } from '../primary-navigation.mjs';
 
 const STORAGE_PREFIX = 'spartan-gaming.social.v1.';
@@ -216,11 +217,13 @@ function setupSocial() {
     try {
       const response = await fetch('../catalogs/providers.json');
       const data = await response.json();
-      providerEntries = data.providers || [];
+      validateCatalogManifest(data, 'provider');
+      providerEntries = createFrontendCatalog({ providers: data.providers }).entries;
     } catch {
       providerEntries = [];
     }
-    renderStreamServices(providerEntries);
+    setupStreamServices(providerEntries);
+    render();
   }
 
   function render() {
