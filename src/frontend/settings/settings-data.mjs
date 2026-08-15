@@ -1683,12 +1683,6 @@ export const settingsCategories = [
         true,
       ),
       toggle(
-        'updates.adapterUpdates',
-        'Update adapters automatically',
-        'Keep provider and emulator adapters current within the selected channel.',
-        true,
-      ),
-      toggle(
         'updates.coreUpdates',
         'Update emulator cores automatically',
         'Update cores while preserving pinned versions and save compatibility.',
