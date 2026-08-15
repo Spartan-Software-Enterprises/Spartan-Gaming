@@ -214,7 +214,7 @@ function setupSocial() {
 
   async function loadProviders() {
     try {
-      const response = await fetch('../../../providers/catalog.json');
+      const response = await fetch('../catalogs/providers.json');
       const data = await response.json();
       providerEntries = data.providers || [];
     } catch {

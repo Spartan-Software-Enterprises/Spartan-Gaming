@@ -134,9 +134,7 @@ function rebuild() {
 }
 async function load() {
   try {
-    const manifest = await fetch('../../catalogs/emulators.json').then((response) =>
-      response.json(),
-    );
+    const manifest = await fetch('../catalogs/emulators.json').then((response) => response.json());
     state.cores = manifest.projects;
     const injected = globalThis.__SPARTAN_ADAPTER_MANIFESTS__;
     if (injected) state.records = [...readAdapterManifestBundle(injected)];

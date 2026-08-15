@@ -187,9 +187,7 @@ document.querySelector('[data-import]').addEventListener('change', async (event)
 });
 async function load() {
   try {
-    const manifest = await fetch('../../catalogs/providers.json').then((response) =>
-      response.json(),
-    );
+    const manifest = await fetch('../catalogs/providers.json').then((response) => response.json());
     providers = mergeCommunityProviders({
       providers: manifest.providers,
       community: communityCatalog.list(),

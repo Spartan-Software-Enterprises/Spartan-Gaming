@@ -658,9 +658,9 @@ async function loadCatalog() {
         return response.json();
       });
     const [providers, emulators, games] = await Promise.all([
-      readCatalog('../../catalogs/providers.json'),
-      readCatalog('../../catalogs/emulators.json'),
-      readCatalog('../../catalogs/games.json'),
+      readCatalog('../catalogs/providers.json'),
+      readCatalog('../catalogs/emulators.json'),
+      readCatalog('../catalogs/games.json'),
     ]);
     validateCatalogManifest(providers, 'provider');
     validateCatalogManifest(emulators, 'emulator');

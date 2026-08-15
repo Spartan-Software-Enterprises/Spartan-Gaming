@@ -248,7 +248,10 @@ function renderLaunchPlan(plan, core) {
 function releaseCardRow(core) {
   const row = state.adapterModel?.rows.find((item) => item.id === core.id);
   const release = row?.release;
-  if (!release) return '';
+  if (!release)
+    return core.url
+      ? `<div class="release-row"><a class="secondary" href="${escapeHtml(core.url)}" target="_blank" rel="noopener noreferrer">Official core project</a><span class="tag release">Download through the signed adapter feed when available</span></div>`
+      : '';
   const label =
     release.status === 'install-available'
       ? `Release v${release.to} available`
@@ -360,9 +363,7 @@ async function loadCores() {
   try {
     state.preferences = resolveEmulationPreferences(createSettingsStore().read());
     if (gameFolderLabel) gameFolderLabel.hidden = !state.preferences.scanLibraries;
-    const manifest = await fetch('../../catalogs/emulators.json').then((response) =>
-      response.json(),
-    );
+    const manifest = await fetch('../catalogs/emulators.json').then((response) => response.json());
     state.cores = manifest.projects;
     let pendingRom = null;
     try {
