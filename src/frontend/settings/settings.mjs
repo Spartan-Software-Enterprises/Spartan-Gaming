@@ -340,18 +340,33 @@ function bindControls() {
       }
       if (action.kind === 'update-check') {
         const status = document.querySelector('[data-save-status]');
-        if (!globalThis.spartanElectron?.checkForUpdates) {
-          if (status) status.textContent = 'Update checks require the Electron desktop app.';
+        if (globalThis.spartanElectron?.checkForUpdates) {
+          displayUpdateStatus({ status: 'checking' });
+          try {
+            const result = await globalThis.spartanElectron.checkForUpdates();
+            displayUpdateStatus(result);
+          } catch {
+            displayUpdateStatus({ status: 'unavailable' });
+          }
           return;
         }
-        displayUpdateStatus({ status: 'checking' });
-        try {
-          const result = await globalThis.spartanElectron.checkForUpdates();
-          displayUpdateStatus(result);
-        } catch {
-          displayUpdateStatus({ status: 'unavailable' });
+        if (globalThis.SpartanAndroid) {
+          if (status) status.textContent = 'Checking GitHub releases…';
+          try {
+            const response = await fetch(
+              'https://api.github.com/repos/Spartan-Software-Enterprises/Spartan-Gaming/releases?per_page=1',
+              { headers: { Accept: 'application/vnd.github+json' } },
+            );
+            if (!response.ok) throw new Error(`release check failed: ${response.status}`);
+            const release = await response.json();
+            if (status)
+              status.textContent = `Latest GitHub release: ${release.tag_name || 'available'}. Android checks automatically at startup.`;
+          } catch {
+            if (status) status.textContent = 'GitHub release checks are currently unavailable.';
+          }
+          return;
         }
-        return;
+        if (status) status.textContent = 'GitHub release checks are available in the app.';
       }
       const status = document.querySelector('[data-save-status]');
       if (status && action.kind === 'status') {

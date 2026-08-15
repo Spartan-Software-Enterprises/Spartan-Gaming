@@ -113,3 +113,14 @@ test('settings category changes reset the page scroll position', async () => {
   assert.match(implementation, /document\.querySelector\('\.main'\)\?\.scrollTo\?\.\(0, 0\)/);
   assert.match(implementation, /render\(\);\n\s*scrollSettingsToTop\(\);/);
 });
+
+test('settings update checks do not require Electron', async () => {
+  const directory = path.dirname(fileURLToPath(import.meta.url));
+  const implementation = await readFile(path.join(directory, 'settings.mjs'), 'utf8');
+  assert.match(implementation, /globalThis\.SpartanAndroid/);
+  assert.match(
+    implementation,
+    /api\.github\.com\/repos\/Spartan-Software-Enterprises\/Spartan-Gaming\/releases/,
+  );
+  assert.doesNotMatch(implementation, /Update checks require the Electron desktop app/);
+});
