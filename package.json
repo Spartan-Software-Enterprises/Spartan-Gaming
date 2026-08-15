@@ -79,7 +79,7 @@
     "node": ">=20"
   },
   "devDependencies": {
-    "electron": "^37.2.6",
+    "electron": "^43.4.0",
     "electron-builder": "^26.0.12",
     "node-api-headers": "^1.9.0",
     "playwright": "1.62.1",
