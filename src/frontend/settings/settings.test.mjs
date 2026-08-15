@@ -104,3 +104,12 @@ test('updater status owns the Updates save area during asynchronous checks', asy
     /saveSequence !== runtimeSaveSequence \|\| updateStatusOwnsSaveArea\(\)/,
   );
 });
+
+test('settings category changes reset the page scroll position', async () => {
+  const directory = path.dirname(fileURLToPath(import.meta.url));
+  const implementation = await readFile(path.join(directory, 'settings.mjs'), 'utf8');
+  assert.match(implementation, /function scrollSettingsToTop\(\)/);
+  assert.match(implementation, /globalThis\.scrollTo\?\.\(0, 0\)/);
+  assert.match(implementation, /document\.querySelector\('\.main'\)\?\.scrollTo\?\.\(0, 0\)/);
+  assert.match(implementation, /render\(\);\n\s*scrollSettingsToTop\(\);/);
+});

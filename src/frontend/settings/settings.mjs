@@ -115,6 +115,11 @@ function visibleCategories() {
     .filter((category) => category.settings.length > 0);
 }
 
+function scrollSettingsToTop() {
+  globalThis.scrollTo?.(0, 0);
+  document.querySelector('.main')?.scrollTo?.(0, 0);
+}
+
 function renderNav() {
   const nav = document.querySelector('[data-settings-nav]');
   const categories = visibleCategories();
@@ -134,6 +139,7 @@ function renderNav() {
     button.addEventListener('click', () => {
       activeCategory = button.dataset.category;
       render();
+      scrollSettingsToTop();
     }),
   );
 }
@@ -234,6 +240,7 @@ function bindControls() {
         query = '';
         document.querySelector('[data-search]').value = '';
         render();
+        scrollSettingsToTop();
         return;
       }
       if (action.kind === 'export-settings') {
