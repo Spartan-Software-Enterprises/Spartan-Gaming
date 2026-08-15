@@ -114,6 +114,7 @@
 - [x] Native OS input, audio, and haptics adapters (Linux uinput virtual gamepad/force feedback, Windows XInput rumble, macOS GameController/CoreHaptics output when capabilities are available, Linux portal consent, audio-device enumeration, and the in-process Werift H.264/Opus loopback contract).
 - [ ] Validate native input, audio, and haptics on real Windows, macOS, and Linux hardware; Linux requires readable/writable `/dev/uinput` and an FF-capable kernel.
 - [ ] Provide Windows/macOS virtual gamepad injection through separately installed, verified virtual-device drivers.
+- [x] Keep the Windows/macOS virtual-gamepad package boundary fail-closed until an injected native driver binding is present; exercise supported operation delegation with platform contract tests.
 - [x] Cross-platform audio capture and publisher readiness contract (native audio publisher pending).
 - [x] Shell-free audio publisher and RTP handoff boundary with permission gating (native capture/codec adapters pending).
 - [x] Browser-to-host control-plane quality and input envelopes (OS adapters pending).

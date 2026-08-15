@@ -33,7 +33,7 @@
     "test:browser-adapter": "node --test src/frontend/emulation/browser-adapter-loader.test.mjs",
     "test:player-volume": "node --test src/frontend/player/volume.test.mjs",
     "test:native-linux": "node --test native/linux/reference-adapter.test.mjs",
-    "test:virtual-gamepad": "node --test host/virtual-gamepad-loader.test.mjs host/input-adapter-mux.test.mjs",
+    "test:virtual-gamepad": "node --test host/virtual-gamepad-loader.test.mjs host/input-adapter-mux.test.mjs host/windows-virtual-gamepad.test.mjs host/macos-virtual-gamepad.test.mjs",
     "test:serial": "node scripts/run-tests.mjs --concurrency 1",
     "native:build-linux": "node scripts/native/package.mjs --platform linux --execute",
     "native:verify-linux": "node scripts/native/verify-linux-uinput.mjs",

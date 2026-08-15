@@ -157,6 +157,8 @@ Public release requires more than green unit tests. Spartan's release gates incl
 
 The fail-closed `roadmap:acceptance` ledger mirrors those gates. Its operator-run workflow requires canonical real-device visual, physical-input, network-disabled runtime, complete cloud-provider account lifecycle, production, native hardware, signed package, SteamOS, and commit-bound release-candidate reports before it can emit `complete`; automated browser or capability observations alone remain insufficient.
 
+Windows and macOS virtual-gamepad packages also fail closed until a verified native driver binding is injected; their package contracts never claim button, axis, or rumble execution from a placeholder adapter.
+
 Spartan Gaming is in active foundation implementation. The shared frontend, Electron-first shell, Android policy/shell boundaries, controller profiles, provider and emulator catalogs, host control plane, deployment contracts, and diagnostics are implemented and automated-test covered. A checked roadmap item can represent a verified contract or development artifact; it does not replace physical hardware, production deployment, driver, store, signing, or certification evidence where the roadmap calls for it.
 
 ## Architecture at a glance
