@@ -11,7 +11,7 @@
 
 ## Public release acceptance gates
 
-- [ ] Maintain passing Prettier, repository, serial, Electron, Android, and cross-platform packaging checks on the release commit.
+- [x] Maintain passing Prettier, repository, serial, Electron, Android, and cross-platform packaging checks on the release commit (verified locally and in CI on `ea753a2`).
 - [x] Run repeatable Playwright interaction and perceptual screenshot comparisons for every maintained application route at desktop, handheld, mobile, and television layouts (44 isolated-state route snapshots, twelve representative interactions, and the Linux/Xvfb baseline are automated; real-device visual approval remains the next separate gate).
 - [ ] Visually inspect the packaged application on real Windows, Linux, SteamOS/Steam Deck, Android, Fire TV, ChromeOS, and every other claimed device class; record platform-specific screenshots and interaction evidence.
 - [ ] Verify keyboard, mouse, touch, remote, and every supported controller family across navigation, text entry, gameplay, overlays, settings, and recovery flows.
