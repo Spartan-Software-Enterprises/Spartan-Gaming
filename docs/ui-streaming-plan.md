@@ -222,6 +222,11 @@ accessible View all actions that switch to focused result views.
 
 ### Phase 3: television, Fire TV, and SteamOS polish
 
+Status: verified in the shared surface. Existing device-mode, safe-area,
+remote-navigation, focus-ring, and SteamOS presentation contracts are now
+covered by the expanded rendered matrix; shelves expose pointer-free arrow
+controls and the controller navigator remains the platform input boundary.
+
 - Add explicit D-pad focus management and focus-visible treatment.
 - Add TV safe-area and remote interaction tests.
 - Add SteamOS handheld presentation and suspend/resume checks.
@@ -229,12 +234,21 @@ accessible View all actions that switch to focused result views.
 
 ### Phase 4: player recovery and accessibility
 
+Status: implemented for the current player surface. Connection errors and
+ended sessions now expose direct Reconnect, See diagnostics, and Return to
+library actions. Existing audio, quality, fullscreen, PiP, controller,
+diagnostics, volume, caption, focus, and reduced-motion settings remain in
+the shared player contract.
+
 - Rework the player control hierarchy.
 - Add actionable reconnect, controller, audio, and expired-session states.
 - Add accessibility settings and runtime announcements.
 - Add device-specific player controls and touch preview.
 
 ### Phase 5: validation and release
+
+Status: continuously gated. The latest rendered and release checks pass on
+the KVM; release workflows remain fail-closed for platform signing custody.
 
 - Exercise every route at desktop, landscape-phone, mobile, television, and
   representative Electron layouts.
