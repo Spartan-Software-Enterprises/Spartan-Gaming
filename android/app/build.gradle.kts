@@ -36,6 +36,41 @@ android {
         versionName = "0.1.0-beta.9"
     }
 
+    flavorDimensions += "device"
+
+    productFlavors {
+        create("phone") {
+            dimension = "device"
+            manifestPlaceholders["spartanDeviceProfile"] = "phone"
+            versionNameSuffix = "-phone"
+            applicationIdSuffix = ".phone"
+        }
+        create("tablet") {
+            dimension = "device"
+            manifestPlaceholders["spartanDeviceProfile"] = "tablet"
+            versionNameSuffix = "-tablet"
+            applicationIdSuffix = ".tablet"
+        }
+        create("foldable") {
+            dimension = "device"
+            manifestPlaceholders["spartanDeviceProfile"] = "foldable"
+            versionNameSuffix = "-foldable"
+            applicationIdSuffix = ".foldable"
+        }
+        create("androidTv") {
+            dimension = "device"
+            manifestPlaceholders["spartanDeviceProfile"] = "android-tv"
+            versionNameSuffix = "-android-tv"
+            applicationIdSuffix = ".androidtv"
+        }
+        create("fireTv") {
+            dimension = "device"
+            manifestPlaceholders["spartanDeviceProfile"] = "fire-tv"
+            versionNameSuffix = "-fire-tv"
+            applicationIdSuffix = ".firetv"
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -115,7 +150,7 @@ tasks.named("preBuild") {
 }
 
 tasks.configureEach {
-    if (name == "assembleRelease") {
+    if (name.startsWith("assemble") && name.endsWith("Release")) {
         doFirst {
             check(releaseSigningConfigured) {
                 "assembleRelease requires operator-managed Android signing environment variables"

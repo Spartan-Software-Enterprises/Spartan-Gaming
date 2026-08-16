@@ -91,7 +91,7 @@ test('Android signed release workflow keeps keystore material external', () => {
   assert.match(workflow, /android-actions\/setup-android@v4/);
   assert.match(workflow, /base64 --decode/);
   assert.match(workflow, /SPARTAN_ANDROID_STORE_PASSWORD/);
-  assert.match(workflow, /:app:assembleRelease/);
+  assert.match(workflow, /:app:assemble\$\{task\}Release/);
   assert.match(workflow, /apksigner.*verify/);
   assert.match(workflow, /actions\/upload-artifact@v7/);
   assert.doesNotMatch(workflow, /BEGIN (RSA |EC )?PRIVATE KEY/);
@@ -107,4 +107,19 @@ test('Android shell keeps native actions bounded and lifecycle-scoped', () => {
     /override fun onTextInput\(payload: JSONObject\): Boolean \{[\s\S]*return false/,
   );
   assert.match(activity, /target\.host == ASSET_HOST/);
+});
+
+test('Android release profiles declare phone, tablet, foldable, Android TV, and Fire TV variants', () => {
+  const build = read('app/build.gradle.kts');
+  const manifest = read('app/src/main/AndroidManifest.xml');
+  assert.match(build, /flavorDimensions \+= "device"/);
+  for (const flavor of ['phone', 'tablet', 'foldable', 'androidTv', 'fireTv'])
+    assert.ok(build.includes('create(\"' + flavor + '\")'));
+  assert.match(manifest, /com\.spartan\.gaming\.device_profile/);
+  for (const overlay of ['androidTv', 'fireTv']) {
+    const overlayManifest = read('app/src/' + overlay + '/AndroidManifest.xml');
+    assert.match(overlayManifest, /LEANBACK_LAUNCHER/);
+    assert.match(overlayManifest, /android:screenOrientation="landscape"/);
+    assert.match(overlayManifest, /android.hardware.touchscreen/);
+  }
 });

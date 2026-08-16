@@ -184,7 +184,7 @@ docs/                  Architecture, research, decisions, validation, and roadma
 
 Spartan Gaming is the standalone application and orchestration layer. Providers, stores, emulators, games, drivers, and operating-system services remain their own execution backends. Integrations use official interfaces, documented protocols, capability-gated adapters, or user-owned local installations.
 
-Read [the architecture](docs/architecture.md), [development guide](docs/development.md), [roadmap](ROADMAP.md), and [contributor guide](CONTRIBUTING.md) to go deeper.
+Read [the architecture](docs/architecture.md), [development guide](docs/development.md), [release device matrix](docs/release-device-matrix.md), [roadmap](ROADMAP.md), and [contributor guide](CONTRIBUTING.md) to go deeper.
 
 ## Principles
 

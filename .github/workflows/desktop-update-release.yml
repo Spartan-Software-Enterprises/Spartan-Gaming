@@ -22,6 +22,8 @@ jobs:
         include:
           - os: ubuntu-latest
             platform: linux
+          - os: ubuntu-latest
+            platform: steamos
           - os: macos-latest
             platform: mac
           - os: windows-latest
@@ -95,7 +97,13 @@ jobs:
           APPLE_ID: ${{ matrix.platform == 'mac' && secrets.SPARTAN_MAC_APPLE_ID || '' }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.platform == 'mac' && secrets.SPARTAN_MAC_APP_PASSWORD || '' }}
           APPLE_TEAM_ID: ${{ matrix.platform == 'mac' && secrets.SPARTAN_MAC_TEAM_ID || '' }}
-        run: npm run desktop:package -- --publish never -c.publish.channel="$SPARTAN_UPDATE_CHANNEL"
+        run: |
+          set -euo pipefail
+          if [ "${{ matrix.platform }}" = "steamos" ]; then
+            npm run desktop:package -- --publish never -c.publish.channel="$SPARTAN_UPDATE_CHANNEL" -c.artifactName='Spartan-Gaming-${{ matrix.platform }}-${version}-${arch}.${ext}'
+          else
+            npm run desktop:package -- --publish never -c.publish.channel="$SPARTAN_UPDATE_CHANNEL"
+          fi
       - name: Upload update artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:

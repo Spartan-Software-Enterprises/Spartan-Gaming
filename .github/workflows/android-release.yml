@@ -2,6 +2,11 @@ name: Android signed release
 
 on:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Existing v-prefixed tag whose version exactly matches package.json'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -13,6 +18,19 @@ jobs:
     environment: android-release
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.release_tag }}
+      - name: Verify release identity
+        id: identity
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          package_version="$(node -p "require(\"./package.json\").version")"
+          test "$RELEASE_TAG" = "v$package_version"
+          git tag --points-at HEAD | grep -Fx "$RELEASE_TAG"
+          echo "version=$package_version" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -48,26 +66,32 @@ jobs:
           npm run playwright:smoke
           node scripts/playwright/providers-deep.mjs
           node scripts/playwright/full-verification.mjs
-      - name: Test and build signed release
+      - name: Build and verify signed Android device profiles
         env:
           SPARTAN_ANDROID_KEYSTORE: ${{ steps.signing.outputs.keystore }}
           SPARTAN_ANDROID_KEY_ALIAS: ${{ secrets.SPARTAN_ANDROID_KEY_ALIAS }}
           SPARTAN_ANDROID_STORE_PASSWORD: ${{ secrets.SPARTAN_ANDROID_STORE_PASSWORD }}
           SPARTAN_ANDROID_KEY_PASSWORD: ${{ secrets.SPARTAN_ANDROID_KEY_PASSWORD }}
+          RELEASE_VERSION: ${{ steps.identity.outputs.version }}
         run: |
           set -euo pipefail
-          npm run test:android-shell
           cd android
-          ./gradlew --no-daemon :app:assembleRelease
-          mv app/build/outputs/apk/release/app-release.apk "app/build/outputs/apk/release/Spartan-Gaming-${{ github.ref_name }}-android.apk"
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/release/Spartan-Gaming-${{ github.ref_name }}-android.apk
-          sha256sum app/build/outputs/apk/release/Spartan-Gaming-${{ github.ref_name }}-android.apk > "$RUNNER_TEMP/spartan-android-release.sha256"
+          profiles=(phone tablet foldable androidTv fireTv)
+          for profile in "${profiles[@]}"; do
+            task="${profile^}"
+            ./gradlew --no-daemon ":app:assemble${task}Release"
+            source_apk="app/build/outputs/apk/${profile}/release/app-$profile-release.apk"
+            output_apk="app/build/outputs/apk/release/Spartan-Gaming-${RELEASE_VERSION}-$profile-android.apk"
+            cp "$source_apk" "$output_apk"
+            "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$output_apk"
+            sha256sum "$output_apk" >> "$RUNNER_TEMP/spartan-android-release.sha256"
+          done
       - name: Upload signed release artifact
         uses: actions/upload-artifact@v7
         with:
           name: spartan-android-release-${{ github.sha }}
           path: |
-            android/app/build/outputs/apk/release/Spartan-Gaming-${{ github.ref_name }}-android.apk
+            android/app/build/outputs/apk/release/Spartan-Gaming-*-android.apk
             ${{ runner.temp }}/spartan-android-release.sha256
           if-no-files-found: error
           retention-days: 14

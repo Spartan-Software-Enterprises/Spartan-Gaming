@@ -8,6 +8,7 @@
         android:supportsRtl="true"
         android:theme="@style/SpartanTheme"
         android:usesCleartextTraffic="false">
+        <meta-data android:name="com.spartan.gaming.device_profile" android:value="${spartanDeviceProfile}" />
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|uiMode"
