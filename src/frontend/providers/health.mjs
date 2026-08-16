@@ -79,7 +79,7 @@ export async function checkProviderReachability({
       method: 'HEAD',
       mode: 'no-cors',
       credentials: 'include',
-      redirect: 'follow',
+      redirect: 'manual',
       cache: 'no-store',
       ...(controller ? { signal: controller.signal } : {}),
     });

@@ -40,6 +40,15 @@ const ERROR_MARKERS = Object.freeze([
   'SyntaxError',
 ]);
 
+const EXTERNAL_HEAD_STUB = `
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = (url, options) => {
+    if (options?.method === 'HEAD' && String(url).startsWith('http'))
+      return Promise.resolve({ status: 204, type: 'basic' });
+    return originalFetch(url, options);
+  };
+`;
+
 function assertNoErrorMarkers(viewport, route, text) {
   for (const marker of ERROR_MARKERS) {
     if (text.includes(marker))
@@ -149,6 +158,7 @@ export async function runPlaywrightSmoke({
       const page = await browser.newPage({
         viewport: { width: viewport.width, height: viewport.height },
       });
+      await page.addInitScript({ content: EXTERNAL_HEAD_STUB });
       for (const route of PLAYWRIGHT_ROUTES)
         results.push(await checkRoute(page, origin, viewport, route));
       await checkInteractions(page, origin, viewport);

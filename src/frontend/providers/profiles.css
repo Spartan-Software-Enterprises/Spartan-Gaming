@@ -240,7 +240,7 @@ header,
   opacity: 1;
   transform: none;
 }
-@media (max-width: 780px) {
+@media (max-width: 980px) {
   .provider-workspace {
     grid-template-columns: 1fr;
   }

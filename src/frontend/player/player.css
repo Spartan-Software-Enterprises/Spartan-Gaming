@@ -561,6 +561,16 @@ body {
     min-width: 40px;
     min-height: 40px;
   }
+  .overlay-bottom {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .overlay-bottom .icon-button {
+    min-width: 0;
+    padding: 7px 2px;
+    font-size: 13px;
+  }
   .touch-stick {
     width: 88px;
     height: 88px;
@@ -570,6 +580,9 @@ body {
   }
   .touch-stick-right {
     right: 8px;
+  }
+  .overlay-bottom .icon-button {
+    display: none;
   }
   .touch-stick-click.touch-left {
     left: 40px;

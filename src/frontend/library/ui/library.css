@@ -18,6 +18,9 @@
 * {
   box-sizing: border-box;
 }
+[hidden] {
+  display: none !important;
+}
 html,
 body {
   margin: 0;
@@ -521,9 +524,13 @@ template {
     width: 280px;
     transform: translateX(-100%);
     z-index: 200;
+    visibility: hidden;
+    pointer-events: none;
   }
   .library-sidebar.open {
     transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
   }
   .library-detail {
     width: 100%;

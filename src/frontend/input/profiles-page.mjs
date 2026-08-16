@@ -100,7 +100,7 @@ function renderEditor() {
   bindings.innerHTML = Object.entries(active.bindings)
     .map(
       ([action, control]) =>
-        `<div class="binding"><label>${escapeHtml(action)}</label><select data-binding="${escapeHtml(action)}">${controls.map((option) => `<option ${option === control ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}</select></div>`,
+        `<div class="binding"><label>${escapeHtml(action)}</label><select aria-label="${escapeHtml(action)} binding" data-binding="${escapeHtml(action)}">${controls.map((option) => `<option ${option === control ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}</select></div>`,
     )
     .join('');
   bindings.querySelectorAll('[data-binding]').forEach((select) =>

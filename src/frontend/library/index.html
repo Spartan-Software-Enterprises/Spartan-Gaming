@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Spartan Gaming — Game Library</title>
-    <link rel="stylesheet" href="./library.css" />
+    <link rel="stylesheet" href="./ui/library.css" />
   </head>
   <body>
     <main class="library-shell">
@@ -22,14 +22,20 @@
 
       <section class="library-toolbar panel">
         <div class="toolbar-left">
-          <input type="search" class="search" placeholder="Search games…" data-search />
-          <select data-filter-platform>
+          <input
+            type="search"
+            class="search"
+            placeholder="Search games…"
+            aria-label="Search games"
+            data-search
+          />
+          <select aria-label="Filter by platform" data-filter-platform>
             <option value="">All Platforms</option>
           </select>
-          <select data-filter-genre>
+          <select aria-label="Filter by genre" data-filter-genre>
             <option value="">All Genres</option>
           </select>
-          <select data-sort>
+          <select aria-label="Sort games" data-sort>
             <option value="title">Title (A–Z)</option>
             <option value="added">Recently Added</option>
             <option value="updated">Recently Updated</option>
@@ -48,7 +54,7 @@
         <aside class="library-sidebar panel">
           <div class="panel-head">
             <h2>Collections</h2>
-            <button class="icon-only" data-new-collection>＋</button>
+            <button class="icon-only" aria-label="New collection" data-new-collection>＋</button>
           </div>
           <div data-collections class="collection-list">
             <div class="collection-item active" data-collection="all">
@@ -77,9 +83,9 @@
             <p class="empty">No games found. Add a library folder in Settings.</p>
           </div>
           <div data-pagination class="pagination hidden">
-            <button data-page-prev>Previous</button>
+            <button aria-label="Previous library page" data-page-prev>Previous</button>
             <span data-page-info></span>
-            <button data-page-next>Next</button>
+            <button aria-label="Next library page" data-page-next>Next</button>
           </div>
         </section>
 
@@ -147,6 +153,6 @@
       </div>
     </template>
 
-    <script type="module" src="./library.js"></script>
+    <script type="module" src="./ui/library.js"></script>
   </body>
 </html>

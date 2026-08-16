@@ -88,6 +88,7 @@ export function createAssetResolver({
         'emulation',
         'host',
         'input',
+        'library',
         'launch',
         'platform',
         'player',

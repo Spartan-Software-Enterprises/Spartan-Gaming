@@ -65,6 +65,7 @@ jobs:
           npm run frontend:build
           npm run playwright:smoke
           npm run playwright:provider-profile
+          npm run playwright:ui-audit
           node scripts/playwright/providers-deep.mjs
           node scripts/playwright/full-verification.mjs
       - name: Build and verify signed Android device profiles

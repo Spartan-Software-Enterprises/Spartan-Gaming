@@ -1,14 +1,16 @@
-import { createLibraryStore } from '../library/store.mjs';
-import { createMetadataProvider } from '../library/providers/index.mjs';
+import { createLibraryStore } from '../store.mjs';
+import { createMetadataProvider } from '../providers/index.mjs';
 
 const store = createLibraryStore({
-  metadataProviders: createMetadataProvider({
-    igdb: { enabled: false, clientId: '', clientSecret: '' },
-    rawg: { enabled: false, apiKey: '' },
-    hasheous: { enabled: true, apiKey: '' },
-    playmatch: { enabled: true, apiKey: '' },
-    steamgriddb: { enabled: false, apiKey: '' },
-  }),
+  metadataProviders: Object.values(
+    createMetadataProvider({
+      igdb: { enabled: false, clientId: '', clientSecret: '' },
+      rawg: { enabled: false, apiKey: '' },
+      hasheous: { enabled: true, apiKey: '' },
+      playmatch: { enabled: true, apiKey: '' },
+      steamgriddb: { enabled: false, apiKey: '' },
+    }),
+  ),
 });
 
 const urlParams = new URLSearchParams(window.location.search);

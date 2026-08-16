@@ -16,7 +16,7 @@ const STORES = Object.freeze({
     ],
   },
   collections: { keyPath: 'id', indexes: ['name', 'createdAt'] },
-  settings: { keyPath: 'key' },
+  settings: { keyPath: 'key', indexes: [] },
   metadataCache: { keyPath: 'key', indexes: ['provider', 'expiresAt'] },
   scanHistory: { keyPath: 'id', indexes: ['startTime', 'status'] },
 });
@@ -32,11 +32,12 @@ class LibraryDB {
   }
 
   _createStoreWrapper(storeName) {
+    const database = this.db;
     const store = this.db.objectStoreNames.contains(storeName) ? null : undefined;
     return {
       async put(value) {
         return new Promise((resolve, reject) => {
-          const tx = this.db.transaction(storeName, 'readwrite');
+          const tx = database.transaction(storeName, 'readwrite');
           const store = tx.objectStore(storeName);
           const request = store.put(value);
           request.onsuccess = () => resolve(request.result);
@@ -45,7 +46,7 @@ class LibraryDB {
       },
       async get(key) {
         return new Promise((resolve, reject) => {
-          const tx = this.db.transaction(storeName, 'readonly');
+          const tx = database.transaction(storeName, 'readonly');
           const store = tx.objectStore(storeName);
           const request = store.get(key);
           request.onsuccess = () => resolve(request.result);
@@ -54,7 +55,7 @@ class LibraryDB {
       },
       async delete(key) {
         return new Promise((resolve, reject) => {
-          const tx = this.db.transaction(storeName, 'readwrite');
+          const tx = database.transaction(storeName, 'readwrite');
           const store = tx.objectStore(storeName);
           const request = store.delete(key);
           request.onsuccess = () => resolve();
@@ -62,27 +63,28 @@ class LibraryDB {
         });
       },
       async *iterate(index = null, range = null, direction = 'next') {
-        return new Promise((resolve, reject) => {
-          const tx = this.db.transaction(storeName, 'readonly');
+        const results = await new Promise((resolve, reject) => {
+          const tx = database.transaction(storeName, 'readonly');
           const store = tx.objectStore(storeName);
           const source = index ? store.index(index) : store;
           const request = source.openCursor(range, direction);
-          const results = [];
+          const values = [];
           request.onsuccess = () => {
             const cursor = request.result;
             if (cursor) {
-              results.push(cursor.value);
+              values.push(cursor.value);
               cursor.continue();
             } else {
-              resolve(results[Symbol.asyncIterator]());
+              resolve(values);
             }
           };
           request.onerror = () => reject(request.error);
         });
+        yield* results;
       },
       async query(indexName, range, limit = null) {
         return new Promise((resolve, reject) => {
-          const tx = this.db.transaction(storeName, 'readonly');
+          const tx = database.transaction(storeName, 'readonly');
           const store = tx.objectStore(storeName);
           const index = store.index(indexName);
           const request = index.openCursor(range);
@@ -101,7 +103,7 @@ class LibraryDB {
       },
       async count(indexName = null, range = null) {
         return new Promise((resolve, reject) => {
-          const tx = this.db.transaction(storeName, 'readonly');
+          const tx = database.transaction(storeName, 'readonly');
           const store = tx.objectStore(storeName);
           const source = indexName ? store.index(indexName) : store;
           const request = source.count(range);
