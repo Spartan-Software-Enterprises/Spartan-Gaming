@@ -211,14 +211,16 @@ page-level overflow and missing shelf controls.
 
 ### Phase 2: unified discovery
 
-Status: in progress. The dashboard now exposes Favorites, Local Library,
-Cloud Providers, Watch & Stream, Browser Games, and Emulation rails with
-accessible View all actions that switch to focused result views.
+Status: complete. The dashboard exposes Favorites, Local Library, Cloud
+Providers, Watch & Stream, Browser Games, and Emulation rails with accessible
+View all actions that switch to focused result views. Global search now offers
+catalog-backed suggestions, while provider, platform, input-capability, and
+readiness selectors compose with the existing type filters.
 
-- Add global search and suggestions.
-- Add provider/platform/input/readiness filters.
-- Add collections, favorites, and a unified game details view.
-- Add View all routes for every rail.
+- Add global search and suggestions. (complete)
+- Add provider/platform/input/readiness filters. (complete)
+- Add collections, favorites, and a unified game details view. (complete)
+- Add View all routes for every rail. (complete)
 
 ### Phase 3: television, Fire TV, and SteamOS polish
 
@@ -247,8 +249,9 @@ the shared player contract.
 
 ### Phase 5: validation and release
 
-Status: continuously gated. The latest rendered and release checks pass on
-the KVM; release workflows remain fail-closed for platform signing custody.
+Status: software validation complete; operator-controlled release gates remain
+fail-closed. The complete rendered matrix, interaction checks, Android shell,
+Electron suite, repository checks, and formatting gates pass on the KVM.
 
 - Exercise every route at desktop, landscape-phone, mobile, television, and
   representative Electron layouts.

@@ -49,6 +49,7 @@ import { createCloudGameDeepLink } from '../providers/cloud-features.mjs';
 import { nextConsoleMode, resolveConsoleMode } from '../platform/console-mode.mjs';
 import { resolveElectronRuntimeSettings } from '../settings/electron-runtime.mjs';
 import { resolveEmulatorCoreForRom } from '../emulation/core-selection.mjs';
+import { discoveryOptions, matchesDiscovery, searchSuggestions } from './discovery.mjs';
 
 const profileStorage = createActiveProfileStorage();
 const launchHistory = createLaunchHistoryStore({ storage: profileStorage });
@@ -101,6 +102,10 @@ const state = {
     ? requestedFilter
     : 'all',
   search: '',
+  provider: '',
+  platform: '',
+  input: '',
+  readiness: '',
   favorites: new Set(favoritesStore.list()),
   recent: new Set(launchHistory.list().map((record) => record.backendId)),
   lastLaunch: launchHistory.latest(),
@@ -167,6 +172,8 @@ const resultCount = document.querySelector('[data-result-count]');
 const toast = document.querySelector('[data-toast]');
 const sessionStatus = document.querySelector('[data-session-status]');
 const statusPill = sessionStatus.closest('.status-pill');
+const searchInput = document.querySelector('[data-search]');
+const searchSuggestionsList = document.querySelector('[data-search-suggestions]');
 const providerDialog = document.querySelector('[data-provider-dialog]');
 const WATCH_KINDS = new Set(['live-streaming', 'social-streaming', 'self-hosted-live-streaming']);
 const sessionManager = createSessionManager({ idFactory: () => `ses-${crypto.randomUUID()}` });
@@ -505,7 +512,6 @@ function escapeHtml(value) {
   );
 }
 function visibleEntries() {
-  const query = state.search.toLowerCase().trim();
   const catalogEntries = state.catalog.filter((entry) => {
     const matchesType =
       state.filter === 'all' ||
@@ -522,10 +528,22 @@ function visibleEntries() {
                 : state.filter === 'rom-library'
                   ? entry.backendType === 'emulator' || entry.kind === 'multi-system'
                   : state.recent.has(entry.id));
-    const haystack =
-      `${entry.name} ${entry.description || ''} ${(entry.systems || []).join(' ')}`.toLowerCase();
-    return matchesType && (!query || haystack.includes(query));
+    return (
+      matchesType &&
+      matchesDiscovery(
+        entry,
+        {
+          search: state.search,
+          provider: state.provider,
+          platform: state.platform,
+          input: state.input,
+          readiness: state.readiness,
+        },
+        state.adapters,
+      )
+    );
   });
+  const query = state.search.toLowerCase().trim();
   const imported = importedGameStore.list();
   const romEntries =
     state.filter === 'rom-library'
@@ -575,6 +593,33 @@ function updateFilterControls() {
     button.classList.toggle('is-active', active);
     button.setAttribute('aria-pressed', String(active));
   });
+}
+function renderDiscoveryOptions() {
+  const options = discoveryOptions(state.catalog);
+  const controls = [
+    ['provider', 'Provider', options.providers],
+    ['platform', 'Platform', options.platforms],
+    ['input', 'Input', options.inputs],
+  ];
+  controls.forEach(([key, label, values]) => {
+    const select = document.querySelector(`[data-discovery-filter="${key}"]`);
+    if (!select) return;
+    const current = state[key];
+    select.innerHTML = `<option value="">${label}: All</option>${values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('')}`;
+    select.value = values.includes(current) ? current : '';
+  });
+  const readiness = document.querySelector('[data-discovery-filter="readiness"]');
+  if (readiness) {
+    readiness.innerHTML = `<option value="">Readiness: All</option>${options.readiness.map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}`;
+    readiness.value = options.readiness.some(([value]) => value === state.readiness)
+      ? state.readiness
+      : '';
+  }
+  if (searchSuggestionsList) {
+    searchSuggestionsList.innerHTML = searchSuggestions(state.catalog, state.search)
+      .map((value) => `<option value="${escapeHtml(value)}"></option>`)
+      .join('');
+  }
 }
 function entryCardMarkup(entry) {
   const favorite = state.favorites.has(entry.id);
@@ -657,7 +702,13 @@ function render() {
       '<div class="empty">No connections match this view. Try another filter or search term.</div>';
     return;
   }
-  const isShelved = state.filter === 'all' && !state.search.trim();
+  const isShelved =
+    state.filter === 'all' &&
+    !state.search.trim() &&
+    !state.provider &&
+    !state.platform &&
+    !state.input &&
+    !state.readiness;
   if (!isShelved) {
     cards.innerHTML = `<section class="content-shelf results-shelf" aria-labelledby="results-title"><div class="shelf-heading"><div><p class="eyebrow">YOUR RESULTS</p><h3 id="results-title">Connections</h3></div></div><div class="cards-grid">${entries.map(entryCardMarkup).join('')}</div></section>`;
     return;
@@ -766,6 +817,7 @@ async function loadCatalog() {
             settings['providers.gameNativeCompanion'] === false ? entry.id !== 'gamenative' : true,
           );
     rebuildAdapters();
+    renderDiscoveryOptions();
     updateReadinessStatus();
     render();
     consumeQueuedDeepLink();
@@ -799,8 +851,9 @@ async function loadCatalog() {
     console.error(error);
   }
 }
-document.querySelector('[data-search]').addEventListener('input', (event) => {
+searchInput.addEventListener('input', (event) => {
   state.search = event.target.value;
+  renderDiscoveryOptions();
   render();
 });
 document.querySelector('[data-workspace-select]')?.addEventListener('change', (event) => {
@@ -817,6 +870,12 @@ document.querySelector('[data-workspace-select]')?.addEventListener('change', (e
 document.querySelectorAll('[data-filter]').forEach((button) =>
   button.addEventListener('click', () => {
     state.filter = button.dataset.filter;
+    render();
+  }),
+);
+document.querySelectorAll('[data-discovery-filter]').forEach((select) =>
+  select.addEventListener('change', (event) => {
+    state[event.target.dataset.discoveryFilter] = event.target.value;
     render();
   }),
 );

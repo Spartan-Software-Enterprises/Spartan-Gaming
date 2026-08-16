@@ -146,6 +146,7 @@
                 type="search"
                 placeholder="Search providers and emulators"
                 aria-label="Search library"
+                list="search-suggestions"
             /></label>
             <div class="filters" role="group" aria-label="Library filters">
               <button class="filter is-active" data-filter="all">All</button
@@ -154,7 +155,34 @@
               ><button class="filter" data-filter="favorites">★ Favorites</button
               ><button class="filter" data-filter="recent">↻ Recent</button>
             </div>
+            <div class="discovery-filters" role="group" aria-label="Advanced discovery filters">
+              <label
+                >Provider
+                <select data-discovery-filter="provider" aria-label="Filter by provider">
+                  <option value="">Provider: All</option>
+                </select>
+              </label>
+              <label
+                >Platform
+                <select data-discovery-filter="platform" aria-label="Filter by platform">
+                  <option value="">Platform: All</option>
+                </select>
+              </label>
+              <label
+                >Input
+                <select data-discovery-filter="input" aria-label="Filter by input capability">
+                  <option value="">Input: All</option>
+                </select>
+              </label>
+              <label
+                >Readiness
+                <select data-discovery-filter="readiness" aria-label="Filter by readiness">
+                  <option value="">Readiness: All</option>
+                </select>
+              </label>
+            </div>
           </div>
+          <datalist id="search-suggestions" data-search-suggestions></datalist>
           <div class="cards" data-cards><div class="loading">Loading your library…</div></div>
         </section>
       </main>
