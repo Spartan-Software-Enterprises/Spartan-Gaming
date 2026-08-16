@@ -82,10 +82,11 @@ header,
 }
 .provider-workspace {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(250px, 0.85fr) minmax(0, 1.15fr);
   gap: 16px;
   width: 100%;
   min-width: 0;
+  align-items: start;
 }
 .provider-list,
 .editor {
@@ -393,7 +394,7 @@ header,
     justify-content: flex-start;
   }
 }
-@media (max-width: 500px) {
+@media (max-width: 900px) {
   .provider-shell {
     padding: 18px 16px 42px;
   }
@@ -416,7 +417,7 @@ header,
 }
 .health-check {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 270px);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   margin-top: 18px;
@@ -459,4 +460,59 @@ header,
 }
 .catalog-portable p:not(.eyebrow) {
   max-width: 640px;
+}
+
+@media (max-width: 720px) {
+  .provider-shell {
+    padding: 16px 12px 20px;
+  }
+  .heading {
+    margin: 24px 0 16px;
+  }
+  .heading h1 {
+    font-size: clamp(28px, 8vw, 40px);
+  }
+  .provider-workspace {
+    grid-template-columns: minmax(148px, 0.78fr) minmax(0, 1.22fr);
+    gap: 8px;
+  }
+  .panel {
+    padding: 12px;
+  }
+  .panel-head {
+    display: block;
+  }
+  .panel-head > span {
+    display: block;
+    margin-top: 4px;
+  }
+  .rail-frame {
+    gap: 4px;
+  }
+  .rail-arrow {
+    width: 24px;
+    height: 38px;
+    font-size: 20px;
+  }
+  .provider-item {
+    flex-basis: min(260px, 78vw);
+    min-height: 82px;
+    padding: 10px;
+  }
+  .provider-icon {
+    flex-basis: 34px;
+    width: 34px;
+    height: 34px;
+  }
+  .form {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .form .wide {
+    grid-column: auto;
+  }
+  .editor-title p {
+    overflow-wrap: anywhere;
+  }
 }

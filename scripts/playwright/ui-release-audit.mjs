@@ -102,6 +102,7 @@ async function inspectPage(page, origin, route, layout) {
       tinyTargets: tinyTargets.length,
       shelves: document.querySelectorAll('[data-shelf]').length,
       shelfControls: document.querySelectorAll('[data-shelf-scroll]').length,
+      viewportScale: Number(document.documentElement.dataset.viewportScale || 1),
     };
   });
   if (!response || response.status() !== 200) fail(route, layout, `HTTP ${response?.status()}`);
@@ -112,6 +113,8 @@ async function inspectPage(page, origin, route, layout) {
     fail(route, layout, `${metrics.unnamed} visible interactive controls lack accessible names`);
   if (metrics.offscreen)
     fail(route, layout, `${metrics.offscreen} visible controls extend beyond the viewport`);
+  if (!Number.isFinite(metrics.viewportScale) || metrics.viewportScale <= 0)
+    fail(route, layout, 'viewport fit did not produce a valid scale');
   if (route === '/dashboard/' && metrics.shelves && metrics.shelfControls < metrics.shelves * 2)
     fail(route, layout, 'horizontal shelves do not expose paired navigation controls');
   if (pageErrors.length) fail(route, layout, `page errors: ${pageErrors.join('; ')}`);
@@ -145,6 +148,12 @@ try {
     const providerCount = await page.locator('[data-provider]').count();
     if (providerCount < 20) fail('/providers/', layout, `only ${providerCount} providers rendered`);
     await page.locator('[data-provider]').first().click();
+    const selectedName = await page
+      .locator('.editor-title h2')
+      .innerText()
+      .catch(() => '');
+    if (!selectedName.trim())
+      fail('/providers/', layout, 'provider click did not select an editor');
     const health = page.locator('.health-check');
     if ((await health.count()) !== 1)
       fail('/providers/', layout, 'availability panel missing after provider selection');
@@ -153,9 +162,15 @@ try {
         const text = element.querySelector('div').getBoundingClientRect();
         const action = element.querySelector('button').getBoundingClientRect();
         const result = element.querySelector('span').getBoundingClientRect();
-        return { text: text.width, action: action.width, result: result.width };
+        const panel = element.getBoundingClientRect();
+        return { text: text.width, action: action.width, result: result.width, panel: panel.width };
       });
-      if (healthLayout.text < 180 || healthLayout.action < 100 || healthLayout.result < 100)
+      const minimum = healthLayout.panel * 0.08;
+      if (
+        healthLayout.text < minimum ||
+        healthLayout.action < minimum ||
+        healthLayout.result < minimum
+      )
         fail('/providers/', layout, `availability panel collapsed ${JSON.stringify(healthLayout)}`);
     }
     await page.close();
