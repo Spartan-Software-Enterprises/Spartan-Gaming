@@ -1,10 +1,10 @@
 # Spartan Gaming CLI/OpenCode Handoff
 
-Updated: 2026-08-15
+Updated: 2026-08-16
 
 ## Source of truth
 
-The active branch is `main`; verify the current commit with `git log -1 --oneline`. The latest prerelease is `v0.1.0-beta.6`. The canonical checkout is `/home/ubuntu/Spartan-Gaming` on the KVM.
+The active branch is `main`; verify the current commit with `git log -1 --oneline`. The latest prerelease is `v0.1.0-beta.6`. The canonical checkout is `/home/ubuntu/Spartan-Gaming` on the KVM. Current HEAD is `4debc9b`.
 
 OpenCode configuration is `/home/userland/.config/opencode/opencode.jsonc`, which loads `/home/userland/AGENTS.md`. Follow that file before repository actions.
 
@@ -30,4 +30,4 @@ Only release when explicitly requested. Bump `package.json`, `package-lock.json`
 
 ## Current evidence
 
-820 repository tests: 815 passed, 5 skipped, 0 failed. Electron tests: 57 passed. Android shell tests: 5 passed. Android signed build and v2 APK signature: passed. Playwright smoke: 11 routes at desktop/mobile. Supplemental UI matrix: 14 routes at desktop/mobile, 28 screenshots, zero browser errors and zero horizontal overflow. Beta.6 tag signature and release checksum: verified.
+862 repository tests: 857 passed, 5 skipped, 0 failed (added contract coverage for the voice/session/adapter/host modules and wired noise-suppression profiles through settings, preferences, and the browser host mic path). Electron tests: 57 passed. Android shell tests: 5 passed. Android signed build and v2 APK signature: passed. Playwright smoke: 11 routes at desktop/mobile. Supplemental UI matrix: 14 routes at desktop/mobile, 28 screenshots, zero browser errors and zero horizontal overflow. Beta.6 tag signature and release checksum: verified.
