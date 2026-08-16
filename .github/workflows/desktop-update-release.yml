@@ -73,6 +73,8 @@ jobs:
           test -n "$APPLE_ID" && test -n "$APPLE_APP_SPECIFIC_PASSWORD" && test -n "$APPLE_TEAM_ID"
       - name: Install pinned dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
       - name: Install the pinned Electron runtime
         run: npm rebuild electron
       - name: Run synchronized release verification
