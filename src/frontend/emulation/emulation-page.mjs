@@ -125,7 +125,7 @@ function downloadSaveState(value, coreId) {
     value instanceof Blob ? value : new Blob([value], { type: 'application/octet-stream' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  link.download = `spartan-${coreId}-${new Date().toISOString().replaceAll(':', '-')}.state`;
+  link.download = `spartan-${coreId}-${new Date().toISOString().replace(/:/g, '-')}.state`;
   link.click();
   setTimeout(() => URL.revokeObjectURL(link.href), 0);
 }

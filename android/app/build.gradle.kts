@@ -26,14 +26,14 @@ if (releaseSigningPartial) {
 
 android {
     namespace = "com.spartan.gaming.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.spartan.gaming"
-        minSdk = 26
-        targetSdk = 35
+        minSdk = 33
+        targetSdk = 36
         versionCode = 1
-        versionName = "0.1.0-beta.7"
+        versionName = "0.1.0-beta.8"
     }
 
     compileOptions {

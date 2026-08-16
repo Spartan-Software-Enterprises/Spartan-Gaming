@@ -197,7 +197,7 @@ export function normalizeNativeClientDescriptor(record) {
           executableCandidates: Object.freeze([
             ...new Set(
               details.executableCandidates.map((value) =>
-                required(value, 'executableCandidates entry').replaceAll('\\', '/'),
+                required(value, 'executableCandidates entry').replace(/\\/g, '/'),
               ),
             ),
           ]),

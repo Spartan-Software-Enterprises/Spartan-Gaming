@@ -11,7 +11,7 @@ function toast(message) {
   timer = setTimeout(() => notice.classList.remove('visible'), 3000);
 }
 function handoffId() {
-  return `lan${crypto.randomUUID().replaceAll('-', '').slice(0, 16)}`;
+  return `lan${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
 }
 form.addEventListener('submit', (event) => {
   event.preventDefault();

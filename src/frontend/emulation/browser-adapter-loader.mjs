@@ -23,7 +23,7 @@ function base64Url(value) {
   let binary = '';
   for (const item of data) binary += String.fromCharCode(item);
   const encoded = typeof btoa === 'function' ? btoa(binary) : Buffer.from(data).toString('base64');
-  return encoded.replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/u, '');
+  return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/u, '');
 }
 
 function canonicalPayload(manifest) {

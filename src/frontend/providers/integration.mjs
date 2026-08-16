@@ -206,7 +206,9 @@ export function createProviderIntegration(entry, { profile = {}, report = {} } =
   if (!entry || entry.backendType !== 'provider')
     throw new TypeError('A normalized provider entry is required');
   const preset = SPECIAL_PROFILES[entry.id] || {};
-  const regionHint = Object.hasOwn(REGION_LABELS, profile.region) ? profile.region : 'automatic';
+  const regionHint = Object.prototype.hasOwnProperty.call(REGION_LABELS, profile.region)
+    ? profile.region
+    : 'automatic';
   const embedUrl = createOfficialEmbedUrl(entry, profile);
   const nativeClient = nativeClientFor(entry, profile);
   const preferred =

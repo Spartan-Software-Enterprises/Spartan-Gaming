@@ -343,7 +343,7 @@ function openProviderDetails(entry, plan) {
   const model = createProviderDetailsModel(entry, plan);
   document.querySelector('[data-provider-details-title]').textContent = model.name;
   document.querySelector('[data-provider-details-subtitle]').textContent =
-    `${model.kind} · Support ${model.supportLevel} · ${model.readinessStatus.replaceAll('-', ' ')}`;
+    `${model.kind} · Support ${model.supportLevel} · ${model.readinessStatus.replace(/-/g, ' ')}`;
   const deepLinkHtml = model.deepLinkSupported
     ? `<div class="details-deeplink" style="margin-top:14px;padding:12px;border:1px solid #2a3540;border-radius:8px;background:#171e26"><label style="display:block;font-size:11px;font-weight:700;margin-bottom:6px;color:#a0aec0">Direct Game Launch (Deep Link)</label><div style="display:flex;gap:8px"><input type="text" data-deeplink-game placeholder="Enter Game Title or ID (e.g. Halo Infinite)" style="flex:1;padding:6px 10px;border:1px solid #2a3540;border-radius:6px;background:#0d1117;color:#fff;font-size:12px"><button type="button" data-deeplink-launch style="padding:6px 14px;border:0;border-radius:6px;background:#50e1d1;color:#0d1117;font-weight:700;cursor:pointer">Launch Game</button></div></div>`
     : '';
@@ -462,7 +462,7 @@ function launchEntry(entry, plan) {
     return;
   }
   const offer = beginSession({ ...entry, adapterMode: plan.mode });
-  if (offer) showToast(`${entry.name}: ${plan.action.replaceAll('-', ' ')}.`);
+  if (offer) showToast(`${entry.name}: ${plan.action.replace(/-/g, ' ')}.`);
 }
 function handleDeepLink(link) {
   if (!link?.version || link.action !== 'launch' || typeof link.backendId !== 'string') return;

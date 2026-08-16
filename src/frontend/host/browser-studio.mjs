@@ -81,7 +81,7 @@ if (typeof document !== 'undefined') {
   async function loadMicrophones() {
     try {
       const devices = await listAudioInputDevices();
-      microphoneDevice.innerHTML = `<option value="">System default microphone</option>${devices.map((device) => `<option value="${device.deviceId.replaceAll('&', '&amp;').replaceAll('"', '&quot;')}">${device.label.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</option>`).join('')}`;
+      microphoneDevice.innerHTML = `<option value="">System default microphone</option>${devices.map((device) => `<option value="${device.deviceId.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}">${device.label.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')}</option>`).join('')}`;
       microphoneDevice.disabled = false;
     } catch {
       microphoneDevice.innerHTML = '<option value="">Microphones unavailable</option>';

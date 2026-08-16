@@ -272,7 +272,7 @@ function signatureBytes(value) {
   if (typeof value !== 'string' || !value)
     throw new TypeError('signature must be a base64url string or Uint8Array');
   const normalized =
-    value.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat((4 - (value.length % 4)) % 4);
+    value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (value.length % 4)) % 4);
   const binary =
     typeof atob === 'function'
       ? atob(normalized)

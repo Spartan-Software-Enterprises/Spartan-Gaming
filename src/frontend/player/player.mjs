@@ -332,7 +332,7 @@ async function loadAudioOutputs({ applyPreference = false } = {}) {
   try {
     const devices = await listAudioOutputDevices();
     elements.audioOutput.disabled = false;
-    elements.audioOutput.innerHTML = `<option value="">Browser default</option>${devices.map((device) => `<option value="${device.deviceId.replaceAll('&', '&amp;').replaceAll('"', '&quot;')}">${device.label.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</option>`).join('')}`;
+    elements.audioOutput.innerHTML = `<option value="">Browser default</option>${devices.map((device) => `<option value="${device.deviceId.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}">${device.label.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')}</option>`).join('')}`;
     if (applyPreference) {
       const preferred = findPreferredAudioOutput(
         devices,
@@ -918,7 +918,7 @@ async function takeScreenshot() {
     const blob = await captureVideoFrame(elements.video);
     await saveCaptureBlob(
       blob,
-      `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.png`,
+      `spartan-gaming-${new Date().toISOString().replace(/:/g, '-')}.png`,
     );
     elements.message.textContent = 'Screenshot saved locally.';
   } catch (error) {
@@ -936,7 +936,7 @@ async function toggleRecording() {
       const blob = await recording.stop();
       await saveCaptureBlob(
         blob,
-        `spartan-gaming-${new Date().toISOString().replaceAll(':', '-')}.webm`,
+        `spartan-gaming-${new Date().toISOString().replace(/:/g, '-')}.webm`,
       );
       elements.message.textContent = 'Recording saved locally.';
       elements.record.classList.remove('capture-active');
@@ -955,7 +955,7 @@ async function saveInstantReplay() {
     const blob = instantReplay.clip();
     await saveCaptureBlob(
       blob,
-      `spartan-replay-${new Date().toISOString().replaceAll(':', '-')}.webm`,
+      `spartan-replay-${new Date().toISOString().replace(/:/g, '-')}.webm`,
     );
     elements.message.textContent = 'Instant replay saved locally.';
   } catch (error) {
@@ -973,7 +973,7 @@ function exportSessionDiagnostics() {
     const blob = new Blob([serializeSessionDiagnostics(bundle)], { type: 'application/json' });
     downloadBlob(
       blob,
-      `spartan-session-diagnostics-${new Date().toISOString().replaceAll(':', '-')}.json`,
+      `spartan-session-diagnostics-${new Date().toISOString().replace(/:/g, '-')}.json`,
     );
     elements.message.textContent = telemetryLog.enabled
       ? 'Redacted session diagnostics exported.'
