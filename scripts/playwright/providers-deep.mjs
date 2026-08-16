@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 import { createRequire } from 'node:module';
+import path from 'node:path';
 import { createFrontendServer } from '../frontend/serve.mjs';
 
 const modulePath = process.env.SPARTAN_PLAYWRIGHT_MODULE || 'playwright';
 const { chromium } = createRequire(import.meta.url)(modulePath);
 
-const root = '/home/ubuntu/Spartan-Gaming/out/spartan-frontend';
-const publicRoot = '/home/ubuntu/Spartan-Gaming';
+const publicRoot = process.cwd();
+const root = path.join(publicRoot, 'out/spartan-frontend');
 
 const errors = [];
 const failures = [];
