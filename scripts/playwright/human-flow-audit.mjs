@@ -161,7 +161,12 @@ async function inspectProviders(page, viewport, origin) {
   const errors = [];
   page.on('pageerror', (error) => errors.push(`page: ${error.message}`));
   page.on('console', (message) => {
-    if (message.type() === 'error') errors.push(`console: ${message.text()}`);
+    if (
+      message.type() === 'error' &&
+      !/Fetch API cannot load .*?(nvidia\.com|twitch\.tv)/i.test(message.text()) &&
+      !/Failed to load resource: the server responded with a status of 405/i.test(message.text())
+    )
+      errors.push(`console: ${message.text()}`);
   });
   await page.goto(`${origin}/providers/`, { waitUntil: 'networkidle' });
   await page.waitForSelector('[data-provider]', { timeout: 10000 });

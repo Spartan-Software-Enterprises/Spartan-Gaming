@@ -76,10 +76,10 @@ export async function checkProviderReachability({
   try {
     timer = setTimeout(() => controller?.abort(), timeout);
     const response = await fetchImpl(target, {
-      method: 'GET',
+      method: 'HEAD',
       mode: 'no-cors',
       credentials: 'include',
-      redirect: 'follow',
+      redirect: 'manual',
       cache: 'no-store',
       ...(controller ? { signal: controller.signal } : {}),
     });
