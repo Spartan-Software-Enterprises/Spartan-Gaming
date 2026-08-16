@@ -28,6 +28,27 @@ async function inspectDashboard(page, viewport, origin) {
     `${viewport.name}: horizontal overflow`,
   );
 
+  const consoleToggle = page.locator('[data-console-mode-toggle]');
+  check((await consoleToggle.count()) === 1, `${viewport.name}: console mode toggle missing`);
+  const consoleInitiallyOn = await consoleToggle.getAttribute('aria-pressed');
+  await consoleToggle.click();
+  await page.waitForTimeout(80);
+  check(
+    (await consoleToggle.getAttribute('aria-pressed')) !== consoleInitiallyOn,
+    `${viewport.name}: console mode did not toggle`,
+  );
+  check(
+    (await page.locator('body').evaluate((body) => body.classList.contains('console-mode'))) !==
+      (consoleInitiallyOn === 'true'),
+    `${viewport.name}: console presentation class did not update`,
+  );
+  check(
+    (await page.locator('html').getAttribute('data-spartan-navigation')) === 'remote-controller',
+    `${viewport.name}: console mode did not enable controller navigation`,
+  );
+  await consoleToggle.click();
+  await page.waitForTimeout(80);
+
   const search = page.locator('[data-search]');
   await search.focus();
   check(

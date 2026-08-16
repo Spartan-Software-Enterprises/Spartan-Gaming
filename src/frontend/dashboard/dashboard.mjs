@@ -48,6 +48,7 @@ import { createProviderDetailsModel } from '../providers/details.mjs';
 import { createCloudGameDeepLink } from '../providers/cloud-features.mjs';
 import { nextConsoleMode, resolveConsoleMode } from '../platform/console-mode.mjs';
 import { resolveElectronRuntimeSettings } from '../settings/electron-runtime.mjs';
+import { applyRuntimeUiSettings } from '../settings/runtime-ui.mjs';
 import { resolveEmulatorCoreForRom } from '../emulation/core-selection.mjs';
 import { discoveryOptions, matchesDiscovery, searchSuggestions } from './discovery.mjs';
 
@@ -199,7 +200,9 @@ function renderConsoleMode() {
 }
 consoleModeToggle?.addEventListener('click', () => {
   consoleMode = nextConsoleMode(consoleMode);
-  settingsStore.save({ ...settings, 'appearance.consoleMode': consoleMode });
+  const nextSettings = { ...settings, 'appearance.consoleMode': consoleMode };
+  settingsStore.save(nextSettings);
+  applyRuntimeUiSettings(document, nextSettings);
   renderConsoleMode();
   showToast(consoleMode ? 'Console Mode enabled' : 'Console Mode disabled');
 });

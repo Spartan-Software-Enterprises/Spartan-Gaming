@@ -69,3 +69,15 @@ test('invalid device signals fail closed to desktop', () => {
     'desktop',
   );
 });
+
+test('explicit console mode upgrades desktop presentation for controller navigation', () => {
+  const profile = resolvePresentationProfile({
+    settings: { 'appearance.consoleMode': true },
+    detectedMode: 'desktop',
+  });
+  assert.equal(profile.mode, 'desktop');
+  assert.equal(profile.navigation, 'remote-controller');
+  assert.equal(profile.preferFullscreen, true);
+  assert.equal(profile.columns, 4);
+  assert.equal(profile.focusScale, 1.12);
+});
