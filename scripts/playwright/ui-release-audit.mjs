@@ -87,7 +87,7 @@ async function inspectPage(page, origin, route, layout) {
     });
     const offscreen = focusables.filter((element) => {
       const rect = element.getBoundingClientRect();
-      const intentionalRail = element.closest('[data-shelf]');
+      const intentionalRail = element.closest('[data-shelf], .provider-rail, .provider-categories');
       return !intentionalRail && (rect.left < -1 || rect.right > innerWidth + 1);
     });
     const tinyTargets = focusables.filter((element) => {

@@ -53,10 +53,10 @@ function renderProviders() {
   const counts = providerCategoryCounts(providers);
   document.querySelector('[data-provider-categories]').innerHTML = PROVIDER_CATEGORIES.map(
     (category) =>
-      `<button type="button" role="tab" aria-selected="${category.id === activeCategory}" class="category-tab ${category.id === activeCategory ? 'active' : ''}" data-provider-category="${category.id}">${escapeHtml(category.label)} <span>${counts[category.id]}</span></button>`,
+      `<button type="button" role="tab" aria-selected="${category.id === activeCategory}" class="category-tab ${category.id === activeCategory ? 'active' : ''}" data-provider-category="${category.id}"><span class="category-icon" aria-hidden="true">${category.icon}</span><span class="category-label">${escapeHtml(category.label)}</span><span class="category-count">${counts[category.id]}</span></button>`,
   ).join('');
   const visibleProviders = providersForCategory(providers, activeCategory);
-  providerContainer.className = '';
+  providerContainer.className = 'provider-rail';
   providerContainer.innerHTML = visibleProviders
     .map((provider) => {
       const accounts = store.list(provider.id);
@@ -66,7 +66,7 @@ function renderProviders() {
         accountCount > 1
           ? `${accountCount} accounts`
           : profile?.accountLabel || 'No local profile configured';
-      return `<button class="provider-item ${provider.id === selectedId ? 'active' : ''}" data-provider="${escapeHtml(provider.id)}"><strong>${escapeHtml(provider.name)}</strong><small>${escapeHtml(label)}</small></button>`;
+      return `<button class="provider-item ${provider.id === selectedId ? 'active' : ''}" data-provider="${escapeHtml(provider.id)}"><span class="provider-icon" aria-hidden="true">${escapeHtml(provider.name.slice(0, 2).toUpperCase())}</span><span class="provider-copy"><strong>${escapeHtml(provider.name)}</strong><small>${escapeHtml(label)}</small></span><span class="provider-chevron" aria-hidden="true">›</span></button>`;
     })
     .join('');
 }
@@ -157,6 +157,18 @@ document.querySelector('[data-provider-categories]').addEventListener('click', (
     : visibleProviders[0]?.id || null;
   renderProviders();
   renderEditor();
+});
+document.querySelectorAll('[data-scroll]').forEach((button) => {
+  button.addEventListener('click', () => {
+    const target = document.querySelector(
+      button.dataset.scroll === 'categories' ? '[data-provider-categories]' : '[data-providers]',
+    );
+    target?.scrollBy({
+      left:
+        (button.dataset.direction === 'next' ? 1 : -1) * Math.max(220, target.clientWidth * 0.72),
+      behavior: 'smooth',
+    });
+  });
 });
 editor.addEventListener('click', async (event) => {
   const provider = providers.find((item) => item.id === selectedId);
