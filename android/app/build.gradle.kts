@@ -24,6 +24,15 @@ if (releaseSigningPartial) {
     )
 }
 
+val packageVersion =
+    Regex("\\\"version\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"")
+        .find(rootProject.file("../package.json").readText())
+        ?.groupValues
+        ?.get(1) ?: error("package.json version is required for Android release identity")
+val packageVersionCode =
+    packageVersion.substringAfter("-beta.", "0").toIntOrNull()?.plus(1000)
+        ?: error("Android releases require a numeric beta version in package.json")
+
 android {
     namespace = "com.spartan.gaming.app"
     compileSdk = 36
@@ -32,8 +41,8 @@ android {
         applicationId = "com.spartan.gaming"
         minSdk = 33
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.1.0-beta.10"
+        versionCode = packageVersionCode
+        versionName = packageVersion
     }
 
     flavorDimensions += "device"

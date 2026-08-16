@@ -21,6 +21,9 @@ test('Android shell packages the shared frontend through a safe asset origin', (
   assert.match(gradleProperties, /android\.enableJetifier=true/);
   assert.match(build, /packageFrontendAssets/);
   assert.match(build, /packageCatalogAssets/);
+  assert.match(build, /packageVersion/);
+  assert.match(build, /versionCode = packageVersionCode/);
+  assert.match(build, /versionName = packageVersion/);
   assert.match(build, /into\("providers"\)/);
   assert.match(build, /into\("emulators"\)/);
   assert.match(build, /into\("games"\)/);
