@@ -106,7 +106,10 @@ test('mobile settings contain the scrollable category rail inside the viewport',
 
 test('updater status owns the Updates save area during asynchronous checks', async () => {
   const directory = path.dirname(fileURLToPath(import.meta.url));
-  const implementation = await readFile(path.join(directory, 'settings.mjs'), 'utf8');
+  const implementation = (await readFile(path.join(directory, 'settings.mjs'), 'utf8')).replace(
+    /\r\n/g,
+    '\n',
+  );
   assert.match(implementation, /function updateStatusOwnsSaveArea\(\)/);
   assert.match(implementation, /displayUpdateStatus\(\{ status: 'checking' \}\)/);
   assert.match(implementation, /displayUpdateStatus\(result\)/);
@@ -118,7 +121,10 @@ test('updater status owns the Updates save area during asynchronous checks', asy
 
 test('settings category changes reset the page scroll position', async () => {
   const directory = path.dirname(fileURLToPath(import.meta.url));
-  const implementation = await readFile(path.join(directory, 'settings.mjs'), 'utf8');
+  const implementation = (await readFile(path.join(directory, 'settings.mjs'), 'utf8')).replace(
+    /\r\n/g,
+    '\n',
+  );
   assert.match(implementation, /function scrollSettingsToTop\(\)/);
   assert.match(implementation, /globalThis\.scrollTo\?\.\(0, 0\)/);
   assert.match(implementation, /document\.querySelector\('\.main'\)\?\.scrollTo\?\.\(0, 0\)/);
@@ -127,7 +133,10 @@ test('settings category changes reset the page scroll position', async () => {
 
 test('settings update checks do not require Electron', async () => {
   const directory = path.dirname(fileURLToPath(import.meta.url));
-  const implementation = await readFile(path.join(directory, 'settings.mjs'), 'utf8');
+  const implementation = (await readFile(path.join(directory, 'settings.mjs'), 'utf8')).replace(
+    /\r\n/g,
+    '\n',
+  );
   assert.match(implementation, /globalThis\.SpartanAndroid/);
   assert.match(
     implementation,
