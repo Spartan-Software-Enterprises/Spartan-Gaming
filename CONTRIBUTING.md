@@ -44,3 +44,7 @@ Use concise imperative subjects, for example:
 ```text
 Add stream session architecture notes
 ```
+
+## Synchronized Android and desktop release gate
+
+Android and desktop releases are one release unit. Every release candidate must use the same tag and version, run the complete shared verification suite on both platform paths, and publish only after both platform jobs pass. The shared gate includes formatting, repository checks, the full contract suite, serial tests, Electron tests, Android shell tests, frontend build, Playwright smoke, deep provider flow, and full visual verification. Platform-specific signing, packaging, install, and runtime checks are additional gates; they never replace the shared suite. Release assets use Spartan-Gaming-<version>-... names and must not use generic names such as app-release.apk.

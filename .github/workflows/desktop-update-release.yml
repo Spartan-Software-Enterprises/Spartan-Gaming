@@ -73,6 +73,19 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Install the pinned Electron runtime
         run: npm rebuild electron
+      - name: Run synchronized release verification
+        run: |
+          set -euo pipefail
+          npm run format:check
+          npm run check
+          npm test
+          npm run test:serial
+          npm run electron:test
+          npm run test:android-shell
+          npm run frontend:build
+          npm run playwright:smoke
+          node scripts/playwright/providers-deep.mjs
+          node scripts/playwright/full-verification.mjs
       - name: Test Electron update contracts
         run: npm run electron:test
       - name: Build update artifacts and metadata

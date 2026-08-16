@@ -35,6 +35,19 @@ jobs:
           printf '%s' "$SPARTAN_ANDROID_KEYSTORE_B64" | base64 --decode > "$keystore"
           chmod 600 "$keystore"
           echo "keystore=$keystore" >> "$GITHUB_OUTPUT"
+      - name: Run synchronized release verification
+        run: |
+          set -euo pipefail
+          npm run format:check
+          npm run check
+          npm test
+          npm run test:serial
+          npm run electron:test
+          npm run test:android-shell
+          npm run frontend:build
+          npm run playwright:smoke
+          node scripts/playwright/providers-deep.mjs
+          node scripts/playwright/full-verification.mjs
       - name: Test and build signed release
         env:
           SPARTAN_ANDROID_KEYSTORE: ${{ steps.signing.outputs.keystore }}
@@ -46,14 +59,15 @@ jobs:
           npm run test:android-shell
           cd android
           ./gradlew --no-daemon :app:assembleRelease
-          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/release/app-release.apk
-          sha256sum app/build/outputs/apk/release/app-release.apk > "$RUNNER_TEMP/spartan-android-release.sha256"
+          mv app/build/outputs/apk/release/app-release.apk "app/build/outputs/apk/release/Spartan-Gaming-${{ github.ref_name }}-android.apk"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/release/Spartan-Gaming-${{ github.ref_name }}-android.apk
+          sha256sum app/build/outputs/apk/release/Spartan-Gaming-${{ github.ref_name }}-android.apk > "$RUNNER_TEMP/spartan-android-release.sha256"
       - name: Upload signed release artifact
         uses: actions/upload-artifact@v7
         with:
           name: spartan-android-release-${{ github.sha }}
           path: |
-            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/apk/release/Spartan-Gaming-${{ github.ref_name }}-android.apk
             ${{ runner.temp }}/spartan-android-release.sha256
           if-no-files-found: error
           retention-days: 14
