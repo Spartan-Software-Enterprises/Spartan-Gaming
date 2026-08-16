@@ -193,7 +193,9 @@ spinner without context, or instructions with no action control.
 
 ### Phase 1: dashboard and provider clarity
 
-Status: in progress. The first dashboard slice is implemented on `main`.
+Status: complete for the dashboard slice. The shared dashboard now uses the
+existing catalog, launch history, readiness, favorites, and workspace state to
+render the first-viewport shelves on `main`.
 The default library view now groups existing catalog entries into Continue
 Playing, Ready to Play, and Needs Attention horizontal shelves. Shelf arrows
 are real buttons with accessible names and smooth keyboard-friendly scrolling;
@@ -208,6 +210,10 @@ page-level overflow and missing shelf controls.
 - Add empty/loading/error/recovery states.
 
 ### Phase 2: unified discovery
+
+Status: in progress. The dashboard now exposes Favorites, Local Library,
+Cloud Providers, Watch & Stream, Browser Games, and Emulation rails with
+accessible View all actions that switch to focused result views.
 
 - Add global search and suggestions.
 - Add provider/platform/input/readiness filters.

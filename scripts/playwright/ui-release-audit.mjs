@@ -162,6 +162,16 @@ try {
     for (const route of routes) {
       const routePage = await context.newPage();
       await inspectPage(routePage, origin, route, layout);
+      if (route === '/dashboard/') {
+        const viewAll = routePage.locator('[data-shelf-filter]').first();
+        if ((await viewAll.count()) !== 1) {
+          fail(route, layout, 'dashboard shelves do not expose a View all action');
+        } else {
+          await viewAll.click();
+          if ((await routePage.locator('.results-shelf').count()) !== 1)
+            fail(route, layout, 'View all did not switch to a focused result view');
+        }
+      }
       await routePage.close();
     }
     await context.close();

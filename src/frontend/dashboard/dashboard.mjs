@@ -640,9 +640,12 @@ function entryCardMarkup(entry) {
         : '';
   return `<article class="card"><div class="card-top"><span class="card-type">${escapeHtml(cardType)}</span><button class="favorite ${favorite ? 'is-favorite' : ''}" data-favorite="${escapeHtml(entry.id)}" aria-label="${favorite ? 'Remove' : 'Add'} ${escapeHtml(entry.name)} ${favorite ? 'from' : 'to'} favorites" aria-pressed="${favorite}">★</button></div><h3>${escapeHtml(entry.name)}</h3><p>${escapeHtml(summary)}</p><div class="chips">${tags.map((tag) => `<span class="chip">${escapeHtml(tag)}</span>`).join('')}${nativeTag ? `<span class="chip native">${escapeHtml(nativeTag)}</span>` : ''}</div><div class="card-actions">${entry.backendType === 'provider' ? `<button class="details-button" data-details="${escapeHtml(entry.id)}">Details</button>` : ''}<button class="launch" data-launch="${escapeHtml(entry.id)}">${actionLabel}</button><span class="details">${escapeHtml(entry.supportLevel || 'Community')} · ${readiness}${detailsLabel ? ` · ${detailsLabel}` : ''}</span></div></article>`;
 }
-function renderShelf(title, eyebrow, entries, shelfId) {
+function renderShelf(title, eyebrow, entries, shelfId, filter = '') {
   if (!entries.length) return '';
-  return `<section class="content-shelf" aria-labelledby="${shelfId}-title"><div class="shelf-heading"><div><p class="eyebrow">${eyebrow}</p><h3 id="${shelfId}-title">${title}</h3></div><div class="shelf-controls"><button type="button" data-shelf-scroll="-1" data-shelf-target="${shelfId}" aria-label="Scroll ${title} left">←</button><button type="button" data-shelf-scroll="1" data-shelf-target="${shelfId}" aria-label="Scroll ${title} right">→</button></div></div><div class="shelf-viewport" data-shelf="${shelfId}">${entries.map(entryCardMarkup).join('')}</div></section>`;
+  const viewAll = filter
+    ? `<button type="button" class="shelf-view-all" data-shelf-filter="${filter}">View all</button>`
+    : '';
+  return `<section class="content-shelf" aria-labelledby="${shelfId}-title"><div class="shelf-heading"><div><p class="eyebrow">${eyebrow}</p><h3 id="${shelfId}-title">${title}</h3></div><div class="shelf-actions">${viewAll}<div class="shelf-controls"><button type="button" data-shelf-scroll="-1" data-shelf-target="${shelfId}" aria-label="Scroll ${title} left">←</button><button type="button" data-shelf-scroll="1" data-shelf-target="${shelfId}" aria-label="Scroll ${title} right">→</button></div></div></div><div class="shelf-viewport" data-shelf="${shelfId}">${entries.map(entryCardMarkup).join('')}</div></section>`;
 }
 function render() {
   renderWorkspaceControl();
@@ -672,17 +675,66 @@ function render() {
   const attentionEntries = entries.filter(
     (entry) => !continueIds.has(entry.id) && !readyIds.has(entry.id),
   );
+  const attentionIds = new Set(attentionEntries.map((entry) => entry.id));
+  const remaining = (predicate) =>
+    entries.filter(
+      (entry) => !continueIds.has(entry.id) && !attentionIds.has(entry.id) && predicate(entry),
+    );
+  const shelves = [
+    renderShelf(
+      'Continue Playing',
+      'PICK UP WHERE YOU LEFT OFF',
+      continueEntries,
+      'continue-playing',
+      'recent',
+    ),
+    renderShelf('Ready to Play', 'NO SETUP NEEDED', readyEntries, 'ready-to-play'),
+    renderShelf('Needs Attention', 'ASSISTED SETUP', attentionEntries, 'needs-attention'),
+    renderShelf(
+      'Favorites',
+      'SAVED FOR LATER',
+      remaining((entry) => state.favorites.has(entry.id)),
+      'favorites',
+      'favorites',
+    ),
+    renderShelf(
+      'Local Library',
+      'ON THIS DEVICE',
+      remaining((entry) => ['rom', 'imported', 'emulator'].includes(entry.backendType)),
+      'local-library',
+      'rom-library',
+    ),
+    renderShelf(
+      'Cloud Providers',
+      'PLAY IN THE CLOUD',
+      remaining((entry) => entry.backendType === 'provider'),
+      'cloud-providers',
+      'cloud',
+    ),
+    renderShelf(
+      'Watch & Stream',
+      'LIVE AND SOCIAL',
+      remaining((entry) => WATCH_KINDS.has(entry.kind)),
+      'watch-stream',
+      'watch',
+    ),
+    renderShelf(
+      'Browser Games',
+      'PLAY INSTANTLY',
+      remaining((entry) => entry.backendType === 'game'),
+      'browser-games',
+      'browser',
+    ),
+    renderShelf(
+      'Emulation',
+      'YOUR CORES AND SYSTEMS',
+      remaining((entry) => entry.backendType === 'emulator'),
+      'emulation',
+      'emulator',
+    ),
+  ];
   cards.innerHTML =
-    [
-      renderShelf(
-        'Continue Playing',
-        'PICK UP WHERE YOU LEFT OFF',
-        continueEntries,
-        'continue-playing',
-      ),
-      renderShelf('Ready to Play', 'NO SETUP NEEDED', readyEntries, 'ready-to-play'),
-      renderShelf('Needs Attention', 'ASSISTED SETUP', attentionEntries, 'needs-attention'),
-    ].join('') || '<div class="empty">Your library is ready for its first connection.</div>';
+    shelves.join('') || '<div class="empty">Your library is ready for its first connection.</div>';
 }
 async function loadCatalog() {
   try {
@@ -770,6 +822,18 @@ document.querySelectorAll('[data-filter]').forEach((button) =>
 );
 updateFilterControls();
 document.addEventListener('click', (event) => {
+  const shelfFilter = event.target.closest('[data-shelf-filter]');
+  if (shelfFilter) {
+    state.filter = shelfFilter.dataset.shelfFilter;
+    state.search = '';
+    const search = document.querySelector('[data-search]');
+    if (search) search.value = '';
+    render();
+    document
+      .querySelector('.library-section')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
   const shelfButton = event.target.closest('[data-shelf-scroll]');
   if (shelfButton) {
     const shelf = document.querySelector(`[data-shelf="${shelfButton.dataset.shelfTarget}"]`);
