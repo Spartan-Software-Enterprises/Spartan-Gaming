@@ -1,5 +1,7 @@
 # Architecture
 
+The user-facing information hierarchy, streaming-style rails, device profiles, and UI acceptance criteria are defined in [the UI streaming plan](ui-streaming-plan.md).
+
 ## Product boundary
 
 Spartan Gaming is a standalone universal application and orchestration layer. It presents one library, launcher, controller model, overlay, profile system, and diagnostics surface over multiple execution backends:

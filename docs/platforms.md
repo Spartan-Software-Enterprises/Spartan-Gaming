@@ -1,5 +1,7 @@
 # Platform strategy
 
+Device-specific presentation and acceptance behavior is maintained in [the UI streaming plan](ui-streaming-plan.md) and the device release matrix.
+
 Spartan Gaming is intended to be universal across practical Chromium-supported environments. “Universal” means a shared product and protocol foundation with native platform adapters, not identical feature parity on every device.
 
 | Platform                    | Initial role                        | Platform-specific work                                                                                                                                   |

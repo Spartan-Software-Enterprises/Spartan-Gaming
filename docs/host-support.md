@@ -1,5 +1,7 @@
 # Spartan Host and user-owned streaming
 
+Host readiness, pairing, recovery, and player presentation follow [the UI streaming plan](ui-streaming-plan.md).
+
 Spartan Host is the native companion boundary for user-owned PCs, local emulator processes, and compatible remote-play services. The browser frontend never receives a long-lived host credential or embeds credentials in an endpoint URL.
 
 ## Connection contract

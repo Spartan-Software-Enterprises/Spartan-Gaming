@@ -1,5 +1,7 @@
 # Browser transport layer
 
+Transport failures and recovery states must be presented according to [the UI streaming plan](ui-streaming-plan.md), especially the player recovery requirements.
+
 `src/frontend/transport/transport.mjs` supplies the browser-facing transport primitives used by host and provider adapters:
 
 - `createWebSocketSignalTransport` validates `ws`/`wss` endpoints, exposes open/message/error/close events, and only sends protocol v1 envelopes.

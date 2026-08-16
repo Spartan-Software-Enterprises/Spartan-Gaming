@@ -1,5 +1,7 @@
 # Emulation support
 
+Emulation discovery, readiness, controller setup, and launch recovery must use the shared patterns in [the UI streaming plan](ui-streaming-plan.md).
+
 Spartan Gaming will provide a unified, controller-first emulation experience while keeping emulator cores modular and legally distributable.
 
 ## Strategy

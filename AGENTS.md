@@ -38,3 +38,26 @@ These paths identify credential stores, not permission to disclose their content
 - Provider availability must be truthful. If a service is unavailable, say so. If authentication is required, expose an Open login dialog action that uses the approved provider session; never collect or store provider passwords, cookies, or tokens in Spartan.
 - Every change to a user-facing flow must add or update interaction-level tests covering loading, success, failure, authentication, assisted recovery, responsive layout, and console/runtime errors. Android and desktop release gates run the same comprehensive UI suite.
 - Before handoff, inspect rendered screenshots, run the relevant full suites, review the diff, sign commits with the Codex key, and push the verified result to main. Keep unsupported physical-device or signing evidence fail-closed.
+
+## Product/UI source of truth
+
+- Read and follow [docs/ui-streaming-plan.md](docs/ui-streaming-plan.md) before changing a user-facing surface. It records the researched streaming-service patterns, information hierarchy, device behavior, accessibility requirements, acceptance criteria, implementation phases, and coding style for Spartan Gaming.
+- The UI is the highest-priority product surface. A passing build or unit suite never substitutes for rendered interaction validation.
+- Work from the human outcome: show the next action, automatically detect state, provide the recovery action, preserve context, and avoid dead ends or instructional text without an executable control.
+- Use HTML, CSS, and modern JavaScript for the shared frontend by default. Do not migrate to React or add a UI framework unless the user explicitly requests that architectural change and the migration plan proves a measurable benefit across Android, TV, SteamOS, Electron, and browser targets.
+- Prefer semantic HTML, small composable modules, shared data contracts, CSS media/device profiles, progressive enhancement, and accessible names over clever abstractions. Preserve the existing vanilla style and avoid unnecessary dependencies.
+- Use horizontal content/category rails when browsing or scrolling is unavoidable: snap points, visible arrow controls, keyboard arrows, gamepad shoulder navigation, and a View all action are required. Do not allow accidental page-level horizontal overflow. Reserve vertical scrolling for intentionally long settings/detail content.
+- Keep primary actions visible in the first viewport. Icon-only controls require accessible labels and must not be the only way to complete a task.
+- Provider cards must automatically show checking, ready, sign-in-required, unavailable, unsupported-device, and needs-input states. Authentication must open the approved provider login surface and recheck automatically; Spartan never receives provider passwords, cookies, or tokens.
+- Profiles/workspaces must isolate resume history, favorites, collections, provider sessions, controller mappings, display/performance settings, and accessibility preferences. Restore focus and return context after switching, dialogs, login, and playback.
+- Every visible flow must explicitly account for desktop, landscape phone, mobile/tablet, television/Fire TV/Android TV, SteamOS/handheld, and Electron behavior where applicable. Android and desktop release workflows must run the same comprehensive UI gates.
+- For every UI change, add or update tests for loading, success, empty, unavailable, authentication, assisted recovery, responsive layout, keyboard/touch/gamepad behavior where applicable, accessible names, focus restoration, and console/runtime errors.
+- Use the same-tag release rule: if a release candidate or workflow is broken, fix it and replace the existing tag in place after confirming the exact target. Do not create a new beta tag merely to escape a failed release. Keep tags signed and commits signed with Codex.
+- Update the relevant documentation and this file when product behavior, platform support, release gates, or agent workflow changes. The next agent must be able to continue from the repository docs without relying on chat history.
+
+## Current implementation sequence
+
+1. Implement Phase 1 from `docs/ui-streaming-plan.md`: dashboard rails, readiness-driven provider cards, Continue Playing/Ready/Needs Sign-In, and recovery states.
+2. Validate fresh rendered behavior with Playwright because the Browser plugin is unavailable in this environment; use desktop, landscape-phone, mobile, and television viewports plus Electron where available.
+3. Proceed through Phases 2–5 only after the previous phase has passing interaction and responsive evidence.
+4. Review the diff, run the full release matrix, sign the commit, push `main`, and replace the current beta tag in place only when the release workflow requires a corrected candidate.

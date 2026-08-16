@@ -1,5 +1,7 @@
 # ADR 0001: Project scope and platform strategy
 
+The user-facing product direction is detailed in [the UI streaming plan](../ui-streaming-plan.md).
+
 ## Status
 
 Accepted

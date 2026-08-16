@@ -1,5 +1,7 @@
 # Cloud gaming and streaming provider support
 
+Provider cards, automatic health states, assisted authentication, horizontal discovery rails, and recovery actions follow [the UI streaming plan](ui-streaming-plan.md).
+
 Spartan Gaming will treat provider support as a compatibility and integration program, not as a collection of brittle service hacks.
 
 ## Support levels

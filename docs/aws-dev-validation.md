@@ -1,5 +1,7 @@
 # AWS Linux validation host
 
+Rendered UI validation and release-gate expectations follow [the UI streaming plan](ui-streaming-plan.md); this host is evidence for automated Linux/browser checks only.
+
 This runbook describes a low-cost Amazon Linux 2023 host for reproducible
 Spartan Gaming Linux checks. It is a development and contract-validation host,
 not evidence of Windows/macOS hardware support or a production relay.

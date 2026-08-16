@@ -1,5 +1,7 @@
 # Development guide
 
+All user-facing work follows [the UI streaming plan](ui-streaming-plan.md), including the HTML/CSS/JavaScript direction, horizontal browsing preference, assisted setup, and rendered interaction gates.
+
 ## Repository stages
 
 Spartan Gaming is deliberately being built in layers:

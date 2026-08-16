@@ -1,5 +1,7 @@
 # ADR 0002: Chromium baseline and repository boundaries
 
+Shared UI behavior remains governed by [the UI streaming plan](../ui-streaming-plan.md) while Chromium remains an external build boundary.
+
 ## Status
 
 Accepted

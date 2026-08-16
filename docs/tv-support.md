@@ -1,5 +1,7 @@
 # Fire TV and Roku support
 
+Television navigation, focus, safe areas, horizontal rails, and assisted recovery follow [the UI streaming plan](ui-streaming-plan.md).
+
 Amazon Fire TV/Fire Stick and Roku are supported as television/browser targets
 in the universal product model. The shared frontend detects common Fire TV
 (`AFT*`/Fire TV) and Roku user-agent signals, switches to the Television

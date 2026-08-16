@@ -1,5 +1,7 @@
 # Device release matrix
 
+The product UI and rendered release evidence are governed by [the UI streaming plan](ui-streaming-plan.md).
+
 Android and desktop releases are one synchronized release unit. Every release tag must produce the named device artifacts below and run the shared verification suite on every platform path before publication.
 
 | Profile                     | Artifact/profile                               | Optimizations and packaging                                                             | Required evidence                                                               |

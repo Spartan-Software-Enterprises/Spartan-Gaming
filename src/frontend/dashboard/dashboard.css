@@ -275,9 +275,63 @@ h2 {
   color: var(--cyan);
 }
 .cards {
+  min-width: 0;
+}
+.cards-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 13px;
+}
+.content-shelf {
+  min-width: 0;
+  margin: 0 0 30px;
+}
+.shelf-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.shelf-heading h3 {
+  margin: 5px 0 0;
+  font-size: 20px;
+  letter-spacing: -0.03em;
+}
+.shelf-controls {
+  display: flex;
+  gap: 6px;
+}
+.shelf-controls button {
+  width: 34px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--cyan);
+  background: var(--panel);
+  font-size: 17px;
+}
+.shelf-controls button:hover,
+.shelf-controls button:focus-visible {
+  border-color: var(--cyan);
+  background: #1c3539;
+}
+.shelf-viewport {
+  display: flex;
+  min-width: 0;
+  gap: 13px;
+  overflow-x: auto;
+  padding: 2px 2px 12px;
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  scrollbar-color: #405864 transparent;
+}
+.shelf-viewport .card {
+  flex: 0 0 min(310px, 31vw);
+  scroll-snap-align: start;
+}
+.results-shelf {
+  margin-bottom: 0;
 }
 .card {
   display: flex;
@@ -400,7 +454,7 @@ h2 {
   .sidebar {
     width: 205px;
   }
-  .cards {
+  .cards-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .toolbar {
@@ -495,8 +549,11 @@ h2 {
   .filter {
     white-space: nowrap;
   }
-  .cards {
+  .cards-grid {
     grid-template-columns: 1fr;
+  }
+  .shelf-viewport .card {
+    flex-basis: min(285px, 82vw);
   }
   .card {
     min-height: 158px;

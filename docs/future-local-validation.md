@@ -1,5 +1,7 @@
 # Future local validation lab
 
+Physical UI/input evidence must validate the device-specific behavior described in [the UI streaming plan](ui-streaming-plan.md), not merely that a package installs.
+
 This runbook defines the future operator-controlled lab required to close the
 acceptance gates that the current AWS Amazon Linux development server cannot
 prove. It is intentionally separate from the remote Linux contract-validation

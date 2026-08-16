@@ -1,5 +1,7 @@
 # OS reinstall handoff
 
+After restoration, the next agent must read [the UI streaming plan](ui-streaming-plan.md) and [AGENTS.md](../AGENTS.md) before UI or release work.
+
 This repository is the restore point for Spartan Gaming. Large Chromium and
 emulator artifacts are stored with Git LFS.
 

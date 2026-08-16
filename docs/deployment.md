@@ -1,5 +1,7 @@
 # Self-hosted deployment
 
+The self-hosted surface must preserve the human-first UI and recovery rules in [the UI streaming plan](ui-streaming-plan.md).
+
 Spartan Gaming includes a dependency-free reference signaling service for
 user-owned hosts. It routes authenticated protocol-v1 control messages only;
 it does not carry game media, terminate TLS, provide STUN/TURN, launch games,

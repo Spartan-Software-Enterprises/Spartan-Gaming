@@ -87,7 +87,8 @@ async function inspectPage(page, origin, route, layout) {
     });
     const offscreen = focusables.filter((element) => {
       const rect = element.getBoundingClientRect();
-      return rect.left < -1 || rect.right > innerWidth + 1;
+      const intentionalRail = element.closest('[data-shelf]');
+      return !intentionalRail && (rect.left < -1 || rect.right > innerWidth + 1);
     });
     const tinyTargets = focusables.filter((element) => {
       const rect = element.getBoundingClientRect();
@@ -99,6 +100,8 @@ async function inspectPage(page, origin, route, layout) {
       unnamed: unnamed.length,
       offscreen: offscreen.length,
       tinyTargets: tinyTargets.length,
+      shelves: document.querySelectorAll('[data-shelf]').length,
+      shelfControls: document.querySelectorAll('[data-shelf-scroll]').length,
     };
   });
   if (!response || response.status() !== 200) fail(route, layout, `HTTP ${response?.status()}`);
@@ -109,6 +112,8 @@ async function inspectPage(page, origin, route, layout) {
     fail(route, layout, `${metrics.unnamed} visible interactive controls lack accessible names`);
   if (metrics.offscreen)
     fail(route, layout, `${metrics.offscreen} visible controls extend beyond the viewport`);
+  if (route === '/dashboard/' && metrics.shelves && metrics.shelfControls < metrics.shelves * 2)
+    fail(route, layout, 'horizontal shelves do not expose paired navigation controls');
   if (pageErrors.length) fail(route, layout, `page errors: ${pageErrors.join('; ')}`);
   if (consoleErrors.length) fail(route, layout, `console errors: ${consoleErrors.join('; ')}`);
   await page.screenshot({
