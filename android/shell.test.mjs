@@ -62,7 +62,7 @@ test('Android shell exposes a reproducible wrapper build in CI', () => {
   assert.match(workflow, /build-tools;35\.0\.0/);
   assert.match(workflow, /\.\/gradlew --no-daemon :app:assembleDebug/);
   assert.match(workflow, /actions\/upload-artifact@v7/);
-  assert.match(workflow, /app\/build\/outputs\/apk\/debug\/app-debug\.apk/);
+  assert.match(workflow, /app\/build\/outputs\/apk\/\*\/debug\/\*\.apk/);
 });
 
 test('Android release signing fails closed and never stores credentials in source', () => {
