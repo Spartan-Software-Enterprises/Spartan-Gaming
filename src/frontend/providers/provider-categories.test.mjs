@@ -20,6 +20,12 @@ test('provider categories group services by the user task', () => {
   assert.equal(providerCategory(providers[3]), 'libraries');
 });
 
+test('provider category labels use title case for every word', async () => {
+  const { PROVIDER_CATEGORIES } = await import('./provider-categories.mjs');
+  for (const { label } of PROVIDER_CATEGORIES)
+    assert.match(label, /^[A-Z][A-Za-z]*(?: [A-Z][A-Za-z]*)*$/);
+});
+
 test('provider category filtering preserves catalog order and counts', () => {
   assert.deepEqual(
     providersForCategory(providers, 'cloud').map(({ id }) => id),

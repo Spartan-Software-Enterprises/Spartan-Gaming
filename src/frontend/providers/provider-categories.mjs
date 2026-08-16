@@ -1,16 +1,16 @@
 const CATEGORY_RULES = Object.freeze([
-  Object.freeze({ id: 'cloud', label: 'Cloud gaming', kinds: ['cloud-gaming', 'cloud-pc'] }),
-  Object.freeze({ id: 'remote', label: 'Remote play', kinds: ['remote-play'] }),
+  Object.freeze({ id: 'cloud', label: 'Cloud Gaming', kinds: ['cloud-gaming', 'cloud-pc'] }),
+  Object.freeze({ id: 'remote', label: 'Remote Play', kinds: ['remote-play'] }),
   Object.freeze({
     id: 'streaming',
-    label: 'Live streaming',
+    label: 'Live Streaming',
     kinds: ['live-streaming', 'social-streaming', 'self-hosted-live-streaming'],
   }),
-  Object.freeze({ id: 'libraries', label: 'Game libraries', kinds: ['game-library', 'native'] }),
+  Object.freeze({ id: 'libraries', label: 'Game Libraries', kinds: ['game-library', 'native'] }),
 ]);
 
 export const PROVIDER_CATEGORIES = Object.freeze([
-  Object.freeze({ id: 'all', label: 'All providers' }),
+  Object.freeze({ id: 'all', label: 'All Providers' }),
   ...CATEGORY_RULES,
 ]);
 
