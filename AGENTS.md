@@ -41,6 +41,48 @@ These paths identify credential stores, not permission to disclose their content
 
 ## Product/UI source of truth
 
+### Communication and completion rule
+
+For autonomous project work, do not send progress updates, partial results, or
+routine status messages while work is in progress. Continue through the full
+authorized workflow and provide one consolidated final report only after the
+implementation, documentation, validation, signing, and publishing gates are
+complete. The final report must clearly separate completed work from external
+gates that failed or remain unavailable; never describe a partial release as
+complete. Do not interrupt the workflow with authorization requests for
+already-authorized repository, KVM, build, test, signing, or GitHub actions.
+If an external gate is genuinely unavailable, exhaust safe in-scope checks and
+record the exact blocker in the final report without exposing credentials.
+
+### Autonomous completion workflow
+
+1. Work from the KVM checkout at `/home/ubuntu/Spartan-Gaming` on `main`.
+2. Read this file, the current handoff/session data, and the complete current
+   repository documentation before changing anything.
+3. Inspect the working tree, reconcile `main` with GitHub, and preserve a
+   clean recoverable state.
+4. Implement the requested work across shared HTML/CSS/JavaScript and every
+   affected Android, desktop, TV, Fire TV, SteamOS, tablet, phone, and browser
+   surface. Keep Android and desktop changes synchronized.
+5. Add or expand tests before claiming completion. Test loading, success,
+   empty, unavailable, authentication-required, offline, unsupported-device,
+   and recovery states, plus keyboard, touch, mouse, D-pad, gamepad, focus,
+   accessibility, responsive, and horizontal-rail behavior.
+6. Run the complete local KVM gates, including formatting, unit/integration
+   tests, frontend build, rendered UI matrices, provider-auth flow, Android
+   shell/release checks, Electron checks, serial checks, and platform package
+   checks. Do not rely on an earlier run after modifying files.
+7. Review the diff and documentation, commit with Codex GPG signing, and push
+   `main` to GitHub.
+8. Build, sign, verify, and publish the Android and desktop artifacts through
+   the documented workflows. Use the existing beta tag when correcting a
+   release; force-replace the same tag rather than creating a new tag.
+9. Verify GitHub workflow conclusions, artifact presence, signatures,
+   checksums, release metadata, and tag-to-commit identity before reporting
+   completion.
+10. Send one final report containing changed areas, exact commit/tag, tests,
+    artifacts, workflow results, and any unavoidable external blockers.
+
 - Read and follow [docs/ui-streaming-plan.md](docs/ui-streaming-plan.md) before changing a user-facing surface. It records the researched streaming-service patterns, information hierarchy, device behavior, accessibility requirements, acceptance criteria, implementation phases, and coding style for Spartan Gaming.
 - The UI is the highest-priority product surface. A passing build or unit suite never substitutes for rendered interaction validation.
 - Work from the human outcome: show the next action, automatically detect state, provide the recovery action, preserve context, and avoid dead ends or instructional text without an executable control.

@@ -275,6 +275,15 @@ the KVM; release workflows remain fail-closed for platform signing custody.
 
 ## Working style
 
+Autonomous work follows a quiet completion workflow: do not send progress
+updates or partial results during implementation. Read `AGENTS.md`, inspect the
+KVM `main` checkout, implement all affected device surfaces, expand tests, run
+the complete KVM and GitHub gates, sign and publish verified artifacts, and
+then provide one consolidated report. Never call a partial release complete.
+When a platform signing or physical-device gate is unavailable, exhaust safe
+checks and report the exact external blocker only in the final report. Release
+corrections replace the existing beta tag; they do not create a new tag.
+
 Use the existing HTML/CSS/JavaScript architecture and small, composable
 modules. Prefer progressive enhancement and shared data contracts over a
 framework migration. Keep styles responsive, semantic, keyboard-safe, and
