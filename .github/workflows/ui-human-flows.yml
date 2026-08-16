@@ -1,0 +1,29 @@
+name: UI human flows
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dashboard-human-flows:
+    name: Dashboard human-flow audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install browser test dependencies
+        run: npm ci --ignore-scripts
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run human-flow audit
+        run: npm run playwright:human-flows
+      - name: Run full rendered verification
+        run: node scripts/playwright/full-verification.mjs

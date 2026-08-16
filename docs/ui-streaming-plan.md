@@ -252,6 +252,10 @@ the shared player contract.
 Status: software validation complete; operator-controlled release gates remain
 fail-closed. The complete rendered matrix, interaction checks, Android shell,
 Electron suite, repository checks, and formatting gates pass on the KVM.
+The dashboard human-flow audit now also covers empty-state recovery, filter
+reset, favorites, provider details, focus, accessible names, overflow, and
+runtime errors across the four release viewports, and runs in its own CI
+workflow.
 
 - Exercise every route at desktop, landscape-phone, mobile, television, and
   representative Electron layouts.
