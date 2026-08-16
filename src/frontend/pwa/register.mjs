@@ -2,9 +2,11 @@ import { createSettingsStore } from '../settings/profile.mjs';
 import { applyRuntimeUiSettings } from '../settings/runtime-ui.mjs';
 import { syncRuntimeControllerNavigation } from '../input/navigation.mjs';
 import { createPwaInstallController } from './install.mjs';
+import { handleAndroidBack } from './back-navigation.mjs';
 
 const manifestUrl = new URL('./manifest.webmanifest', import.meta.url);
 if (typeof document !== 'undefined') {
+  globalThis.spartanAndroidBack = () => handleAndroidBack(document);
   try {
     applyRuntimeUiSettings(document, createSettingsStore().read());
   } catch {

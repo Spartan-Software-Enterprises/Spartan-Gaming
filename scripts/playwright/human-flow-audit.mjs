@@ -157,6 +157,46 @@ async function inspectDashboard(page, viewport, origin) {
   check(errors.length === 0, `${viewport.name}: runtime errors: ${errors.join('; ')}`);
 }
 
+async function inspectProviders(page, viewport, origin) {
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(`page: ${error.message}`));
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(`console: ${message.text()}`);
+  });
+  await page.goto(`${origin}/providers/`, { waitUntil: 'networkidle' });
+  await page.waitForSelector('[data-provider]', { timeout: 10000 });
+  const tabs = page.locator('[data-provider-category]');
+  check((await tabs.count()) === 5, `${viewport.name}: provider categories missing`);
+  check(
+    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),
+    `${viewport.name}: provider page horizontal overflow`,
+  );
+  await page.locator('[data-provider-category="cloud"]').click();
+  check(
+    (await page.locator('[data-provider]').count()) === 8,
+    `${viewport.name}: cloud category count incorrect`,
+  );
+  check(
+    (await page.locator('[data-provider="twitch"]').count()) === 0,
+    `${viewport.name}: cloud category leaked streaming provider`,
+  );
+  await page.locator('[data-provider-category="streaming"]').click();
+  check(
+    (await page.locator('[data-provider="twitch"]').count()) === 1,
+    `${viewport.name}: streaming category missing Twitch`,
+  );
+  check(
+    (await page.locator('[data-provider="nvidia-geforce-now"]').count()) === 0,
+    `${viewport.name}: streaming category leaked cloud provider`,
+  );
+  await page.locator('[data-provider-category="all"]').click();
+  check(
+    (await page.locator('[data-provider]').count()) === 28,
+    `${viewport.name}: all providers did not restore catalog`,
+  );
+  check(errors.length === 0, `${viewport.name}: provider runtime errors: ${errors.join('; ')}`);
+}
+
 const frontend = createFrontendServer({ host: '127.0.0.1', port: 0 });
 await frontend.listen();
 const address = frontend.server.address();
@@ -173,6 +213,7 @@ try {
       viewport: { width: viewport.width, height: viewport.height },
     });
     await inspectDashboard(page, viewport, origin);
+    await inspectProviders(page, viewport, origin);
     await page.close();
   }
 } finally {

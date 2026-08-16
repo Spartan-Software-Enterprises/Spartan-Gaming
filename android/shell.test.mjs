@@ -42,6 +42,10 @@ test('Android shell packages the shared frontend through a safe asset origin', (
   assert.match(activity, /addJavascriptInterface\(nativeBridge, "SpartanAndroid"\)/);
   assert.match(activity, /GameNativeHandoff\.launchOrInstall/);
   assert.match(activity, /GithubReleaseUpdate\.check/);
+  assert.match(activity, /window\.spartanAndroidBack\?\.\(\) === true/);
+  assert.match(activity, /webView\.canGoBack\(\)/);
+  assert.match(activity, /Press Back again to exit Spartan Gaming/);
+  assert.match(activity, /SystemClock\.elapsedRealtime/);
   assert.match(
     updater,
     /api\.github\.com\/repos\/Spartan-Software-Enterprises\/Spartan-Gaming\/releases/,
@@ -49,6 +53,17 @@ test('Android shell packages the shared frontend through a safe asset origin', (
   assert.match(updater, /setCancelable\(false\)/);
   assert.match(manifest, /android:usesCleartextTraffic="false"/);
   assert.match(manifest, /android\.permission\.INTERNET/);
+});
+
+test('Android back delegates dialogs to the shared frontend before exit handling', () => {
+  const activity = read('app/src/main/kotlin/com/spartan/gaming/app/MainActivity.kt');
+  const registration = fs.readFileSync(
+    path.join(root, '..', 'src/frontend/pwa/register.mjs'),
+    'utf8',
+  );
+  assert.match(activity, /evaluateJavascript\("window\.spartanAndroidBack/);
+  assert.match(registration, /globalThis\.spartanAndroidBack/);
+  assert.match(registration, /handleAndroidBack/);
 });
 
 test('Android shell exposes a reproducible wrapper build in CI', () => {

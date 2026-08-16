@@ -18,7 +18,7 @@ test('provider health targets strip query credentials and require secure remote 
   );
 });
 
-test('provider health probe uses HEAD without credentials and reports a reachable response', async () => {
+test('provider health probe uses GET without credentials and reports a reachable response', async () => {
   let request;
   const result = await checkProviderReachability({
     url: 'https://example.test/game?secret=removed',
@@ -33,9 +33,9 @@ test('provider health probe uses HEAD without credentials and reports a reachabl
   });
   assert.equal(result.status, 'reachable');
   assert.equal(request.url, 'https://example.test/game');
-  assert.equal(request.options.method, 'HEAD');
+  assert.equal(request.options.method, 'GET');
   assert.equal(request.options.credentials, 'include');
-  assert.equal(request.options.redirect, 'manual');
+  assert.equal(request.options.redirect, 'follow');
 });
 
 test('provider health probe distinguishes opaque, timeout, and HTTP failure outcomes', async () => {

@@ -8,6 +8,7 @@ import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.WindowManager
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -27,6 +28,7 @@ class MainActivity : Activity() {
     private lateinit var webView: WebView
     private lateinit var assetLoader: WebViewAssetLoader
     private var bridge: SpartanAndroidBridge? = null
+    private var lastBackPressAt = 0L
 
     private val resultSink =
         object : SpartanAndroidBridge.ResultSink {
@@ -79,7 +81,21 @@ class MainActivity : Activity() {
 
     @Deprecated("Use the predictive back dispatcher on newer Android releases")
     override fun onBackPressed() {
-        if (webView.canGoBack()) webView.goBack() else super.onBackPressed()
+        webView.evaluateJavascript("window.spartanAndroidBack?.() === true") { handled ->
+            if (handled == "true") return@evaluateJavascript
+            if (webView.canGoBack()) {
+                webView.goBack()
+                return@evaluateJavascript
+            }
+            val now = SystemClock.elapsedRealtime()
+            if (now - lastBackPressAt < 2000) {
+                super@MainActivity.onBackPressed()
+            } else {
+                lastBackPressAt = now
+                Toast.makeText(this, "Press Back again to exit Spartan Gaming", Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
     }
 
     private fun configureWebView(view: WebView) {

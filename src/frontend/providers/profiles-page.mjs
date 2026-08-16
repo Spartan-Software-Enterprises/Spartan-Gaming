@@ -9,6 +9,11 @@ import {
 } from './community-catalog.mjs';
 import { createActiveProfileStorage } from '../profiles/storage.mjs';
 import { CONTROLLER_PROFILE_OPTIONS } from '../input/controller-policy.mjs';
+import {
+  PROVIDER_CATEGORIES,
+  providerCategoryCounts,
+  providersForCategory,
+} from './provider-categories.mjs';
 
 const profileStorage = createActiveProfileStorage();
 const store = createProviderProfileStore({ storage: profileStorage });
@@ -19,6 +24,7 @@ const editor = document.querySelector('[data-editor]');
 const notice = document.querySelector('[data-notice]');
 let providers = [];
 let selectedId = null;
+let activeCategory = 'all';
 let timer;
 function escapeHtml(value) {
   return String(value).replace(
@@ -44,8 +50,14 @@ function controllerProfileOptions() {
 }
 function renderProviders() {
   document.querySelector('[data-count]').textContent = `${providers.length} services`;
+  const counts = providerCategoryCounts(providers);
+  document.querySelector('[data-provider-categories]').innerHTML = PROVIDER_CATEGORIES.map(
+    (category) =>
+      `<button type="button" role="tab" aria-selected="${category.id === activeCategory}" class="category-tab ${category.id === activeCategory ? 'active' : ''}" data-provider-category="${category.id}">${escapeHtml(category.label)} <span>${counts[category.id]}</span></button>`,
+  ).join('');
+  const visibleProviders = providersForCategory(providers, activeCategory);
   providerContainer.className = '';
-  providerContainer.innerHTML = providers
+  providerContainer.innerHTML = visibleProviders
     .map((provider) => {
       const accounts = store.list(provider.id);
       const profile = accounts[0];
@@ -134,6 +146,17 @@ function selectProvider(id) {
 providerContainer.addEventListener('click', (event) => {
   const button = event.target.closest('[data-provider]');
   if (button) selectProvider(button.dataset.provider);
+});
+document.querySelector('[data-provider-categories]').addEventListener('click', (event) => {
+  const tab = event.target.closest('[data-provider-category]');
+  if (!tab || tab.dataset.providerCategory === activeCategory) return;
+  activeCategory = tab.dataset.providerCategory;
+  const visibleProviders = providersForCategory(providers, activeCategory);
+  selectedId = visibleProviders.some((provider) => provider.id === selectedId)
+    ? selectedId
+    : visibleProviders[0]?.id || null;
+  renderProviders();
+  renderEditor();
 });
 editor.addEventListener('click', async (event) => {
   const provider = providers.find((item) => item.id === selectedId);
