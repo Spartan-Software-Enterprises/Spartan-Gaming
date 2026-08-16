@@ -6,9 +6,8 @@ Updated: 2026-08-16
 
 - Repository: `Spartan-Software-Enterprises/Spartan-Gaming`
 - KVM checkout: `/home/ubuntu/Spartan-Gaming`
-- Branch: `main`; HEAD: `6b2db4b`
-- Working tree: clean and synchronized with `origin/main`
-- Latest release: `v0.1.0-beta.9` (not yet published; signed APK verified locally)
+- Branch: `main`; HEAD: 6bc8498- Working tree: clean and synchronized with `origin/main`
+- Latest release: `v0.1.0-beta.9` (published prerelease; signed APK and Linux desktop packages verified)
 
 ## Verification evidence (beta.9)
 
