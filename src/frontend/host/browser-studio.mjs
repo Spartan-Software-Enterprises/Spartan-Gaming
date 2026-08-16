@@ -5,15 +5,20 @@ import { createBrowserHostRuntime } from './browser-host-runtime.mjs';
 import { installLanHandoffListener } from './lan-handoff.mjs';
 import { listAudioInputDevices } from './audio-input.mjs';
 import { createSettingsStore } from '../settings/profile.mjs';
+import { normalizeNoiseSuppressionPreference } from '../voice/noise-suppression.mjs';
 
 export function resolveBrowserHostMediaPreferences(settings = {}) {
+  const noiseSuppressionEnabled = settings['media.micNoiseSuppression'] !== false;
   return Object.freeze({
     audioInput: ['System default', 'No microphone', 'Ask each time'].includes(
       settings['media.audioInput'],
     )
       ? settings['media.audioInput']
       : 'System default',
-    microphoneNoiseSuppression: settings['media.micNoiseSuppression'] !== false,
+    microphoneNoiseSuppression: noiseSuppressionEnabled,
+    microphoneNoiseSuppressionProfile: normalizeNoiseSuppressionPreference(
+      noiseSuppressionEnabled ? settings['media.micNoiseSuppressionProfile'] : 'off',
+    ),
   });
 }
 export function normalizeBrowserHostConfig(values = {}) {
@@ -31,6 +36,11 @@ export function normalizeBrowserHostConfig(values = {}) {
     microphone: values.microphone === true,
     microphoneDeviceId: String(values.microphoneDeviceId || '').trim(),
     microphoneNoiseSuppression: values.microphoneNoiseSuppression !== false,
+    microphoneNoiseSuppressionProfile: normalizeNoiseSuppressionPreference(
+      values.microphoneNoiseSuppression !== false
+        ? values.microphoneNoiseSuppressionProfile
+        : 'off',
+    ),
     displaySurface,
     framerate:
       Number.isFinite(framerate) && framerate > 0 ? Math.min(240, Math.max(1, framerate)) : 60,
@@ -119,6 +129,7 @@ if (typeof document !== 'undefined') {
         microphone: microphone.checked,
         microphoneDeviceId: microphoneDevice.value,
         microphoneNoiseSuppression: mediaPreferences.microphoneNoiseSuppression,
+        microphoneNoiseSuppressionProfile: mediaPreferences.microphoneNoiseSuppressionProfile,
         displaySurface: surface.value,
         framerate: framerate.value,
       });
@@ -127,6 +138,7 @@ if (typeof document !== 'undefined') {
         microphone: capture.microphone,
         microphoneDeviceId: capture.microphoneDeviceId,
         microphoneNoiseSuppression: capture.microphoneNoiseSuppression,
+        microphoneNoiseSuppressionProfile: capture.microphoneNoiseSuppressionProfile,
         displaySurface: capture.displaySurface,
         framerate: capture.framerate,
       });

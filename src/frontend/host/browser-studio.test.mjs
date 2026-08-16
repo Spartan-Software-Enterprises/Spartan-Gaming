@@ -30,6 +30,7 @@ test('browser host studio normalizes connection and capture fields without persi
       microphone: true,
       microphoneDeviceId: 'mic-1',
       microphoneNoiseSuppression: false,
+      microphoneNoiseSuppressionProfile: 'off',
       displaySurface: 'window',
       framerate: 240,
     },
@@ -49,10 +50,42 @@ test('browser host media preferences never grant microphone permission implicitl
       'media.audioInput': 'No microphone',
       'media.micNoiseSuppression': false,
     }),
-    { audioInput: 'No microphone', microphoneNoiseSuppression: false },
+    {
+      audioInput: 'No microphone',
+      microphoneNoiseSuppression: false,
+      microphoneNoiseSuppressionProfile: 'off',
+    },
   );
   assert.equal(
     resolveBrowserHostMediaPreferences({ 'media.audioInput': 'invalid' }).audioInput,
     'System default',
+  );
+});
+test('browser host media preferences honor the noise-suppression profile setting', () => {
+  assert.equal(
+    resolveBrowserHostMediaPreferences({
+      'media.micNoiseSuppression': true,
+      'media.micNoiseSuppressionProfile': 'aggressive',
+    }).microphoneNoiseSuppressionProfile,
+    'aggressive',
+  );
+  assert.equal(
+    resolveBrowserHostMediaPreferences({
+      'media.micNoiseSuppression': false,
+      'media.micNoiseSuppressionProfile': 'aggressive',
+    }).microphoneNoiseSuppressionProfile,
+    'off',
+  );
+  assert.equal(
+    resolveBrowserHostMediaPreferences({ 'media.micNoiseSuppression': true })
+      .microphoneNoiseSuppressionProfile,
+    'basic',
+  );
+  assert.equal(
+    normalizeBrowserHostConfig({
+      microphoneNoiseSuppression: false,
+      microphoneNoiseSuppressionProfile: 'ml',
+    }).microphoneNoiseSuppressionProfile,
+    'off',
   );
 });

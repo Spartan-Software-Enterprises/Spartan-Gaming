@@ -11,13 +11,14 @@ const toggle = (key, label, description, defaultValue = false) => ({
   type: 'toggle',
   default: defaultValue,
 });
-const select = (key, label, description, options, defaultValue) => ({
+const select = (key, label, description, options, defaultValue, optionLabels) => ({
   key,
   label,
   description,
   type: 'select',
   options,
   default: defaultValue ?? options[0],
+  ...(optionLabels ? { optionLabels } : {}),
 });
 const range = (key, label, description, min, max, step, defaultValue, unit = '') => ({
   key,
@@ -1429,6 +1430,14 @@ export const settingsCategories = [
         'Microphone noise suppression',
         'Reduce background noise during voice chat and broadcasts.',
         true,
+      ),
+      select(
+        'media.micNoiseSuppressionProfile',
+        'Microphone noise suppression profile',
+        'Noise-suppression strength and processing profile for the microphone when noise suppression is enabled.',
+        ['off', 'basic', 'aggressive', 'ml'],
+        'basic',
+        { off: 'Off', basic: 'Basic', aggressive: 'Aggressive', ml: 'ML' },
       ),
       toggle(
         'media.voiceChat',

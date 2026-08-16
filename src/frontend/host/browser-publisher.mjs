@@ -1,3 +1,8 @@
+import {
+  buildNoiseSuppressionConstraints,
+  resolveEffectiveNoiseSuppression,
+} from '../voice/noise-suppression.mjs';
+
 const MAX = Object.freeze({ width: 7680, height: 4320, framerate: 240, bitrateKbps: 100000 });
 const DEFAULT_QUALITY = Object.freeze({
   profile: 'custom',
@@ -34,18 +39,26 @@ function required(value, name) {
   if (!value) throw new TypeError(`${name} is required`);
   return value;
 }
+function resolveNoiseSuppressionProfile(profile) {
+  return buildNoiseSuppressionConstraints(
+    resolveEffectiveNoiseSuppression(profile, 'chromium').effective,
+  );
+}
 
 export function createMicrophoneConstraints({
   deviceId = '',
   echoCancellation = true,
   noiseSuppression = true,
   autoGainControl = true,
+  noiseSuppressionProfile,
 } = {}) {
   const audio = {
     echoCancellation: Boolean(echoCancellation),
     noiseSuppression: Boolean(noiseSuppression),
     autoGainControl: Boolean(autoGainControl),
   };
+  if (noiseSuppressionProfile !== undefined)
+    Object.assign(audio, resolveNoiseSuppressionProfile(noiseSuppressionProfile));
   const normalizedDeviceId = typeof deviceId === 'string' ? deviceId.trim() : '';
   if (normalizedDeviceId) audio.deviceId = { exact: normalizedDeviceId };
   return Object.freeze(audio);
@@ -168,6 +181,7 @@ export function createBrowserWebRtcPublisher({
             audio: createMicrophoneConstraints({
               deviceId: options.microphoneDeviceId,
               noiseSuppression: options.microphoneNoiseSuppression !== false,
+              noiseSuppressionProfile: options.microphoneNoiseSuppressionProfile,
             }),
           });
           const microphoneTracks = microphone?.getAudioTracks?.() || [];

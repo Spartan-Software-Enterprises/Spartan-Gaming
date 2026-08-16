@@ -154,6 +154,7 @@ test('session preferences carry audio mix and processing policy', () => {
   assert.equal(result.preferences.monoAudio, true);
   assert.equal(result.preferences.audioInput, 'No microphone');
   assert.equal(result.preferences.microphoneNoiseSuppression, false);
+  assert.equal(result.preferences.microphoneNoiseSuppressionProfile, 'off');
   assert.deepEqual(result.capabilities.audio, {
     codecs: ['opus', 'aac'],
     channels: 2,

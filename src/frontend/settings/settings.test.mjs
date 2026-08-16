@@ -73,6 +73,17 @@ test('controller settings options are accepted by the shared policy normalizer',
     assert.equal(normalizeControllerPolicy({ defaultProfile: profile }).defaultProfile, profile);
 });
 
+test('noise suppression profile setting covers every option with a label', () => {
+  const setting = settingsCategories
+    .flatMap((category) => category.settings)
+    .find((item) => item.key === 'media.micNoiseSuppressionProfile');
+  assert.equal(setting.type, 'select');
+  assert.deepEqual(setting.options, ['off', 'basic', 'aggressive', 'ml']);
+  assert.equal(setting.default, 'basic');
+  for (const option of setting.options)
+    assert.ok(setting.optionLabels?.[option], `missing label for ${option}`);
+});
+
 test('active setting toggles keep their label beside the thumb', async () => {
   const directory = path.dirname(fileURLToPath(import.meta.url));
   const stylesheet = await readFile(path.join(directory, 'settings.css'), 'utf8');

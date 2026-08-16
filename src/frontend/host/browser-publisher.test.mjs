@@ -42,6 +42,24 @@ test('microphone constraints are explicit, device-scoped, and configurable for n
   });
 });
 
+test('microphone constraints honor the noise-suppression profile contract on chromium', () => {
+  assert.deepEqual(createMicrophoneConstraints({ noiseSuppressionProfile: 'basic' }), {
+    echoCancellation: false,
+    noiseSuppression: true,
+    autoGainControl: false,
+  });
+  assert.deepEqual(createMicrophoneConstraints({ noiseSuppressionProfile: 'aggressive' }), {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: false,
+  });
+  assert.deepEqual(createMicrophoneConstraints({ noiseSuppressionProfile: 'off' }), {
+    echoCancellation: false,
+    noiseSuppression: false,
+    autoGainControl: false,
+  });
+});
+
 test('browser quality requests and sender parameters are bounded', () => {
   const quality = normalizeBrowserQualityRequest({
     profile: ' low ',

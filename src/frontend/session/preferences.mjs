@@ -9,6 +9,7 @@ import {
 import { createControllerProfileStore, resolveControllerProfile } from '../input/profiles.mjs';
 import { resolveControllerPreferences } from '../input/inspector.mjs';
 import { resolvePowerQualityPolicy } from './power-policy.mjs';
+import { normalizeNoiseSuppressionPreference } from '../voice/noise-suppression.mjs';
 
 const RESOLUTIONS = Object.freeze({
   '720p': [1280, 720],
@@ -333,6 +334,11 @@ export function createSessionPreferences(
     audioOutput,
     audioInput,
     microphoneNoiseSuppression: settings['media.micNoiseSuppression'] !== false,
+    microphoneNoiseSuppressionProfile: normalizeNoiseSuppressionPreference(
+      settings['media.micNoiseSuppression'] === false
+        ? 'off'
+        : settings['media.micNoiseSuppressionProfile'],
+    ),
     recordingCodec,
     recordingLocation,
     clearOnExit: settings['privacy.clearOnExit'] === true,
