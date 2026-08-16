@@ -105,6 +105,7 @@ export function resolvePresentationProfile({
   const mode = resolveDeviceMode({ settings, detectedMode });
   const profile = PROFILES[mode];
   const consoleMode = settings['appearance.consoleMode'] === true;
+  const focusScale = consoleMode ? Math.max(profile.focusScale, 1.12) : profile.focusScale;
   const width = widthOf(viewport);
   const scale = Number(settings['appearance.uiScale']);
   const baseScale = Number.isFinite(scale) ? Math.max(80, Math.min(140, scale)) : 100;
@@ -113,9 +114,9 @@ export function resolvePresentationProfile({
     navigation: consoleMode ? 'remote-controller' : profile.navigation,
     touchControls: profile.touchControls,
     preferFullscreen: consoleMode || profile.preferFullscreen,
-    focusScale: consoleMode ? Math.max(profile.focusScale, 1.12) : profile.focusScale,
+    focusScale,
     columns: consoleMode ? Math.max(profile.columns, 4) : profile.columns,
     narrowViewport: width < 720,
-    effectiveUiScale: Math.min(160, Math.round(baseScale * profile.focusScale)),
+    effectiveUiScale: Math.min(160, Math.round(baseScale * focusScale)),
   });
 }
