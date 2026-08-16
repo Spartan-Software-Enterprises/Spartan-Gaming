@@ -157,6 +157,32 @@ body {
   color: #081318;
   font-weight: 800;
 }
+.recovery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px;
+  margin-top: 14px;
+}
+.secondary {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 10px 14px;
+  color: #d5e0e4;
+  background: #111b22;
+  font-size: 12px;
+  font-weight: 800;
+  text-decoration: none;
+}
+.secondary:hover,
+.secondary:focus-visible {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+.recovery-link {
+  display: inline-flex;
+  align-items: center;
+}
 .overlay-top,
 .overlay-bottom {
   position: absolute;

@@ -142,6 +142,7 @@ const elements = {
   diagnostics: document.querySelector('[data-diagnostics]'),
   overlay: document.querySelectorAll('[data-overlay]'),
   stage: document.querySelector('[data-stage]'),
+  stageEmpty: document.querySelector('.stage-empty'),
   video: document.querySelector('[data-video]'),
   demo: document.querySelector('[data-demo-answer]'),
   connectionForm: document.querySelector('[data-connection-form]'),
@@ -295,10 +296,16 @@ function apply(event) {
   }
   if (state.status === 'connected' || state.status === 'reconnecting') void wakeLock.start();
   else if (state.status === 'ended' || state.status === 'error') void wakeLock.stop();
-  if (state.status === 'error') elements.message.textContent = state.error;
-  if (state.status === 'ended')
+  if (state.status === 'error') {
+    elements.message.textContent = state.error;
+    renderRecoveryActions({ reconnect: true, diagnostics: true });
+  }
+  if (state.status === 'ended') {
     elements.message.textContent =
       'This session has ended. Return to the library to choose another backend.';
+    renderRecoveryActions({ reconnect: false, diagnostics: true });
+  }
+  if (state.status === 'connected') renderRecoveryActions({ reconnect: false, diagnostics: false });
   if (event.type === 'session.negotiated') {
     negotiationAdjustments = describeNegotiationAdjustments({
       requested: sessionPreferences.capabilities,
@@ -319,6 +326,26 @@ function apply(event) {
   if (state.status === 'connected' && state.mediaState === 'not-configured')
     elements.message.textContent =
       'Host paired successfully. Media capture and encoding are not configured on this host.';
+}
+
+function renderRecoveryActions({ reconnect, diagnostics }) {
+  if (!elements.stageEmpty) return;
+  let actions = elements.stageEmpty.querySelector('[data-recovery-actions]');
+  if (!reconnect && !diagnostics && !actions) return;
+  if (!actions) {
+    actions = document.createElement('div');
+    actions.className = 'recovery-actions';
+    actions.dataset.recoveryActions = '';
+    elements.stageEmpty.append(actions);
+  }
+  actions.innerHTML = `${reconnect ? '<button class="primary" data-recovery-action="reconnect" type="button">Reconnect</button>' : ''}${diagnostics ? '<button class="secondary" data-recovery-action="diagnostics" type="button">See diagnostics</button>' : ''}<a class="secondary recovery-link" href="../dashboard/index.html">Return to library</a>`;
+  actions
+    .querySelector('[data-recovery-action="reconnect"]')
+    ?.addEventListener('click', requestReconnect);
+  actions.querySelector('[data-recovery-action="diagnostics"]')?.addEventListener('click', () => {
+    apply({ type: 'toggle.diagnostics' });
+    elements.diagnostics?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 }
 
 async function loadAudioOutputs({ applyPreference = false } = {}) {
