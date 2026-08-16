@@ -249,7 +249,7 @@ header,
   }
   .portable {
     align-items: flex-start;
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
   .actions {
     justify-content: flex-start;
@@ -271,7 +271,8 @@ header,
   }
 }
 .health-check {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto minmax(220px, 270px);
   align-items: center;
   gap: 12px;
   margin-top: 18px;
@@ -282,7 +283,10 @@ header,
 .health-check div {
   display: grid;
   gap: 3px;
-  flex: 1;
+  min-width: 0;
+}
+.health-check button {
+  white-space: nowrap;
 }
 .health-check strong {
   font-size: 12px;
@@ -293,13 +297,13 @@ header,
   font-size: 10px;
 }
 .health-check span {
-  max-width: 270px;
+  min-width: 0;
   text-align: right;
 }
 @media (max-width: 500px) {
   .health-check {
     align-items: flex-start;
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
   .health-check span {
     max-width: none;

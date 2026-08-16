@@ -34,7 +34,7 @@ test('provider health probe uses HEAD without credentials and reports a reachabl
   assert.equal(result.status, 'reachable');
   assert.equal(request.url, 'https://example.test/game');
   assert.equal(request.options.method, 'HEAD');
-  assert.equal(request.options.credentials, 'omit');
+  assert.equal(request.options.credentials, 'include');
   assert.equal(request.options.redirect, 'manual');
 });
 

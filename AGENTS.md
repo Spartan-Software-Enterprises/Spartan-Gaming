@@ -30,3 +30,11 @@ OpenCode should use the existing authenticated managers and agents; it must neve
 - OpenCode configuration: `/home/userland/.config/opencode/opencode.jsonc`; it loads this file.
 
 These paths identify credential stores, not permission to disclose their contents. Tokens, passwords, private keys, keystores, cookies, and raw secret stores must remain in their protected managers and must not be written into OpenCode config, repository documentation, logs, or GitHub.
+
+## Human-first UI and interaction directives
+
+- Treat the human UI as a release-critical surface. A passing unit or build suite is insufficient: every user-facing flow must be exercised at desktop, landscape-phone, mobile, and television-sized layouts where applicable.
+- Build flows around normal human use: automatic status checks, clear reachable/unavailable/authentication-required states, explicit assisted actions, readable left-to-right layouts, no accidental vertical text wrapping, and no unexplained dead ends.
+- Provider availability must be truthful. If a service is unavailable, say so. If authentication is required, expose an Open login dialog action that uses the approved provider session; never collect or store provider passwords, cookies, or tokens in Spartan.
+- Every change to a user-facing flow must add or update interaction-level tests covering loading, success, failure, authentication, assisted recovery, responsive layout, and console/runtime errors. Android and desktop release gates run the same comprehensive UI suite.
+- Before handoff, inspect rendered screenshots, run the relevant full suites, review the diff, sign commits with the Codex key, and push the verified result to main. Keep unsupported physical-device or signing evidence fail-closed.

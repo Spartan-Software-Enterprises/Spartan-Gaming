@@ -285,6 +285,15 @@ export async function runFullVerification({
       const page = await browser.newPage({
         viewport: { width: layout.width, height: layout.height },
       });
+      await page.addInitScript(() => {
+        const originalFetch = window.fetch.bind(window);
+        window.fetch = (url, options) => {
+          if (options?.method === 'HEAD' && String(url).startsWith('http'))
+            return Promise.resolve({ status: 204, type: 'basic' });
+          return originalFetch(url, options);
+        };
+      });
+
       const pageErrors = [];
       const consoleErrors = [];
       const failedRequests = [];

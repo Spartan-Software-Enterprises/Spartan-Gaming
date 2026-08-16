@@ -21,7 +21,11 @@ depend on a hosted frontend. Provider/game launches are checked against the
 bundled catalogs, general external access is limited to approved gaming and
 download origins, and the local application remains available offline.
 Provider authentication uses sandboxed windows in bounded persistent Electron
-partitions. Account isolation is enabled by default, mapping the four supported
+partitions. Provider Profiles automatically check the selected official service;
+unavailable services are reported as unavailable, while authentication-required
+states expose an explicit Open login dialog action. The action reuses the
+profile-scoped provider session and never asks Spartan to receive credentials;
+after sign-in, Check again verifies the service state. Account isolation is enabled by default, mapping the four supported
 local profiles to `persist:spartan-gaming-providers-<profile>`; disabling
 Settings -> Providers -> Isolate provider accounts deliberately selects the
 legacy shared `persist:spartan-gaming-providers` compatibility partition.

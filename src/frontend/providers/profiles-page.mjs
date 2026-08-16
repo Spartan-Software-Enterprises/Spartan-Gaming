@@ -1,7 +1,7 @@
 import '../pwa/register.mjs';
 import { createProviderProfileStore } from './profiles.mjs';
 import { BUILTIN_CONTROLLER_PROFILES, createControllerProfileStore } from '../input/profiles.mjs';
-import { checkProviderReachability } from './health.mjs';
+import { checkProviderReachability, openProviderAuthentication } from './health.mjs';
 import { consumeLaunchIntent } from '../launch/intent.mjs';
 import {
   createCommunityProviderCatalogStore,
@@ -91,12 +91,41 @@ function renderEditor() {
         `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`,
     )
     .join('');
-  editor.innerHTML = `<div class="editor-title"><p class="eyebrow">${escapeHtml(provider.kind)}</p><h2>${escapeHtml(provider.name)}</h2><p>${escapeHtml(provider.url)} · ${escapeHtml(provider.supportLevel)} support</p></div><div class="health-check panel"><div><p class="eyebrow">REACHABILITY ONLY</p><strong>Check official service</strong><small>No credentials, cookies, or response bodies are sent to Spartan Gaming.</small></div><button class="secondary" data-health type="button">Check availability</button><span data-health-result>Not checked</span></div><div class="form"><label>Account label<input data-account value="${escapeHtml(profile.accountLabel)}" maxlength="80" placeholder="e.g. Personal account"></label><label>Region hint<select data-region><option value="automatic">Automatic</option><option value="north-america">North America</option><option value="europe">Europe</option><option value="asia-pacific">Asia Pacific</option><option value="latin-america">Latin America</option></select></label><label>Quality preference<select data-quality><option value="prefer-latency">Prefer latency</option><option value="balanced">Balanced</option><option value="prefer-quality">Prefer quality</option></select></label><label>Launch preference<select data-launch><option value="browser">Spartan browser</option><option value="official">Official provider launch</option><option value="native">Native app when available</option></select></label><label>Controller profile<select data-controller>${controllerOptions}</select><small>Overrides the workspace controller profile for this provider’s session surfaces.</small></label><label>Embed target <input data-embed-target value="${escapeHtml(profile.embedTarget)}" maxlength="128" placeholder="${escapeHtml(targetHint)}"><small>Optional, non-secret target used only for an official embedded player.</small></label><label class="check wide"><input data-fullscreen type="checkbox" ${profile.autoFullscreen ? 'checked' : ''}> Request fullscreen when this provider starts a session</label><label class="wide">Private notes<textarea data-notes maxlength="500" placeholder="Non-secret reminders for this provider">${escapeHtml(profile.notes)}</textarea></label></div><div class="save-row"><button class="secondary" data-clear>Clear profile</button><button class="primary" data-save>Save profile</button></div>`;
+  editor.innerHTML = `<div class="editor-title"><p class="eyebrow">${escapeHtml(provider.kind)}</p><h2>${escapeHtml(provider.name)}</h2><p>${escapeHtml(provider.url)} · ${escapeHtml(provider.supportLevel)} support</p></div><div class="health-check panel"><div><p class="eyebrow">SERVICE STATUS</p><strong>Check official service or sign in</strong><small>No credentials, cookies, or response bodies are sent to Spartan Gaming.</small></div><button class="secondary" data-health type="button">Check again</button><button class="secondary auth-action" data-auth type="button" hidden>Open login dialog</button><span data-health-result role="status" aria-live="polite">Checking automatically…</span></div><div class="form"><label>Account label<input data-account value="${escapeHtml(profile.accountLabel)}" maxlength="80" placeholder="e.g. Personal account"></label><label>Region hint<select data-region><option value="automatic">Automatic</option><option value="north-america">North America</option><option value="europe">Europe</option><option value="asia-pacific">Asia Pacific</option><option value="latin-america">Latin America</option></select></label><label>Quality preference<select data-quality><option value="prefer-latency">Prefer latency</option><option value="balanced">Balanced</option><option value="prefer-quality">Prefer quality</option></select></label><label>Launch preference<select data-launch><option value="browser">Spartan browser</option><option value="official">Official provider launch</option><option value="native">Native app when available</option></select></label><label>Controller profile<select data-controller>${controllerOptions}</select><small>Overrides the workspace controller profile for this provider’s session surfaces.</small></label><label>Embed target <input data-embed-target value="${escapeHtml(profile.embedTarget)}" maxlength="128" placeholder="${escapeHtml(targetHint)}"><small>Optional, non-secret target used only for an official embedded player.</small></label><label class="check wide"><input data-fullscreen type="checkbox" ${profile.autoFullscreen ? 'checked' : ''}> Request fullscreen when this provider starts a session</label><label class="wide">Private notes<textarea data-notes maxlength="500" placeholder="Non-secret reminders for this provider">${escapeHtml(profile.notes)}</textarea></label></div><div class="save-row"><button class="secondary" data-clear>Clear profile</button><button class="primary" data-save>Save profile</button></div>`;
   editor.querySelector('[data-region]').value = profile.region;
   editor.querySelector('[data-quality]').value = profile.quality;
   editor.querySelector('[data-launch]').value = profile.launchMode;
   editor.querySelector('[data-controller]').value = profile.controllerProfile;
+  void runAvailabilityCheck(provider, editor.querySelector('[data-health-result]'));
 }
+async function runAvailabilityCheck(provider, output) {
+  const authButton = editor.querySelector('[data-auth]');
+  if (authButton) authButton.hidden = true;
+  output.textContent = 'Checking…';
+  try {
+    const health = await checkProviderReachability({ url: provider.url });
+    const authenticationRequired =
+      health.status === 'indeterminate' || [401, 403].includes(health.httpStatus);
+    if (authenticationRequired) {
+      if (authButton) authButton.hidden = false;
+      output.textContent = 'sign-in required · open the official login dialog to authenticate';
+    } else {
+      output.textContent = health.status + ' · ' + health.reason;
+    }
+  } catch (error) {
+    output.textContent = 'unavailable · ' + error.message;
+  }
+}
+
+async function openProviderLogin(provider, output) {
+  try {
+    await openProviderAuthentication({ url: provider.url });
+    output.textContent = 'login dialog opened · finish sign-in, then choose Check again';
+  } catch (error) {
+    output.textContent = 'login unavailable · ' + error.message;
+  }
+}
+
 function selectProvider(id) {
   selectedId = id;
   renderProviders();
@@ -110,14 +139,11 @@ editor.addEventListener('click', async (event) => {
   const provider = providers.find((item) => item.id === selectedId);
   if (!provider) return;
   if (event.target.closest('[data-health]')) {
-    const output = editor.querySelector('[data-health-result]');
-    output.textContent = 'Checking…';
-    try {
-      const health = await checkProviderReachability({ url: provider.url });
-      output.textContent = `${health.status} · ${health.reason}`;
-    } catch (error) {
-      output.textContent = `invalid · ${error.message}`;
-    }
+    void runAvailabilityCheck(provider, editor.querySelector('[data-health-result]'));
+    return;
+  }
+  if (event.target.closest('[data-auth]')) {
+    void openProviderLogin(provider, editor.querySelector('[data-health-result]'));
     return;
   }
   if (event.target.closest('[data-save]')) {

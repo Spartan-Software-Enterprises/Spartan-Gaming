@@ -32,6 +32,29 @@ function result(values) {
   return Object.freeze({ ...values });
 }
 
+export async function openProviderAuthentication({
+  url,
+  openProvider = globalThis.spartanElectron?.openProvider,
+  openExternal = globalThis.spartanElectron?.openExternal,
+  windowOpen = globalThis.open,
+} = {}) {
+  const target = normalizeProviderHealthTarget(url);
+  if (typeof openProvider === 'function') {
+    await openProvider(target, 'Sign in to provider', { autoLogin: true });
+    return Object.freeze({ mode: 'provider', url: target });
+  }
+  if (typeof openExternal === 'function') {
+    await openExternal(target);
+    return Object.freeze({ mode: 'electron', url: target });
+  }
+  if (typeof windowOpen === 'function') {
+    const opened = windowOpen(target, '_blank', 'noopener,noreferrer');
+    if (!opened) throw new Error('The official sign-in window was blocked');
+    return Object.freeze({ mode: 'browser', url: target });
+  }
+  throw new Error('No supported official sign-in surface is available');
+}
+
 export async function checkProviderReachability({
   url,
   fetchImpl = globalThis.fetch,
@@ -54,9 +77,9 @@ export async function checkProviderReachability({
     timer = setTimeout(() => controller?.abort(), timeout);
     const response = await fetchImpl(target, {
       method: 'HEAD',
-      mode: 'cors',
-      credentials: 'omit',
-      redirect: 'manual',
+      mode: 'no-cors',
+      credentials: 'include',
+      redirect: 'follow',
       cache: 'no-store',
       ...(controller ? { signal: controller.signal } : {}),
     });
@@ -66,7 +89,7 @@ export async function checkProviderReachability({
         status: 'indeterminate',
         url: target,
         latencyMs,
-        reason: 'provider response was opaque; CORS prevented a reliable status',
+        reason: 'provider response did not expose a readable status; sign-in may be required',
       });
     const status = Number(response?.status) || 0;
     if (status >= 200 && status < 400)
@@ -98,7 +121,7 @@ export async function checkProviderReachability({
       url: target,
       latencyMs,
       reason:
-        'provider could not be checked without credentials; verify the official service in a new tab',
+        'provider authentication or CORS prevented a reliable status; sign in through the official service',
     });
   } finally {
     if (timer) clearTimeout(timer);

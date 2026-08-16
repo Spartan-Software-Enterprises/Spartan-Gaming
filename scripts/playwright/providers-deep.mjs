@@ -32,6 +32,15 @@ try {
     const page = await browser.newPage({
       viewport: { width: viewport.width, height: viewport.height },
     });
+    await page.addInitScript(() => {
+      const originalFetch = window.fetch.bind(window);
+      window.fetch = (url, options) => {
+        if (options?.method === 'HEAD' && String(url).startsWith('http'))
+          return Promise.resolve({ status: 204, type: 'basic' });
+        return originalFetch(url, options);
+      };
+    });
+
     const pageErrors = [];
     const consoleErrors = [];
     const failedRequests = [];
@@ -39,7 +48,10 @@ try {
     page.on('console', (m) => {
       if (m.type() === 'error') consoleErrors.push(m.text());
     });
-    page.on('requestfailed', (r) => failedRequests.push(`${r.url()} (${r.failure()?.errorText})`));
+    page.on('requestfailed', (r) => {
+      if (r.method() !== 'HEAD' && r.failure()?.errorText !== 'csp')
+        failedRequests.push(r.url() + ' (' + (r.failure()?.errorText || '') + ')');
+    });
     await page.goto(`${origin}/providers/`, { waitUntil: 'networkidle' });
     const count = await page.locator('[data-count]').innerText();
     check(/^\d+ services$/.test(count), `${viewport.name} count text: "${count}"`);

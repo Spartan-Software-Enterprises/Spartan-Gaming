@@ -68,13 +68,7 @@ The dashboard applies the provider visibility and launch defaults from Settings 
 
 Each provider card now has a capability-aware **Details** surface before launch. It summarizes the selected mode, readiness reason, quality and region hints, controller profile, provider surfaces, capabilities, setup requirements, troubleshooting notes, blocking evidence, and the official destination. The details model is metadata-only and intentionally excludes credentials, tokens, cookies, and session endpoints.
 
-The provider manager’s **Check availability** action uses
-`src/frontend/providers/health.mjs` for a credential-free `HEAD` request. It
-strips query strings, omits cookies, requires HTTPS for remote targets, bounds
-the timeout, and reports CORS-indeterminate results separately from HTTP
-failures. A reachable response proves only that the official URL responded;
-it does not prove login, subscription, regional eligibility, API approval, or
-stream playback.
+The Provider Profiles surface automatically checks each selected provider’s official URL and renders a truthful state: reachable, unavailable, or sign-in required when the provider or CORS policy does not expose an authenticated status. Existing provider-session cookies are included only in the provider’s own request; Spartan never reads, stores, or handles passwords, tokens, or response bodies. When sign-in is required, the UI reveals an **Open login dialog** action. In Electron that action opens the approved provider surface through the persistent, profile-scoped provider session; in a browser it opens the official HTTPS sign-in page. After sign-in, the user returns to **Check again**. The flow is automatically exercised at desktop, landscape-phone, and mobile sizes, including reachable, unavailable, authentication-required, login handoff, blocked-login, layout, and console-error states. A reachable response proves only that the official URL responded; it does not prove subscription, regional eligibility, API approval, or stream playback.
 
 Provider accounts must remain isolated by profile. Provider tokens must never be stored in the game catalog or URL-history export.
 
