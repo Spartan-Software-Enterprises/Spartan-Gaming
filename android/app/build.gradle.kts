@@ -32,8 +32,8 @@ android {
         applicationId = "com.spartan.gaming"
         minSdk = 33
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.1.0-beta.10"
+        versionCode = 3
+        versionName = "0.1.0-beta.11"
     }
 
     flavorDimensions += "device"
