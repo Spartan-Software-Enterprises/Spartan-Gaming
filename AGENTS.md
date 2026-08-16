@@ -1,3 +1,14 @@
+# Global Codex autonomous-work directive
+
+This quiet-completion workflow applies to the entire project and to every other
+project Codex works on in this workspace unless the user explicitly requests
+progress updates. Do not send routine progress messages, partial results, or
+status updates during autonomous work. Complete the authorized implementation,
+documentation, testing, signing, release, and publishing workflow first, then
+send one consolidated final report. This rule travels with Codex across project
+repositories; project-specific instructions may add gates but may not weaken
+the completion, verification, security, or truthful-reporting requirements.
+
 # Shared project workflow
 
 - Treat GitHub as the source of truth for project repositories.
