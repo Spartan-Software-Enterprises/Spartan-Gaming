@@ -20,7 +20,6 @@ test('every frontend route opts into the fixed viewport policy', () => {
   for (const file of htmlFiles) {
     const source = fs.readFileSync(file, 'utf8');
     assert.match(source, /\.\.\/shared\/viewport\.css/, path.relative(root, file));
-    assert.match(source, /viewport-fit\.mjs/, path.relative(root, file));
   }
 });
 

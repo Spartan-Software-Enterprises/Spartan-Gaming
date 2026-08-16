@@ -267,7 +267,7 @@ workflow.
 
 ## Viewport policy
 
-All maintained frontend routes are fixed to the device viewport and have no vertical scrolling. Long browsing surfaces use horizontal rails with snap, focus, arrow, and gamepad navigation. Dialogs and detail views stay contained within the viewport. Android checks GitHub on every foreground resume; semantic beta identifiers are compared numerically so beta.13 detects beta.14 and later releases.
+All maintained frontend routes are fixed to the device viewport and have no vertical scrolling. Long browsing surfaces use horizontal rails with snap, focus, arrow, and gamepad navigation. On narrow screens, provider browsing and editing are separate snap pages in one horizontal workspace so selection always has a visible result without page scrolling. Dashboard filters and shelves use compact horizontal rails to preserve the first-viewport action. Dialogs and detail views stay contained within the viewport. Android checks GitHub on every foreground resume; semantic beta identifiers are compared numerically so beta.13 detects beta.14 and later releases.
 
 ## Acceptance criteria
 

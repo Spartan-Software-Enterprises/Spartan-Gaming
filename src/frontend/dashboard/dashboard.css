@@ -519,12 +519,17 @@ h2 {
   .sidebar {
     width: 100%;
     height: auto;
-    padding: 17px 17px 0;
+    padding: 8px 17px 0;
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
   .brand {
-    margin-bottom: 17px;
+    margin-bottom: 5px;
+  }
+  .brand-mark {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
   }
   .main-nav {
     display: flex;
@@ -534,7 +539,7 @@ h2 {
   }
   .main-nav .nav-item {
     justify-content: center;
-    padding: 10px 11px;
+    padding: 7px 11px;
     white-space: nowrap;
     font-size: 12px;
   }
@@ -545,7 +550,7 @@ h2 {
     display: none;
   }
   .content {
-    padding: 25px 17px 45px;
+    padding: 10px 17px 12px;
   }
   .topbar {
     align-items: flex-start;
@@ -558,23 +563,23 @@ h2 {
     white-space: nowrap;
   }
   .hero {
-    min-height: 260px;
-    margin: 25px 0 30px;
-    padding: 27px 24px;
+    min-height: 148px;
+    margin: 10px 0 12px;
+    padding: 14px 17px;
     align-items: flex-start;
   }
   .hero h2 {
-    font-size: 30px;
+    font-size: 22px;
   }
   .hero-art {
     position: absolute;
-    right: 6px;
-    bottom: 47px;
-    transform: scale(0.65) rotate(-10deg);
+    right: -9px;
+    bottom: 29px;
+    transform: scale(0.48) rotate(-10deg);
   }
   .latency {
-    right: 24px;
-    bottom: 21px;
+    right: 17px;
+    bottom: 12px;
   }
   .toolbar {
     display: block;
@@ -611,7 +616,50 @@ h2 {
     flex-basis: min(285px, 82vw);
   }
   .card {
-    min-height: 158px;
+    min-height: 132px;
+    padding: 14px;
+  }
+  .hero-copy {
+    max-width: 220px;
+    margin: 5px 0 9px;
+    font-size: 12px;
+  }
+  .primary-button {
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+  .latency strong {
+    font-size: 21px;
+  }
+  .section-heading h2 {
+    font-size: 20px;
+  }
+  .filters,
+  .discovery-filters {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 7px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .filters::-webkit-scrollbar,
+  .discovery-filters::-webkit-scrollbar {
+    display: none;
+  }
+  .discovery-filters label {
+    flex: 0 0 145px;
+  }
+  .discovery-filters select {
+    margin-top: 3px;
+  }
+  .results-shelf {
+    margin-top: 8px;
+  }
+  .shelf-heading {
+    margin-bottom: 7px;
+  }
+  .shelf-heading h3 {
+    font-size: 17px;
   }
 }
 .status-pill[data-status='loading'] i,

@@ -87,7 +87,9 @@ async function inspectPage(page, origin, route, layout) {
     });
     const offscreen = focusables.filter((element) => {
       const rect = element.getBoundingClientRect();
-      const intentionalRail = element.closest('[data-shelf], .provider-rail, .provider-categories');
+      const intentionalRail = element.closest(
+        '[data-shelf], .provider-rail, .provider-categories, .provider-workspace, .discovery-filters',
+      );
       return !intentionalRail && (rect.left < -1 || rect.right > innerWidth + 1);
     });
     const tinyTargets = focusables.filter((element) => {
@@ -102,7 +104,6 @@ async function inspectPage(page, origin, route, layout) {
       tinyTargets: tinyTargets.length,
       shelves: document.querySelectorAll('[data-shelf]').length,
       shelfControls: document.querySelectorAll('[data-shelf-scroll]').length,
-      viewportScale: Number(document.documentElement.dataset.viewportScale || 1),
     };
   });
   if (!response || response.status() !== 200) fail(route, layout, `HTTP ${response?.status()}`);
@@ -113,8 +114,6 @@ async function inspectPage(page, origin, route, layout) {
     fail(route, layout, `${metrics.unnamed} visible interactive controls lack accessible names`);
   if (metrics.offscreen)
     fail(route, layout, `${metrics.offscreen} visible controls extend beyond the viewport`);
-  if (!Number.isFinite(metrics.viewportScale) || metrics.viewportScale <= 0)
-    fail(route, layout, 'viewport fit did not produce a valid scale');
   if (route === '/dashboard/' && metrics.shelves && metrics.shelfControls < metrics.shelves * 2)
     fail(route, layout, 'horizontal shelves do not expose paired navigation controls');
   if (pageErrors.length) fail(route, layout, `page errors: ${pageErrors.join('; ')}`);

@@ -21,6 +21,7 @@ const controllerStore = createControllerProfileStore({ storage: profileStorage }
 const communityCatalog = createCommunityProviderCatalogStore();
 const providerContainer = document.querySelector('[data-providers]');
 const editor = document.querySelector('[data-editor]');
+const providerWorkspace = document.querySelector('.provider-workspace');
 const notice = document.querySelector('[data-notice]');
 let providers = [];
 let selectedId = null;
@@ -103,7 +104,7 @@ function renderEditor() {
         `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`,
     )
     .join('');
-  editor.innerHTML = `<div class="editor-title"><p class="eyebrow">${escapeHtml(provider.kind)}</p><h2>${escapeHtml(provider.name)}</h2><p>${escapeHtml(provider.url)} · ${escapeHtml(provider.supportLevel)} support</p></div><div class="health-check panel"><div><p class="eyebrow">SERVICE STATUS</p><strong>Check official service or sign in</strong><small>No credentials, cookies, or response bodies are sent to Spartan Gaming.</small></div><button class="secondary" data-health type="button">Check again</button><button class="secondary auth-action" data-auth type="button" hidden>Open login dialog</button><span data-health-result role="status" aria-live="polite">Checking automatically…</span></div><div class="form"><label>Account label<input data-account value="${escapeHtml(profile.accountLabel)}" maxlength="80" placeholder="e.g. Personal account"></label><label>Region hint<select data-region><option value="automatic">Automatic</option><option value="north-america">North America</option><option value="europe">Europe</option><option value="asia-pacific">Asia Pacific</option><option value="latin-america">Latin America</option></select></label><label>Quality preference<select data-quality><option value="prefer-latency">Prefer latency</option><option value="balanced">Balanced</option><option value="prefer-quality">Prefer quality</option></select></label><label>Launch preference<select data-launch><option value="browser">Spartan browser</option><option value="official">Official provider launch</option><option value="native">Native app when available</option></select></label><label>Controller profile<select data-controller>${controllerOptions}</select><small>Overrides the workspace controller profile for this provider’s session surfaces.</small></label><label>Embed target <input data-embed-target value="${escapeHtml(profile.embedTarget)}" maxlength="128" placeholder="${escapeHtml(targetHint)}"><small>Optional, non-secret target used only for an official embedded player.</small></label><label class="check wide"><input data-fullscreen type="checkbox" ${profile.autoFullscreen ? 'checked' : ''}> Request fullscreen when this provider starts a session</label><label class="wide">Private notes<textarea data-notes maxlength="500" placeholder="Non-secret reminders for this provider">${escapeHtml(profile.notes)}</textarea></label></div><div class="save-row"><button class="secondary" data-clear>Clear profile</button><button class="primary" data-save>Save profile</button></div>`;
+  editor.innerHTML = `<button class="editor-back" data-provider-back type="button">← Providers</button><div class="editor-title"><p class="eyebrow">${escapeHtml(provider.kind)}</p><h2>${escapeHtml(provider.name)}</h2><p>${escapeHtml(provider.url)} · ${escapeHtml(provider.supportLevel)} support</p></div><div class="health-check panel"><div><p class="eyebrow">SERVICE STATUS</p><strong>Check official service or sign in</strong><small>No credentials, cookies, or response bodies are sent to Spartan Gaming.</small></div><button class="secondary" data-health type="button">Check again</button><button class="secondary auth-action" data-auth type="button" hidden>Open login dialog</button><span data-health-result role="status" aria-live="polite">Checking automatically…</span></div><div class="form"><label>Account label<input data-account value="${escapeHtml(profile.accountLabel)}" maxlength="80" placeholder="e.g. Personal account"></label><label>Region hint<select data-region><option value="automatic">Automatic</option><option value="north-america">North America</option><option value="europe">Europe</option><option value="asia-pacific">Asia Pacific</option><option value="latin-america">Latin America</option></select></label><label>Quality preference<select data-quality><option value="prefer-latency">Prefer latency</option><option value="balanced">Balanced</option><option value="prefer-quality">Prefer quality</option></select></label><label>Launch preference<select data-launch><option value="browser">Spartan browser</option><option value="official">Official provider launch</option><option value="native">Native app when available</option></select></label><label>Controller profile<select data-controller>${controllerOptions}</select><small>Overrides the workspace controller profile for this provider’s session surfaces.</small></label><label>Embed target <input data-embed-target value="${escapeHtml(profile.embedTarget)}" maxlength="128" placeholder="${escapeHtml(targetHint)}"><small>Optional, non-secret target used only for an official embedded player.</small></label><label class="check wide"><input data-fullscreen type="checkbox" ${profile.autoFullscreen ? 'checked' : ''}> Request fullscreen when this provider starts a session</label><label class="wide">Private notes<textarea data-notes maxlength="500" placeholder="Non-secret reminders for this provider">${escapeHtml(profile.notes)}</textarea></label></div><div class="save-row"><button class="secondary" data-clear>Clear profile</button><button class="primary" data-save>Save profile</button></div>`;
   editor.querySelector('[data-region]').value = profile.region;
   editor.querySelector('[data-quality]').value = profile.quality;
   editor.querySelector('[data-launch]').value = profile.launchMode;
@@ -142,6 +143,9 @@ function selectProvider(id) {
   selectedId = id;
   renderProviders();
   renderEditor();
+  if (innerWidth <= 720) {
+    providerWorkspace.scrollTo({ left: editor.offsetLeft, behavior: 'smooth' });
+  }
 }
 providerContainer.addEventListener('click', (event) => {
   const button = event.target.closest('[data-provider]');
@@ -171,6 +175,10 @@ document.querySelectorAll('[data-scroll]').forEach((button) => {
   });
 });
 editor.addEventListener('click', async (event) => {
+  if (event.target.closest('[data-provider-back]')) {
+    providerWorkspace.scrollTo({ left: 0, behavior: 'smooth' });
+    return;
+  }
   const provider = providers.find((item) => item.id === selectedId);
   if (!provider) return;
   if (event.target.closest('[data-health]')) {
