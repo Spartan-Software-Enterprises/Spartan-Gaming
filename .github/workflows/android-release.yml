@@ -83,6 +83,7 @@ jobs:
         run: |
           set -euo pipefail
           cd android
+          mkdir -p app/build/outputs/apk/release
           profiles=(phone tablet foldable androidTv fireTv)
           for profile in "${profiles[@]}"; do
             task="${profile^}"
