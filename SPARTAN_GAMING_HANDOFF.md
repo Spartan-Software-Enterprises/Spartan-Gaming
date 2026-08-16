@@ -8,9 +8,9 @@ Updated: 2026-08-16
 - KVM checkout: `/home/ubuntu/Spartan-Gaming`
 - Branch: `main`; HEAD: `468e171`
 - Working tree: clean and synchronized with `origin/main`
-- Latest release: `v0.1.0-beta.8` (not yet published; signed APK verified locally)
+- Latest release: `v0.1.0-beta.9` (not yet published; signed APK verified locally)
 
-## Verification evidence (beta.8)
+## Verification evidence (beta.9)
 
 - `npm test`: 879 tests; 873 passed, 1 failed (test env issue), 5 skipped
 - `npm run electron:test`: 57 passed, 0 failed.

@@ -4,6 +4,7 @@ const ROM_EXTENSIONS = new Set([
   'nes',
   'smc',
   'sfc',
+  'sf',
   'gb',
   'gbc',
   'gba',
