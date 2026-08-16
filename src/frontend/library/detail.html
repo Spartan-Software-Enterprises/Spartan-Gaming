@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title data-page-title>Spartan Gaming — Game Detail</title>
+    <link rel="stylesheet" href="./library.css" />
+  </head>
+  <body>
+    <main class="detail-shell">
+      <header>
+        <a class="back" href="../library/index.html">← Library</a>
+      </header>
+
+      <section class="detail-hero">
+        <img data-hero-cover class="hero-cover" alt="" />
+        <div class="hero-overlay">
+          <h1 data-hero-title></h1>
+          <p class="hero-meta" data-hero-meta></p>
+          <div class="hero-actions">
+            <button class="primary" data-hero-launch>Launch Game</button>
+            <button class="secondary" data-hero-favorite>★ Favorite</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="detail-tabs">
+        <nav data-tabs>
+          <button class="active" data-tab="overview">Overview</button>
+          <button data-tab="screenshots">Screenshots</button>
+          <button data-tab="videos">Videos</button>
+          <button data-tab="achievements">Achievements</button>
+          <button data-tab="metadata">Metadata</button>
+        </nav>
+      </section>
+
+      <section class="detail-content">
+        <div data-tab-content="overview" class="tab-panel active">
+          <div class="overview-grid">
+            <div class="overview-main">
+              <section>
+                <h2>Description</h2>
+                <p data-description></p>
+              </section>
+              <section>
+                <h2>Details</h2>
+                <dl data-details></dl>
+              </section>
+              <section>
+                <h2>Platforms</h2>
+                <div data-platforms class="tag-list"></div>
+              </section>
+              <section>
+                <h2>Genres</h2>
+                <div data-genres class="tag-list"></div>
+              </section>
+            </div>
+            <aside class="overview-sidebar">
+              <section>
+                <h2>Metadata Sources</h2>
+                <div data-sources></div>
+              </section>
+              <section>
+                <h2>Links</h2>
+                <div data-links></div>
+              </section>
+            </aside>
+          </div>
+        </div>
+
+        <div data-tab-content="screenshots" class="tab-panel">
+          <div data-screenshots class="screenshot-grid"></div>
+        </div>
+
+        <div data-tab-content="videos" class="tab-panel">
+          <div data-videos class="video-grid"></div>
+        </div>
+
+        <div data-tab-content="achievements" class="tab-panel">
+          <div data-achievements class="achievement-list"></div>
+        </div>
+
+        <div data-tab-content="metadata" class="tab-panel">
+          <div data-metadata-view class="metadata-view"></div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./game-detail.js"></script>
+  </body>
+</html>

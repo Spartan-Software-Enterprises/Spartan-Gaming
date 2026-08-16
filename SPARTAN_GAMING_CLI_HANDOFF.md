@@ -1,33 +1,47 @@
-# Spartan Gaming CLI/OpenCode Handoff
+# Spartan Gaming CLI Handoff
 
 Updated: 2026-08-16
 
-## Source of truth
+## Canonical state
 
-The active branch is `main`; verify the current commit with `git log -1 --oneline`. The latest prerelease is `v0.1.0-beta.7`. The canonical checkout is `/home/ubuntu/Spartan-Gaming` on the KVM. Current HEAD is `dc97ece`.
+- Repository: `Spartan-Software-Enterprises/Spartan-Gaming`
+- KVM checkout: `/home/ubuntu/Spartan-Gaming`
+- Branch: `main`; HEAD: `6b2db4b`
+- Working tree: clean and synchronized with `origin/main`
+- Latest release: `v0.1.0-beta.8` (not yet published; signed APK verified locally)
 
-OpenCode configuration is `/home/userland/.config/opencode/opencode.jsonc`, which loads `/home/userland/AGENTS.md`. Follow that file before repository actions.
+## Verification evidence (beta.8)
 
-## Authorized connection paths
+- `npm test`: 863 tests; 858 passed, 5 skipped, 0 failed.
+- `npm run electron:test`: 57 passed, 0 failed.
+- `npm run test:android-shell`: 5 passed.
+- `npm run format:check`: passed (Prettier + ktfmt).
+- `npm run check`: passed.
+- `npm run playwright:smoke`: 22 viewports pass (11 routes × desktop/mobile); 0 page errors, 0 console errors, 0 horizontal overflow.
+- `scripts/playwright/providers-deep.mjs`: full provider flow pass at desktop + mobile (28 providers render, editor populates, save/persist, cross-route, no errors).
+- WebView compatibility fixes: `Object.hasOwn` → `hasOwnProperty.call`, `replaceAll` → regex global (9 files).
+- Android 16 (API 36, Chrome 133 WebView): app launches, 28 providers render, editor opens, no errors.
+- Android 13 (API 33, Chrome 101 WebView): app launches, 28 providers render, editor opens, no errors.
+- Signed APK built: minSdk 33, targetSdk 36, catalogs as files, apksigner v2 verified (one signer, SHA-256 2b811bac...).
 
-- KVM: `ssh kvm-spartancode` using the existing `SpartanDev` SSH agent.
-- GitHub: configured SSH remote alias plus authenticated `gh` session.
-- Commit/tag signing: existing `Codex` GPG configuration.
-- Drive exchange: authenticated `google-drive` rclone remote with `Inbox/`, `Outbox/`, `Projects/`, and `Backups/`.
-- Android SDK: `/home/ubuntu/android-sdk` on KVM.
+## Android compatibility
 
-These paths use inherited operator authentication. Never put tokens, passwords, private keys, keystore bytes, cookies, or raw credential stores into OpenCode configuration, repository files, logs, or handoff documents.
+- minSdk 33 (Android 13 "Tiramisu")
+- targetSdk 36 (Android 16 "Baklava")
+- compileSdk 36
+- Tested on emulators: API 33 (Chrome 101 WebView), API 36 (Chrome 133 WebView)
+- WebView API compatibility: Chrome 101+ supports `Object.hasOwn` and `String.replaceAll`; defensive fixes applied for robustness.
 
-## Validation gate
+## Release workflow (when authorized)
 
-Run `npm run format:check`, `npm run check`, `npm test`, `npm run electron:test`, `npm run test:android-shell`, and `npm run playwright:smoke` from the KVM checkout.
+1. Run `cd /home/ubuntu/Spartan-Gaming && git status -sb`.
+2. Confirm target version, clean worktree, GitHub state.
+3. Run `npm run format:check`, `npm run check`, and `npm test`.
+4. Build Android with protected signing environment.
+5. Verify with `apksigner`, generate basename-only `SHA256SUMS.txt`, download-verify uploaded assets.
+6. Sign commits/tags with Codex and push intentionally.
+7. Publish GitHub prerelease with signed APK and `SHA256SUMS.txt`.
 
-Kotlin formatting uses `npm run format:kotlin` and `npm run format:kotlin:check`. `npm run format` is the combined write command: Prettier followed by ktfmt. The Prettier Kotlin plugin was tested and rejected because it failed to parse the project sources.
+## External gates
 
-## Release procedure
-
-Only release when explicitly requested. Bump `package.json`, `package-lock.json`, and `android/app/build.gradle.kts`; run all gates; build with protected signing environment variables; verify with `apksigner`; create a basename-only checksum; sign and push commit/tag; upload assets; download-verify the GitHub release; and leave the tree clean.
-
-## Current evidence
-
-863 repository tests: 858 passed, 5 skipped, 0 failed (added contract coverage for the voice/session/adapter/host modules and wired noise-suppression profiles through settings, preferences, and the browser host mic path). Electron tests: 57 passed. Android shell tests: 5 passed. Android signed build and v2 APK signature: passed. Playwright smoke: 11 routes at desktop/mobile, hardened to assert provider rendering, page errors, console errors, and JSON/type error markers. Supplemental UI matrix: 14 routes at desktop/mobile, 28 screenshots, zero browser errors and zero horizontal overflow. Beta.7 tag signature and release checksum: verified.
+Software and repository checks pass. Live provider authentication, real streaming accounts, physical-device interaction, and production service credentials require operator-controlled environments and were not fabricated by local tests.

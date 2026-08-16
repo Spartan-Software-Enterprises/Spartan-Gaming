@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Spartan Gaming — Game Library</title>
+    <link rel="stylesheet" href="./library.css" />
+  </head>
+  <body>
+    <main class="library-shell">
+      <header>
+        <a class="brand" href="../dashboard/index.html"
+          ><span class="mark">S</span><span>SPARTAN <small>GAMING</small></span></a
+        ><a class="back" href="../settings/index.html">Settings</a>
+      </header>
+
+      <section class="heading">
+        <p class="eyebrow">GAME LIBRARY</p>
+        <h1>Your collection</h1>
+        <p>Browse, organize, and launch your games</p>
+      </section>
+
+      <section class="library-toolbar panel">
+        <div class="toolbar-left">
+          <input type="search" class="search" placeholder="Search games…" data-search />
+          <select data-filter-platform>
+            <option value="">All Platforms</option>
+          </select>
+          <select data-filter-genre>
+            <option value="">All Genres</option>
+          </select>
+          <select data-sort>
+            <option value="title">Title (A–Z)</option>
+            <option value="added">Recently Added</option>
+            <option value="updated">Recently Updated</option>
+            <option value="playtime">Playtime</option>
+            <option value="rating">Rating</option>
+          </select>
+        </div>
+        <div class="toolbar-right">
+          <button class="secondary" data-view-grid>Grid</button>
+          <button class="secondary" data-view-list>List</button>
+          <button class="primary" data-add-game>＋ Add Game</button>
+        </div>
+      </section>
+
+      <section class="library-workspace">
+        <aside class="library-sidebar panel">
+          <div class="panel-head">
+            <h2>Collections</h2>
+            <button class="icon-only" data-new-collection>＋</button>
+          </div>
+          <div data-collections class="collection-list">
+            <div class="collection-item active" data-collection="all">
+              <span>All Games</span>
+              <span class="count" data-count-all>0</span>
+            </div>
+            <div class="collection-item" data-collection="favorites">
+              <span>Favorites</span>
+              <span class="count" data-count-fav>0</span>
+            </div>
+            <div class="collection-item" data-collection="recent">
+              <span>Recently Added</span>
+              <span class="count" data-count-recent>0</span>
+            </div>
+            <div class="collection-item" data-collection="no-meta">
+              <span>Missing Metadata</span>
+              <span class="count" data-count-nometa>0</span>
+            </div>
+            <div class="collection-divider"></div>
+            <div data-custom-collections></div>
+          </div>
+        </aside>
+
+        <section class="library-main panel">
+          <div data-game-grid class="game-grid loading">
+            <p class="empty">No games found. Add a library folder in Settings.</p>
+          </div>
+          <div data-pagination class="pagination hidden">
+            <button data-page-prev>Previous</button>
+            <span data-page-info></span>
+            <button data-page-next>Next</button>
+          </div>
+        </section>
+
+        <section class="library-detail panel" data-detail hidden>
+          <div class="detail-header">
+            <button class="back" data-detail-back>←</button>
+            <h2 data-detail-title></h2>
+            <div class="detail-meta" data-detail-meta></div>
+          </div>
+          <div class="detail-content">
+            <div class="detail-left">
+              <img data-detail-cover class="cover" alt="" />
+              <div class="detail-actions">
+                <button class="primary" data-detail-launch>Launch</button>
+                <button class="secondary" data-detail-favorite>★ Favorite</button>
+                <button class="secondary" data-detail-edit>Edit</button>
+              </div>
+            </div>
+            <div class="detail-right">
+              <section class="detail-section">
+                <h3>Description</h3>
+                <p data-detail-description></p>
+              </section>
+              <section class="detail-section">
+                <h3>Details</h3>
+                <dl data-detail-details></dl>
+              </section>
+              <section class="detail-section">
+                <h3>Screenshots</h3>
+                <div data-detail-screenshots class="screenshot-grid"></div>
+              </section>
+              <section class="detail-section">
+                <h3>Metadata Sources</h3>
+                <div data-detail-sources></div>
+              </section>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <template id="game-card-grid">
+      <article class="game-card" data-game-id="">
+        <img class="cover" data-cover alt="" loading="lazy" />
+        <div class="card-info">
+          <h3 class="title" data-title></h3>
+          <p class="meta" data-meta></p>
+          <div class="tags" data-tags></div>
+        </div>
+        <button class="favorite" data-favorite>★</button>
+      </article>
+    </template>
+
+    <template id="game-card-list">
+      <div class="game-row" data-game-id="">
+        <img class="cover-small" data-cover alt="" loading="lazy" />
+        <div class="row-info">
+          <h3 class="title" data-title></h3>
+          <p class="meta" data-meta></p>
+        </div>
+        <div class="row-actions">
+          <button class="icon-only" data-favorite>★</button>
+          <button class="secondary" data-launch>Launch</button>
+        </div>
+      </div>
+    </template>
+
+    <script type="module" src="./library.js"></script>
+  </body>
+</html>

@@ -1,5 +1,5 @@
 const ROUTES = Object.freeze({
-  library: '../dashboard/index.html',
+  library: '../library/index.html',
   providers: '../providers/index.html',
   emulation: '../emulation/index.html',
   watch: '../watch/index.html',

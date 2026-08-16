@@ -195,17 +195,25 @@ async function probeRoute(page, route) {
   }
   if (route === '/adapters/') {
     const manifestList = page.locator('[data-manifest-list]');
-    const coreList = page.locator('[data-core-list]');
     const manifestText = await manifestList.innerText();
-    const coreText = await coreList.innerText();
-    if (manifestText.trim().length < 10 && coreText.trim().length < 10)
-      return { ok: false, message: 'adapters rendered no manifests or cores' };
+    if (manifestText.trim().length < 10)
+      return { ok: false, message: 'adapters rendered no manifests' };
     return { ok: true };
   }
   if (route === '/emulation/') {
-    const coreList = page.locator('[data-core-list]');
-    const cores = await coreList.locator('.core-card, article, button').count();
-    const countText = await page.locator('[data-core-count]').innerText();
+    await page
+      .waitForFunction(
+        () => !document.querySelector('[data-core-list]')?.textContent?.includes('Loading'),
+        { timeout: 25000 },
+      )
+      .catch(() => null);
+    const cores = await page
+      .locator('[data-core-list] .core-card, [data-core-list] article, [data-core-list] button')
+      .count();
+    const countText = await page
+      .locator('[data-core-count]')
+      .innerText()
+      .catch(() => '');
     if (!/runtimes/.test(countText) && cores === 0)
       return { ok: false, message: 'emulation rendered no cores' };
     return { ok: true };
