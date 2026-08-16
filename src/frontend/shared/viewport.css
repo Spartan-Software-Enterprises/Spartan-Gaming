@@ -1,0 +1,36 @@
+/* Every Spartan surface is a viewport, never a vertically scrolling document. */
+html,
+body {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden !important;
+}
+body {
+  max-height: 100dvh;
+  overscroll-behavior: none;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  overflow-y: hidden !important;
+}
+[data-shelf],
+.rail-track,
+.provider-rail,
+.provider-categories,
+.category-rail {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+}
+[data-shelf]::-webkit-scrollbar,
+.rail-track::-webkit-scrollbar,
+.provider-rail::-webkit-scrollbar,
+.provider-categories::-webkit-scrollbar,
+.category-rail::-webkit-scrollbar {
+  display: none;
+}

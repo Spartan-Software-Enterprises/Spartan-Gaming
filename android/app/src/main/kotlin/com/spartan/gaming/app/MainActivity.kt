@@ -62,11 +62,11 @@ class MainActivity : Activity() {
         webView.addJavascriptInterface(nativeBridge, "SpartanAndroid")
         setContentView(webView)
         webView.loadUrl(FRONTEND_URL)
-        GithubReleaseUpdate.check(this)
     }
 
     override fun onResume() {
         super.onResume()
+        GithubReleaseUpdate.check(this)
         // Game Mode is query-only and is refreshed by the native boundary.
         AndroidGameModeBridge.queryOnResume(this, null)
     }

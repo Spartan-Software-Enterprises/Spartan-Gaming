@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import java.net.HttpURLConnection
 import java.net.URL
 import org.json.JSONArray
@@ -13,19 +14,27 @@ import org.json.JSONArray
 object GithubReleaseUpdate {
     private const val RELEASES_URL =
         "https://api.github.com/repos/Spartan-Software-Enterprises/Spartan-Gaming/releases?per_page=20"
+    @Volatile private var checkInFlight = false
+    private const val TAG = "SpartanReleaseUpdate"
 
     fun check(activity: MainActivity) {
+        if (checkInFlight) return
+        checkInFlight = true
         Thread {
-            val update = runCatching { findNewerRelease(activity) }.getOrNull() ?: return@Thread
+            val result = runCatching { findNewerRelease(activity) }
+            checkInFlight = false
+            val update = result.getOrNull()
+            result.exceptionOrNull()?.let { Log.w(TAG, "GitHub update check failed", it) }
+            if (update == null) return@Thread
             Handler(Looper.getMainLooper()).post {
                 if (activity.isFinishing || activity.isDestroyed) return@post
                 AlertDialog.Builder(activity)
-                    .setTitle("Update required")
+                    .setTitle("Update Required")
                     .setMessage(
                         "Spartan Gaming ${update.name} is available. Update from the official GitHub release before continuing."
                     )
                     .setCancelable(false)
-                    .setPositiveButton("Download update") { _, _ ->
+                    .setPositiveButton("Download Update") { _, _ ->
                         activity.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(update.url)))
                         activity.finishAffinity()
                     }
@@ -55,7 +64,7 @@ object GithubReleaseUpdate {
                     val item = releases.optJSONObject(index) ?: return@mapNotNull null
                     if (
                         item.optBoolean("draft") ||
-                            item.optBoolean("prerelease") != current.preRelease
+                            item.optBoolean("prerelease") != current.preRelease.isNotEmpty()
                     )
                         return@mapNotNull null
                     val version = parseVersion(item.optString("tag_name")) ?: return@mapNotNull null
@@ -81,7 +90,7 @@ object GithubReleaseUpdate {
             match.groupValues[1].toInt(),
             match.groupValues[2].toInt(),
             match.groupValues[3].toInt(),
-            match.groupValues[4].isNotEmpty(),
+            match.groupValues[4],
         )
     }
 
@@ -89,17 +98,30 @@ object GithubReleaseUpdate {
         val major: Int,
         val minor: Int,
         val patch: Int,
-        val preRelease: Boolean,
+        val preRelease: String,
     ) : Comparable<Version> {
-        override fun compareTo(other: Version): Int =
-            compareValuesBy(
-                this,
-                other,
-                Version::major,
-                Version::minor,
-                Version::patch,
-                Version::preRelease,
-            )
+        override fun compareTo(other: Version): Int {
+            val core = compareValuesBy(this, other, Version::major, Version::minor, Version::patch)
+            if (core != 0) return core
+            if (preRelease.isEmpty() != other.preRelease.isEmpty()) {
+                return if (preRelease.isEmpty()) 1 else -1
+            }
+            val leftParts = preRelease.split('.')
+            val rightParts = other.preRelease.split('.')
+            for (index in 0 until maxOf(leftParts.size, rightParts.size)) {
+                val left = leftParts.getOrNull(index) ?: return -1
+                val right = rightParts.getOrNull(index) ?: return 1
+                val leftNumber = left.toIntOrNull()
+                val rightNumber = right.toIntOrNull()
+                if (leftNumber != null && rightNumber != null && leftNumber != rightNumber) {
+                    return leftNumber.compareTo(rightNumber)
+                }
+                if (leftNumber != null && rightNumber == null) return -1
+                if (leftNumber == null && rightNumber != null) return 1
+                if (left != right) return left.compareTo(right)
+            }
+            return 0
+        }
     }
 
     private data class Release(val name: String, val url: String, val version: Version)

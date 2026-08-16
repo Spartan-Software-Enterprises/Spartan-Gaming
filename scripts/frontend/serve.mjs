@@ -102,6 +102,7 @@ export function createAssetResolver({
         'startup',
         'transport',
         'workspaces',
+        'shared',
         'multiplayer',
         'watch',
       ].includes(firstSegment)

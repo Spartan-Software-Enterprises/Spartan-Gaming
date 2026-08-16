@@ -265,6 +265,10 @@ workflow.
 - Keep signing, physical-device, store, notarization, and unsupported-platform
   gates fail-closed.
 
+## Viewport policy
+
+All maintained frontend routes are fixed to the device viewport and have no vertical scrolling. Long browsing surfaces use horizontal rails with snap, focus, arrow, and gamepad navigation. Dialogs and detail views stay contained within the viewport. Android checks GitHub on every foreground resume; semantic beta identifiers are compared numerically so beta.13 detects beta.14 and later releases.
+
 ## Acceptance criteria
 
 - The first viewport has an obvious next action on every maintained route.

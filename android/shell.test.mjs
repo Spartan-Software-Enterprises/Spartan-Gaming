@@ -54,6 +54,9 @@ test('Android shell packages the shared frontend through a safe asset origin', (
     /api\.github\.com\/repos\/Spartan-Software-Enterprises\/Spartan-Gaming\/releases/,
   );
   assert.match(updater, /setCancelable\(false\)/);
+  assert.match(updater, /preRelease: String/);
+  assert.match(updater, /compareIdentifiers|preRelease.split/);
+  assert.match(activity, /onResume/);
   assert.match(manifest, /android:usesCleartextTraffic="false"/);
   assert.match(manifest, /android\.permission\.INTERNET/);
 });
