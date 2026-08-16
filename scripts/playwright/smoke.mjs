@@ -31,23 +31,86 @@ function playwrightModule() {
   }
 }
 
+const ERROR_MARKERS = Object.freeze([
+  'Unexpected end of JSON input',
+  'is not valid JSON',
+  'Failed to execute',
+  'TypeError',
+  'ReferenceError',
+  'SyntaxError',
+]);
+
+function assertNoErrorMarkers(viewport, route, text) {
+  for (const marker of ERROR_MARKERS) {
+    if (text.includes(marker))
+      throw new Error(`${viewport.name} ${route} shows error marker "${marker}"`);
+  }
+}
+
+async function checkProvidersPage(page, origin, viewport) {
+  const count = await page.locator('[data-count]').innerText();
+  if (!/^\d+ services$/.test(count))
+    throw new Error(
+      `${viewport.name} /providers/ did not render a provider count (got "${count}")`,
+    );
+  const providerItems = await page.locator('[data-provider]').count();
+  if (providerItems < 20)
+    throw new Error(`${viewport.name} /providers/ rendered only ${providerItems} provider entries`);
+  const editor = page.locator('[data-editor]');
+  const firstProvider = page.locator('[data-provider]').first();
+  const selectedName = (await firstProvider.locator('strong').innerText()).trim();
+  await firstProvider.click();
+  await page.waitForTimeout(100);
+  const editorText = await editor.innerText();
+  if (!editorText.includes(selectedName))
+    throw new Error(`${viewport.name} /providers/ editor did not populate "${selectedName}"`);
+}
+
 async function checkRoute(page, origin, viewport, route) {
-  const response = await page.goto(`${origin}${route}`, { waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(250);
-  const body = await page.locator('body').innerText();
-  const horizontalOverflow = await page.evaluate(
-    () => document.documentElement.scrollWidth > window.innerWidth,
-  );
-  if (!response || response.status() !== 200)
-    throw new Error(`${viewport.name} ${route} returned ${response?.status() || 'no response'}`);
-  if (body.trim().length < 20) throw new Error(`${viewport.name} ${route} has no meaningful body`);
-  return Object.freeze({
-    viewport: viewport.name,
-    route,
-    status: response.status(),
-    bodyLength: body.trim().length,
-    horizontalOverflow,
-  });
+  const pageErrors = [];
+  const consoleErrors = [];
+  const onPageError = (error) => pageErrors.push(error.message);
+  const onConsole = (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  };
+  page.on('pageerror', onPageError);
+  page.on('console', onConsole);
+  try {
+    const response = await page.goto(`${origin}${route}`, { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(250);
+    const body = await page.locator('body').innerText();
+    const horizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth,
+    );
+    if (!response || response.status() !== 200)
+      throw new Error(`${viewport.name} ${route} returned ${response?.status() || 'no response'}`);
+    if (body.trim().length < 20)
+      throw new Error(`${viewport.name} ${route} has no meaningful body`);
+    assertNoErrorMarkers(viewport, route, body);
+    if (pageErrors.length > 0)
+      throw new Error(
+        `${viewport.name} ${route} page error: ${pageErrors.map((message) => `"${message}"`).join(', ')}`,
+      );
+    if (consoleErrors.length > 0)
+      throw new Error(
+        `${viewport.name} ${route} console error: ${consoleErrors
+          .map((message) => `"${message}"`)
+          .join(', ')}`,
+      );
+    if (route === '/providers/') await checkProvidersPage(page, origin, viewport);
+    return Object.freeze({
+      viewport: viewport.name,
+      route,
+      status: response.status(),
+      bodyLength: body.trim().length,
+      horizontalOverflow,
+      pageErrors,
+      consoleErrors,
+    });
+  } finally {
+    page.removeListener('pageerror', onPageError);
+    page.removeListener('console', onConsole);
+  }
 }
 
 async function checkInteractions(page, origin, viewport) {

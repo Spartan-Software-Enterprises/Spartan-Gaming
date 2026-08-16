@@ -87,6 +87,12 @@ test('provider profile store returns default account when no accountId specified
   assert.equal(store.get('xbox-cloud').accountLabel, 'Default');
   assert.equal(store.get('xbox-cloud', 'personal').accountLabel, 'Personal');
 });
+test('provider profile store returns null for providers without saved profiles', () => {
+  const store = createProviderProfileStore({ storage: storage() });
+  assert.equal(store.get('twitch'), null);
+  assert.equal(store.get('geforce-now'), null);
+  assert.equal(store.get('xbox-cloud'), null);
+});
 test('provider profile import rejects malformed data', () => {
   assert.throws(() => createProviderProfileStore({ storage: storage() }).import('{}'), /invalid/);
 });

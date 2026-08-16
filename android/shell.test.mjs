@@ -24,8 +24,13 @@ test('Android shell packages the shared frontend through a safe asset origin', (
   assert.match(build, /into\("providers"\)/);
   assert.match(build, /into\("emulators"\)/);
   assert.match(build, /into\("games"\)/);
-  assert.match(build, /catalogs\/providers\.json/);
-  assert.match(build, /catalogs\/emulators\.json/);
+  assert.match(build, /into\("catalogs"\)/);
+  assert.match(build, /rename\s*\{\s*"providers\.json"\s*\}/);
+  assert.match(build, /rename\s*\{\s*"emulators\.json"\s*\}/);
+  assert.match(build, /rename\s*\{\s*"games\.json"\s*\}/);
+  assert.doesNotMatch(build, /into\("catalogs\/providers\.json"\)/);
+  assert.doesNotMatch(build, /into\("catalogs\/emulators\.json"\)/);
+  assert.doesNotMatch(build, /into\("catalogs\/games\.json"\)/);
   assert.match(build, /androidx\.webkit:webkit/);
   assert.match(activity, /WebViewAssetLoader/);
   assert.match(activity, /appassets\.androidplatform\.net/);

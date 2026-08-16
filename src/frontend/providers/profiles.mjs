@@ -123,13 +123,11 @@ export function createProviderProfileStore({
         );
         return match ? clone(match) : null;
       }
-      return (
-        clone(
-          profiles.find(
-            (profile) => profile.providerId === providerId && profile.accountId === 'default',
-          ) || profiles.find((profile) => profile.providerId === providerId),
-        ) || null
-      );
+      const match =
+        profiles.find(
+          (profile) => profile.providerId === providerId && profile.accountId === 'default',
+        ) || profiles.find((profile) => profile.providerId === providerId);
+      return match ? clone(match) : null;
     },
     save(profile) {
       const normalized = normalizeProviderProfile(profile);
