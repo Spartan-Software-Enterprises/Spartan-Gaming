@@ -269,6 +269,15 @@ workflow.
 
 All maintained frontend routes are fixed to the device viewport and have no vertical scrolling. Long browsing surfaces use horizontal rails with snap, focus, arrow, and gamepad navigation. On narrow screens, provider browsing and editing are separate snap pages in one horizontal workspace so selection always has a visible result without page scrolling. Dashboard filters and shelves use compact horizontal rails to preserve the first-viewport action. Dialogs and detail views stay contained within the viewport. Android checks GitHub on every foreground resume; semantic beta identifiers are compared numerically so beta.13 detects beta.14 and later releases.
 
+## Xbox-style interaction model
+
+Every maintained interface uses the Xbox One console interaction model: a
+persistent hub-style navigation rail, controller and keyboard directional focus,
+obvious selected and focused states, horizontally browsable content shelves, and
+a visible primary action in the first viewport. Existing Spartan colors,
+typography, logos, and branding remain the visual source of truth; this model
+changes hierarchy, focus, motion, and interaction behavior only.
+
 ## Acceptance criteria
 
 - The first viewport has an obvious next action on every maintained route.

@@ -1,12 +1,56 @@
 body.console-mode {
   background: radial-gradient(circle at 68% 0%, #233b46 0, transparent 38rem), #0b1015;
 }
+body.console-mode .app-shell {
+  display: block;
+  height: 100dvh;
+}
 body.console-mode .sidebar {
+  display: flex;
+  width: 100%;
+  height: 74px;
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 34px;
+  border-right: 0;
+  border-bottom: 1px solid var(--line);
+}
+body.console-mode .brand {
+  flex: none;
+  margin: 0;
+}
+body.console-mode .main-nav {
+  display: flex;
+  flex: 1;
+  gap: 5px;
+  min-width: 0;
+  margin: 0;
+  overflow-x: auto;
+}
+body.console-mode .main-nav .nav-item {
+  width: auto;
+  flex: none;
+  padding: 10px 15px;
+  white-space: nowrap;
+}
+body.console-mode .sidebar-bottom {
+  display: flex;
+  flex: none;
+  align-items: center;
+  margin: 0;
+}
+body.console-mode .sidebar-bottom .nav-item {
+  width: auto;
+}
+body.console-mode .sidebar-bottom p {
   display: none;
 }
 body.console-mode .content {
   width: min(1540px, 100%);
-  padding: 38px 68px 72px;
+  height: calc(100dvh - 74px);
+  overflow: hidden;
+  padding: 26px 44px 24px;
 }
 body.console-mode .library-section {
   max-width: none;
@@ -29,8 +73,25 @@ body.console-mode .details-button {
   font-size: 12px;
 }
 body.console-mode .hero {
-  min-height: 295px;
-  margin-top: 42px;
+  min-height: 214px;
+  margin: 26px 0 24px;
+  padding: 28px 34px;
+}
+body.console-mode .hero h2 {
+  font-size: 32px;
+}
+body.console-mode .section-heading {
+  margin-bottom: 4px;
+}
+body.console-mode .toolbar {
+  margin: 12px 0 16px;
+}
+body.console-mode .shelf-heading {
+  margin-bottom: 8px;
+}
+body.console-mode .shelf-viewport .card {
+  flex-basis: min(300px, 24vw);
+  min-height: 164px;
 }
 body.console-mode button:focus-visible,
 body.console-mode input:focus-visible,
@@ -63,14 +124,35 @@ body.console-mode select:focus-visible {
   }
 }
 @media (max-width: 700px) {
+  body.console-mode .sidebar {
+    height: 68px;
+    gap: 9px;
+    padding: 8px 12px;
+  }
+  body.console-mode .brand {
+    gap: 6px;
+  }
+  body.console-mode .brand-mark {
+    width: 30px;
+    height: 30px;
+  }
+  body.console-mode .main-nav .nav-item {
+    padding: 8px 11px;
+    font-size: 11px;
+  }
   body.console-mode .content {
-    padding: 25px 17px 45px;
+    height: calc(100dvh - 68px);
+    padding: 12px 17px;
   }
   body.console-mode .cards {
     grid-template-columns: 1fr;
   }
   body.console-mode .hero {
-    min-height: 280px;
-    margin-top: 25px;
+    min-height: 148px;
+    margin-top: 12px;
+    padding: 14px 17px;
+  }
+  body.console-mode .hero h2 {
+    font-size: 22px;
   }
 }

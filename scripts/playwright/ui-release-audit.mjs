@@ -88,7 +88,7 @@ async function inspectPage(page, origin, route, layout) {
     const offscreen = focusables.filter((element) => {
       const rect = element.getBoundingClientRect();
       const intentionalRail = element.closest(
-        '[data-shelf], .provider-rail, .provider-categories, .provider-workspace, .discovery-filters',
+        '[data-shelf], .provider-rail, .provider-categories, .provider-workspace, .discovery-filters, .filters, .main-nav',
       );
       return !intentionalRail && (rect.left < -1 || rect.right > innerWidth + 1);
     });

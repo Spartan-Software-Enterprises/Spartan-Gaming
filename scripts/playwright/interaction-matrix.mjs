@@ -88,8 +88,21 @@ async function exercise(page, layout, route) {
   await checkControls(page, layout, route);
 
   if (route === '/dashboard/') {
+    await clickAndCapture(
+      page,
+      layout,
+      route,
+      page.locator('[data-console-mode-toggle]'),
+      'console-mode',
+    );
+    await clickAndCapture(
+      page,
+      layout,
+      route,
+      page.locator('[data-console-mode-toggle]'),
+      'console-mode-exit',
+    );
     for (const [selector, name] of [
-      ['[data-console-mode-toggle]', 'console-mode'],
       ['[data-filter="cloud"]', 'filter-cloud'],
       ['[data-filter="all"]', 'filter-all'],
       ['[data-shelf-scroll]', 'shelf-arrow'],

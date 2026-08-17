@@ -1,0 +1,42 @@
+/* Shared Xbox One-inspired interaction language. Spartan colors and branding stay unchanged. */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--cyan, #50e1d1);
+  outline-offset: 3px;
+}
+
+:where([data-shelf], .rail-track, .provider-rail, .provider-categories, .category-rail) {
+  scroll-snap-type: x proximity;
+  scroll-behavior: smooth;
+}
+
+:where([data-shelf] > *, .rail-track > *, .provider-rail > *, .provider-categories > *) {
+  scroll-snap-align: start;
+}
+
+:where(.card, .panel, .rail, .stage, .hero, .setting-row):focus-within {
+  border-color: var(--cyan, #50e1d1);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cyan, #50e1d1) 24%, transparent);
+}
+
+:where([aria-selected='true'], [aria-current='page'], .is-selected, .selected) {
+  border-color: var(--cyan, #50e1d1) !important;
+  box-shadow:
+    inset 4px 0 var(--cyan, #50e1d1),
+    0 0 0 1px color-mix(in srgb, var(--cyan, #50e1d1) 22%, transparent);
+}
+
+html[data-spartan-navigation='remote-controller']
+  :where(button, a, input, select, textarea, [tabindex]) {
+  min-height: 44px;
+}
+
+html[data-spartan-navigation='remote-controller'] :where(button, a):focus-visible {
+  outline-width: 4px;
+  outline-offset: 5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where([data-shelf], .rail-track, .provider-rail, .provider-categories, .category-rail) {
+    scroll-behavior: auto;
+  }
+}
