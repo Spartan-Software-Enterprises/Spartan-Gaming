@@ -7,7 +7,7 @@ Updated: 2026-08-17
 - Repository: Spartan-Software-Enterprises/Spartan-Gaming
 - KVM checkout: /home/ubuntu/Spartan-Gaming
 - Branch: main
-- Latest main commit: ced9b41 (chore: prepare alpha.3 release)
+- Latest main commit: c87bed5 (docs: save OpenCode continuation handoff)
 - Working tree: clean and synchronized with origin/main
 - Current package version: 0.1.0-alpha.3
 - Latest release: https://github.com/Spartan-Software-Enterprises/Spartan-Gaming/releases/tag/v0.1.0-alpha.3
