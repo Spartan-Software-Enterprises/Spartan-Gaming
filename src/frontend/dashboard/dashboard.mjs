@@ -184,12 +184,10 @@ let consoleMode = resolveConsoleMode({
 });
 document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="./console-mode.css">');
 document.body.classList.toggle('console-mode', consoleMode);
-document
-  .querySelector('.topbar')
-  ?.insertAdjacentHTML(
-    'beforeend',
-    '<button class="console-mode-toggle" data-console-mode-toggle type="button" aria-pressed="false">▣ Console Mode</button>',
-  );
+document.body.insertAdjacentHTML(
+  'beforeend',
+  '<button class="console-mode-toggle" data-console-mode-toggle type="button" aria-pressed="false">▣ Console Mode</button>',
+);
 const consoleModeToggle = document.querySelector('[data-console-mode-toggle]');
 function renderConsoleMode() {
   document.body.classList.toggle('console-mode', consoleMode);
