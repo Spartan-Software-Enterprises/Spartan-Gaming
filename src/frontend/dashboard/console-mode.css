@@ -446,3 +446,121 @@ body.console-mode .topbar .console-mode-toggle {
     font-size: 10px;
   }
 }
+
+/* Spartan brand correction: the console layout uses the supplied red, black, metallic and white identity. */
+body.console-mode {
+  --spartan-red: #e3262e;
+  --spartan-red-dark: #8f171d;
+  --spartan-black: #050505;
+  --spartan-gunmetal: #242628;
+  --spartan-steel: #55585b;
+  --spartan-silver: #b9bbbd;
+  --spartan-white: #f4f4f2;
+  --cyan: var(--spartan-red);
+  --violet: var(--spartan-silver);
+  --bg: var(--spartan-black);
+  --panel: #111214;
+  --panel2: var(--spartan-gunmetal);
+  --line: #45484b;
+  --muted: #b4b5b7;
+  color: var(--spartan-white);
+  background: var(--spartan-black);
+}
+body.console-mode .sidebar {
+  background: #080808;
+  border-color: var(--spartan-gunmetal);
+}
+body.console-mode .brand-mark {
+  border-color: var(--spartan-red);
+  color: var(--spartan-red);
+}
+body.console-mode .brand small,
+body.console-mode .main-nav .nav-item.is-active,
+body.console-mode .main-nav .nav-item:hover {
+  color: var(--spartan-white);
+}
+body.console-mode .main-nav .nav-item:hover,
+body.console-mode .main-nav .nav-item.is-active {
+  background: #1b1c1e;
+  border-bottom-color: var(--spartan-red);
+}
+body.console-mode .content {
+  background: var(--spartan-black);
+}
+body.console-mode .hero {
+  background: linear-gradient(115deg, #0a0a0a 0%, #17191b 55%, #2a1719 100%);
+  box-shadow:
+    inset 0 -4px 0 var(--spartan-red),
+    0 14px 34px #000b;
+}
+body.console-mode .hero::after {
+  background:
+    linear-gradient(90deg, transparent 48%, #0008),
+    repeating-linear-gradient(135deg, #ffffff05 0 1px, transparent 1px 9px);
+}
+body.console-mode .eyebrow.accent,
+body.console-mode .card-type,
+body.console-mode .shelf-heading .eyebrow {
+  color: var(--spartan-red);
+}
+body.console-mode .primary-button {
+  background: var(--spartan-red);
+  color: #fff;
+  box-shadow: 0 0 0 1px #ff7478aa;
+}
+body.console-mode .console-tile {
+  background: var(--spartan-gunmetal);
+  color: var(--spartan-white);
+}
+body.console-mode .console-tile:nth-child(1) {
+  background: linear-gradient(145deg, #a71920, #5f1217);
+}
+body.console-mode .console-tile:nth-child(2) {
+  background: linear-gradient(145deg, #55585b, #292b2d);
+}
+body.console-mode .console-tile:nth-child(3) {
+  background: linear-gradient(145deg, #3b3d40, #171819);
+}
+body.console-mode .console-tile small,
+body.console-mode .console-tile-icon {
+  color: var(--spartan-white);
+}
+body.console-mode .console-tile:hover,
+body.console-mode .console-tile:focus-visible {
+  outline-color: var(--spartan-red);
+  filter: brightness(1.2);
+}
+body.console-mode .shelf-viewport .card {
+  background: linear-gradient(145deg, #202224, #101112);
+  box-shadow: inset 0 -3px 0 var(--spartan-red);
+}
+body.console-mode .shelf-viewport .card:hover,
+body.console-mode .shelf-viewport .card:focus-within {
+  outline-color: var(--spartan-red);
+}
+body.console-mode .shelf-controls button,
+body.console-mode .console-mode-toggle {
+  color: var(--spartan-red);
+  border-color: var(--spartan-steel);
+  background: #111214;
+}
+body.console-mode .shelf-controls button:hover,
+body.console-mode .shelf-controls button:focus-visible,
+body.console-mode .console-mode-toggle:hover,
+body.console-mode .console-mode-toggle[aria-pressed='true'] {
+  border-color: var(--spartan-red);
+  background: #2b1215;
+  color: var(--spartan-white);
+}
+body.console-mode :where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline-color: var(--spartan-red);
+}
+body.console-mode .toast {
+  border-color: var(--spartan-red);
+  background: #241012;
+  color: #ffd8d9;
+}
+body.console-mode .chip {
+  background: #303235;
+  color: var(--spartan-silver);
+}
