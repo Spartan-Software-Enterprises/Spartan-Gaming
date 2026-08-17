@@ -564,3 +564,109 @@ body.console-mode .chip {
   background: #303235;
   color: var(--spartan-silver);
 }
+@media (max-width: 700px) {
+  body.console-mode .sidebar {
+    height: 58px;
+    padding: 6px 10px;
+    gap: 7px;
+  }
+  body.console-mode .brand {
+    gap: 6px;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+  }
+  body.console-mode .brand-mark {
+    width: 28px;
+    height: 28px;
+    font-size: 15px;
+  }
+  body.console-mode .brand small {
+    font-size: 7px;
+  }
+  body.console-mode .main-nav {
+    gap: 2px;
+  }
+  body.console-mode .main-nav .nav-item {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+  body.console-mode .main-nav .nav-item span {
+    display: none;
+  }
+  body.console-mode .sidebar-bottom .nav-item {
+    padding: 6px 7px;
+  }
+  body.console-mode .sidebar-bottom .nav-item span {
+    display: none;
+  }
+  body.console-mode .content {
+    height: calc(100dvh - 58px);
+    padding: 10px 12px 24px;
+  }
+  body.console-mode .hero {
+    gap: 14px;
+    padding: 17px;
+    margin-bottom: 20px;
+  }
+  body.console-mode .hero h2 {
+    font-size: 29px;
+  }
+  body.console-mode .hero-copy {
+    margin: 9px 0 15px;
+    font-size: 11px;
+    line-height: 1.3;
+  }
+  body.console-mode .primary-button {
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+  body.console-mode .console-tile-grid {
+    min-height: 132px;
+    gap: 6px;
+  }
+  body.console-mode .console-tile {
+    min-height: 62px;
+    padding: 10px;
+    font-size: 12px;
+  }
+  body.console-mode .console-tile small {
+    font-size: 8px;
+  }
+  body.console-mode .console-tile-icon {
+    font-size: 22px;
+  }
+  body.console-mode .shelf-heading {
+    margin-bottom: 6px;
+  }
+  body.console-mode .shelf-heading h3 {
+    font-size: 18px;
+  }
+  body.console-mode .shelf-viewport {
+    gap: 7px;
+    padding-bottom: 9px;
+  }
+  body.console-mode .shelf-viewport .card {
+    flex-basis: min(68vw, 220px);
+    min-height: 142px;
+    padding: 12px;
+  }
+  body.console-mode .shelf-viewport .card h3 {
+    font-size: 14px;
+    margin-top: 10px;
+  }
+  body.console-mode .shelf-viewport .card p {
+    font-size: 10px;
+  }
+  body.console-mode .shelf-viewport .card-actions {
+    margin-top: 9px;
+    gap: 6px;
+  }
+  body.console-mode .shelf-viewport .launch,
+  body.console-mode .shelf-viewport .details-button {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+  body.console-mode .shelf-viewport .details {
+    font-size: 9px;
+  }
+}
