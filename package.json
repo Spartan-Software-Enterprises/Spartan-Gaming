@@ -2,7 +2,7 @@
   "name": "@spartan-software-enterprises/spartan-gaming",
   "productName": "Spartan Gaming",
   "desktopName": "com.spartan.gaming.desktop",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.0-alpha.3",
   "main": "desktop/electron/main.mjs",
   "private": true,
   "author": "Spartan Software Enterprises",
