@@ -8,6 +8,31 @@ Electron is the primary desktop application. The same bundled application UI and
 
 > **Built in the open, verified in layers.** Core interfaces and tested reference implementations are available today. Hardware-, driver-, signing-, store-certification-, and production-service gates stay explicitly open until they have real evidence. [See the full roadmap](ROADMAP.md).
 
+## Xbox One-style experience
+
+Spartan Gaming keeps its Spartan colors, logos, typography, and visual identity
+while using an Xbox One-inspired interaction model across the application:
+hub-style navigation, controller and keyboard directional focus, clear selected
+states, and horizontal content shelves that stay inside the viewport. Console
+Mode turns the dashboard into a full-width gaming hub with the primary action,
+resume session, library filters, and provider rails available from the first
+screen.
+
+Fresh screenshots from the verified four-viewport UI matrix:
+
+| Desktop                                                                      | Mobile                                                                     |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| ![Xbox-style desktop dashboard](docs/screenshots/dashboard-xbox-desktop.png) | ![Xbox-style mobile dashboard](docs/screenshots/dashboard-xbox-mobile.png) |
+
+| Landscape                                                                        | Television                                                                 |
+| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| ![Xbox-style landscape dashboard](docs/screenshots/dashboard-xbox-landscape.png) | ![Xbox-style television dashboard](docs/screenshots/dashboard-xbox-tv.png) |
+
+The provider workspace uses the same focus and horizontal selection model on
+mobile, so choosing a provider always produces a visible configuration surface:
+
+![Xbox-style provider selection](docs/screenshots/providers-xbox-mobile.png)
+
 ## Why Spartan Gaming?
 
 Gaming is fragmented across launchers, browser tabs, streaming clients, controller tools, emulator frontends, and remote-host utilities. Spartan Gaming is building the connective layer between them: one controller-friendly library, one player experience, one settings center, and one honest compatibility model.
