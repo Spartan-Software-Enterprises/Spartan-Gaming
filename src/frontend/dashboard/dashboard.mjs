@@ -291,7 +291,15 @@ function renderResume() {
   const button = document.querySelector('[data-action="resume"]');
   title.textContent = presentation.title;
   copy.textContent = presentation.copy;
-  button.textContent = presentation.actionLabel;
+  button.hidden = !state.recovery && !state.lastLaunch;
+  button.setAttribute('aria-hidden', String(button.hidden));
+  button.textContent = presentation.actionLabel.includes('Resume')
+    ? '▶'
+    : presentation.actionLabel.includes('Configure')
+      ? '⚙'
+      : '↗';
+  button.setAttribute('aria-label', presentation.actionLabel);
+  button.title = presentation.actionLabel;
 }
 function openProviderSurface(entry, plan) {
   providerReturnFocus =

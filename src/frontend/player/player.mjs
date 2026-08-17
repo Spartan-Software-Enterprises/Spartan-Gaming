@@ -702,6 +702,7 @@ function toggleSessionPause() {
     }
     elements.pause.textContent = action.glyph;
     elements.pause.setAttribute('aria-label', action.label);
+    elements.pause.title = action.label;
     elements.message.textContent = action.message;
     mediaSession.setPlaybackState('paused');
   } else {
@@ -713,6 +714,7 @@ function toggleSessionPause() {
     }
     elements.pause.textContent = action.glyph;
     elements.pause.setAttribute('aria-label', action.label);
+    elements.pause.title = action.label;
     elements.message.textContent = action.message;
     mediaSession.setPlaybackState('playing');
   }

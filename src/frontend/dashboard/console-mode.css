@@ -670,3 +670,145 @@ body.console-mode .chip {
     font-size: 9px;
   }
 }
+/* Compact console scale and restrained motion. */
+body.console-mode .hero h2 {
+  font-size: clamp(30px, 3.3vw, 48px);
+}
+body.console-mode .shelf-heading h3 {
+  font-size: 20px;
+}
+body.console-mode .shelf-viewport .card {
+  flex-basis: 240px;
+}
+body.console-mode .hero::before {
+  content: ' ';
+  position: absolute;
+  inset: -20% auto -20% -35%;
+  width: 18%;
+  transform: skewX(-18deg);
+  background: linear-gradient(90deg, transparent, #e3262e33, transparent);
+  animation: spartan-hero-sweep 8s ease-in-out infinite;
+  pointer-events: none;
+}
+body.console-mode .console-tile,
+body.console-mode .shelf-viewport .card,
+body.console-mode .shelf-controls button,
+body.console-mode .primary-button {
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+body.console-mode .console-tile:hover,
+body.console-mode .console-tile:focus-visible {
+  transform: scale(1.025);
+  box-shadow: 0 8px 20px #0008;
+}
+body.console-mode .shelf-viewport .card:hover,
+body.console-mode .shelf-viewport .card:focus-within {
+  transform: translateY(-3px);
+  box-shadow:
+    inset 0 -3px 0 var(--spartan-red),
+    0 8px 18px #0008;
+}
+body.console-mode .shelf-controls button:hover,
+body.console-mode .shelf-controls button:focus-visible {
+  transform: scale(1.08);
+}
+@keyframes spartan-hero-sweep {
+  0%,
+  62% {
+    opacity: 0;
+    left: -35%;
+  }
+  72% {
+    opacity: 1;
+  }
+  86%,
+  100% {
+    opacity: 0;
+    left: 125%;
+  }
+}
+@media (max-width: 700px) {
+  body.console-mode .hero h2 {
+    font-size: 26px;
+  }
+  body.console-mode .hero-copy {
+    font-size: 10px;
+  }
+  body.console-mode .primary-button {
+    padding: 9px 12px;
+    font-size: 12px;
+  }
+  body.console-mode .shelf-heading h3 {
+    font-size: 17px;
+  }
+  body.console-mode .shelf-viewport .card {
+    flex-basis: min(62vw, 200px);
+    min-height: 134px;
+  }
+  body.console-mode .shelf-viewport .card h3 {
+    font-size: 13px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.console-mode .hero::before {
+    animation: none;
+  }
+  body.console-mode .console-tile,
+  body.console-mode .shelf-viewport .card,
+  body.console-mode .shelf-controls button,
+  body.console-mode .primary-button {
+    transition: none;
+  }
+}
+.session-icon-button {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid var(--spartan-red, var(--cyan));
+  border-radius: 50%;
+  background: var(--spartan-red, var(--cyan));
+  color: #fff;
+  font-size: 17px;
+  line-height: 1;
+  box-shadow:
+    0 0 0 3px #e3262e22,
+    0 7px 16px #0008;
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease,
+    box-shadow 0.18s ease;
+}
+.session-icon-button:hover,
+.session-icon-button:focus-visible {
+  transform: scale(1.08);
+  filter: brightness(1.15);
+  box-shadow:
+    0 0 0 4px #e3262e44,
+    0 9px 20px #0009;
+}
+body.console-mode .session-icon-button {
+  width: 36px;
+  height: 36px;
+  font-size: 15px;
+}
+@media (max-width: 700px) {
+  .session-icon-button {
+    width: 36px;
+    height: 36px;
+    font-size: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .session-icon-button {
+    transition: none;
+  }
+}
+.session-icon-button[hidden] {
+  display: none !important;
+}
