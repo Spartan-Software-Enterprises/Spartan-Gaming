@@ -1,6 +1,16 @@
 import '../pwa/register.mjs';
 import { createProviderIntegration } from '../providers/integration.mjs';
 import { STREAM_SERVICE_IDS } from '../social/streaming.mjs';
+import { bindPrimaryNavigation } from '../primary-navigation.mjs';
+import { createSettingsStore } from '../settings/profile.mjs';
+
+const settingsStore = createSettingsStore();
+const watchSettings = settingsStore.read();
+document.head.insertAdjacentHTML(
+  'beforeend',
+  '<link rel="stylesheet" href="../dashboard/console-mode.css">',
+);
+document.body.classList.add('console-mode');
 
 function escapeHtml(value) {
   return String(value).replace(
@@ -109,7 +119,7 @@ function setupWatchPage(providerEntries = []) {
       const entry = providerEntries.find((s) => s.id === streamButton.dataset.stream);
       if (entry) {
         const integration = createProviderIntegration(entry, {});
-        if (integration.mode === 'official-embed' && integration.embedUrl) {
+        if (integration.mode === 'provider-embed' && integration.embedUrl) {
           const dialog = document.querySelector('[data-stream-dialog]');
           const title = document.querySelector('[data-stream-title]');
           const detail = document.querySelector('[data-stream-detail]');

@@ -1,20 +1,20 @@
 :root {
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   color: #e8f0f3;
-  background: #0d1319;
+  background: var(--spartan-black);
   color-scheme: dark;
-  --panel: #151e27;
-  --line: #2a3945;
-  --muted: #8d9ba7;
-  --cyan: #50e1d1;
-  --violet: #9183ff;
+  --panel: #1b1c1e;
+  --line: #353739;
+  --muted: #9a9b9d;
+  --cyan: var(--spartan-red);
+  --violet: var(--spartan-silver);
 }
 * {
   box-sizing: border-box;
 }
 body {
   margin: 0;
-  background: radial-gradient(circle at 72% 0, #1b3039, transparent 34rem), #0d1319;
+  background: radial-gradient(circle at 72% 0, #121314, transparent 34rem), var(--spartan-black);
 }
 .emu-shell {
   max-width: 1200px;
@@ -48,9 +48,9 @@ header,
   place-items: center;
   width: 32px;
   height: 32px;
-  border: 2px solid var(--cyan);
+  border: 2px solid var(--spartan-red);
   border-radius: 8px;
-  color: var(--cyan);
+  color: var(--spartan-red);
   font-size: 17px;
 }
 .back {
@@ -59,7 +59,7 @@ header,
   text-decoration: none;
 }
 .back:hover {
-  color: var(--cyan);
+  color: var(--spartan-red);
 }
 .intro {
   max-width: 670px;
@@ -108,10 +108,10 @@ header,
   display: block;
   margin: 8px 0;
   padding: 10px;
-  border: 1px solid #3c706d;
+  border: 1px solid #5b0706;
   border-radius: 6px;
-  background: #183337;
-  color: var(--cyan);
+  background: #1a0a0b;
+  color: var(--spartan-red);
   font-size: 11px;
   font-weight: 800;
   text-align: center;
@@ -162,7 +162,7 @@ header,
   padding: 15px;
   border: 1px solid var(--line);
   border-radius: 9px;
-  background: #111a21;
+  background: #121314;
 }
 .core-card h3 {
   margin: 0 0 5px;
@@ -182,13 +182,13 @@ header,
 .tag {
   padding: 4px 6px;
   border-radius: 4px;
-  background: #273640;
+  background: #1b1c1e;
   color: #b6c3c8;
   font-size: 10px;
 }
 .tag.release {
-  background: #20406e;
-  color: #a9d4ff;
+  background: #2b1215;
+  color: #ffd8d9;
 }
 .release-row {
   display: flex;
@@ -210,8 +210,8 @@ header,
   border: 0;
   border-radius: 5px;
   padding: 8px 10px;
-  background: var(--cyan);
-  color: #071316;
+  background: var(--spartan-red);
+  color: #fff;
   font-size: 11px;
   font-weight: 800;
 }
@@ -225,10 +225,10 @@ header,
   right: 24px;
   bottom: 24px;
   padding: 11px 14px;
-  border: 1px solid #3c706d;
+  border: 1px solid #5b0706;
   border-radius: 7px;
-  background: #172b2e;
-  color: #b8f7ed;
+  background: #1a0a0b;
+  color: #ffd8d9;
   opacity: 0;
   transform: translateY(8px);
   transition: 0.2s;
@@ -299,7 +299,7 @@ header,
 }
 .runtime-manager {
   margin-bottom: 15px;
-  border-color: #3c706d;
+  border-color: #5b0706;
 }
 .runtime-help {
   max-width: 820px;
@@ -378,7 +378,7 @@ header,
 }
 .launch-plan {
   margin-top: 15px;
-  border-color: #3c706d;
+  border-color: #5b0706;
 }
 .launch-plan .panel-head {
   margin-bottom: 14px;
@@ -425,9 +425,9 @@ header,
 .browser-runtime-box {
   margin-top: 16px;
   padding: 14px;
-  border: 1px solid #3c706d;
+  border: 1px solid #353739;
   border-radius: 8px;
-  background: #102124;
+  background: #121314;
 }
 .browser-runtime-box small,
 .browser-runtime-box strong {
@@ -439,7 +439,7 @@ header,
 }
 .browser-runtime-box strong {
   margin-top: 4px;
-  color: #c9fff6;
+  color: var(--spartan-red);
   font-size: 13px;
 }
 .browser-runtime-box p {
@@ -508,9 +508,9 @@ header,
 .native-handoff {
   margin-top: 22px;
   padding: 20px;
-  border: 1px solid #3d666b;
+  border: 1px solid #353739;
   border-radius: 12px;
-  background: #142329;
+  background: #121314;
 }
 .native-handoff label {
   display: grid;

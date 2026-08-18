@@ -33,7 +33,7 @@ Never copy or print tokens, passwords, private keys, keystores, cookies, raw cre
 
 ## Product/UI State
 
-The current console UI uses an Xbox One-style interaction model while preserving Spartan branding:
+The current console UI uses a console-style interaction model while preserving Spartan branding:
 
 - Spartan red, black, gunmetal, metallic gray, and white palette from the supplied brand reference.
 - Compact controller-friendly navigation and horizontal rails.
@@ -108,17 +108,17 @@ Do not create beta tags. Do not create another alpha tag unless the operator exp
 This handoff captures the active conversation so another agent does not need the chat transcript:
 
 - The project is Spartan Gaming only; unrelated Android talk-to-text work was explicitly discarded.
-- The user requested Xbox One console behavior and visual hierarchy without changing Spartan branding.
+- The user requested console behavior and visual hierarchy without changing Spartan branding.
 - Provider browsing must use categorized horizontal rails with icons, visible selection, arrow controls, keyboard/gamepad focus, and no accidental page overflow.
 - Android back navigation must preserve in-app context instead of closing the whole app.
 - Release update checks, install-over-existing-app behavior, capitalization, viewport fitting, and release-tag behavior remain release-critical areas documented in the repository.
 - The user explicitly stopped automatic beta publishing. Alpha publishing is allowed only when explicitly requested.
 - The previous beta tag history was removed/reworked; the active release channel is alpha.
 - Alpha.3 was explicitly requested and published. The release includes signed Android profiles, Linux, and SteamOS artifacts. Windows and macOS remain blocked by missing signing/notarization custody and must stay fail-closed.
-- The UI was changed from a generic dark dashboard to an Xbox-style tile-and-rail layout.
+- The UI was changed from a generic dark dashboard to a console-style tile-and-rail layout.
 - The supplied Spartan logo reference established the correct palette: black, Spartan red, gunmetal, metallic silver, and white. Cyan, violet, and teal are not the console brand palette.
 - Mobile sizing was reduced again after screenshot review.
 - Hero resume is hidden unless a recovery handoff or launch history exists. When available, resume uses a compact play icon. Player pause/resume controls use compact icons, accessible labels, and tooltips.
 - Motion is intentionally restrained: hero sweep, tile hover/focus lift, rail-button feedback, and reduced-motion fallbacks.
 - Every UI modification was followed by formatting, build, unit, Playwright UI audit, interaction matrix, human-flow, and screenshot review gates.
-- Do not overwrite these decisions with a generic Xbox color palette or reintroduce large text buttons for session controls.
+- Do not overwrite these decisions with a generic console color palette or reintroduce large text buttons for session controls.

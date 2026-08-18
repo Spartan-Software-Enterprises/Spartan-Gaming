@@ -27,6 +27,9 @@ export const SETTINGS_ACTIONS = Object.freeze({
     kind: 'external',
     href: 'https://github.com/Spartan-Software-Enterprises/Spartan-Gaming/releases',
   }),
+  'about.viewLicense': route('../../vendor/chromium/LICENSE'),
+  'about.privacyPolicy': route('../../PRIVACY.md'),
+  'about.dmcaPolicy': route('../../DMCA.md'),
 });
 
 export function resolveSettingsAction(key) {

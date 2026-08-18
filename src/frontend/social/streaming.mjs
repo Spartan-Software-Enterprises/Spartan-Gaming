@@ -58,7 +58,7 @@ export function setupStreamServices(providerEntries = []) {
       const entry = providerEntries.find((s) => s.id === streamButton.dataset.stream);
       if (entry) {
         const integration = createProviderIntegration(entry, {});
-        if (integration.mode === 'official-embed' && integration.embedUrl) {
+        if (integration.mode === 'provider-embed' && integration.embedUrl) {
           const dialog = document.querySelector('[data-social-dialog]');
           const title = document.querySelector('[data-social-title]');
           const detail = document.querySelector('[data-social-detail]');

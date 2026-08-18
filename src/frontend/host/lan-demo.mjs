@@ -1,4 +1,5 @@
 import '../pwa/register.mjs';
+import '../console-mode-init.mjs';
 import { createLanHandoffPayload, openLanHandoffWindow } from './lan-handoff.mjs';
 
 const form = document.querySelector('[data-form]');

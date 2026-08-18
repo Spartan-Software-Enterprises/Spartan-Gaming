@@ -8,7 +8,7 @@
   --panel2: #1c2630;
   --line: #2a3540;
   --muted: #8d9aa7;
-  --cyan: #50e1d1;
+  --cyan: var(--spartan-red, #50e1d1);
   --violet: #9a84ff;
   --green: #6fea9b;
   --yellow: #ffd168;

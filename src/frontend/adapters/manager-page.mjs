@@ -1,4 +1,5 @@
 import '../pwa/register.mjs';
+import '../console-mode-init.mjs';
 import { createSettingsStore } from '../settings/profile.mjs';
 import {
   createAdapterManagerModel,

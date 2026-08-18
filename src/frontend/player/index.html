@@ -4,10 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#080b10" />
-    <title>Spartan Gaming — Session</title>
+    <title>Spartan Gaming™ — Session</title>
 
     <link rel="stylesheet" href="../shared/viewport.css" />
-    <link rel="stylesheet" href="../shared/xbox-ui.css" />
+    <link rel="stylesheet" href="../shared/landscape.css" />
+    <link rel="stylesheet" href="../shared/spartan-brand.css" />
+    <link rel="stylesheet" href="../shared/spartan-ui.css" />
     <link rel="stylesheet" href="./player.css" />
   </head>
   <body>
@@ -74,27 +76,32 @@
           </div>
         </div>
         <div class="overlay-bottom" data-overlay>
-          <button class="icon-button" data-action="audio" aria-label="Mute session audio">🔊</button
+          <button class="icon-button" data-action="audio" aria-label="Mute session audio">
+            <span class="icon" aria-hidden="true">&#9834;</span></button
           ><button class="icon-button" data-action="fullscreen" aria-label="Toggle fullscreen">
-            ⛶</button
+            <span class="icon" aria-hidden="true">&#9974;</span></button
           ><button class="icon-button" data-action="pip" aria-label="Enter Picture-in-Picture">
-            ▣</button
+            <span class="icon" aria-hidden="true">&#9634;</span></button
           ><button class="icon-button" data-action="screenshot" aria-label="Take screenshot">
-            ▧</button
-          ><button class="icon-button" data-action="record" aria-label="Start recording">●</button
+            <span class="icon" aria-hidden="true">&#9635;</span></button
+          ><button class="icon-button" data-action="record" aria-label="Start recording">
+            <span class="icon record-icon" aria-hidden="true"></span></button
           ><button
             class="icon-button"
             data-action="replay"
             aria-label="Save instant replay"
             disabled
           >
-            ↺</button
+            <span class="icon" aria-hidden="true">&#8634;</span></button
           ><button class="icon-button" data-action="reconnect" aria-label="Reconnect session">
-            ↻</button
-          ><button class="icon-button" data-action="overlay" aria-label="Toggle overlay">◌</button
+            <span class="icon" aria-hidden="true">&#8635;</span></button
+          ><button class="icon-button" data-action="overlay" aria-label="Toggle overlay">
+            <span class="icon" aria-hidden="true">&#9673;</span></button
           ><button class="icon-button" data-action="diagnostics" aria-label="Toggle diagnostics">
-            ⌁</button
-          ><button class="icon-button end" data-action="end" aria-label="End session">■</button>
+            <span class="icon" aria-hidden="true">&#9839;</span></button
+          ><button class="icon-button end" data-action="end" aria-label="End session">
+            <span class="icon" aria-hidden="true">&#9632;</span>
+          </button>
         </div>
       </section>
       <aside class="diagnostics" data-diagnostics aria-label="Session diagnostics">

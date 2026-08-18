@@ -1,4 +1,5 @@
 import '../pwa/register.mjs';
+import '../console-mode-init.mjs';
 import { createWebSocketSignalTransport } from '../transport/transport.mjs';
 import { createBrowserWebRtcPublisher } from './browser-publisher.mjs';
 import { createBrowserHostRuntime } from './browser-host-runtime.mjs';

@@ -3,6 +3,15 @@ import { createFrontendCatalog, validateCatalogManifest } from '../catalog.mjs';
 import { createProviderIntegration } from '../providers/integration.mjs';
 import { setupStreamServices } from './streaming.mjs';
 import { bindPrimaryNavigation } from '../primary-navigation.mjs';
+import { createSettingsStore } from '../settings/profile.mjs';
+
+const settingsStore = createSettingsStore();
+const socialSettings = settingsStore.read();
+document.head.insertAdjacentHTML(
+  'beforeend',
+  '<link rel="stylesheet" href="../dashboard/console-mode.css">',
+);
+document.body.classList.add('console-mode');
 
 const STORAGE_PREFIX = 'spartan-gaming.social.v1.';
 

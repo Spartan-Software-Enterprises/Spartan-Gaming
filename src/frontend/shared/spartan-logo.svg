@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Spartan Gaming Enhanced</title>
+  <desc id="desc">Spartan warrior helmet emblem</desc>
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ed1913;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#a61916;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5b0706;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <circle cx="128" cy="128" r="120" fill="#080b10" />
+  <path d="M128 80 Q128 50 160 55 Q175 50 172 75 Q170 90 140 100 Q110 110 80 105 Q55 110 30 90 Q20 75 25 55 Q30 45 65 50 Q95 55 128 80 Z" fill="#ed1913" />
+  <path d="M128 130 Q128 145 100 150 Q75 152 55 140 Q35 130 35 110 Q35 85 60 70 Q85 60 110 70 Q135 75 128 130 Z" fill="#aaa8a5" />
+  <circle cx="100" cy="100" r="8" fill="#dedcd9" />
+  <circle cx="156" cy="100" r="8" fill="#dedcd9" />
+  <path d="M128 180 Q128 210 160 215 Q175 210 172 190 Q170 175 140 165 Q110 155 80 160 Q55 155 30 165 Q20 170 25 150 Q30 140 65 145 Q95 150 128 180 Z" fill="#5b0706" />
+</svg>

@@ -4,10 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#10151b" />
-    <title>Spartan Gaming — Social Center</title>
+    <title>Spartan Gaming™ — Social Center</title>
 
     <link rel="stylesheet" href="../shared/viewport.css" />
-    <link rel="stylesheet" href="../shared/xbox-ui.css" />
+    <link rel="stylesheet" href="../shared/landscape.css" />
+    <link rel="stylesheet" href="../shared/spartan-brand.css" />
+    <link rel="stylesheet" href="../shared/spartan-ui.css" />
     <link rel="stylesheet" href="../dashboard/dashboard.css" />
     <link rel="stylesheet" href="./social.css" />
     <style>
@@ -62,7 +64,7 @@
       }
       .secondary-link {
         flex: none;
-        color: #50e1d1;
+        color: var(--cyan, #50e1d1);
         font-size: 12px;
         text-decoration: none;
       }
@@ -84,16 +86,16 @@
           <span class="brand-mark">S</span><span>SPARTAN<br /><small>GAMING</small></span>
         </a>
         <nav class="main-nav" aria-label="Primary navigation">
-          <button class="nav-item" data-section="library">▦ <span>Library</span></button>
-          <button class="nav-item" data-section="providers">◈ <span>Providers</span></button>
-          <button class="nav-item" data-section="emulation">⌘ <span>Emulation</span></button>
-          <button class="nav-item" data-section="watch">◉ <span>Watch &amp; stream</span></button>
+          <button class="nav-item" data-section="library"><i class="spartan-icon icon-library"></i> <span>Library</span></button>
+          <button class="nav-item" data-section="providers"><i class="spartan-icon icon-providers"></i> <span>Providers</span></button>
+          <button class="nav-item" data-section="emulation"><i class="spartan-icon icon-emulation"></i> <span>Emulation</span></button>
+          <button class="nav-item" data-section="watch"><i class="spartan-icon icon-watch"></i> <span>Watch &amp; stream</span></button>
           <a class="nav-item is-active" data-section="social" href="../social/index.html">
-            ◍ <span>Social Center</span>
+            <i class="spartan-icon icon-social"></i> <span>Social Center</span>
           </a>
         </nav>
         <div class="sidebar-bottom">
-          <a class="nav-item" href="../settings/index.html">⚙ <span>Settings</span></a>
+          <a class="nav-item" href="../settings/index.html"><i class="spartan-icon icon-settings"></i> <span>Settings</span></a>
           <p>v0.1.0 · open source</p>
         </div>
       </aside>

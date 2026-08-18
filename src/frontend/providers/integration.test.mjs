@@ -8,7 +8,7 @@ const xbox = {
   id: 'xbox-cloud-gaming',
   name: 'Xbox Cloud Gaming',
   backendType: 'provider',
-  integrationModes: ['browser-first', 'official-launch'],
+  integrationModes: ['browser-first', 'provider-launch'],
   capabilities: ['gamepad', 'touch-controls'],
   requirements: ['xbox-account'],
   url: 'https://www.xbox.com/play',
@@ -17,7 +17,7 @@ const stream = {
   id: 'twitch',
   name: 'Twitch',
   backendType: 'provider',
-  integrationModes: ['browser-first', 'official-api', 'official-embed'],
+  integrationModes: ['browser-first', 'provider-api', 'provider-embed'],
   capabilities: ['video', 'chat'],
   requirements: [],
   url: 'https://www.twitch.tv/',
@@ -32,7 +32,7 @@ test('provider integration selects platform preset and saved launch preference',
       autoFullscreen: true,
     },
   });
-  assert.equal(integration.mode, 'official-launch');
+  assert.equal(integration.mode, 'provider-launch');
   assert.equal(integration.controllerProfile, 'Xbox layout');
   assert.equal(integration.quality, 'prefer-latency');
   assert.equal(integration.regionLabel, 'North America');
@@ -67,7 +67,7 @@ test('GameNative remains an external Android companion with explicit licensing n
       id: 'gamenative',
       name: 'GameNative',
       backendType: 'provider',
-      integrationModes: ['official-launch', 'browser-first'],
+      integrationModes: ['provider-launch', 'browser-first'],
       capabilities: ['gamepad', 'touch-controls'],
       requirements: ['android-device'],
       url: 'https://gamenative.app/',
@@ -75,7 +75,7 @@ test('GameNative remains an external Android companion with explicit licensing n
     },
     { profile: { launchMode: 'official' } },
   );
-  assert.equal(integration.mode, 'official-launch');
+  assert.equal(integration.mode, 'provider-launch');
   assert.match(integration.notes.join(' '), /separately distributed GPLv3/);
   assert.match(integration.notes.join(' '), /app\.gamenative/);
 });
@@ -89,25 +89,25 @@ test('provider integration builds and selects official target-aware embeds', () 
     { ...stream, id: 'twitch' },
     { profile: { embedTarget: 'twitchdev', embedParent: 'gaming.example' } },
   );
-  assert.equal(twitch.mode, 'official-embed');
+  assert.equal(twitch.mode, 'provider-embed');
   assert.match(twitch.embedUrl, /player\.twitch\.tv/);
   assert.match(twitch.embedUrl, /parent=gaming\.example/);
   const local = createProviderIntegration(
     { ...stream, id: 'twitch' },
     { profile: { embedTarget: 'twitchdev', embedParent: 'localhost' } },
   );
-  assert.equal(local.mode, 'official-embed');
+  assert.equal(local.mode, 'provider-embed');
   const youtube = createProviderIntegration(
     { ...stream, id: 'youtube-live' },
     { profile: { embedTarget: 'M7lc1UVf-VE' } },
   );
-  assert.equal(youtube.mode, 'official-embed');
+  assert.equal(youtube.mode, 'provider-embed');
   assert.equal(youtube.embedUrl, 'https://www.youtube.com/embed/M7lc1UVf-VE');
   const kick = createProviderIntegration(
     { ...stream, id: 'kick' },
     { profile: { embedTarget: 'spartanlive' } },
   );
-  assert.equal(kick.mode, 'official-embed');
+  assert.equal(kick.mode, 'provider-embed');
   assert.equal(kick.embedUrl, 'https://player.kick.com/spartanlive');
   assert.equal(
     createProviderIntegration({ ...stream, id: 'kick' }, { profile: { embedTarget: 'not valid' } })

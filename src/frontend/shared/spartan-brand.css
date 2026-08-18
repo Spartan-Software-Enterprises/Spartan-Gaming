@@ -1,0 +1,10 @@
+/* Spartan brand palette — the visual source of truth across every surface. */
+:root {
+  --spartan-red: #e3262e;
+  --spartan-red-dark: #8f171d;
+  --spartan-black: #050505;
+  --spartan-gunmetal: #242628;
+  --spartan-steel: #55585b;
+  --spartan-silver: #b9bbbd;
+  --spartan-white: #f4f4f2;
+}

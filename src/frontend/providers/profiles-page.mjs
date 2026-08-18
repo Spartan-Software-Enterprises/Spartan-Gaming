@@ -1,4 +1,5 @@
 import '../pwa/register.mjs';
+import '../console-mode-init.mjs';
 import { createProviderProfileStore } from './profiles.mjs';
 import { BUILTIN_CONTROLLER_PROFILES, createControllerProfileStore } from '../input/profiles.mjs';
 import { checkProviderReachability, openProviderAuthentication } from './health.mjs';

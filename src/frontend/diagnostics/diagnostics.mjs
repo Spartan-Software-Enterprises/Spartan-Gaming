@@ -1,4 +1,5 @@
 import '../pwa/register.mjs';
+import '../console-mode-init.mjs';
 import { collectCapabilities, redactDiagnostics } from './capabilities.mjs';
 import { collectPermissionStates, collectPerformanceSnapshot } from './focus.mjs';
 

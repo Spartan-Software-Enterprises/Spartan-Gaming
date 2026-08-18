@@ -1,226 +1,202 @@
+/* Xbox One X console-mode: Spartan Gaming always-on dashboard.
+   Layout: liquid-black background, floating top bar, hero showcase,
+   horizontal tile rails, Guide overlay, controller button hints. */
+
+/* ─── Reset & Foundation ─── */
 body.console-mode {
-  background: radial-gradient(circle at 68% 0%, #233b46 0, transparent 38rem), #0b1015;
-}
-body.console-mode .app-shell {
-  display: block;
+  margin: 0;
+  background: #101010;
+  color: #f1f1f1;
+  font-family: 'Segoe UI', Tahoma, Verdana, sans-serif;
+  overflow: hidden;
   height: 100dvh;
+  width: 100vw;
 }
-body.console-mode .sidebar {
+body.console-mode * {
+  box-sizing: border-box;
+}
+body.console-mode a {
+  color: inherit;
+  text-decoration: none;
+}
+body.console-mode button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ─── App Shell ─── */
+body.console-mode .app-shell {
   display: flex;
-  width: 100%;
-  height: 74px;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ─── Top Quick-Access Bar (Xbox floating bar) ─── */
+body.console-mode .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 24px;
-  padding: 12px 34px;
-  border-right: 0;
-  border-bottom: 1px solid var(--line);
+  width: 100%;
+  height: 48px;
+  padding: 0 20px;
+  gap: 6px;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(241, 241, 241, 0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
+
+/* Brand mark */
 body.console-mode .brand {
-  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0;
+  padding: 0 8px 0 0;
+  flex: none;
+  color: #f1f1f1;
+  text-decoration: none;
 }
+body.console-mode .brand-mark {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--spartan-red);
+  border-radius: 4px;
+  background: var(--spartan-red-dark, #8f171d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Spartan Icons', sans-serif;
+  color: #fff;
+  font-size: 16px;
+  box-shadow: 0 0 8px rgba(227, 38, 46, 0.4);
+}
+body.console-mode .brand span {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  line-height: 1.2;
+}
+body.console-mode .brand small {
+  font-size: 8px;
+  color: #9a9b9d;
+  letter-spacing: 0.2em;
+  display: block;
+}
+
+/* Primary navigation tabs */
 body.console-mode .main-nav {
   display: flex;
   flex: 1;
-  gap: 5px;
+  gap: 2px;
   min-width: 0;
   margin: 0;
   overflow-x: auto;
+  scrollbar-width: none;
+}
+body.console-mode .main-nav::-webkit-scrollbar {
+  display: none;
 }
 body.console-mode .main-nav .nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   width: auto;
   flex: none;
-  padding: 10px 15px;
+  padding: 8px 14px;
   white-space: nowrap;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #9a9b9d;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
+body.console-mode .main-nav .nav-item:hover {
+  background: rgba(241, 241, 241, 0.08);
+  color: #f1f1f1;
+}
+body.console-mode .main-nav .nav-item.is-active {
+  background: rgba(227, 38, 46, 0.15);
+  color: var(--spartan-red);
+}
+body.console-mode .main-nav .nav-item span {
+  font-size: 12px;
+}
+
+/* Sidebar bottom (settings + version) */
 body.console-mode .sidebar-bottom {
   display: flex;
   flex: none;
   align-items: center;
   margin: 0;
+  margin-left: auto;
+  gap: 8px;
 }
 body.console-mode .sidebar-bottom .nav-item {
   width: auto;
+  padding: 6px 10px;
+  border-radius: 4px;
+  color: #9a9b9d;
+}
+body.console-mode .sidebar-bottom .nav-item:hover {
+  background: rgba(241, 241, 241, 0.08);
+  color: #f1f1f1;
 }
 body.console-mode .sidebar-bottom p {
   display: none;
 }
-body.console-mode .content {
-  width: min(1540px, 100%);
-  height: calc(100dvh - 74px);
-  overflow: hidden;
-  padding: 26px 44px 24px;
-}
-body.console-mode .library-section {
-  max-width: none;
-}
-body.console-mode .cards {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
-}
-body.console-mode .card {
-  min-height: 205px;
-  padding: 22px;
-  border-color: #344852;
-}
-body.console-mode .card h3 {
-  font-size: 19px;
-}
-body.console-mode .launch,
-body.console-mode .details-button {
-  padding: 10px 13px;
-  font-size: 12px;
-}
-body.console-mode .hero {
-  min-height: 214px;
-  margin: 26px 0 24px;
-  padding: 28px 34px;
-}
-body.console-mode .hero h2 {
-  font-size: 32px;
-}
-body.console-mode .section-heading {
-  margin-bottom: 4px;
-}
-body.console-mode .toolbar {
-  margin: 12px 0 16px;
-}
-body.console-mode .shelf-heading {
-  margin-bottom: 8px;
-}
-body.console-mode .shelf-viewport .card {
-  flex-basis: min(300px, 24vw);
-  min-height: 164px;
-}
-body.console-mode button:focus-visible,
-body.console-mode input:focus-visible,
-body.console-mode select:focus-visible {
-  outline: 3px solid var(--cyan);
-  outline-offset: 3px;
-}
-.console-mode-toggle {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 9px 12px;
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-.console-mode-toggle:hover,
-.console-mode-toggle[aria-pressed='true'] {
-  border-color: var(--cyan);
-  background: #1c3539;
-  color: var(--cyan);
-}
-@media (max-width: 1100px) {
-  body.console-mode .content {
-    padding: 30px;
-  }
-  body.console-mode .cards {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-@media (max-width: 700px) {
-  body.console-mode .sidebar {
-    height: 68px;
-    gap: 9px;
-    padding: 8px 12px;
-  }
-  body.console-mode .brand {
-    gap: 6px;
-  }
-  body.console-mode .brand-mark {
-    width: 30px;
-    height: 30px;
-  }
-  body.console-mode .main-nav .nav-item {
-    padding: 8px 11px;
-    font-size: 11px;
-  }
-  body.console-mode .content {
-    height: calc(100dvh - 68px);
-    padding: 12px 17px;
-  }
-  body.console-mode .cards {
-    grid-template-columns: 1fr;
-  }
-  body.console-mode .hero {
-    min-height: 148px;
-    margin-top: 12px;
-    padding: 14px 17px;
-  }
-  body.console-mode .hero h2 {
-    font-size: 22px;
-  }
-}
 
-/* Xbox One-inspired hub composition: preserve Spartan colors, change hierarchy to tiles and rails. */
-body.console-mode {
-  background: #0b0f13;
-}
-body.console-mode .app-shell {
-  min-height: 100dvh;
-}
-body.console-mode .sidebar {
-  position: sticky;
-  top: 0;
-  z-index: 4;
-  background: rgba(12, 17, 22, 0.97);
-  box-shadow: 0 8px 26px #0008;
-}
-body.console-mode .main-nav .nav-item {
-  border-radius: 2px;
-  border-bottom: 3px solid transparent;
-}
-body.console-mode .main-nav .nav-item:hover,
-body.console-mode .main-nav .nav-item.is-active {
-  background: #1b2930;
-  border-bottom-color: var(--cyan);
-  box-shadow: none;
-}
+/* ─── Content Area ─── */
 body.console-mode .content {
-  max-width: 1600px;
-  margin: 0 auto;
+  flex: 1;
+  width: 100%;
+  height: 100dvh;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 22px 42px 46px;
+  padding: 48px 0 56px;
+  scroll-behavior: smooth;
 }
+
+/* ─── Topbar (hidden — replaced by floating bar) ─── */
 body.console-mode .topbar {
-  min-height: 34px;
-  margin-bottom: 12px;
-}
-body.console-mode .topbar h1,
-body.console-mode .topbar .eyebrow,
-body.console-mode .topbar .status-pill,
-body.console-mode .topbar .workspace-picker,
-body.console-mode .topbar .rom-import,
-body.console-mode .topbar .rom-scan,
-body.console-mode .topbar .add-game {
   display: none !important;
 }
-body.console-mode .topbar .console-mode-toggle {
-  display: inline-flex;
-  margin-left: auto;
-  border-radius: 2px;
-  padding: 7px 10px;
-  background: transparent;
-  color: #72828b;
-}
+
+/* ─── Hero Showcase (Xbox background zone) ─── */
 body.console-mode .hero {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(360px, 1.15fr) minmax(280px, 0.85fr);
-  min-height: 300px;
-  margin: 0 0 30px;
-  padding: 34px 38px;
+  grid-template-columns: 1fr auto;
+  min-height: 340px;
+  margin: 0;
+  padding: 40px 48px;
   border: 0;
   border-radius: 0;
-  background: linear-gradient(115deg, #173842 0%, #14252d 58%, #202342 100%);
-  box-shadow:
-    inset 0 -4px 0 var(--cyan),
-    0 14px 34px #0007;
+  background: linear-gradient(135deg, #0a0a0a 0%, #12151a 40%, #1a1014 100%);
+  overflow: hidden;
+}
+body.console-mode .hero::before {
+  content: '';
+  position: absolute;
+  inset: -20% auto -20% -35%;
+  width: 18%;
+  transform: skewX(-18deg);
+  background: linear-gradient(90deg, transparent, rgba(227, 38, 46, 0.2), transparent);
+  animation: spartan-hero-sweep 8s ease-in-out infinite;
+  pointer-events: none;
 }
 body.console-mode .hero::after {
   content: '';
@@ -228,494 +204,595 @@ body.console-mode .hero::after {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, transparent 48%, #0b101566),
-    repeating-linear-gradient(135deg, #ffffff04 0 1px, transparent 1px 9px);
+    linear-gradient(180deg, transparent 60%, rgba(16, 16, 16, 0.6)),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.015) 0 1px, transparent 1px 10px);
 }
 body.console-mode .hero > div:first-child {
   position: relative;
   z-index: 1;
   align-self: center;
 }
-body.console-mode .hero h2 {
-  max-width: 520px;
-  font-size: clamp(32px, 4vw, 58px);
-  line-height: 0.98;
+body.console-mode .hero .eyebrow {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 2px;
+  background: rgba(227, 38, 46, 0.2);
+  color: var(--spartan-red);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
+body.console-mode .hero h2 {
+  max-width: 600px;
+  margin: 12px 0;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 300;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #f1f1f1;
+}
 body.console-mode .hero-copy {
-  max-width: 440px;
-  margin: 14px 0 22px;
+  max-width: 480px;
+  margin: 0 0 20px;
+  color: #9a9b9d;
+  font-size: 14px;
+  line-height: 1.5;
 }
 body.console-mode .primary-button {
-  border-radius: 2px;
-  padding: 13px 19px;
-  box-shadow: 0 0 0 1px #dffaf5aa;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--spartan-red);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition:
+    transform 0.15s ease,
+    filter 0.15s ease;
+}
+body.console-mode .primary-button:hover {
+  transform: scale(1.03);
+  filter: brightness(1.15);
 }
 body.console-mode .hero-art,
 body.console-mode .latency {
   display: none;
 }
+
+/* Quick-access tile grid (hero right side) */
 body.console-mode .console-tile-grid {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: repeat(2, minmax(120px, 1fr));
-  grid-template-rows: repeat(2, minmax(86px, 1fr));
+  grid-template-columns: repeat(2, minmax(100px, 1fr));
+  grid-template-rows: repeat(2, minmax(70px, 1fr));
   gap: 8px;
   align-self: stretch;
+  max-width: 280px;
 }
 body.console-mode .console-tile {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  min-height: 92px;
-  padding: 15px;
+  min-height: 80px;
+  padding: 12px;
   border: 0;
-  border-radius: 0;
-  color: #f2f7f8;
-  background: #1d5559;
+  border-radius: 6px;
+  color: #f1f1f1;
+  background: rgba(227, 38, 46, 0.12);
   text-align: left;
-  font-size: 15px;
-  font-weight: 850;
+  font-size: 13px;
+  font-weight: 700;
   transition:
-    transform 0.12s ease,
-    outline 0.12s ease,
-    filter 0.12s ease;
+    transform 0.15s ease,
+    outline 0.15s ease,
+    filter 0.15s ease;
 }
 body.console-mode .console-tile:nth-child(1) {
   grid-row: span 2;
-  background: linear-gradient(145deg, #2b6266, #19454c);
+  background: linear-gradient(145deg, rgba(227, 38, 46, 0.25), rgba(143, 23, 29, 0.2));
 }
 body.console-mode .console-tile:nth-child(2) {
-  background: #3c315f;
+  background: rgba(185, 187, 189, 0.1);
 }
 body.console-mode .console-tile:nth-child(3) {
-  background: #4a3b56;
+  background: rgba(85, 88, 91, 0.15);
 }
 body.console-mode .console-tile:hover,
 body.console-mode .console-tile:focus-visible {
   z-index: 2;
-  outline: 3px solid #f4ffff;
+  outline: 3px solid var(--spartan-red);
   outline-offset: -3px;
-  filter: brightness(1.18);
-  transform: scale(1.015);
+  filter: brightness(1.2);
+  transform: scale(1.02);
 }
 body.console-mode .console-tile span:last-child {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 body.console-mode .console-tile small {
-  color: #b6d9d6;
+  color: #9a9b9d;
   font-size: 9px;
-  font-weight: 750;
-  letter-spacing: 0.16em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 body.console-mode .console-tile-icon {
   align-self: flex-start;
-  color: #d6fff9;
-  font-size: 28px;
+  color: var(--spartan-white, #f1f1f1);
+  font-size: 22px;
 }
+body.console-mode .console-tile-icon .spartan-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* ─── Content Sections ─── */
 body.console-mode .library-section {
   max-width: none;
+  margin: 0;
 }
 body.console-mode .library-section > .section-heading,
 body.console-mode .library-section > .toolbar {
   display: none;
 }
+
+/* ─── Horizontal Rails (Xbox shelves) ─── */
 body.console-mode .content-shelf {
-  margin-bottom: 30px;
+  position: relative;
+  margin: 0 0 4px;
+  padding: 24px 48px;
 }
 body.console-mode .shelf-heading {
-  margin: 0 0 9px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 0 12px;
 }
 body.console-mode .shelf-heading .eyebrow {
-  color: #82939c;
+  color: #9a9b9d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 body.console-mode .shelf-heading h3 {
-  font-size: 23px;
+  margin: 4px 0 0;
+  font-size: 20px;
+  font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #f1f1f1;
 }
+body.console-mode .shelf-view-all {
+  color: var(--spartan-red);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+body.console-mode .shelf-view-all:hover {
+  color: #ff6b6f;
+}
+body.console-mode .shelf-controls {
+  display: none;
+}
+
+/* Shelf viewport: horizontal scroll rail */
 body.console-mode .shelf-viewport {
-  gap: 10px;
-  padding: 2px 3px 12px;
-  scrollbar-width: auto;
+  display: flex;
+  gap: 12px;
+  padding: 4px 0 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
 }
-body.console-mode .shelf-viewport .card {
-  flex-basis: 258px;
-  min-height: 166px;
-  padding: 17px;
+body.console-mode .shelf-viewport::-webkit-scrollbar {
+  display: none;
+}
+body.console-mode .shelf-viewport > * {
+  scroll-snap-align: start;
+}
+
+/* Cards in shelves: Xbox tile style */
+body.console-mode .shelf-viewport .card,
+body.console-mode .cards .card {
+  flex: 0 0 220px;
+  min-height: 140px;
+  padding: 14px;
   border: 0;
-  border-radius: 0;
-  background: linear-gradient(145deg, #1d2a32, #182027);
-  box-shadow: inset 0 -3px 0 #48606a;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #1a1d22 0%, #12141a 100%);
+  box-shadow: inset 0 -3px 0 rgba(227, 38, 46, 0.4);
+  color: #f1f1f1;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
 }
 body.console-mode .shelf-viewport .card:hover,
-body.console-mode .shelf-viewport .card:focus-within {
-  border: 0;
-  outline: 3px solid #f4ffff;
+body.console-mode .shelf-viewport .card:focus-within,
+body.console-mode .cards .card:hover,
+body.console-mode .cards .card:focus-within {
+  transform: translateY(-4px);
+  box-shadow:
+    inset 0 -3px 0 var(--spartan-red),
+    0 8px 24px rgba(0, 0, 0, 0.5);
+  outline: 3px solid var(--spartan-red);
   outline-offset: -3px;
-  transform: none;
 }
-body.console-mode .shelf-viewport .card h3 {
-  font-size: 17px;
+body.console-mode .shelf-viewport .card h3,
+body.console-mode .cards .card h3 {
+  margin: 8px 0 4px;
+  font-size: 14px;
+  font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
-body.console-mode .shelf-viewport .card p {
+body.console-mode .shelf-viewport .card p,
+body.console-mode .cards .card p {
   display: -webkit-box;
   overflow: hidden;
+  color: #9a9b9d;
+  font-size: 11px;
+  line-height: 1.4;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
-body.console-mode .shelf-controls button {
-  border-radius: 2px;
+
+/* Card top section */
+body.console-mode .card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-@media (max-width: 800px) {
-  body.console-mode .content {
-    padding: 14px 18px 34px;
-  }
-  body.console-mode .hero {
-    grid-template-columns: 1fr;
-    min-height: 0;
-    gap: 20px;
-    padding: 24px;
-  }
-  body.console-mode .console-tile-grid {
-    min-height: 164px;
-  }
-  body.console-mode .console-tile {
-    min-height: 76px;
-    padding: 12px;
-  }
-  body.console-mode .console-tile:nth-child(1) {
-    grid-row: auto;
-  }
-  body.console-mode .shelf-viewport .card {
-    flex-basis: min(78vw, 258px);
-  }
+body.console-mode .card-type {
+  color: var(--spartan-red);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
-body.console-mode .topbar {
-  position: relative;
-  height: 0;
-  min-height: 0;
-  margin: 0;
+body.console-mode .favorite {
+  border: 0;
+  background: transparent;
+  color: #9a9b9d;
+  font-size: 14px;
+  padding: 4px;
+  transition: color 0.15s ease;
 }
-body.console-mode .topbar .console-mode-toggle {
-  position: absolute;
-  top: 8px;
-  right: 0;
-  z-index: 5;
-}
-@media (max-width: 800px) {
-  body.console-mode .topbar .console-mode-toggle {
-    top: 6px;
-    right: 0;
-  }
-}
-body.console-mode .topbar {
-  z-index: 10;
-  pointer-events: none;
-}
-body.console-mode .topbar .console-mode-toggle {
-  pointer-events: auto;
-}
-body.console-mode .topbar .console-mode-toggle {
-  position: fixed;
-  top: 82px;
-  right: 30px;
-  z-index: 50;
-}
-@media (max-width: 800px) {
-  body.console-mode .topbar .console-mode-toggle {
-    top: 76px;
-    right: 18px;
-  }
-}
-body.console-mode .topbar .console-mode-toggle {
-  top: 78px;
-  right: 30px;
-  padding: 5px 8px;
-  font-size: 10px;
-}
-@media (max-width: 800px) {
-  body.console-mode .topbar .console-mode-toggle {
-    top: 70px;
-    right: 18px;
-    padding: 4px 7px;
-    font-size: 10px;
-  }
+body.console-mode .favorite:hover,
+body.console-mode .favorite.is-favorite {
+  color: var(--spartan-red);
 }
 
-/* Spartan brand correction: the console layout uses the supplied red, black, metallic and white identity. */
-body.console-mode {
-  --spartan-red: #e3262e;
-  --spartan-red-dark: #8f171d;
-  --spartan-black: #050505;
-  --spartan-gunmetal: #242628;
-  --spartan-steel: #55585b;
-  --spartan-silver: #b9bbbd;
-  --spartan-white: #f4f4f2;
-  --cyan: var(--spartan-red);
-  --violet: var(--spartan-silver);
-  --bg: var(--spartan-black);
-  --panel: #111214;
-  --panel2: var(--spartan-gunmetal);
-  --line: #45484b;
-  --muted: #b4b5b7;
-  color: var(--spartan-white);
-  background: var(--spartan-black);
+/* Card chips */
+body.console-mode .chip {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(185, 187, 189, 0.1);
+  color: #9a9b9d;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
-body.console-mode .sidebar {
-  background: #080808;
-  border-color: var(--spartan-gunmetal);
-}
-body.console-mode .brand-mark {
-  border-color: var(--spartan-red);
+body.console-mode .chip.native {
+  background: rgba(227, 38, 46, 0.15);
   color: var(--spartan-red);
 }
-body.console-mode .brand small,
-body.console-mode .main-nav .nav-item.is-active,
-body.console-mode .main-nav .nav-item:hover {
-  color: var(--spartan-white);
+
+/* Card actions */
+body.console-mode .card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
 }
-body.console-mode .main-nav .nav-item:hover,
-body.console-mode .main-nav .nav-item.is-active {
-  background: #1b1c1e;
-  border-bottom-color: var(--spartan-red);
+body.console-mode .launch,
+body.console-mode .details-button {
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
 }
-body.console-mode .content {
-  background: var(--spartan-black);
-}
-body.console-mode .hero {
-  background: linear-gradient(115deg, #0a0a0a 0%, #17191b 55%, #2a1719 100%);
-  box-shadow:
-    inset 0 -4px 0 var(--spartan-red),
-    0 14px 34px #000b;
-}
-body.console-mode .hero::after {
-  background:
-    linear-gradient(90deg, transparent 48%, #0008),
-    repeating-linear-gradient(135deg, #ffffff05 0 1px, transparent 1px 9px);
-}
-body.console-mode .eyebrow.accent,
-body.console-mode .card-type,
-body.console-mode .shelf-heading .eyebrow {
-  color: var(--spartan-red);
-}
-body.console-mode .primary-button {
+body.console-mode .launch {
   background: var(--spartan-red);
   color: #fff;
-  box-shadow: 0 0 0 1px #ff7478aa;
 }
-body.console-mode .console-tile {
-  background: var(--spartan-gunmetal);
-  color: var(--spartan-white);
+body.console-mode .launch:hover {
+  filter: brightness(1.15);
+  transform: scale(1.03);
 }
-body.console-mode .console-tile:nth-child(1) {
-  background: linear-gradient(145deg, #a71920, #5f1217);
+body.console-mode .details-button {
+  background: rgba(241, 241, 241, 0.08);
+  color: #9a9b9d;
 }
-body.console-mode .console-tile:nth-child(2) {
-  background: linear-gradient(145deg, #55585b, #292b2d);
+body.console-mode .details-button:hover {
+  background: rgba(241, 241, 241, 0.15);
+  color: #f1f1f1;
 }
-body.console-mode .console-tile:nth-child(3) {
-  background: linear-gradient(145deg, #3b3d40, #171819);
+body.console-mode .details {
+  color: #6b6b6b;
+  font-size: 9px;
 }
-body.console-mode .console-tile small,
-body.console-mode .console-tile-icon {
-  color: var(--spartan-white);
+
+/* ─── Library Cards Grid ─── */
+body.console-mode .cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  padding: 0 48px 24px;
 }
-body.console-mode .console-tile:hover,
-body.console-mode .console-tile:focus-visible {
-  outline-color: var(--spartan-red);
-  filter: brightness(1.2);
-}
-body.console-mode .shelf-viewport .card {
-  background: linear-gradient(145deg, #202224, #101112);
-  box-shadow: inset 0 -3px 0 var(--spartan-red);
-}
-body.console-mode .shelf-viewport .card:hover,
-body.console-mode .shelf-viewport .card:focus-within {
-  outline-color: var(--spartan-red);
-}
-body.console-mode .shelf-controls button,
-body.console-mode .console-mode-toggle {
-  color: var(--spartan-red);
-  border-color: var(--spartan-steel);
-  background: #111214;
-}
-body.console-mode .shelf-controls button:hover,
-body.console-mode .shelf-controls button:focus-visible,
-body.console-mode .console-mode-toggle:hover,
-body.console-mode .console-mode-toggle[aria-pressed='true'] {
-  border-color: var(--spartan-red);
-  background: #2b1215;
-  color: var(--spartan-white);
-}
-body.console-mode :where(button, a, input, select, textarea, [tabindex]):focus-visible {
-  outline-color: var(--spartan-red);
-}
-body.console-mode .toast {
-  border-color: var(--spartan-red);
-  background: #241012;
-  color: #ffd8d9;
-}
-body.console-mode .chip {
-  background: #303235;
-  color: var(--spartan-silver);
-}
-@media (max-width: 700px) {
-  body.console-mode .sidebar {
-    height: 58px;
-    padding: 6px 10px;
-    gap: 7px;
-  }
-  body.console-mode .brand {
-    gap: 6px;
-    font-size: 9px;
-    letter-spacing: 0.14em;
-  }
-  body.console-mode .brand-mark {
-    width: 28px;
-    height: 28px;
-    font-size: 15px;
-  }
-  body.console-mode .brand small {
-    font-size: 7px;
-  }
-  body.console-mode .main-nav {
-    gap: 2px;
-  }
-  body.console-mode .main-nav .nav-item {
-    padding: 6px 8px;
-    font-size: 10px;
-  }
-  body.console-mode .main-nav .nav-item span {
-    display: none;
-  }
-  body.console-mode .sidebar-bottom .nav-item {
-    padding: 6px 7px;
-  }
-  body.console-mode .sidebar-bottom .nav-item span {
-    display: none;
-  }
-  body.console-mode .content {
-    height: calc(100dvh - 58px);
-    padding: 10px 12px 24px;
-  }
-  body.console-mode .hero {
-    gap: 14px;
-    padding: 17px;
-    margin-bottom: 20px;
-  }
-  body.console-mode .hero h2 {
-    font-size: 29px;
-  }
-  body.console-mode .hero-copy {
-    margin: 9px 0 15px;
-    font-size: 11px;
-    line-height: 1.3;
-  }
-  body.console-mode .primary-button {
-    padding: 10px 14px;
-    font-size: 13px;
-  }
-  body.console-mode .console-tile-grid {
-    min-height: 132px;
-    gap: 6px;
-  }
-  body.console-mode .console-tile {
-    min-height: 62px;
-    padding: 10px;
-    font-size: 12px;
-  }
-  body.console-mode .console-tile small {
-    font-size: 8px;
-  }
-  body.console-mode .console-tile-icon {
-    font-size: 22px;
-  }
-  body.console-mode .shelf-heading {
-    margin-bottom: 6px;
-  }
-  body.console-mode .shelf-heading h3 {
-    font-size: 18px;
-  }
-  body.console-mode .shelf-viewport {
-    gap: 7px;
-    padding-bottom: 9px;
-  }
-  body.console-mode .shelf-viewport .card {
-    flex-basis: min(68vw, 220px);
-    min-height: 142px;
-    padding: 12px;
-  }
-  body.console-mode .shelf-viewport .card h3 {
-    font-size: 14px;
-    margin-top: 10px;
-  }
-  body.console-mode .shelf-viewport .card p {
-    font-size: 10px;
-  }
-  body.console-mode .shelf-viewport .card-actions {
-    margin-top: 9px;
-    gap: 6px;
-  }
-  body.console-mode .shelf-viewport .launch,
-  body.console-mode .shelf-viewport .details-button {
-    padding: 6px 8px;
-    font-size: 10px;
-  }
-  body.console-mode .shelf-viewport .details {
-    font-size: 9px;
-  }
-}
-/* Compact console scale and restrained motion. */
-body.console-mode .hero h2 {
-  font-size: clamp(30px, 3.3vw, 48px);
-}
-body.console-mode .shelf-heading h3 {
-  font-size: 20px;
-}
-body.console-mode .shelf-viewport .card {
-  flex-basis: 240px;
-}
-body.console-mode .hero::before {
-  content: ' ';
-  position: absolute;
-  inset: -20% auto -20% -35%;
-  width: 18%;
-  transform: skewX(-18deg);
-  background: linear-gradient(90deg, transparent, #e3262e33, transparent);
-  animation: spartan-hero-sweep 8s ease-in-out infinite;
-  pointer-events: none;
-}
-body.console-mode .console-tile,
-body.console-mode .shelf-viewport .card,
-body.console-mode .shelf-controls button,
-body.console-mode .primary-button {
-  transition:
-    transform 0.18s ease,
-    filter 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease;
-}
-body.console-mode .console-tile:hover,
-body.console-mode .console-tile:focus-visible {
-  transform: scale(1.025);
-  box-shadow: 0 8px 20px #0008;
-}
-body.console-mode .shelf-viewport .card:hover,
-body.console-mode .shelf-viewport .card:focus-within {
-  transform: translateY(-3px);
+
+/* ─── Focus States (Xbox accent glow) ─── */
+body.console-mode button:focus-visible,
+body.console-mode input:focus-visible,
+body.console-mode select:focus-visible,
+body.console-mode a:focus-visible {
+  outline: 3px solid var(--spartan-red);
+  outline-offset: 3px;
   box-shadow:
-    inset 0 -3px 0 var(--spartan-red),
-    0 8px 18px #0008;
+    0 0 12px rgba(227, 38, 46, 0.4),
+    0 0 24px rgba(227, 38, 46, 0.15);
 }
-body.console-mode .shelf-controls button:hover,
-body.console-mode .shelf-controls button:focus-visible {
-  transform: scale(1.08);
+
+/* ─── Guide Overlay (Xbox left panel) ─── */
+body.console-mode .guide-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 200;
+  width: 340px;
+  background: rgba(10, 10, 10, 0.95);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-right: 1px solid rgba(241, 241, 241, 0.08);
+  transform: translateX(-100%);
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+  scrollbar-width: none;
 }
+body.console-mode .guide-overlay.is-open {
+  transform: translateX(0);
+}
+body.console-mode .guide-overlay::-webkit-scrollbar {
+  display: none;
+}
+body.console-mode .guide-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+body.console-mode .guide-backdrop.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+body.console-mode .guide-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 12px;
+  border-bottom: 1px solid rgba(241, 241, 241, 0.08);
+}
+body.console-mode .guide-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #9a9b9d;
+  font-size: 18px;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+body.console-mode .guide-tab:hover {
+  background: rgba(241, 241, 241, 0.08);
+  color: #f1f1f1;
+}
+body.console-mode .guide-tab.is-active {
+  background: rgba(227, 38, 46, 0.15);
+  color: var(--spartan-red);
+}
+body.console-mode .guide-content {
+  padding: 8px 0;
+}
+body.console-mode .guide-section {
+  padding: 8px 16px 16px;
+}
+body.console-mode .guide-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  color: #6b6b6b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+body.console-mode .guide-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #c2c2c2;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+body.console-mode .guide-item:hover {
+  background: rgba(241, 241, 241, 0.08);
+  color: #f1f1f1;
+}
+body.console-mode .guide-item:focus-visible {
+  outline: 3px solid var(--spartan-red);
+  outline-offset: -3px;
+}
+body.console-mode .guide-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: rgba(241, 241, 241, 0.06);
+  color: #9a9b9d;
+  font-size: 14px;
+  flex: none;
+}
+body.console-mode .guide-item-label {
+  flex: 1;
+  min-width: 0;
+}
+body.console-mode .guide-item-badge {
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: var(--spartan-red);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+}
+body.console-mode .guide-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid rgba(241, 241, 241, 0.08);
+}
+body.console-mode .guide-profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--spartan-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+}
+body.console-mode .guide-profile-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f1f1;
+}
+body.console-mode .guide-profile-status {
+  font-size: 11px;
+  color: #9a9b9d;
+}
+
+/* ─── Button Hints Bar (Xbox bottom bar) ─── */
+body.console-mode .button-hints {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  height: 40px;
+  padding: 0 24px;
+  background: rgba(10, 10, 10, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(241, 241, 241, 0.08);
+}
+body.console-mode .button-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #9a9b9d;
+  white-space: nowrap;
+}
+body.console-mode .button-hint-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border: 1px solid rgba(241, 241, 241, 0.2);
+  border-radius: 3px;
+  background: rgba(241, 241, 241, 0.06);
+  color: #f1f1f1;
+  font-size: 10px;
+  font-weight: 700;
+}
+body.console-mode .button-hint-key.key-a {
+  border-color: rgba(107, 192, 76, 0.5);
+  color: #6bc04c;
+}
+body.console-mode .button-hint-key.key-b {
+  border-color: rgba(227, 38, 46, 0.5);
+  color: var(--spartan-red);
+}
+body.console-mode .button-hint-key.key-x {
+  border-color: rgba(70, 130, 230, 0.5);
+  color: #4682e6;
+}
+body.console-mode .button-hint-key.key-y {
+  border-color: rgba(230, 180, 40, 0.5);
+  color: #e6b428;
+}
+
+/* ─── Toast Notification ─── */
+body.console-mode .toast {
+  position: fixed;
+  bottom: 52px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  z-index: 300;
+  padding: 10px 20px;
+  border: 1px solid var(--spartan-red);
+  border-radius: 6px;
+  background: rgba(20, 10, 12, 0.95);
+  color: #ffd8d9;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+body.console-mode .toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ─── Animations ─── */
 @keyframes spartan-hero-sweep {
   0%,
   62% {
@@ -731,54 +808,266 @@ body.console-mode .shelf-controls button:focus-visible {
     left: 125%;
   }
 }
-@media (max-width: 700px) {
-  body.console-mode .hero h2 {
-    font-size: 26px;
+
+/* ─── Hover/Focus Transitions ─── */
+body.console-mode .console-tile,
+body.console-mode .shelf-viewport .card,
+body.console-mode .cards .card,
+body.console-mode .primary-button,
+body.console-mode .guide-item {
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+/* ─── Responsive: Tablet (landscape phone) ─── */
+@media (max-width: 1100px) {
+  body.console-mode .hero {
+    min-height: 280px;
+    padding: 32px 32px;
   }
-  body.console-mode .hero-copy {
-    font-size: 10px;
+  body.console-mode .content-shelf {
+    padding: 20px 32px;
   }
-  body.console-mode .primary-button {
-    padding: 9px 12px;
-    font-size: 12px;
-  }
-  body.console-mode .shelf-heading h3 {
-    font-size: 17px;
-  }
-  body.console-mode .shelf-viewport .card {
-    flex-basis: min(62vw, 200px);
-    min-height: 134px;
-  }
-  body.console-mode .shelf-viewport .card h3 {
-    font-size: 13px;
+  body.console-mode .cards {
+    padding: 0 32px 20px;
   }
 }
+
+/* ─── Responsive: Mobile ─── */
+@media (max-width: 700px) {
+  body.console-mode .sidebar {
+    height: 44px;
+    padding: 0 10px;
+    gap: 4px;
+  }
+  body.console-mode .brand {
+    gap: 6px;
+  }
+  body.console-mode .brand-mark {
+    width: 24px;
+    height: 24px;
+    font-size: 13px;
+  }
+  body.console-mode .brand span {
+    font-size: 9px;
+  }
+  body.console-mode .brand small {
+    font-size: 7px;
+  }
+  body.console-mode .main-nav .nav-item {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  body.console-mode .main-nav .nav-item span {
+    display: none;
+  }
+  body.console-mode .sidebar-bottom .nav-item {
+    padding: 6px 7px;
+  }
+  body.console-mode .sidebar-bottom .nav-item span {
+    display: none;
+  }
+  body.console-mode .content {
+    padding: 44px 0 44px;
+  }
+  body.console-mode .hero {
+    grid-template-columns: 1fr;
+    min-height: 220px;
+    padding: 24px 20px;
+    gap: 16px;
+  }
+  body.console-mode .hero h2 {
+    font-size: 28px;
+  }
+  body.console-mode .hero-copy {
+    font-size: 12px;
+    margin-bottom: 14px;
+  }
+  body.console-mode .primary-button {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+  body.console-mode .console-tile-grid {
+    min-height: 120px;
+    max-width: none;
+    gap: 6px;
+  }
+  body.console-mode .console-tile {
+    min-height: 56px;
+    padding: 10px;
+    font-size: 11px;
+    border-radius: 4px;
+  }
+  body.console-mode .console-tile small {
+    font-size: 8px;
+  }
+  body.console-mode .console-tile-icon {
+    font-size: 18px;
+  }
+  body.console-mode .content-shelf {
+    padding: 16px 16px;
+  }
+  body.console-mode .shelf-heading h3 {
+    font-size: 16px;
+  }
+  body.console-mode .shelf-viewport .card {
+    flex: 0 0 180px;
+    min-height: 120px;
+    padding: 12px;
+  }
+  body.console-mode .shelf-viewport .card h3 {
+    font-size: 12px;
+  }
+  body.console-mode .shelf-viewport .card p {
+    font-size: 10px;
+  }
+  body.console-mode .shelf-viewport .card-actions {
+    margin-top: 8px;
+    gap: 5px;
+  }
+  body.console-mode .shelf-viewport .launch,
+  body.console-mode .shelf-viewport .details-button {
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+  body.console-mode .cards {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    padding: 0 16px 16px;
+  }
+  body.console-mode .guide-overlay {
+    width: 280px;
+  }
+  body.console-mode .button-hints {
+    height: 36px;
+    gap: 16px;
+  }
+  body.console-mode .button-hint {
+    font-size: 10px;
+  }
+  body.console-mode .button-hint-key {
+    min-width: 18px;
+    height: 18px;
+    font-size: 9px;
+  }
+}
+
+/* ─── Responsive: TV / 10-foot mode ─── */
+@media (min-width: 1200px) {
+  body.console-mode .sidebar {
+    height: 52px;
+    padding: 0 28px;
+  }
+  body.console-mode .main-nav .nav-item {
+    padding: 10px 18px;
+    font-size: 13px;
+  }
+  body.console-mode .hero {
+    min-height: 400px;
+    padding: 48px 64px;
+  }
+  body.console-mode .hero h2 {
+    font-size: 56px;
+  }
+  body.console-mode .content-shelf {
+    padding: 28px 64px;
+  }
+  body.console-mode .shelf-heading h3 {
+    font-size: 24px;
+  }
+  body.console-mode .shelf-viewport .card {
+    flex: 0 0 260px;
+    min-height: 160px;
+  }
+  body.console-mode .shelf-viewport .card h3 {
+    font-size: 16px;
+  }
+  body.console-mode .cards {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+    padding: 0 64px 28px;
+  }
+  body.console-mode .button-hints {
+    height: 44px;
+    gap: 32px;
+  }
+  body.console-mode .button-hint {
+    font-size: 12px;
+  }
+  body.console-mode .button-hint-key {
+    min-width: 26px;
+    height: 26px;
+    font-size: 11px;
+  }
+  html[data-spartan-navigation='remote-controller'] body.console-mode .guide-item,
+  html[data-spartan-navigation='remote-controller'] body.console-mode .button-hint {
+    min-height: 44px;
+  }
+}
+
+/* ─── Reduced Motion ─── */
 @media (prefers-reduced-motion: reduce) {
   body.console-mode .hero::before {
     animation: none;
   }
   body.console-mode .console-tile,
   body.console-mode .shelf-viewport .card,
-  body.console-mode .shelf-controls button,
-  body.console-mode .primary-button {
+  body.console-mode .cards .card,
+  body.console-mode .primary-button,
+  body.console-mode .guide-item {
+    transition: none;
+  }
+  body.console-mode .guide-overlay {
+    transition: none;
+  }
+  body.console-mode .guide-backdrop {
     transition: none;
   }
 }
+
+/* ─── Landscape mobile ─── */
+@media (max-height: 600px) and (orientation: landscape) {
+  body.console-mode .sidebar {
+    height: 40px;
+    padding: 0 10px;
+  }
+  body.console-mode .content {
+    padding: 40px 0 36px;
+  }
+  body.console-mode .hero {
+    min-height: 180px;
+    padding: 16px 24px;
+  }
+  body.console-mode .hero h2 {
+    font-size: 24px;
+  }
+  body.console-mode .console-tile-grid {
+    min-height: 100px;
+  }
+  body.console-mode .content-shelf {
+    padding: 12px 24px;
+  }
+}
+
+/* ─── Session icon button (resume/play) ─── */
 .session-icon-button {
   display: grid;
   place-items: center;
   width: 42px;
   height: 42px;
   padding: 0;
-  border: 1px solid var(--spartan-red, var(--cyan));
+  border: 1px solid var(--spartan-red);
   border-radius: 50%;
-  background: var(--spartan-red, var(--cyan));
+  background: var(--spartan-red);
   color: #fff;
   font-size: 17px;
   line-height: 1;
   box-shadow:
-    0 0 0 3px #e3262e22,
-    0 7px 16px #0008;
+    0 0 0 3px rgba(227, 38, 46, 0.15),
+    0 7px 16px rgba(0, 0, 0, 0.4);
   transition:
     transform 0.18s ease,
     filter 0.18s ease,
@@ -789,8 +1078,8 @@ body.console-mode .shelf-controls button:focus-visible {
   transform: scale(1.08);
   filter: brightness(1.15);
   box-shadow:
-    0 0 0 4px #e3262e44,
-    0 9px 20px #0009;
+    0 0 0 4px rgba(227, 38, 46, 0.3),
+    0 9px 20px rgba(0, 0, 0, 0.5);
 }
 body.console-mode .session-icon-button {
   width: 36px;

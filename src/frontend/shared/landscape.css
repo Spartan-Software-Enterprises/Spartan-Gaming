@@ -1,0 +1,206 @@
+/* Mobile landscape responsive fixes — Spartan Gaming. */
+/* Applied via height queries when the viewport is landscape and short. */
+
+@media (max-height: 600px) and (orientation: landscape) {
+  /* ─── Dashboard / Console mode ─── */
+  body.console-mode .sidebar {
+    height: 56px;
+    padding: 8px 16px;
+    gap: 8px;
+  }
+  body.console-mode .content {
+    height: calc(100dvh - 56px);
+    padding: 12px 20px 20px;
+  }
+  body.console-mode .hero {
+    grid-template-columns: 1fr 1fr;
+    min-height: 140px;
+    margin-bottom: 14px;
+    padding: 14px 20px;
+  }
+  body.console-mode .hero h2 {
+    font-size: 22px;
+  }
+  body.console-mode .hero-copy {
+    margin: 6px 0 12px;
+    font-size: 11px;
+    max-width: 280px;
+  }
+  body.console-mode .console-tile-grid {
+    min-height: 100px;
+    gap: 6px;
+  }
+  body.console-mode .console-tile {
+    min-height: 60px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  body.console-mode .console-tile small {
+    font-size: 8px;
+  }
+  body.console-mode .shelf-heading {
+    margin-bottom: 4px;
+  }
+  body.console-mode .shelf-heading h3 {
+    font-size: 16px;
+  }
+  body.console-mode .shelf-viewport .card {
+    flex-basis: min(200px, 22vw);
+    min-height: 120px;
+    padding: 10px;
+  }
+  body.console-mode .shelf-viewport .card h3 {
+    font-size: 13px;
+  }
+  body.console-mode .content-shelf {
+    margin-bottom: 12px;
+  }
+
+  /* Non-console dashboard */
+  .sidebar {
+    width: 180px;
+    padding: 12px 10px;
+  }
+  .main-nav .nav-item {
+    padding: 7px 8px;
+    font-size: 12px;
+  }
+  .content {
+    padding: 10px 16px 16px;
+  }
+  .hero {
+    min-height: 120px;
+    margin: 10px 0 12px;
+    padding: 14px 18px;
+  }
+  .hero h2 {
+    font-size: 20px;
+  }
+  .hero-copy {
+    font-size: 11px;
+    max-width: 200px;
+    margin: 4px 0 8px;
+  }
+  .primary-button {
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+
+  /* ─── Settings ─── */
+  .app {
+    grid-template-columns: 180px 1fr;
+  }
+  .rail {
+    padding: 12px 10px;
+  }
+  .nav-item {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .main {
+    padding: 20px 24px 30px;
+  }
+  h1 {
+    font-size: 24px;
+  }
+  .setting-row {
+    min-height: 60px;
+    padding: 10px 0;
+  }
+  .content-heading {
+    margin-bottom: 16px;
+  }
+
+  /* ─── Providers ─── */
+  .provider-shell {
+    padding: 12px 12px 20px;
+  }
+  .heading {
+    margin: 20px 0 16px;
+  }
+  .heading h1 {
+    font-size: 24px;
+  }
+  .provider-workspace {
+    gap: 10px;
+  }
+  .category-tab {
+    flex-basis: 140px;
+    min-height: 44px;
+    padding: 8px;
+  }
+  .provider-item {
+    min-height: 70px;
+    padding: 10px;
+  }
+
+  /* ─── Emulation ─── */
+  .emu-shell {
+    padding: 14px 16px 20px;
+  }
+  .intro {
+    margin: 24px 0 14px;
+  }
+  .intro h1 {
+    font-size: 22px;
+  }
+  .content {
+    gap: 10px;
+  }
+  .core-card {
+    padding: 10px;
+  }
+
+  /* ─── Library ─── */
+  .library-workspace {
+    gap: 8px;
+  }
+
+  /* ─── Social ─── */
+  .social-shell {
+    padding: 12px 12px 20px;
+  }
+
+  /* ─── Multiplayer ─── */
+  .mp-shell {
+    padding: 12px 12px 20px;
+  }
+
+  /* ─── Host ─── */
+  .host-shell {
+    padding: 14px 14px 20px;
+  }
+
+  /* ─── Diagnostics ─── */
+  .diagnostics-shell {
+    padding: 14px 16px 20px;
+  }
+  .capability-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  /* ─── Workspaces ─── */
+  .workspace-grid {
+    gap: 10px;
+  }
+  .workspace-card {
+    min-height: 160px;
+    padding: 14px;
+  }
+
+  /* ─── Global ─── */
+  .topbar {
+    flex-wrap: wrap;
+  }
+  .section-heading h2 {
+    font-size: 18px;
+  }
+  .cards-grid {
+    gap: 8px;
+  }
+  .card {
+    min-height: 120px;
+    padding: 12px;
+  }
+}

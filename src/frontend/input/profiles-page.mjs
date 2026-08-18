@@ -1,4 +1,5 @@
 import '../pwa/register.mjs';
+import '../console-mode-init.mjs';
 import {
   BUILTIN_CONTROLLER_PROFILES,
   CONTROLLER_PROFILE_CAPABILITIES,

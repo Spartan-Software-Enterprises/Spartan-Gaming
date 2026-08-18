@@ -1,0 +1,127 @@
+/* Player console-mode: Spartan brand palette and compact controls. */
+body.console-mode {
+  --cyan: var(--spartan-red);
+  --violet: var(--spartan-silver);
+  --panel: #111214;
+  --line: #45484b;
+  --muted: #b4b5b7;
+  color: var(--spartan-white);
+  background: var(--spartan-black);
+}
+body.console-mode .player-topbar {
+  background: rgba(8, 8, 8, 0.97);
+  border-bottom: 1px solid var(--spartan-gunmetal);
+}
+body.console-mode .brand-mark {
+  border-color: var(--spartan-red);
+  color: var(--spartan-red);
+}
+body.console-mode .brand small {
+  color: var(--spartan-red);
+}
+body.console-mode .exit-link {
+  color: var(--spartan-silver);
+}
+body.console-mode .exit-link:hover {
+  color: var(--spartan-red);
+}
+body.console-mode .stage {
+  border-color: var(--spartan-gunmetal);
+  background: linear-gradient(145deg, #0a0a0a, #111214 50%, #1a1215);
+}
+body.console-mode .stage-icon {
+  color: var(--spartan-red);
+}
+body.console-mode .primary {
+  background: var(--spartan-red);
+  color: #fff;
+  box-shadow: 0 0 0 1px #ff7478aa;
+}
+body.console-mode .secondary {
+  border-color: var(--spartan-steel);
+  background: #111214;
+  color: var(--spartan-silver);
+}
+body.console-mode .secondary:hover,
+body.console-mode .secondary:focus-visible {
+  border-color: var(--spartan-red);
+  background: #2b1215;
+  color: var(--spartan-white);
+}
+body.console-mode .overlay-top,
+body.console-mode .overlay-bottom {
+  background: linear-gradient(180deg, #000b, transparent);
+}
+body.console-mode .overlay-bottom {
+  background: linear-gradient(0deg, #000b, transparent);
+}
+body.console-mode .overlay-bottom .icon-button {
+  border-color: var(--spartan-steel);
+  background: #111214cc;
+  color: var(--spartan-silver);
+}
+body.console-mode .overlay-bottom .icon-button:hover,
+body.console-mode .overlay-bottom .icon-button:focus-visible {
+  border-color: var(--spartan-red);
+  background: #2b1215cc;
+  color: var(--spartan-white);
+}
+body.console-mode .overlay-bottom .end {
+  color: var(--spartan-red);
+}
+body.console-mode .signal-good {
+  background: #6fea9b;
+  box-shadow: 0 0 8px #6fea9b;
+}
+body.console-mode .quality-control select {
+  border-color: var(--spartan-steel);
+  background: #111214cc;
+  color: var(--spartan-silver);
+}
+body.console-mode .quality-control select:focus {
+  border-color: var(--spartan-red);
+  outline-color: #e3262e44;
+}
+body.console-mode .diagnostics {
+  border-color: var(--spartan-gunmetal);
+  background: #111214;
+}
+body.console-mode .diagnostics dt {
+  color: var(--spartan-steel);
+}
+body.console-mode .audio-output-control select {
+  border-color: var(--spartan-steel);
+  background: #111214;
+  color: var(--spartan-silver);
+}
+body.console-mode .audio-output-control select:focus {
+  border-color: var(--spartan-red);
+  outline-color: #e3262e44;
+}
+body.console-mode .connection-form input {
+  border-color: var(--spartan-steel);
+  background: #0a0a0a;
+  color: var(--spartan-white);
+}
+body.console-mode .touch-control {
+  border-color: #8ca3ac66;
+  background: #111214b8;
+  color: var(--spartan-silver);
+}
+body.console-mode .touch-control.is-pressed,
+body.console-mode .touch-control:active {
+  border-color: var(--spartan-red);
+  background: #e3262ecc;
+  color: #fff;
+}
+body.console-mode .touch-stick {
+  border-color: #8ca3ac66;
+  background: #111214b8;
+}
+body.console-mode .touch-stick span {
+  border-color: var(--spartan-red);
+  background: #e3262ecc;
+}
+body.console-mode :where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline-color: var(--spartan-red);
+}

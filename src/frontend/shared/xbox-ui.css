@@ -1,6 +1,6 @@
-/* Shared Xbox One-inspired interaction language. Spartan colors and branding stay unchanged. */
+/* Shared console-inspired interaction language. Spartan colors and branding stay unchanged. */
 :where(button, a, input, select, textarea, [tabindex]):focus-visible {
-  outline: 3px solid var(--cyan, #50e1d1);
+  outline: 3px solid var(--spartan-red, #e3262e);
   outline-offset: 3px;
 }
 
@@ -14,15 +14,15 @@
 }
 
 :where(.card, .panel, .rail, .stage, .hero, .setting-row):focus-within {
-  border-color: var(--cyan, #50e1d1);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cyan, #50e1d1) 24%, transparent);
+  border-color: var(--spartan-red, #e3262e);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--spartan-red, #e3262e) 24%, transparent);
 }
 
 :where([aria-selected='true'], [aria-current='page'], .is-selected, .selected) {
-  border-color: var(--cyan, #50e1d1) !important;
+  border-color: var(--spartan-red, #e3262e) !important;
   box-shadow:
-    inset 4px 0 var(--cyan, #50e1d1),
-    0 0 0 1px color-mix(in srgb, var(--cyan, #50e1d1) 22%, transparent);
+    inset 4px 0 var(--spartan-red, #e3262e),
+    0 0 0 1px color-mix(in srgb, var(--spartan-red, #e3262e) 22%, transparent);
 }
 
 html[data-spartan-navigation='remote-controller']

@@ -1,5 +1,14 @@
 import '../pwa/register.mjs';
 import { bindPrimaryNavigation } from '../primary-navigation.mjs';
+import { createSettingsStore } from '../settings/profile.mjs';
+
+const settingsStore = createSettingsStore();
+const multiplayerSettings = settingsStore.read();
+document.head.insertAdjacentHTML(
+  'beforeend',
+  '<link rel="stylesheet" href="../dashboard/console-mode.css">',
+);
+document.body.classList.add('console-mode');
 
 const STORAGE_PREFIX = 'spartan-gaming.multiplayer.v1.';
 

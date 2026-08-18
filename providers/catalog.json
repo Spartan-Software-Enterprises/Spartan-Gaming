@@ -7,7 +7,7 @@
       "name": "NVIDIA GeForce NOW",
       "kind": "cloud-gaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch", "native-client"],
+      "integrationModes": ["browser-first", "provider-launch", "native-client"],
       "nativeClients": [
         {
           "name": "GeForce NOW",
@@ -30,7 +30,7 @@
       "name": "Xbox Cloud Gaming",
       "kind": "cloud-gaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch", "native-client"],
+      "integrationModes": ["browser-first", "provider-launch", "native-client"],
       "nativeClients": [
         {
           "name": "Xbox",
@@ -46,7 +46,7 @@
       "name": "Amazon Luna",
       "kind": "cloud-gaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": ["browser-first", "provider-launch"],
       "url": "https://luna.amazon.com/",
       "requirements": ["amazon-account", "supported-channel-or-entitlement"],
       "capabilities": ["gamepad", "keyboard", "mouse", "fullscreen", "adaptive-quality"]
@@ -56,7 +56,7 @@
       "name": "Boosteroid",
       "kind": "cloud-gaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": ["browser-first", "provider-launch"],
       "url": "https://boosteroid.com/",
       "requirements": ["provider-account", "supported-game-library"],
       "capabilities": ["gamepad", "keyboard", "mouse", "fullscreen", "adaptive-quality"]
@@ -66,7 +66,7 @@
       "name": "Shadow PC",
       "kind": "cloud-pc",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch", "native-client"],
+      "integrationModes": ["browser-first", "provider-launch", "native-client"],
       "nativeClients": [
         {
           "name": "Shadow",
@@ -82,7 +82,7 @@
       "name": "Steam Remote Play",
       "kind": "remote-play",
       "supportLevel": "D",
-      "integrationModes": ["official-launch", "user-owned-host", "native-client"],
+      "integrationModes": ["provider-launch", "user-owned-host", "native-client"],
       "nativeClients": [
         {
           "name": "Steam",
@@ -98,7 +98,7 @@
       "name": "Twitch",
       "kind": "live-streaming",
       "supportLevel": "C",
-      "integrationModes": ["browser-first", "official-api", "official-embed"],
+      "integrationModes": ["browser-first", "provider-api", "provider-embed"],
       "url": "https://www.twitch.tv/",
       "requirements": [],
       "capabilities": ["video", "chat", "clips", "watch-parties", "creator-dashboard"],
@@ -111,7 +111,7 @@
       "name": "YouTube Live",
       "kind": "live-streaming",
       "supportLevel": "C",
-      "integrationModes": ["browser-first", "official-api", "official-embed"],
+      "integrationModes": ["browser-first", "provider-api", "provider-embed"],
       "url": "https://www.youtube.com/live",
       "requirements": ["google-account-for-creator-actions"],
       "capabilities": ["video", "chat", "clips", "broadcast-management", "creator-dashboard"],
@@ -124,7 +124,7 @@
       "name": "Discord",
       "kind": "social-streaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch", "official-embed", "native-client"],
+      "integrationModes": ["browser-first", "provider-launch", "provider-embed", "native-client"],
       "nativeClients": [
         {
           "name": "Discord",
@@ -143,7 +143,7 @@
       "name": "Owncast",
       "kind": "self-hosted-live-streaming",
       "supportLevel": "D",
-      "integrationModes": ["browser-first", "official-api", "self-hosted"],
+      "integrationModes": ["browser-first", "provider-api", "self-hosted"],
       "url": "https://owncast.online/",
       "requirements": ["owncast-instance-for-hosting"],
       "capabilities": ["video", "chat", "self-hosting", "custom-instance"]
@@ -153,7 +153,7 @@
       "name": "PlayStation Plus Cloud Streaming",
       "kind": "cloud-gaming",
       "supportLevel": "A",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": ["browser-first", "provider-launch"],
       "url": "https://www.playstation.com/en-us/ps-plus/",
       "requirements": ["playstation-network-account", "supported-plan", "supported-region"],
       "capabilities": ["gamepad", "keyboard", "fullscreen", "adaptive-quality"]
@@ -163,7 +163,7 @@
       "name": "Blacknut",
       "kind": "cloud-gaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": ["browser-first", "provider-launch"],
       "url": "https://www.blacknut.com/",
       "requirements": ["blacknut-account", "subscription"],
       "capabilities": [
@@ -180,7 +180,7 @@
       "name": "Antstream Arcade",
       "kind": "cloud-gaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": ["browser-first", "provider-launch"],
       "url": "https://www.antstream.com/",
       "requirements": ["antstream-account", "subscription-or-trial"],
       "capabilities": [
@@ -197,7 +197,7 @@
       "name": "Parsec",
       "kind": "remote-play",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch", "user-owned-host", "native-client"],
+      "integrationModes": ["browser-first", "provider-launch", "user-owned-host", "native-client"],
       "nativeClients": [
         {
           "name": "Parsec",
@@ -213,7 +213,7 @@
       "name": "Xbox Remote Play",
       "kind": "remote-play",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch", "user-owned-host"],
+      "integrationModes": ["browser-first", "provider-launch", "user-owned-host"],
       "url": "https://www.xbox.com/en-US/play/consoles",
       "requirements": ["microsoft-account", "remote-features-enabled", "user-owned-xbox"],
       "capabilities": [
@@ -230,7 +230,7 @@
       "name": "PlayStation Remote Play",
       "kind": "remote-play",
       "supportLevel": "B",
-      "integrationModes": ["official-launch", "user-owned-host", "native-client"],
+      "integrationModes": ["provider-launch", "user-owned-host", "native-client"],
       "nativeClients": [
         {
           "name": "PS Remote Play",
@@ -270,7 +270,7 @@
       "name": "Steam Broadcasting",
       "kind": "live-streaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch", "official-embed", "native-client"],
+      "integrationModes": ["browser-first", "provider-launch", "provider-embed", "native-client"],
       "nativeClients": [
         {
           "name": "Steam",
@@ -289,10 +289,10 @@
       "name": "KICK",
       "kind": "live-streaming",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-embed", "official-api"],
+      "integrationModes": ["browser-first", "provider-embed", "provider-api"],
       "url": "https://kick.com/",
       "requirements": ["kick-account-for-creator-actions"],
-      "capabilities": ["video", "chat", "clips", "official-embed", "creator-dashboard"],
+      "capabilities": ["video", "chat", "clips", "provider-embed", "creator-dashboard"],
       "description": "Watch live streams and interact with creators on Kick.",
       "privacy": "Official Kick surfaces. Spartan Gaming does not capture Kick credentials or chat content.",
       "secure": true
@@ -321,7 +321,7 @@
       "name": "Steam",
       "kind": "game-library",
       "supportLevel": "A",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": ["browser-first", "provider-launch"],
       "url": "https://store.steampowered.com",
       "requirements": ["steam-account", "steam-client"],
       "capabilities": ["gamepad", "cloud-saves", "achievements", "overlay", "fullscreen"],
@@ -337,7 +337,7 @@
       "name": "GOG",
       "kind": "game-library",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": ["browser-first", "provider-launch"],
       "url": "https://www.gog.com",
       "requirements": ["gog-account", "gog-galaxy-client"],
       "capabilities": ["gamepad", "cloud-saves", "achievements", "overlay", "fullscreen"],
@@ -353,7 +353,7 @@
       "name": "Epic Games",
       "kind": "game-library",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": ["browser-first", "provider-launch"],
       "url": "https://store.epicgames.com",
       "requirements": ["epic-account", "epic-games-launcher"],
       "capabilities": ["gamepad", "cloud-saves", "achievements", "overlay", "fullscreen"],
@@ -369,7 +369,7 @@
       "name": "Ubisoft Connect",
       "kind": "game-library",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": ["browser-first", "provider-launch"],
       "url": "https://www.ubisoft.com",
       "requirements": ["ubisoft-account", "ubisoft-connect-client"],
       "capabilities": ["gamepad", "cloud-saves", "achievements", "overlay", "fullscreen"],
@@ -385,7 +385,7 @@
       "name": "EA App",
       "kind": "game-library",
       "supportLevel": "C",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": ["browser-first", "provider-launch"],
       "url": "https://www.ea.com",
       "requirements": ["ea-account", "ea-app-client"],
       "capabilities": ["gamepad", "cloud-saves", "achievements", "overlay", "fullscreen"],
@@ -401,7 +401,7 @@
       "name": "Battle.net",
       "kind": "game-library",
       "supportLevel": "B",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": ["browser-first", "provider-launch"],
       "url": "https://www.blizzard.com",
       "requirements": ["battlenet-account", "battlenet-client"],
       "capabilities": ["gamepad", "cloud-saves", "achievements", "overlay", "fullscreen"],
@@ -417,7 +417,7 @@
       "name": "Rockstar Games",
       "kind": "game-library",
       "supportLevel": "C",
-      "integrationModes": ["browser-first", "official-launch"],
+      "integrationModes": ["browser-first", "provider-launch"],
       "url": "https://www.rockstargames.com",
       "requirements": ["rockstar-account", "rockstar-games-launcher"],
       "capabilities": ["gamepad", "cloud-saves", "achievements", "overlay", "fullscreen"],
@@ -433,7 +433,7 @@
       "name": "GameNative",
       "kind": "native",
       "supportLevel": "D",
-      "integrationModes": ["official-launch", "browser-first"],
+      "integrationModes": ["provider-launch", "browser-first"],
       "url": "https://gamenative.app/",
       "requirements": ["android-device", "owned-game-library", "official-gamenative-install"],
       "capabilities": [

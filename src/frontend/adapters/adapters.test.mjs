@@ -8,7 +8,7 @@ const cloud = {
   id: 'cloud',
   name: 'Cloud',
   backendType: 'provider',
-  integrationModes: ['browser-first', 'official-launch'],
+  integrationModes: ['browser-first', 'provider-launch'],
   url: 'https://example.test',
   requirements: ['account'],
   capabilities: ['gamepad'],
@@ -63,10 +63,10 @@ test('catalog adapter registry resolves immutable descriptors', () => {
 });
 test('provider launch plans honor saved official launch preferences', () => {
   const plan = resolveLaunchPlan(
-    { ...cloud, integrationModes: ['browser-first', 'official-launch'] },
+    { ...cloud, integrationModes: ['browser-first', 'provider-launch'] },
     { providerProfile: { launchMode: 'official' } },
   );
-  assert.equal(plan.mode, 'official-launch');
+  assert.equal(plan.mode, 'provider-launch');
   assert.equal(plan.integration.controllerProfile, 'Auto-detect');
 });
 test('launch plans expose capability readiness and a concrete next action', () => {
@@ -145,16 +145,16 @@ test('provider embed plans require a configured official target and use its gene
     id: 'twitch',
     name: 'Twitch',
     backendType: 'provider',
-    integrationModes: ['official-embed', 'browser-first'],
+    integrationModes: ['provider-embed', 'browser-first'],
     capabilities: ['video', 'chat'],
     url: 'https://www.twitch.tv/',
   };
   const plan = resolveLaunchPlan(twitch, {
-    allowedModes: ['official-embed', 'browser-first'],
+    allowedModes: ['provider-embed', 'browser-first'],
     providerProfile: { embedTarget: 'twitchdev', embedParent: 'gaming.example' },
   });
   assert.equal(plan.action, 'embed-url');
   assert.match(plan.url, /player\.twitch\.tv/);
-  const fallback = resolveLaunchPlan(twitch, { allowedModes: ['official-embed', 'browser-first'] });
+  const fallback = resolveLaunchPlan(twitch, { allowedModes: ['provider-embed', 'browser-first'] });
   assert.equal(fallback.action, 'open-url');
 });

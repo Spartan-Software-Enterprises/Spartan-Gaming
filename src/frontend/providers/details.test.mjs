@@ -17,7 +17,7 @@ test('provider details preserve bounded launch evidence without secrets', () => 
   const model = createProviderDetailsModel(entry, {
     backendId: 'twitch',
     status: 'ready',
-    mode: 'official-embed',
+    mode: 'provider-embed',
     action: 'embed-url',
     url: 'https://player.twitch.tv/?channel=spartan',
     requirements: ['account'],

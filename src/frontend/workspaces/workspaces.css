@@ -6,7 +6,7 @@
   --line: #283341;
   --text: #eef4f8;
   --muted: #8c9bab;
-  --accent: #60d6df;
+  --accent: var(--spartan-red);
 }
 * {
   box-sizing: border-box;

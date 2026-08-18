@@ -148,8 +148,8 @@ export const settingsCategories = [
       toggle(
         'appearance.consoleMode',
         'Console mode',
-        'Use a controller-first, fullscreen-friendly dashboard presentation with larger focus targets.',
-        false,
+        'Always use the Xbox-style controller-first, fullscreen-friendly dashboard presentation with larger focus targets.',
+        true,
       ),
       select(
         'appearance.tabLayout',
@@ -1722,11 +1722,58 @@ export const settingsCategories = [
       ),
     ],
   },
+  {
+    id: 'about',
+    label: 'About',
+    icon: 'ℹ',
+    description: 'Version, licensing, and legal information for Spartan Gaming™.',
+    settings: [
+      text('about.name', 'Application name', 'Spartan Gaming™', 'Spartan Gaming™'),
+      text('about.version', 'Version', 'Current application version.', '0.1.0-alpha.3'),
+      text(
+        'about.license',
+        'License',
+        'Spartan Gaming is released under an open-source license.',
+        'Open source',
+      ),
+      text(
+        'about.repository',
+        'Source repository',
+        'https://github.com/Spartan-Software-Enterprises/Spartan-Gaming',
+        'https://github.com/Spartan-Software-Enterprises/Spartan-Gaming',
+      ),
+      action(
+        'about.viewLicense',
+        'View license and third-party notices',
+        'Review THIRD_PARTY_NOTICES.md for third-party license details.',
+        'View notices',
+      ),
+      action(
+        'about.privacyPolicy',
+        'Privacy policy',
+        'Read the Spartan Gaming™ privacy policy covering GDPR, CCPA, and COPPA.',
+        'View privacy policy',
+      ),
+      action(
+        'about.dmcaPolicy',
+        'DMCA takedown policy',
+        'Read the DMCA takedown and counter-notification policy.',
+        'View DMCA policy',
+      ),
+      {
+        type: 'disclaimer',
+        key: 'about.disclaimer',
+        label: 'Legal disclaimer',
+        description:
+          'Spartan Gaming™ is an independent open-source project. Spartan Gaming™ is not affiliated with, endorsed by, sponsored by, or in any way associated with Microsoft Corporation, Sony Interactive Entertainment, Nintendo Co. Ltd., NVIDIA Corporation, Amazon.com Inc., Valve Corporation, Electronic Arts Inc., Ubisoft Entertainment SA, Blizzard Entertainment Inc., Take-Two Interactive Software Inc., or any other third-party gaming, streaming, or technology company whose services may be accessible through Spartan Gaming™. All third-party trademarks, service marks, trade names, and trade dress are the property of their respective owners. Provider authentication, sessions, and content remain the sole responsibility of the respective provider.',
+      },
+    ],
+  },
 ];
 
 export const defaultSettings = Object.fromEntries(
   settingsCategories
     .flatMap((category) => category.settings)
-    .filter((setting) => setting.type !== 'action')
+    .filter((setting) => setting.type !== 'action' && setting.type !== 'disclaimer')
     .map((setting) => [setting.key, setting.default]),
 );

@@ -12,9 +12,9 @@ const KINDS = new Set([
 ]);
 const MODES = new Set([
   'browser-first',
-  'official-launch',
-  'official-embed',
-  'official-api',
+  'provider-launch',
+  'provider-embed',
+  'provider-api',
   'user-owned-host',
   'self-hosted',
 ]);

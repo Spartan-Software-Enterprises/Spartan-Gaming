@@ -1,4 +1,5 @@
 import '../pwa/register.mjs';
+import '../console-mode-init.mjs';
 import { settingsCategories } from './settings-data.mjs';
 import { createSettingsStore } from './profile.mjs';
 import { resolveSettingsAction } from './actions.mjs';

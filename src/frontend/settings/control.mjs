@@ -16,5 +16,7 @@ export function renderSettingControl(setting, value) {
     return `<div class="range-control"><input aria-label="${escapeHtml(setting.label)}" type="range" min="${escapeHtml(setting.min)}" max="${escapeHtml(setting.max)}" step="${escapeHtml(setting.step)}" value="${escapeHtml(value)}" data-key="${key}"><output>${escapeHtml(value)}${escapeHtml(setting.unit)}</output></div>`;
   if (setting.type === 'text' || setting.type === 'secret')
     return `<input aria-label="${escapeHtml(setting.label)}" class="text-input" type="${setting.type === 'secret' ? 'password' : 'text'}" value="${escapeHtml(value)}" placeholder="Not configured" autocomplete="${setting.type === 'secret' ? 'new-password' : 'off'}" data-key="${key}">`;
+  if (setting.type === 'disclaimer')
+    return `<p class="disclaimer-text" role="note">${escapeHtml(setting.description)}</p>`;
   return `<button class="action-button" data-action="${key}">${escapeHtml(setting.actionLabel)}</button>`;
 }

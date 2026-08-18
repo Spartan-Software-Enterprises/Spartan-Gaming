@@ -7,9 +7,9 @@ import { createRuntimeReadiness } from '../readiness/runtime.mjs';
 
 const PROVIDER_MODE_PLANS = Object.freeze({
   'browser-first': { kind: 'web', action: 'open-url', external: true },
-  'official-launch': { kind: 'web', action: 'open-url', external: true },
-  'official-embed': { kind: 'web', action: 'embed-url', external: false },
-  'official-api': { kind: 'api', action: 'configure-api', external: false },
+  'provider-launch': { kind: 'web', action: 'open-url', external: true },
+  'provider-embed': { kind: 'web', action: 'embed-url', external: false },
+  'provider-api': { kind: 'api', action: 'configure-api', external: false },
   'native-client': { kind: 'native', action: 'open-native-client', external: false },
   'user-owned-host': { kind: 'remote', action: 'configure-host', external: false },
   'self-hosted': { kind: 'remote', action: 'configure-host', external: false },
@@ -88,10 +88,10 @@ export function resolveLaunchPlan(
         ? EMULATOR_MODE_PLANS
         : GAME_MODE_PLANS;
   const orderedModes = preferEmbedded
-    ? [...modes].sort((mode) => (mode === 'official-embed' ? -1 : 0))
+    ? [...modes].sort((mode) => (mode === 'provider-embed' ? -1 : 0))
     : modes;
   const selectedMode = orderedModes.find(
-    (mode) => plans[mode] && (mode !== 'official-embed' || integration.embedUrl),
+    (mode) => plans[mode] && (mode !== 'provider-embed' || integration.embedUrl),
   );
   if (!selectedMode)
     return {

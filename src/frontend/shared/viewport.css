@@ -1,4 +1,4 @@
-/* Every Spartan surface is a viewport, never a vertically scrolling document. */
+/* Every Spartan surface is a viewport. Desktop stays locked; mobile landscape gets scroll. */
 html,
 body {
   width: 100%;
@@ -15,8 +15,22 @@ body {
 *::before,
 *::after {
   box-sizing: border-box;
-  overflow-y: hidden !important;
 }
+/* Allow scrolling in landscape phones where height is constrained */
+@media (max-height: 600px) and (orientation: landscape) {
+  html,
+  body {
+    overflow-y: auto !important;
+  }
+  .content,
+  .main,
+  .emu-shell,
+  .provider-shell,
+  .app {
+    overflow-y: auto !important;
+  }
+}
+/* Horizontal rail scrolling remains locked */
 [data-shelf],
 .rail-track,
 .provider-rail,

@@ -1,3 +1,4 @@
+import '../../console-mode-init.mjs';
 import { createLibraryStore } from '../store.mjs';
 import { createMetadataProvider } from '../providers/index.mjs';
 

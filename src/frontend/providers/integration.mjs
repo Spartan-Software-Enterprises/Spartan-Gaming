@@ -1,17 +1,17 @@
 const MODE_ORDER = Object.freeze({
   browser: [
     'browser-first',
-    'official-launch',
-    'official-embed',
-    'official-api',
+    'provider-launch',
+    'provider-embed',
+    'provider-api',
     'user-owned-host',
     'self-hosted',
   ],
   official: [
-    'official-launch',
-    'official-embed',
+    'provider-launch',
+    'provider-embed',
     'browser-first',
-    'official-api',
+    'provider-api',
     'user-owned-host',
     'self-hosted',
   ],
@@ -19,10 +19,10 @@ const MODE_ORDER = Object.freeze({
     'native-client',
     'user-owned-host',
     'self-hosted',
-    'official-launch',
+    'provider-launch',
     'browser-first',
-    'official-embed',
-    'official-api',
+    'provider-embed',
+    'provider-api',
   ],
 });
 const REGION_LABELS = Object.freeze({
@@ -213,15 +213,15 @@ export function createProviderIntegration(entry, { profile = {}, report = {} } =
   const nativeClient = nativeClientFor(entry, profile);
   const preferred =
     embedUrl && (!profile.launchMode || profile.launchMode === 'browser')
-      ? ['official-embed', ...MODE_ORDER.browser]
+      ? ['provider-embed', ...MODE_ORDER.browser]
       : MODE_ORDER[profile.launchMode] || MODE_ORDER.browser;
   const mode =
     preferred.find(
       (candidate) =>
-        entry.integrationModes?.includes(candidate) && (candidate !== 'official-embed' || embedUrl),
+        entry.integrationModes?.includes(candidate) && (candidate !== 'provider-embed' || embedUrl),
     ) ||
-    entry.integrationModes?.find((candidate) => candidate !== 'official-embed') ||
-    (embedUrl ? 'official-embed' : undefined);
+    entry.integrationModes?.find((candidate) => candidate !== 'provider-embed') ||
+    (embedUrl ? 'provider-embed' : undefined);
   const missingCapabilities = (entry.capabilities || []).filter(
     (capability) => capability === 'gamepad' && report.input?.gamepad === false,
   );

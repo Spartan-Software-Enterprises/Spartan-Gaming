@@ -1,19 +1,19 @@
 :root {
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   color: #e8f0f3;
-  background: #0b1117;
+  background: var(--spartan-black);
   color-scheme: dark;
-  --panel: #151e27;
-  --line: #2a3945;
-  --muted: #8d9ba7;
-  --cyan: #50e1d1;
+  --panel: #1b1c1e;
+  --line: #353739;
+  --muted: #9a9b9d;
+  --cyan: var(--spartan-red);
 }
 * {
   box-sizing: border-box;
 }
 body {
   margin: 0;
-  background: radial-gradient(circle at 72% 0, #193137, transparent 35rem), #0b1117;
+  background: radial-gradient(circle at 72% 0, #121314, transparent 35rem), var(--spartan-black);
 }
 .provider-shell {
   max-width: 1160px;
@@ -49,8 +49,9 @@ header,
   place-items: center;
   width: 34px;
   height: 34px;
-  border: 2px solid var(--cyan);
+  border: 1px solid #353739;
   border-radius: 9px;
+  background: #121314;
   color: var(--cyan);
   font-size: 17px;
 }
@@ -131,10 +132,10 @@ header,
   place-items: center;
   width: 34px;
   height: 46px;
-  border: 1px solid #31545a;
+  border: 1px solid #353739;
   border-radius: 9px;
-  background: #101b22;
-  color: var(--cyan);
+  background: #121314;
+  color: var(--spartan-red);
   font:
     26px/1 system-ui,
     sans-serif;
@@ -142,8 +143,8 @@ header,
 }
 .rail-arrow:hover,
 .rail-arrow:focus-visible {
-  border-color: var(--cyan);
-  background: #173339;
+  border-color: var(--spartan-red);
+  background: #1b1c1e;
   outline: none;
 }
 .provider-rail {
@@ -167,9 +168,9 @@ header,
   gap: 9px;
   min-height: 62px;
   padding: 10px 12px;
-  border: 1px solid #2b414b;
+  border: 1px solid #353739;
   border-radius: 11px;
-  background: linear-gradient(145deg, #182731, #111a22);
+  background: linear-gradient(145deg, #1b1c1e, #121314);
   color: var(--muted);
   font: inherit;
   font-size: 12px;
@@ -184,10 +185,10 @@ header,
   place-items: center;
   width: 32px;
   height: 32px;
-  border: 1px solid #3d6868;
+  border: 1px solid #353739;
   border-radius: 9px;
-  background: #102c32;
-  color: var(--cyan);
+  background: #1a0a0b;
+  color: var(--spartan-red);
   font-size: 17px;
 }
 .category-label {
@@ -200,9 +201,9 @@ header,
 .category-tab:hover,
 .category-tab.active,
 .category-tab:focus-visible {
-  border-color: #3e6d6b;
-  background: #173339;
-  color: var(--cyan);
+  border-color: #5b0706;
+  background: #1b1c1e;
+  color: var(--spartan-red);
   outline: none;
 }
 .provider-item {
@@ -213,9 +214,9 @@ header,
   min-height: 100px;
   margin: 5px 0;
   padding: 14px;
-  border: 1px solid #2b414b;
+  border: 1px solid #353739;
   border-radius: 12px;
-  background: linear-gradient(145deg, #172630, #111a22);
+  background: linear-gradient(145deg, #1b1c1e, #121314);
   color: #dce8ec;
   text-align: left;
   cursor: pointer;
@@ -224,8 +225,8 @@ header,
 }
 .provider-item:hover,
 .provider-item.active {
-  border-color: #3e6d6b;
-  background: #173339;
+  border-color: #5b0706;
+  background: #1b1c1e;
 }
 .provider-item small {
   display: block;
@@ -238,9 +239,9 @@ header,
   place-items: center;
   width: 42px;
   height: 42px;
-  border: 1px solid #3e6d6b;
+  border: 1px solid #353739;
   border-radius: 12px;
-  background: #0e3538;
+  background: #2b2c2e;
   color: var(--cyan);
   font-size: 12px;
   font-weight: 900;
@@ -257,7 +258,7 @@ header,
 }
 .provider-chevron {
   margin-left: auto;
-  color: var(--cyan);
+  color: var(--spartan-red);
   font-size: 24px;
 }
 .loading,
@@ -328,13 +329,13 @@ header,
 }
 .primary {
   border: 0;
-  background: var(--cyan);
-  color: #071418;
+  background: var(--spartan-red);
+  color: #fff;
 }
 .secondary {
-  border: 1px solid #3e6d6b;
-  background: #1a3438;
-  color: var(--cyan);
+  border: 1px solid #5b0706;
+  background: #2b1215;
+  color: var(--spartan-red);
 }
 .save-row {
   display: flex;
@@ -367,10 +368,10 @@ header,
   right: 22px;
   bottom: 22px;
   padding: 11px 14px;
-  border: 1px solid #3e6d6b;
+  border: 1px solid #5b0706;
   border-radius: 7px;
-  background: #172a2d;
-  color: #b8f7ed;
+  background: #1a0a0b;
+  color: #ffd8d9;
   opacity: 0;
   transform: translateY(8px);
   transition: 0.2s;
@@ -422,8 +423,8 @@ header,
   gap: 12px;
   margin-top: 18px;
   padding: 12px 14px;
-  border-color: #315456;
-  background: #111d22;
+  border-color: #353739;
+  background: #121314;
 }
 .health-check div {
   display: grid;
@@ -447,7 +448,7 @@ header,
   border: 0;
   padding: 0;
   background: transparent;
-  color: var(--cyan);
+  color: var(--spartan-red);
   font: inherit;
   font-size: 12px;
   font-weight: 800;
@@ -467,7 +468,7 @@ header,
   }
 }
 .catalog-portable {
-  border-color: #365253;
+  border-color: #353739;
 }
 .catalog-portable p:not(.eyebrow) {
   max-width: 640px;

@@ -1,4 +1,5 @@
 import '../pwa/register.mjs';
+import '../console-mode-init.mjs';
 import { createWorkspaceStore } from './workspaces.mjs';
 import { createActiveProfileStorage } from '../profiles/storage.mjs';
 import { BUILTIN_CONTROLLER_PROFILES, createControllerProfileStore } from '../input/profiles.mjs';

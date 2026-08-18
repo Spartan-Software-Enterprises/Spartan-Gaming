@@ -1,4 +1,5 @@
 import '../pwa/register.mjs';
+import { initSounds } from '../shared/sounds.mjs';
 import { createSessionEnvelope, createSessionManager } from '../session/session.mjs';
 import { readSessionPreferences } from '../session/preferences.mjs';
 import { createSessionRuntime } from '../session/runtime.mjs';
@@ -85,7 +86,11 @@ import { formatDisplayNegotiation, resolveDisplayNegotiation } from '../display/
 import { formatSessionVolume, setSessionVolume } from './volume.mjs';
 import { createStickyKeysController } from '../input/sticky-keys.mjs';
 import { createWakeLockController } from './wake-lock.mjs';
+import { createSettingsStore } from '../settings/profile.mjs';
 
+if (typeof window !== 'undefined') {
+  document.addEventListener('click', () => initSounds(), { once: true, passive: true });
+}
 const query = new URLSearchParams(location.search);
 const pendingHostPair = readPendingHostPair(sessionStorage);
 clearPendingHostPair(sessionStorage);
@@ -115,6 +120,13 @@ let mapper = createInputMapper({
 const stickyKeys = createStickyKeysController({
   enabled: sessionPreferences.preferences.stickyKeys,
 });
+const settingsStore = createSettingsStore();
+const playerSettings = settingsStore.read();
+document.head.insertAdjacentHTML(
+  'beforeend',
+  '<link rel="stylesheet" href="./player-console-mode.css">',
+);
+document.body.classList.add('console-mode');
 const immersive = createImmersiveController({ target: document.querySelector('[data-stage]') });
 let runtime = null;
 const elements = {

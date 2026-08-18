@@ -1,4 +1,5 @@
 import '../pwa/register.mjs';
+import { initSounds } from '../shared/sounds.mjs';
 import { createFrontendCatalog, validateCatalogManifest } from '../catalog.mjs';
 import { createSessionManager } from '../session/session.mjs';
 import { createCatalogAdapterRegistry } from '../adapters/adapters.mjs';
@@ -46,7 +47,6 @@ import { resolveStartupRoute } from '../startup/route.mjs';
 import { createActiveProfileStorage } from '../profiles/storage.mjs';
 import { createProviderDetailsModel } from '../providers/details.mjs';
 import { createCloudGameDeepLink } from '../providers/cloud-features.mjs';
-import { nextConsoleMode, resolveConsoleMode } from '../platform/console-mode.mjs';
 import { resolveElectronRuntimeSettings } from '../settings/electron-runtime.mjs';
 import { applyRuntimeUiSettings } from '../settings/runtime-ui.mjs';
 import { resolveEmulatorCoreForRom } from '../emulation/core-selection.mjs';
@@ -172,37 +172,62 @@ const cards = document.querySelector('[data-cards]');
 const resultCount = document.querySelector('[data-result-count]');
 const toast = document.querySelector('[data-toast]');
 const sessionStatus = document.querySelector('[data-session-status]');
-const statusPill = sessionStatus.closest('.status-pill');
+const statusPill = sessionStatus?.closest('.status-pill');
 const searchInput = document.querySelector('[data-search]');
 const searchSuggestionsList = document.querySelector('[data-search-suggestions]');
 const providerDialog = document.querySelector('[data-provider-dialog]');
 const WATCH_KINDS = new Set(['live-streaming', 'social-streaming', 'self-hosted-live-streaming']);
 const sessionManager = createSessionManager({ idFactory: () => `ses-${crypto.randomUUID()}` });
-let consoleMode = resolveConsoleMode({
-  settings,
-  deviceMode: String(settings['appearance.deviceMode'] || 'desktop').toLowerCase(),
-});
 document.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="./console-mode.css">');
-document.body.classList.toggle('console-mode', consoleMode);
-document.body.insertAdjacentHTML(
-  'beforeend',
-  '<button class="console-mode-toggle" data-console-mode-toggle type="button" aria-pressed="false">▣ Console Mode</button>',
-);
-const consoleModeToggle = document.querySelector('[data-console-mode-toggle]');
-function renderConsoleMode() {
-  document.body.classList.toggle('console-mode', consoleMode);
-  if (consoleModeToggle) {
-    consoleModeToggle.setAttribute('aria-pressed', String(consoleMode));
-    consoleModeToggle.textContent = consoleMode ? '▣ Exit Console Mode' : '▣ Console Mode';
-  }
+document.body.classList.add('console-mode');
+if (typeof window !== 'undefined') {
+  document.addEventListener('click', () => initSounds(), { once: true, passive: true });
 }
-consoleModeToggle?.addEventListener('click', () => {
-  consoleMode = nextConsoleMode(consoleMode);
-  const nextSettings = { ...settings, 'appearance.consoleMode': consoleMode };
-  settingsStore.save(nextSettings);
-  applyRuntimeUiSettings(document, nextSettings);
-  renderConsoleMode();
-  showToast(consoleMode ? 'Console Mode enabled' : 'Console Mode disabled');
+
+/* ─── Guide Overlay (Xbox left panel) ─── */
+const guideOverlay = document.querySelector('[data-guide-overlay]');
+const guideBackdrop = document.querySelector('[data-guide-backdrop]');
+function openGuide() {
+  guideOverlay?.classList.add('is-open');
+  guideBackdrop?.classList.add('is-visible');
+  guideOverlay?.querySelector('.guide-item')?.focus();
+}
+function closeGuide() {
+  guideOverlay?.classList.remove('is-open');
+  guideBackdrop?.classList.remove('is-visible');
+}
+guideBackdrop?.addEventListener('click', closeGuide);
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && guideOverlay?.classList.contains('is-open')) {
+    closeGuide();
+    event.preventDefault();
+  }
+  if (
+    event.key === 'Gamepad1' ||
+    (event.key === 'F1' && !event.shiftKey && !event.ctrlKey && !event.altKey)
+  ) {
+    if (guideOverlay?.classList.contains('is-open')) closeGuide();
+    else openGuide();
+  }
+});
+document.querySelectorAll('[data-guide-action]').forEach((item) => {
+  item.addEventListener('click', () => {
+    const action = item.dataset.guideAction;
+    if (action === 'settings') window.location.assign('../settings/index.html');
+    else if (action === 'home') window.location.assign('./index.html');
+    else closeGuide();
+  });
+});
+const guideTabs = document.querySelectorAll('[data-guide-tab]');
+guideTabs.forEach((tab) => {
+  tab.addEventListener('click', () => {
+    guideTabs.forEach((t) => {
+      t.classList.remove('is-active');
+      t.setAttribute('aria-selected', 'false');
+    });
+    tab.classList.add('is-active');
+    tab.setAttribute('aria-selected', 'true');
+  });
 });
 let sessionStatusId = 'idle';
 let toastTimer;
@@ -265,9 +290,11 @@ function updateReadinessStatus() {
     online: globalThis.navigator?.onLine !== false,
     activeSession: sessionStatusId,
   });
-  sessionStatus.textContent = status.label;
-  statusPill.dataset.status = status.id;
-  statusPill.title = status.detail;
+  if (sessionStatus) sessionStatus.textContent = status.label;
+  if (statusPill) {
+    statusPill.dataset.status = status.id;
+    statusPill.title = status.detail;
+  }
 }
 function setSessionStatus(status) {
   sessionStatusId = status;
