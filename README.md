@@ -42,14 +42,14 @@ Mode turns the dashboard into a full-width gaming hub with the primary action,
 resume session, library filters, and provider rails available from the first
 screen.
 
-Fresh redesigned screenshots — Xbox One X Spartan style, 72 total (18 routes × 4 viewports), **console mode enabled by default**:
+Screenshots — Xbox One X console mode, 60 total (15 routes × 4 viewports), **console mode enabled by default**:
 
 Console Mode is the permanent application state — the entire app transitions into a controller-focused hub with Spartan warrior aesthetic, compact navigation rails, and readiness-driven provider cards. The dashboard body defaults to `console-mode`, switching the navigation to horizontal rail layout, emphasizing Spartan red accents, and hiding resume controls unless a recoverable session exists.
 
-| Desktop (Xbox One X – Console Mode)                                                       | Mobile (Xbox One X – Console Mode)                                                     |
-| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| ![Desktop dashboard](docs/screenshots/desktop--dashboard.png) | ![Mobile dashboard](docs/screenshots/mobile--dashboard.png) |
+| Desktop (1280×800)                                                                     | Mobile (390×844)                                                                       |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| ![Desktop dashboard](docs/screenshots/dashboard-console-desktop.png) | ![Mobile dashboard](docs/screenshots/dashboard-console-mobile.png) |
 
-| Landscape-phone (Xbox One X – Console Mode)                                                         | Television (Xbox One X – Console Mode)                                                          |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| ![Landscape dashboard](docs/screenshots/landscape-phone--dashboard.png) | ![Television dashboard](docs/screenshots/television--dashboard.png) |
+| Landscape (960×540)                                                                    | Television (1920×1080)                                                                 |
+| -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| ![Landscape dashboard](docs/screenshots/dashboard-console-landscape.png) | ![Television dashboard](docs/screenshots/dashboard-console-tv.png) |
